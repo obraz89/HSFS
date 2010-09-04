@@ -1,0 +1,8 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:31 2010
+        MODULE AMAX_mod
+          INTERFACE 
+            SUBROUTINE AMAX(EPS)
+              REAL(KIND=8) :: EPS
+            END SUBROUTINE AMAX
+          END INTERFACE 
+        END MODULE AMAX_mod

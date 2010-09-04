@@ -1,0 +1,8 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:26 2010
+        MODULE POISK2_mod
+          INTERFACE 
+            SUBROUTINE POISK2(LP)
+              INTEGER(KIND=4) :: LP
+            END SUBROUTINE POISK2
+          END INTERFACE 
+        END MODULE POISK2_mod

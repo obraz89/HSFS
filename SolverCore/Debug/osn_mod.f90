@@ -1,0 +1,7 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:27 2010
+        MODULE OSN_mod
+          INTERFACE 
+            SUBROUTINE OSN
+            END SUBROUTINE OSN
+          END INTERFACE 
+        END MODULE OSN_mod

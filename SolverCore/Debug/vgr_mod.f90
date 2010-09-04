@@ -1,0 +1,7 @@
+        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:31 2010
+        MODULE VGR_mod
+          INTERFACE 
+            SUBROUTINE VGR
+            END SUBROUTINE VGR
+          END INTERFACE 
+        END MODULE VGR_mod
