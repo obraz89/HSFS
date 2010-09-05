@@ -36,7 +36,8 @@ public:
 	double calc_cf_vmax(const int i, const int k) const;
 	void wind_dw_dz(double* dw_dz);
 
-	void create_stabsolver_profiles(const int k) const;
+	void get_profiles(const int i, const int k, double* y, double* u, 
+		double* w, double* p, double* t, double* r, double& u_e, double& w_e) const;
 	void get_merid_distrib(const int i) const;
 	void get_profiles(const int i, const int j) const;
 

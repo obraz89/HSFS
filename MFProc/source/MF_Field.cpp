@@ -288,60 +288,44 @@ double MF_Field::get_cf_wave_dir(const int i_ind, const int k_ind) const
 	return ang_res;
 };
 
-void MF_Field::create_stabsolver_profiles(const int k_ind) const
+//return profiles in prof, also u_e and w_e - values at the upper bl edge
+//! IMPORTANT: multiplies y and r by coef required by stability solver
+void MF_Field::get_profiles(const int i_ind, const int k_ind, double* y_prof, double* u_prof,double* w_prof,
+							double* p_prof,double* t_prof, double* r_prof, double& u_e, double& w_e) const
 {
-	std::ostringstream to_file_name;
-	std::string filename;
-	int num_of_recs = 75;
-	to_file_name<<"output/KingSSD_k="<<k_ind<<"_sz="
-				<<num_of_recs<<"_al="<<int(Alpha*58.0)<<"_NR_new.dat";
-	filename = to_file_name.str();
-	FILE* out = fopen(&filename[0], "wb");
-	fwrite(&num_of_recs,sizeof(int),1,out);
-	fwrite(&ny,sizeof(int),1,out);
-	for (int i=nx-2; i>nx-2-num_of_recs; i--)	// indent one step
-	{
 	// moving upstream (from base to apex)
 // for rotated profiles
-/*		int bound_ind = get_bound_index(i,k_ind);
-		const Rec& bound_rec = fld[i][bound_ind][k_ind];
+/*		int bound_ind = get_bound_index(i_ind,k_ind);
+		const Rec& bound_rec = fld[i_ind][bound_ind][k_ind];
 		double u_e = bound_rec.u;
 		double w_e = bound_rec.w;
 		double ang = atan(w_e/u_e);
-		double cf_wave_dir = get_cf_wave_dir(i, k_ind);
-		fwrite(&cf_wave_dir, sizeof(double),1,out);*/
+		double cf_wave_dir = get_cf_wave_dir(i_ind, k_ind);*/
 //-------------------------------------------------------------
 		// for non rotated:
-		int bound_ind = get_bound_index(i,k_ind);
-		const Rec& bound_rec = fld[i][bound_ind][k_ind];
-		double u_e = bound_rec.u;
-		double w_e = bound_rec.w;
-		double x = bound_rec.x;
-		double cf_wave_dir = get_cf_wave_dir(i, k_ind);
-		fwrite(&x,sizeof(double),1,out);
-		fwrite(&u_e,sizeof(double),1,out);
-		fwrite(&w_e,sizeof(double),1,out);
-		fwrite(&cf_wave_dir, sizeof(double),1,out);
+		int bound_ind = get_bound_index(i_ind,k_ind);
+		const Rec& bound_rec = fld[i_ind][bound_ind][k_ind];
+		u_e = bound_rec.u;
+		w_e = bound_rec.w;
 // ------------------------------------------------------------
 		for (int j=0; j<ny; j++)
 		{
-			const Rec& cur_rec = fld[i][j][k_ind];
+			const Rec& cur_rec = fld[i_ind][j][k_ind];
 			/* rotated velocity profiles [along inviscid streamline]
 			double u_new = cur_rec.u*cos(ang) + cur_rec.w*sin(ang);
 			double w_new = -cur_rec.u*sin(ang) + cur_rec.w*cos(ang);
 			*/ 
 			// not rotated:
-			double u_new = cur_rec.u;
-			double w_new = cur_rec.w;
-			fwrite(&cur_rec.y,sizeof(double),1,out);
-			fwrite(&u_new, sizeof(double),1,out);
-			fwrite(&w_new, sizeof(double),1,out);
-			fwrite(&cur_rec.p, sizeof(double),1,out);
-			fwrite(&cur_rec.t, sizeof(double),1,out);
+			y_prof[j] = cur_rec.y;
+			u_prof[j] = cur_rec.u;
+			w_prof[j] = cur_rec.w;
+			p_prof[j] = cur_rec.p;
+			t_prof[j] = cur_rec.t;
+			r_prof[j] = cur_rec.r;
+
+			r_prof[j]*=MF_Field::Gamma*MF_Field::Mach*MF_Field::Mach;
+			y_prof[j]*=sqrt(MF_Field::Re);
 		};
-	};
-	std::cout<<"Created StabSolver Data File, k="<<k_ind<<"\n";
-	fclose(out);
 };
 
 void MF_Field::get_profiles(const int i_ind, const int k_ind) const{
