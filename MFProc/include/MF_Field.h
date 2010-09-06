@@ -8,8 +8,9 @@ class SMProfile;
 class MF_Field{
 	friend class StreamLine;
 	friend class SmProfile;
-private:
+public:
 	struct Rec{double x,y,z,u,v,w,p,t,r;};
+private:
 	struct ProfileRec{
 		double y, val;
 		//ProfileRec(){y=0; val=0;};
@@ -18,7 +19,6 @@ private:
 	const int nx, ny, nz;
 	Rec*** fld;
 public:
-	struct Ind{int i,j,k;};
 	static const double Theta, Mach,
 					Re, Alpha,
 					L_ref,T_inf, T_wall, 
@@ -52,5 +52,18 @@ private:
 	int  get_cf_zero_index
 		(const std::vector<double>& profile) const;
 };
+
+inline MF_Field::Rec operator-(const MF_Field::Rec& rec1, const MF_Field::Rec& rec2){
+	    MF_Field::Rec res;
+		res.x = rec1.x - rec2.x;
+		res.y = rec1.y - rec2.y;
+		res.z = rec1.z - rec2.z;
+		res.u = rec1.u - rec2.u;
+		res.v = rec1.v - rec2.v;
+		res.w = rec1.w - rec2.w;
+		res.p = rec1.p - rec2.p;
+		res.t = rec1.t - rec2.t;
+		return res;
+	};
 
 #endif //__MF_Field
