@@ -316,15 +316,14 @@ void MF_Field::get_profiles(const int i_ind, const int k_ind, double* y_prof, do
 			double w_new = -cur_rec.u*sin(ang) + cur_rec.w*cos(ang);
 			*/ 
 			// not rotated:
-			y_prof[j] = cur_rec.y;
+			y_prof[j] = cur_rec.y*sqrt(MF_Field::Re);
 			u_prof[j] = cur_rec.u;
 			w_prof[j] = cur_rec.w;
 			p_prof[j] = cur_rec.p;
 			t_prof[j] = cur_rec.t;
 			r_prof[j] = cur_rec.r;
 
-			r_prof[j]*=MF_Field::Gamma*MF_Field::Mach*MF_Field::Mach;
-			y_prof[j]*=sqrt(MF_Field::Re);
+			r_prof[j]=cur_rec.p/cur_rec.t*MF_Field::Gamma*MF_Field::Mach*MF_Field::Mach;
 		};
 };
 

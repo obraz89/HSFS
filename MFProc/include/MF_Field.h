@@ -4,8 +4,10 @@
 #ifndef __MF_Field
 #define __MF_Field
 class StreamLine;
+class SMProfile;
 class MF_Field{
 	friend class StreamLine;
+	friend class SmProfile;
 private:
 	struct Rec{double x,y,z,u,v,w,p,t,r;};
 	struct ProfileRec{

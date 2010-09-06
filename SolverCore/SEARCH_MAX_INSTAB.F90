@@ -30,12 +30,13 @@ COMMON/OUT  /K,SIG,G,M,XI,PB                    &
 	        /JP/JPOISK
 	!temp common
 COMMON/CF_PROFILE_DATA/ MF_I, MF_J, MF_X, MF_WE, MF_ANG
+COMMON/ADDITIONAL_NS/ X_DIM, Y_DIM
 COMPLEX*16 A,B,W,R,FUR,FU(8,201),           &
            CF(4),SI,W0,V,Z0,A0,             &
            AEXTR,VA,VB,VR,FREQ
            
 REAL*8 K,M,MF_X, MF_WE, MF_ANG,PI              
-integer MF_I, MF_J
+integer MF_I, MF_J, Y_DIM, X_DIM
 
 !locals          
 real*4, dimension(2) :: elapsed_time
@@ -52,5 +53,60 @@ RVAP=287.1    ! gas constant per unit mass [J/kg/K]
 IUPT=1
 BVB=0.75
 K=0.
+
+
+! Additional mean-flow parameters
+!
+IBAS=0 ! If IBAS=1 then write mean-flow profiles in first X-station and stops
+XI=0.D0
+PB=0.D0
+CQ=0.D0
+XIR=XI*PI/180.
+PB0=PB
+IHH=0
+JHH=0
+IA=0
+Z0=0.
+MAB0=1
+MAB=MAB0
+MAB1=1
+NJOB=2
+IPRINT=0
+
+! Specify parameters for stability solver
+!
+NO=150  !250  ! number of grid points
+NS=1    ! coefficient increasing number of grid points 
+IGR=100	  ! index of poisition where eigenfun is to be plotted
+      
+NYY=Y_DIM      
+XXX=XST(1)
+CALL NAVSTOK(NYY,XXX)
+
+RE1=REE/(XXX*XLL)		! Local unit Reynolds number
+RRR=DSQRT(REE)  ! Reynolds number for stability calculations
+R=RRR
+LP=1 ! if LP=1 then search of alpha at fixed omega !obsolete, unused
+
+CW='V'
+A0=A
+W0=W
+MAB0=1
+MAB1=0
+BBVB=BVB
+MAB=MAB0
+MAB2=MAB
+
+DELS=RRR/RE1	! local length-scale
+! if it is first station ....
+call TS_GLOBAL_TIME()
+print *, "GLOBAL SEARCH:"
+WRITE(*,'(1P,/," RRR=",E13.5,/," W=",2E13.5, &
+             /,"  B=",2E13.5,/," A=",2E13.5,  &
+             /," PHASE SPEED=",E13.5)')RRR,W,B,A,DREAL(W)/DREAL(A)
+
+CALL TS_WMAX_TIME_ALL()
+call TS_TRANS_TO_SPATIAL(a_spat, b_spat, w_spat)
+print *,'time elapsed:', etime(elapsed_time)
 
 end subroutine SEARCH_MAX_INSTAB_TIME
