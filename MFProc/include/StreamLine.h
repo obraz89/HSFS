@@ -1,4 +1,6 @@
 #include "MF_Field.h"
+#include "SmProfile.h"
+#include "SolverCore.h"
 #include <vector>
 struct Index{
 int i,j,k;
@@ -35,5 +37,6 @@ public:
 	StreamLine(const MF_Field&, int	i_start, int j_start, int z_start);
 	void add_node();
 	void print_line(const char*) const;
+	Index find_transition_location() const;
 	~StreamLine();
 };

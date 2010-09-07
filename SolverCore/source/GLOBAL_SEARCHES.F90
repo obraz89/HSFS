@@ -115,7 +115,7 @@ complex*16 SI,Z,ZZZ0
 real(8) AAK,AASIG,AAG,AAM,AAXI,AAPB
 !</globals>
 real(8), parameter :: pi = 3.141592653
-real(8), parameter :: theta = -pi/3.0         
+real(8), parameter :: theta = pi/3.0         
 real(8), parameter :: wi = 2.0d-5 
 real(8), parameter :: wr_start = 0.005
 real(8), parameter :: wr_end   = 0.1

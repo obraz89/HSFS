@@ -1,6 +1,7 @@
 extern "C"{
 	const int SmProfSize = 541; // to match fortran common (TODO: how to automate ???)
 	void SEARCH_MAX_INSTAB_TIME();
+	void TS_GLOBAL_TIME();
 	extern struct {
 	double	YNS[SmProfSize],UNS[SmProfSize],UNS1[SmProfSize],UNS2[SmProfSize],
 							TNS[SmProfSize],TNS1[SmProfSize],TNS2[SmProfSize],
@@ -20,4 +21,10 @@ extern "C"{
 	extern struct{
 		int X_DIM,Y_DIM;
 	} ADDITIONAL_NS;
+	extern struct{
+		int REQ_TS_GLOB;
+	} CONTROL;
+	extern struct{
+		double SIGMA_SPAT;
+	} SOLVER_OUTPUT;
 }

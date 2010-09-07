@@ -14,5 +14,6 @@ public:
 	~SmProfile();
 	void smooth();	// smooth profiles and get derivatives using fortran imsl lib
 	void setSolverParameters();	// couples DataPoint with StabilitySolver
-
+	void searchMaxInstability(); // wraps SEARCH_MAX_INSTAB_TIME
+	//void globalTS();
 };

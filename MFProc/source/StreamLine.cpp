@@ -110,7 +110,7 @@ void StreamLine::interpolate_to_point(){
 //		<<line.back().p<<";"<<line.back().t<<";"<<line.back().w<<";";
 }
 void StreamLine::add_node(){
-if (line.back().x>0.9) return;
+if (line.back().x>0.95) return;
 
 double time_step =0.005;	//get_time_step(fld, cur_ind);
 Fld_rec lst_rec = line.back();
@@ -135,6 +135,43 @@ line.back().y = lst_rec.y + dy;
 line.back().z = lst_rec.z + dz_dst/y_tot;
 //std::cout<<"current nearest:["<<cur_ind.i<<"; "<<cur_ind.j<<"; "<<cur_ind.k<<"]; ";
 //std::cout<<"bound nearest:["<<fld.get_bound(cur_ind).i<<"; "<<fld.get_bound(cur_ind).j<<"; "<<fld.get_bound(cur_ind).k<<"]\n";
-if (get_nearest_node()!=nearest_nodes.back()) nearest_nodes.push_back(get_nearest_node());
+if (get_nearest_node().i!=nearest_nodes.back().i) nearest_nodes.push_back(get_nearest_node());
 this->interpolate_to_point();	// calculates back.u,v,w,p,t,r
+};
+
+Index StreamLine::find_transition_location() const{
+	// moving from base to apex 
+	std::vector<double> sigmas;
+	std::vector<Index>::const_iterator beg = nearest_nodes.end();
+	beg--;
+	SmProfile first_profile(this->fld_ref, beg->i, beg->k);
+	CONTROL.REQ_TS_GLOB=1;
+	first_profile.smooth();
+	first_profile.setSolverParameters();
+	first_profile.searchMaxInstability();
+	sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT);
+	while(beg!=nearest_nodes.begin()) 
+	{
+		SmProfile cur_profile(this->fld_ref, beg->i, beg->k);
+		cur_profile.smooth();
+		cur_profile.setSolverParameters();
+		cur_profile.searchMaxInstability();
+		sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT);
+		beg--;
+	};
+
+	std::vector<double>::const_iterator sbeg = sigmas.end();
+	sbeg--;
+	// this is so raw
+	double dx = fld_ref.L_ref]/fld_ref.nx;
+	int ind_res=0;
+	double res=0.0;
+	while (sbeg!=sigmas.begin()){
+		res+=*sbeg*dx;
+		sbeg--;
+		ind_res++;
+		if (res>20.0) break;
+	}
+
+	return Index(nearest_nodes[ind_res]);
 };

@@ -16,29 +16,39 @@ complex*16 a_def, b_def,            &
            a_prv, b_prv, w_prv,     &
            a_cur, b_cur, w_cur
 real(8) db_def, da, db,             &
-        gr_fun_prv, gr_fun_cur
+        gr_fun_prv, gr_fun_cur,     & 
+        wi_prv, wi_cur, wi_def
 call POISK2(3)
 a_def = A
 b_def = B
-db = 0.001*B             ! constant <>?
+wi_def = DIMAG(W)
+db = 0.01*B             ! constant <>?
 gr_fun_prv = GR_VEL_FUN()
+wi_prv = DIMAG(W)
 da = -DREAL(VB)/DREAL(VA)*db
 B = b_def + db
 A = a_def + da
 gr_fun_cur = GR_VEL_FUN()
-if (DABS(gr_fun_cur)>DABS(gr_fun_prv)) then
+wi_cur = DIMAG(W)
+!if (DABS(gr_fun_cur)>DABS(gr_fun_prv)) then
+if (wi_cur<wi_prv) then
   db = -db
   da = -DREAL(VB)/DREAL(VA)*db
   B = b_def + db
   A = a_def + da
   gr_fun_cur = GR_VEL_FUN()
+  wi_cur = DIMAG(W)
 end if
-do while (DABS(gr_fun_cur)<DABS(gr_fun_prv)) 
+!do while (DABS(gr_fun_cur)<DABS(gr_fun_prv)) 
+do while (wi_prv<wi_cur) 
+print*, "WI:", wi_cur
 da = -DREAL(VB)/DREAL(VA)*db
 B = B + db
 A = A + da
 gr_fun_prv = gr_fun_cur
+wi_prv = wi_cur
 gr_fun_cur = GR_VEL_FUN()
+wi_cur = DIMAG(W)
 if (DREAL(W)<0.0d0) W=DCMPLX(0.0d0, DIMAG(W)) 
 end do 
 contains
@@ -67,7 +77,7 @@ call TIME_WMAX_STAT()
 a_prv = A
 b_prv = B
 w_prv = W
-dar = 0.001*DREAL(a_prv)
+dar = 0.005*DREAL(a_prv)
 call TIME_SHIFT_FREQ(dar)
 call TIME_WMAX_STAT()
 a_cur = A
