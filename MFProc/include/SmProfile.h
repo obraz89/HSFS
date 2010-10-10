@@ -1,4 +1,6 @@
 #include "MF_Field.h"
+#ifndef __SMPROFILE
+#define __SMPROFILE
 class SmProfile {
 public:
 	int i_ind, k_ind;
@@ -17,3 +19,4 @@ public:
 	void searchMaxInstability(); // wraps SEARCH_MAX_INSTAB_TIME
 	//void globalTS();
 };
+#endif // __SMPROFILE

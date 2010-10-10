@@ -7,6 +7,7 @@ class StreamLine;
 class SMProfile;
 class MF_Field{
 	friend class StreamLine;
+	friend class WavePackLine;
 	friend class SmProfile;
 public:
 	struct Rec{double x,y,z,u,v,w,p,t,r;};

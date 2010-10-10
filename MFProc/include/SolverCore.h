@@ -1,7 +1,10 @@
+#ifndef __SOLVERCORE
+#define __SOLVERCORE
 extern "C"{
 	const int SmProfSize = 541; // to match fortran common (TODO: how to automate ???)
 	void SEARCH_MAX_INSTAB_TIME();
 	void TS_GLOBAL_TIME();
+	void CF_GLOBAL_SEARCH();
 	extern struct {
 	double	YNS[SmProfSize],UNS[SmProfSize],UNS1[SmProfSize],UNS2[SmProfSize],
 							TNS[SmProfSize],TNS1[SmProfSize],TNS2[SmProfSize],
@@ -15,6 +18,12 @@ extern "C"{
 		double	AMINF,REINF,TINF,XLL,REE,REE1,UEE;
 	} DNS;
 	extern struct{
+		struct CompVal{
+			double real, imag;
+		};
+		CompVal VA, VB, VR;
+	} VGRC;
+	extern struct{
 		int  MF_I, MF_J;
 		double	MF_X, MF_WE, MF_ANG;
 	} CF_PROFILE_DATA;
@@ -22,9 +31,10 @@ extern "C"{
 		int X_DIM,Y_DIM;
 	} ADDITIONAL_NS;
 	extern struct{
-		int REQ_TS_GLOB;
+		int REQ_TS_GLOB, REQ_CF_GLOB;
 	} CONTROL;
 	extern struct{
 		double SIGMA_SPAT;
 	} SOLVER_OUTPUT;
 }
+#endif // __SOLVERCORE

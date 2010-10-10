@@ -110,7 +110,7 @@ void StreamLine::interpolate_to_point(){
 //		<<line.back().p<<";"<<line.back().t<<";"<<line.back().w<<";";
 }
 void StreamLine::add_node(){
-if (line.back().x>0.95) return;
+if (line.back().x>0.9) return;
 
 double time_step =0.005;	//get_time_step(fld, cur_ind);
 Fld_rec lst_rec = line.back();
@@ -139,12 +139,14 @@ if (get_nearest_node().i!=nearest_nodes.back().i) nearest_nodes.push_back(get_ne
 this->interpolate_to_point();	// calculates back.u,v,w,p,t,r
 };
 
-Index StreamLine::find_transition_location() const{
+void StreamLine::find_transition_location(double& x_tr, double& t_tr) const{
 	// moving from base to apex 
 	std::vector<double> sigmas;
 	std::vector<Index>::const_iterator beg = nearest_nodes.end();
 	beg--;
 	SmProfile first_profile(this->fld_ref, beg->i, beg->k);
+	//if ((beg->k>20)&&(beg->k<30)) CONTROL.REQ_CF_GLOB=1;
+	//else
 	CONTROL.REQ_TS_GLOB=1;
 	first_profile.smooth();
 	first_profile.setSolverParameters();
@@ -163,15 +165,17 @@ Index StreamLine::find_transition_location() const{
 	std::vector<double>::const_iterator sbeg = sigmas.end();
 	sbeg--;
 	// this is so raw
-	double dx = fld_ref.L_ref]/fld_ref.nx;
+	double dx = fld_ref.L_ref/fld_ref.nx;
 	int ind_res=0;
 	double res=0.0;
 	while (sbeg!=sigmas.begin()){
 		res+=*sbeg*dx;
 		sbeg--;
 		ind_res++;
-		if (res>20.0) break;
+		if (res>10.0) break;
 	}
+	Index trans_ind(nearest_nodes[ind_res]); 
+	x_tr = fld_ref.fld[trans_ind.i][trans_ind.j][trans_ind.k].x;
+	t_tr = fld_ref.fld[trans_ind.i][trans_ind.j][trans_ind.k].z;
 
-	return Index(nearest_nodes[ind_res]);
 };
