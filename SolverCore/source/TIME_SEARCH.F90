@@ -41,7 +41,7 @@ if (wi_cur<wi_prv) then
 end if
 !do while (DABS(gr_fun_cur)<DABS(gr_fun_prv)) 
 do while (wi_prv<wi_cur) 
-print*, "WI:", wi_cur
+!print*, "WI, WR:", wi_cur, DREAL(W)
 da = -DREAL(VB)/DREAL(VA)*db
 B = B + db
 A = A + da
@@ -79,6 +79,8 @@ b_prv = B
 w_prv = W
 dar = 0.005*DREAL(a_prv)
 call TIME_SHIFT_FREQ(dar)
+! if we fall in a wrong place
+!if (dimag(W)<-3.0d-4) call TS_GLOBAL_TIME()
 call TIME_WMAX_STAT()
 a_cur = A
 b_cur = B
