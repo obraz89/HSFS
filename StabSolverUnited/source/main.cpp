@@ -1,20 +1,33 @@
 #include "TaskParameters.h"
 #include "MF_Field.h"
 #include "StreamLine.h"
+#include "WavePackLine.h"
 #include <iostream>
-
+#include <fstream>
 int main(){
 	int nx=81, ny=161, nz=51;
 	std::string NSFieldName;					// std::cin>> NSFieldName;
-	NSFieldName = "input/new/07.85000.dat";		// now it is for al=1
+	NSFieldName = "input/new/07.85000.dat";		// now it is for al=2
+	FILE* file = fopen("output/transitions.dat", "a+");
 	MF_Field field(NSFieldName,nx,ny,nz);
 	field.trans_to_cyl();
 	// initialize Streamline
-	int i_start = 5, k_start = 50;
-	StreamLine str_line(field, i_start, field.get_bound_index(i_start, k_start)+5, k_start);
-	for (int i=0; i<200; i++) str_line.add_node();
-	Index pos_ind = str_line.find_transition_location();
-	str_line.print_line("v");
+	for (int k_start = 30; k_start>10; k_start--){
+		file = fopen("output/transitions.dat", "a+");
+		std::cout<<"------------------------------------k_start="<<k_start<<"\n";
+		int i_start = 5;
+		double x_tr, t_tr;
+		/*StreamLine str_line(field, i_start,80, k_start);
+		for (int i=0; i<1000; i++) str_line.add_node();
+		str_line.find_transition_location(x_tr, t_tr);*/
+		WavePackLine wp_line(field, 70, 50, k_start);
+		wp_line.find_transition_location(x_tr, t_tr);
+		//to_f_trans<<x_tr<<"\t"<<t_tr<<"\n";
+		fprintf(file,"%f\t%f\n", x_tr, t_tr);
+		fclose(file);
+		//str_line.print_line("v");
+	}
+	//to_f_trans.close();
 	getchar();
 	return 0;
 }
