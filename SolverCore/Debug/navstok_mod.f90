@@ -1,9 +1,0 @@
-        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:27 2010
-        MODULE NAVSTOK_mod
-          INTERFACE 
-            SUBROUTINE NAVSTOK(NNS,XST)
-              INTEGER(KIND=4) :: NNS
-              REAL(KIND=8) :: XST
-            END SUBROUTINE NAVSTOK
-          END INTERFACE 
-        END MODULE NAVSTOK_mod

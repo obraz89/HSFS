@@ -1,8 +1,0 @@
-        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:37 2010
-        MODULE POISK_TS_mod
-          INTERFACE 
-            SUBROUTINE POISK_TS(LP)
-              INTEGER(KIND=4) :: LP
-            END SUBROUTINE POISK_TS
-          END INTERFACE 
-        END MODULE POISK_TS_mod

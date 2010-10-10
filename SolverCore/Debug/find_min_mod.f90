@@ -1,9 +1,0 @@
-        !COMPILER-GENERATED INTERFACE MODULE: Sun Sep 05 01:26:34 2010
-        MODULE FIND_MIN_mod
-          INTERFACE 
-            FUNCTION FIND_MIN(FUN) RESULT(FIND_MIN_0)
-              REAL(KIND=8) :: FUN(:)
-              INTEGER(KIND=4) :: FIND_MIN_0
-            END FUNCTION FIND_MIN
-          END INTERFACE 
-        END MODULE FIND_MIN_mod
