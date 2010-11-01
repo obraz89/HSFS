@@ -11,12 +11,10 @@ COMMON/OUT  /K,SIG,G,M,XI,PB                    &
             /MACKY1/ Y1O,DO,C,YC,NO             &
             /ABOCT/ MAB,MAB1,MAB2               &
             /BASA6/ A6(10),BVB,DL1              &
-            /BASAP/UPP,DLP                      &
             /BASA3/A7(9),AMK,TETB,A8(4),III(2)  &   
             /HADY2/ A,B,W,R                     &
             /HADY5/ FU,CF                       &
             /HADY3/ SI,Z0                       &
-            /AK/ AK                             &
             /OSNOB/YYY,U,U1,U2,T,T1,T2,         &
                    VMU,VMU1,VMU2,WS,WS1,WS2     &
             /VGRC/ VA,VB,VR                     &

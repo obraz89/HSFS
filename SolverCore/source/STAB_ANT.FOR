@@ -502,7 +502,6 @@ C**********************************************************************
      *       /HADY4/ FI(8,8),LAM(4)
      *       /ABOCT/ MAB,MAB1,MAB2
      *       /SHOCK1/ARB(7),LS
-     *       /AK/ AK
       DIMENSION RS(8)
       COMPLEX*16 SI,FI,A,B,W,R,Z0,LAM
       L1=0  
@@ -519,7 +518,6 @@ C
       COMMON /HADY2/ A,B,W,R
      *       /HADY3/ SI,ZZZ0
      *       /ABOCT/ MAB,MAB1,MAB2
-     *       /AK/ AK
      *       /VGRC/ VA,VB,VR
       COMPLEX*16 SI,A,B,W,R,ZZZ0,A0,B0,W0,W1,VA,VB,VR
       DATA D /1.D-6/
@@ -564,7 +562,6 @@ C
       COMMON /HADY2/ A,B,W,R
      *       /HADY3/ SI,ZZZ0
      *       /ABOCT/ MAB,MAB1,MAB2
-     *       /AK/ AK
       COMPLEX*16 SI,A,B,W,R,ZZZ0,A00
       MAB1=0
       W0=DREAL(W)
@@ -604,7 +601,6 @@ C
       COMMON /HADY2/ A,B,W,R
      *       /HADY3/ SI,ZZZ0
      *       /ABOCT/ MAB,MAB1,MAB2
-     *       /AK/ AK
      *       /LSP_OUT/ GR_DIR
       COMPLEX*16 SI,A,B,W,R,ZZZ0,A00
       real*8 step

@@ -4,7 +4,6 @@
       COMMON /HADY2/ Z(4)
      *       /HADY3/ SI,ZZZ0
      *       /ABOCT/ MAB,MAB1,MAB2
-     *       /AK/ AK
      *       /BASA6/ A6(10),BVB,DL1
       COMMON/OUT  /AAK,AASIG,AAG,AAM,AAXI,AAPB
 	COMMON/JP/JPOISK
