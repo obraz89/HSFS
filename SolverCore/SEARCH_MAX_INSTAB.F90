@@ -9,7 +9,6 @@ COMMON/RHONS/ RHO(NY)
 COMMON/OUT  /K,SIG,G,M,XI,PB                    &
             /HADY1/Y1,D,NS,L1                   &
             /MACKY1/ Y1O,DO,C,YC,NO             &
-            /MACKXY/XFIRST,YFIRST,ZFIRST        &
             /ABOCT/ MAB,MAB1,MAB2               &
             /BASA6/ A6(10),BVB,DL1              &
             /BASAP/UPP,DLP                      &

@@ -16,7 +16,6 @@ C
      *       /BASA6/ A6(10),BV,DL1,TWWW
       COMMON/OUT/K,SIG,GG,MM,XXI,PB
      *      /MACKY1/ Y1O,DDDD,C,YC,NO
-     *      /MACKXY/XFIRST,YFIRST,ZFIRST
      *      /HADY1/Y1H,DOD,NNNS,LLL1
      *      /MOMENT/DL2
       REAL*8 M,K,MM
