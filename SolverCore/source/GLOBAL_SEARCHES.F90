@@ -117,8 +117,8 @@ real(8) AAK,AASIG,AAG,AAM,AAXI,AAPB
 real(8), parameter :: pi = 3.141592653
 real(8), parameter :: theta = pi/3.0         
 real(8), parameter :: wi = 2.0d-5 
-real(8), parameter :: wr_start = 0.005
-real(8), parameter :: wr_end   = 0.1
+real(8), parameter :: wr_start = 0.001
+real(8), parameter :: wr_end   = 0.01
 integer, parameter :: nw = 100, na = 100
 real(8)  wr_cur, cfup, cflow,                      &
          a_start, a_end,                           &

@@ -66,6 +66,8 @@ C
       PRINT 20,LOG
 20    FORMAT(' :LHADY **ERROR IN PARAMETERS** LOG=',L1)
 97    WRITE(6,10)A,B,W,R,Y1,NS,MAB,K,PR,G,M,LAM,FIQ
+      !to stop mess
+      STOP
       MAB=-1
       RETURN
 1     CONTINUE

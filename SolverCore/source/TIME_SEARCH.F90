@@ -2,6 +2,57 @@ module TIME_SEARCH
 implicit none
 real(8) TGT_WR                                             
 contains
+! moving along integration path
+! values from previous spatial
+!point should be adjusted for current point
+subroutine ADJUST_INITIAL_VALUES()
+implicit none
+common /HADY2/ A, B, W, R           &
+       /HADY3/ SI,ZZZ0                                     
+complex*16 A, B, W, R, SI, ZZZ0
+complex*16 a_def, b_def, w_def
+real fsi_cur, fsi_prv, da, db, dwr, dwi
+! to enter loop
+fsi_prv = 10
+fsi_cur = 1
+do while (fsi_cur<fsi_prv)
+call HADSI
+fsi_prv = cdabs(SI)
+a_def = A
+b_def = B
+w_def = W
+
+da = 0.001*A
+A = a_def + da
+call HADSI
+if (cdabs(SI)>fsi_prv) da = - da
+A = a_def
+
+db = 0.001*B
+B = B + db
+call HADSI
+if (cdabs(SI)>fsi_prv) db =  - db
+B = b_def
+
+dwr = 0.001*dreal(W)
+W = w_def + dwr
+call HADSI
+if (cdabs(SI)>fsi_prv) dwr =  - dwr 
+W = w_def
+
+dwi = 0.001*dimag(W)
+W = w_def + dcmplx(0, dwi)
+call HADSI
+if (cdabs(SI)>fsi_prv) dwi =  - dwi
+W = w_def
+A = A + da
+B = B + db
+W = W + dcmplx(dwr, dwi)
+call HADSI
+fsi_cur = cdabs(SI)
+print*, "internal adjust: FSI=", fsi_cur
+end do
+end subroutine
 ! search for maximum instability
 ! in time approach with keeping Wr constant
 ! criterion - Function GR_VEL_FUN = VBi*VAr - VAi*VBr
@@ -72,7 +123,8 @@ complex*16 A, B, W, R
 complex*16 a_prv, b_prv, w_prv,     &
            a_cur, b_cur, w_cur
 real(8) dar
-call POISK2(3)
+!call POISK2(3)
+call ADJUST_INITIAL_VALUES()
 call TIME_WMAX_STAT()
 a_prv = A
 b_prv = B

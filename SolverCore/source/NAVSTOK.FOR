@@ -17,7 +17,6 @@ C
       COMMON/OUT/K,SIG,GG,MM,XXI,PB
      *      /MACK02/TELOC,TWALL,TFFF
      *      /MACKY1/ Y1O,DDDD,C,YC,NO
-     *      /MACKNJ/NJOB,IPRINT,LOLD,IV
      *      /MACKXY/XFIRST,YFIRST,ZFIRST
      *      /HADY1/Y1H,DOD,NNNS,LLL1
      *      /MOMENT/DL2
@@ -89,14 +88,11 @@ C
 	TWALL=T(1)/TTE ! Wall temperature Twall/Te
       BETA=PB
       IK=0
-      MAB=0
       CQ=0.
       T0=TELOC*(1.+MM*MM*0.5*(GG-1.)) ! Stagnation temperature
       E=(GG-1.)*MM**2
       TE=E*0.5
       IP=0
-      IW=0
-      IF(NJOB.EQ.2) IW=1
       TETB=1.000
       XI=XXI
       AMK=M
