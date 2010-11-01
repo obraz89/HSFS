@@ -8,7 +8,6 @@ COMMON/NS/YNS(NY),UNS(NY),UNS1(NY),UNS2(NY),    &
 COMMON/RHONS/ RHO(NY)                           
 COMMON/OUT  /K,SIG,G,M,XI,PB                    &
             /HADY1/Y1,D,NS,L1                   &
-            /MACK02/TELOC,TWALL,TF              &
             /MACKY1/ Y1O,DO,C,YC,NO             &
             /MACKXY/XFIRST,YFIRST,ZFIRST        &
             /ABOCT/ MAB,MAB1,MAB2               &

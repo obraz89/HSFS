@@ -32,7 +32,6 @@ C
      *       /ABOCT/ MAB,MAB1,MMAB2
      *       /OSNOB/ Y,U,U1,U2,T,T1,T2,MU,MU1,MU2,WS,WS1,WS2
      *       /OUT  / K,PR,G,M,XXXI,PPPB
-     *      /MACK02/TINFIN,TWALL,TFFF
      
       COMMON /CF_PROFILE_DATA/ MF_I, MF_J, MF_X, MF_WE, MF_ANG
       integer MF_I, MF_J
