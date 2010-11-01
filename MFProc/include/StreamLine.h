@@ -3,6 +3,8 @@
 #include "SolverCore.h"
 #include <vector>
 #include "Elems.h"
+#ifndef __SreamLine__
+#define __StreamLIne__
 class StreamLine{
 typedef MF_Field::Rec Fld_rec;
 	const MF_Field& fld_ref;
@@ -18,3 +20,4 @@ public:
 	void find_transition_location(double&, double&) const;
 	~StreamLine();
 };
+#endif

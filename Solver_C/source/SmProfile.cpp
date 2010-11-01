@@ -1,6 +1,7 @@
 #include "SmProfile.h"
-#include "Smooth.h"
+#include "Smooth.h"	
 #include "SolverCore.h"
+#include "MF_Field.h"
 #include <cmath>
 SmProfile::SmProfile(const MF_Field &__fld_ref, int __i_ind, int __k_ind)
 :fld_ref(__fld_ref), i_ind(__i_ind), k_ind(__k_ind), ny(__fld_ref.ny){
@@ -32,17 +33,8 @@ void SmProfile::smooth(){
 	SMOOTH_3D_PROFILES(y_prof, w_prof, &size, w1_prof, w2_prof);
 	SMOOTH_3D_PROFILES(y_prof, t_prof, &size, t1_prof, t2_prof);
 }
-void SmProfile::setSolverParameters(){
-	DNS.AMINF = MF_Field::Mach;
-	DNS.REINF = MF_Field::Re;
-	DNS.TINF = MF_Field::T_inf;
-	DNS.XLL = MF_Field::L_ref;
 
-	NS.XST[0] = fld_ref.fld[i_ind][0][k_ind].x;
-	CF_PROFILE_DATA.MF_WE = w_e;
-	CF_PROFILE_DATA.MF_ANG = fld_ref.get_cf_wave_dir(i_ind, k_ind);
-	ADDITIONAL_NS.Y_DIM = ny;
-
+void SmProfile::adapt(){
 	for (int i=0; i<this->ny;i++){
 		NS.YNS[i] = y_prof[i]/sqrt(NS.XST[0]);
 		NS.UNS[i] = u_prof[i];
@@ -56,11 +48,9 @@ void SmProfile::setSolverParameters(){
 		NS.TNS2[i] = t2_prof[i]*NS.XST[0];
 		RHONS.RHO[i] = r_prof[i];
 	}
-}
-
-void SmProfile::searchMaxInstability(){
-	SEARCH_MAX_INSTAB_TIME();
-}
-//void SmProfile::globalTS(){
-//	TS_GLOBAL_TIME();
-//};
+	double x = NS.XST[0];
+	int y_dim = ny;
+	NAVSTOK(y_dim,x);
+	HADY2.R.real = sqrt(DNS.REE);	// R for stab comps - can be calculated only after NAVSTOK
+	HADY2.R.imag = 0.0;
+};

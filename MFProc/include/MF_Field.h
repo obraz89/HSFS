@@ -1,14 +1,13 @@
+#ifndef __MF_Field
+#define __MF_Field
 #include <iostream>
 #include <string>
 #include <vector>
-#ifndef __MF_Field
-#define __MF_Field
-class StreamLine;
-class SMProfile;
 class MF_Field{
 	friend class StreamLine;
 	friend class WavePackLine;
 	friend class SmProfile;
+	friend class StabSolver;
 public:
 	struct Rec{double x,y,z,u,v,w,p,t,r;};
 private:

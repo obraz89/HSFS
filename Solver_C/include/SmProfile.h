@@ -1,6 +1,7 @@
-#include "MF_Field.h"
 #ifndef __SMPROFILE
 #define __SMPROFILE
+class MF_Field;
+// TODO: separate profile from from solver
 class SmProfile {
 public:
 	int i_ind, k_ind;
@@ -15,8 +16,6 @@ public:
 	SmProfile( const MF_Field& _fld_ref, int i_ind, int k_ind);
 	~SmProfile();
 	void smooth();	// smooth profiles and get derivatives using fortran imsl lib
-	void setSolverParameters();	// couples DataPoint with StabilitySolver
-	void searchMaxInstability(); // wraps SEARCH_MAX_INSTAB_TIME
-	//void globalTS();
+	void adapt();				 // wraps NAVSTOK
 };
 #endif // __SMPROFILE

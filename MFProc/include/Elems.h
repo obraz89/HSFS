@@ -11,7 +11,16 @@ Index(const Index& _ind, int di, int dj, int dk)
 	k = _ind.k + dk;
 }
 };
-
+// complex value
+	struct CompVal{
+		double real, imag;
+	};
+// stabdata we want to keep at a point
+	struct StabDataPoint{
+		CompVal a_spat, b_spat, w_spat;
+		CompVal a_time, b_time, w_time;
+		CompVal vga, vgb;	// group velocity
+	};
 inline bool operator==(const Index& a, const Index& b){
 	if ((a.i==b.i)&&(a.j==b.j)&&(a.k==b.k))
 		return true;

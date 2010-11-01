@@ -1,9 +1,13 @@
 #include "WavePackLine.h"
+#include "StabField.h"
+#include "StabSolver.h"
 #include <iostream>
 #include <cmath>
+#include <string>
+#include <sstream>
 
-WavePackLine::WavePackLine(const MF_Field &_fld, int _i, int _j, int _k):
-fld_ref(_fld),line(1), nearest_nodes(1)
+WavePackLine::WavePackLine(const MF_Field &_fld, StabField &_stab_fld, int _i, int _j, int _k):
+fld_ref(_fld), stab_fld_ref(_stab_fld), line(1), nearest_nodes(1)
 {
 	const Fld_rec& ptr = fld_ref.fld[_i][_j][_k];
 	line.back() = ptr;
@@ -89,14 +93,16 @@ return ind_nrst;
 void WavePackLine::find_transition_location(double& x_tr, double& t_tr){
 	// moving from base to apex 
 	std::vector<double> sigmas;
-	SmProfile first_profile(this->fld_ref, nearest_nodes.back().i, nearest_nodes.back().k);
-	//if ((beg->k>20)&&(beg->k<30)) CONTROL.REQ_CF_GLOB=1;
-	//else
-	CONTROL.REQ_TS_GLOB=1;
-	first_profile.smooth();
-	first_profile.setSolverParameters();
-	first_profile.searchMaxInstability();
-	sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT);
+	Index first_ind = nearest_nodes.back();
+	//SmProfile first_profile(this->fld_ref,first_ind.i, first_ind.k);
+	StabSolver solver(this->fld_ref,first_ind.i, first_ind.k);
+	solver.smoothProfile();
+	solver.setParameters();
+	solver.adaptProfile();
+	solver.searchGlobal();
+	solver.searchMaxInstability();
+	stab_fld_ref.write_max(first_ind.i, first_ind.k);
+	sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT.real);
 	while ((sigmas.back()>0.0)&&(line.back().x>3.0/fld_ref.nx)){
 	Fld_rec last_pos_rec = line.back();
 	line.resize(line.size()+1);
@@ -110,11 +116,14 @@ void WavePackLine::find_transition_location(double& x_tr, double& t_tr){
 	line.back().w = VGRC.VB.real;
 	if (get_nearest_node().i!=nearest_nodes.back().i){
 		nearest_nodes.push_back(get_nearest_node());
-		SmProfile cur_profile(this->fld_ref, nearest_nodes.back().i, nearest_nodes.back().k);
-		cur_profile.smooth();
-		cur_profile.setSolverParameters();
-		cur_profile.searchMaxInstability();
-		sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT);
+		//SmProfile cur_profile(this->fld_ref, nearest_nodes.back().i, nearest_nodes.back().k);
+		StabSolver cur_solver(this->fld_ref, nearest_nodes.back().i, nearest_nodes.back().k);
+		cur_solver.smoothProfile();
+		cur_solver.setParameters();
+		cur_solver.adaptProfile();
+		cur_solver.searchMaxInstability();
+		sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT.real);
+		stab_fld_ref.write_max(nearest_nodes.back().i, nearest_nodes.back().k);
 	}
 	}
 
@@ -135,3 +144,24 @@ void WavePackLine::find_transition_location(double& x_tr, double& t_tr){
 	t_tr = fld_ref.fld[trans_ind.i][trans_ind.j][trans_ind.k].z;
 
 };
+
+void WavePackLine::print_line_to_file() const{
+	
+	std::vector<Fld_rec>::const_iterator fbeg=this->line.end();
+	std::vector<Index>::const_iterator ibeg=this->nearest_nodes.end();
+	fbeg--; 
+	ibeg--;
+	std::ostringstream to_file;
+	to_file<<"output/WPPaths/al=2/WPLine_kstart="<<ibeg->k;
+	std::string filename = to_file.str(); 
+	FILE* f=fopen(&filename[0],"w");
+	while (ibeg!=nearest_nodes.begin()){
+		const Fld_rec& fdata_ref = fld_ref.fld[ibeg->i][0][ibeg->k];
+		const StabDataPoint& sdata_ref = stab_fld_ref.read_max(ibeg->i, ibeg->k);
+		double angle = atan(sdata_ref.b_spat.real/sdata_ref.a_spat.real) - atan(sdata_ref.vgb.real/sdata_ref.vga.real);
+		fprintf(f, "%f\t%f\t%f\t%f\t%f\t%f\n", fdata_ref.x, fdata_ref.z, sdata_ref.a_spat.real, sdata_ref.b_spat.real, sdata_ref.w_spat.real, angle);
+		fbeg--;
+		ibeg--;
+	}
+	fclose(f);
+}

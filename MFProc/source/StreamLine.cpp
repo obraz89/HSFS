@@ -147,18 +147,17 @@ void StreamLine::find_transition_location(double& x_tr, double& t_tr) const{
 	SmProfile first_profile(this->fld_ref, beg->i, beg->k);
 	//if ((beg->k>20)&&(beg->k<30)) CONTROL.REQ_CF_GLOB=1;
 	//else
-	CONTROL.REQ_TS_GLOB=1;
-	first_profile.smooth();
-	first_profile.setSolverParameters();
-	first_profile.searchMaxInstability();
-	sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT);
+//	first_profile.smooth();
+//	first_profile.setSolverParameters();
+//	first_profile.searchMaxInstability();
+//	sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT.real);
 	while(beg!=nearest_nodes.begin()) 
 	{
 		SmProfile cur_profile(this->fld_ref, beg->i, beg->k);
-		cur_profile.smooth();
-		cur_profile.setSolverParameters();
-		cur_profile.searchMaxInstability();
-		sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT);
+//		cur_profile.smooth();
+//		cur_profile.setSolverParameters();
+//		cur_profile.searchMaxInstability();
+//		sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT.real);
 		beg--;
 	};
 

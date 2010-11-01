@@ -1,10 +1,11 @@
 #ifndef __SOLVERCORE
 #define __SOLVERCORE
+#include "Elems.h"
 extern "C"{
 	const int SmProfSize = 541; // to match fortran common (TODO: how to automate ???)
-	void SEARCH_MAX_INSTAB_TIME();
-	void TS_GLOBAL_TIME();
-	void CF_GLOBAL_SEARCH();
+	extern void SEARCH_MAX_INSTAB_TIME();
+	extern void SEARCH_INITIAL_INSTAB_TIME();
+	extern void NAVSTOK(int&, double&);
 	extern struct {
 	double	YNS[SmProfSize],UNS[SmProfSize],UNS1[SmProfSize],UNS2[SmProfSize],
 							TNS[SmProfSize],TNS1[SmProfSize],TNS2[SmProfSize],
@@ -18,9 +19,6 @@ extern "C"{
 		double	AMINF,REINF,TINF,XLL,REE,REE1,UEE;
 	} DNS;
 	extern struct{
-		struct CompVal{
-			double real, imag;
-		};
 		CompVal VA, VB, VR;
 	} VGRC;
 	extern struct{
@@ -31,10 +29,30 @@ extern "C"{
 		int X_DIM,Y_DIM;
 	} ADDITIONAL_NS;
 	extern struct{
-		int REQ_TS_GLOB, REQ_CF_GLOB;
-	} CONTROL;
-	extern struct{
-		double SIGMA_SPAT;
+		CompVal SIGMA_SPAT, A_SPAT, B_SPAT, W_SPAT;
 	} SOLVER_OUTPUT;
+	extern struct{
+		double K,SIG,G,M,XI,PB;
+	} OUT;	// additional mean flow parameters
+	extern struct {
+		int IUPT;
+	} IUPT;	// viscosity : 0-Sutherland, 1 - power
+	extern struct {
+		double A6[10], BVB, DL1; // BVB is for viscosity power coef ( eg 0.75)
+	} BASA6;
+	extern struct {
+		int MAB, MAB1, MAB2;	// seems only MAB is used: see STAB.for (defines asymptotics)
+	} ABOCT;
+	extern struct {
+		double Y1, D;
+		int NS, L1;
+	} HADY1;					// NS used;
+	extern struct {
+		double Y1O, DO, C, YC;
+		int NO;					// NO used;
+	} MACKY1;
+	extern struct{
+		CompVal A,B,W,R;
+	} HADY2;
 }
 #endif // __SOLVERCORE
