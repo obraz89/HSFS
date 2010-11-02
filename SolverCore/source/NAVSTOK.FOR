@@ -11,7 +11,6 @@ C
      *      /OSNOB/Y,BU,BU1,BU2,BT,BT1,BT2,BMU,BMU1,BMU2,BW,BW1,BW2
      *      /OSNV/BBV,BBV1,VBB,VBB1
 	COMMON/DNS/AMINF,REINF,TINF,XLL,REE,REE1,UE
-      COMMON/BASA3/PRA,T0,A3,A4,A5,M,BETA,CQ,XI,AMK,TETB,Y1,TW,G
       COMMON/OUT/K,SIG,GG,MM,VISC_POWER, XXI,PB, VISC_FLAG
      *      /MACKY1/ Y1O,DDDD,C,YC,NO
      *      /HADY1/Y1H,DOD,NNNS,LLL1
@@ -83,18 +82,11 @@ C
 	MM=AME ! Local Mach number
 	TELOC=TTE*TINF ! temperature at the upper b.l. edge
 	TWALL=T(1)/TTE ! Wall temperature Twall/Te
-      BETA=PB
       IK=0
-      CQ=0.
       T0=TELOC*(1.+MM*MM*0.5*(GG-1.)) ! Stagnation temperature
       E=(GG-1.)*MM**2
       TE=E*0.5
       IP=0
-      TETB=1.000
-      XI=XXI
-      AMK=M
-      PRA=SIG
-      TW=TWALL
 C
 c Normalize y-coordinate to SQRT(NU_e*X/U_e)
 c Normalize flow parameters to their values at Ye=YE
@@ -124,11 +116,10 @@ C Calculate the boundary-layer displacement thicknesses
       DLH=SIMPR(F,YYY,N)
 C
 C Interpolate to uniform grid
-      Y1=YYY(N)
-	Y1O=Y1
+      Y1H=YYY(N)
+	Y1O=Y1H
 	NN=NO
-	Y1H=Y1
-      D=Y1/(NN-1.D0)
+      D=Y1H/(NN-1.D0)
       DO 4 I=1,NN
       Y=D*(I-1.D0)
 4     F(I)=PARAB2(Y,YYY,U,N)
@@ -216,7 +207,7 @@ c
       BMU2=PARAB1(Y,DOD,DFI,NO)
       BBV=PARAB1(Y,DOD,V,NO)
       BBV1=PARAB1(Y,DOD,V1,NO)
-      IF(Y.LT.Y1) GO TO 28
+      IF(Y.LT.Y1H) GO TO 28
       BU = 1.0
       BU1=0.
       BU2=0.

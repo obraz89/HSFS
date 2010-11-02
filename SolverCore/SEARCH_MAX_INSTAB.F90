@@ -9,8 +9,7 @@ COMMON/RHONS/ RHO(NY)
 COMMON/OUT  /K,SIG,G,M, VISC_POWER, XI, PB, VISC_FLAG      &
             /HADY1/Y1,D,NS,L1                   &
             /MACKY1/ Y1O,DO,C,YC,NO             &
-            /ABOCT/ MAB,MAB1,MAB2               &
-            /BASA3/A7(9),AMK,TETB,A8(4),III(2)  &   
+            /ABOCT/ MAB,MAB1,MAB2               & 
             /HADY2/ A,B,W,R                     &
             /HADY5/ FU,CF                       &
             /HADY3/ SI,Z0                       &
