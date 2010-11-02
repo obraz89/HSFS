@@ -8,8 +8,7 @@ IMPLICIT REAL*8 (A-H,O-Z)
 
 common /HADY2/ Z(4)                         &
             /HADY3/ SI,ZZZ0                 &
-            /ABOCT/ MAB,MAB1,MAB2           &
-            /BASA6/ A6(10),BVB,DL1  
+            /ABOCT/ MAB,MAB1,MAB2            
 common/OUT  /AAK,AASIG,AAG,AAM,AAXI,AAPB
 common/JP/JPOISK
 complex*16 SI,Z0,F,F1,Z00,ZB,Z,ZZZ0

@@ -1,6 +1,6 @@
 #include "TaskParameters.h"
 #include "MF_Field.h"
-//#include "StreamLine.h"		// streamline concept dropped because of uncertainty
+//#include "StreamLine.h"		// streamline concept dropped
 #include "WavePackLine.h"
 #include "StabField.h"
 #include <iostream>

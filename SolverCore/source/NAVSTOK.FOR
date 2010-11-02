@@ -10,16 +10,15 @@ C
 	COMMON/RHONS/ RHO(NY)
      *      /OSNOB/Y,BU,BU1,BU2,BT,BT1,BT2,BMU,BMU1,BMU2,BW,BW1,BW2
      *      /OSNV/BBV,BBV1,VBB,VBB1
-     *      /IUPT/IUPT
 	COMMON/DNS/AMINF,REINF,TINF,XLL,REE,REE1,UE
       COMMON/BASA3/PRA,T0,A3,A4,A5,M,BETA,CQ,XI,AMK,TETB,Y1,TW,G
-     *       /BASA6/ A6(10),BV,DL1,TWWW
-      COMMON/OUT/K,SIG,GG,MM,XXI,PB
+      COMMON/OUT/K,SIG,GG,MM,VISC_POWER, XXI,PB, VISC_FLAG
      *      /MACKY1/ Y1O,DDDD,C,YC,NO
      *      /HADY1/Y1H,DOD,NNNS,LLL1
      *      /MOMENT/DL2
       REAL*8 M,K,MM
       DIMENSION F(NY),V(NY),V1(NY)
+      integer VISC_FLAG
 c
 c Determine the shock locus
 c
@@ -65,8 +64,8 @@ C Parameters at the upper boundary Ye
 	M=AME
       T0=TINF*(1.+AMINF**2*(GG-1.)*0.5)
 C Viscosity
-      IF(IUPT.NE.0)GO TO 224
-      EMU=TTE**BV
+      IF(VISC_FLAG.NE.0)GO TO 224
+      EMU=TTE**VISC_POWER
       GO TO 223
 224   CONTINUE
       X=TTE
@@ -96,7 +95,6 @@ C
       AMK=M
       PRA=SIG
       TW=TWALL
-      TWWW=T(1)
 C
 c Normalize y-coordinate to SQRT(NU_e*X/U_e)
 c Normalize flow parameters to their values at Ye=YE
@@ -177,10 +175,10 @@ C Interpolate to uniform grid
       DO 21 I=1,NN
 21    W2(I)=F(I)
       DO 23 I=1,NN
-      IF(IUPT.NE.0)GO TO 24
-      ENT(I)=T(I)**BV
-      FI(I)=BV*T(I)**(BV-1.D0)
-      DFI(I)=BV*(BV-1.D0)*T(I)**(BV-2.D0)
+      IF(VISC_FLAG.NE.0)GO TO 24
+      ENT(I)=T(I)**VISC_POWER
+      FI(I)=VISC_POWER*T(I)**(VISC_POWER-1.D0)
+      DFI(I)=VISC_POWER*(VISC_POWER-1.D0)*T(I)**(VISC_POWER-2.D0)
       GO TO 23
 24    CONTINUE
       X=T(I)

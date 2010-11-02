@@ -33,14 +33,9 @@ extern "C"{
 		CompVal SIGMA_SPAT, A_SPAT, B_SPAT, W_SPAT;
 	} SOLVER_OUTPUT;
 	extern struct{
-		double K,SIG,G,M,XI,PB;
+		double K,SIG,G,M,VISC_POWER,XI,PB;	// XI, PB ??
+		int VISC_FLAG;
 	} OUT;	// additional mean flow parameters
-	extern struct {
-		int IUPT;
-	} IUPT;	// viscosity : 0-Sutherland, 1 - power
-	extern struct {
-		double A6[10], BVB, DL1; // BVB is for viscosity power coef ( eg 0.75)
-	} BASA6;
 	extern struct {
 		int MAB, MAB1, MAB2;	// seems only MAB is used: see STAB.for (defines asymptotics)
 	} ABOCT;

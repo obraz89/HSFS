@@ -6,11 +6,10 @@ COMMON/NS/YNS(NY),UNS(NY),UNS1(NY),UNS2(NY),    &
                   WNS(NY),WNS1(NY),WNS2(NY),    &
                   ENTNS(NY),FINS(NY),DFINS(NY),XST(NY)
 COMMON/RHONS/ RHO(NY)                           
-COMMON/OUT  /K,SIG,G,M,XI,PB                    &
+COMMON/OUT  /K,SIG,G,M, VISC_POWER, XI, PB, VISC_FLAG      &
             /HADY1/Y1,D,NS,L1                   &
             /MACKY1/ Y1O,DO,C,YC,NO             &
             /ABOCT/ MAB,MAB1,MAB2               &
-            /BASA6/ A6(10),BVB,DL1              &
             /BASA3/A7(9),AMK,TETB,A8(4),III(2)  &   
             /HADY2/ A,B,W,R                     &
             /HADY5/ FU,CF                       &
@@ -18,7 +17,6 @@ COMMON/OUT  /K,SIG,G,M,XI,PB                    &
             /OSNOB/YYY,U,U1,U2,T,T1,T2,         &
                    VMU,VMU1,VMU2,WS,WS1,WS2     &
             /VGRC/ VA,VB,VR                     &
-            /IUPT/IUPT                          &
 	        /DNS/AMINF,REINF,TINF,              &
 	             XLL,REE,REE1,UEE               &
 	        /JP/JPOISK
@@ -31,7 +29,7 @@ COMPLEX*16 A,B,W,R,FUR,FU(8,201),           &
            AEXTR,VA,VB,VR,FREQ
            
 REAL*8 K,M,MF_X, MF_WE, MF_ANG               
-integer MF_I, MF_J, Y_DIM, X_DIM, REQ_TS_GLOB, REQ_CF_GLOB
+integer MF_I, MF_J, Y_DIM, X_DIM, REQ_TS_GLOB, REQ_CF_GLOB, VISC_FLAG
 
 !locals          
 real*4, dimension(2) :: elapsed_time

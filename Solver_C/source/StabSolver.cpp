@@ -11,9 +11,9 @@ void StabSolver::setParameters(){
 	// -gas parameters
 	OUT.G = 1.4;	// specific heat ratio
 	OUT.SIG = 0.72;	// Prandtl number
-	IUPT.IUPT = 1;  // for viscosity: iupt=0 - Sutherland, 1 - power
-	BASA6.BVB = 0.75; // if iupt=1, BVB - viscosity power coef
 	OUT.K = 0.0;	  // second viscosity
+	OUT.VISC_FLAG = 1; // for viscosity: iupt=0 - Sutherland, 1 - power
+	OUT.VISC_POWER = 0.75; // if VISC_FLAG=1, VISC_POWER - viscosity power coef  
 	// locals
 	NS.XST[0] = fld_ref.fld[i_ind][0][k_ind].x;
 	CF_PROFILE_DATA.MF_WE = profile.w_e;
