@@ -154,6 +154,74 @@ Z(3) = dcmplx(wr_res, wi)
 call POISK2(3)
 end subroutine TS_GLOBAL_TIME
 !###########################################################
+! search neutral instabilities of specified
+! frequency, with phase speed and wave angle
+subroutine GLOBAL_TIME_GRAD(wr, phs, theta)
+use HELPER
+implicit none
+common /HADY2/ A,B,W,R                       &
+       /HADY3/ SI,ZZZ0                       &
+       /OUT  / AAK,AASIG,AAG,AAM,AAXI,AAPB
+!globals
+complex*16 A,B,W,R,SI,ZZZ0
+real*8 AAK,AASIG,AAG,AAM,AAXI,AAPB
+!input-output
+real*8, intent(in) :: wr, phs, theta
+! locals
+real*8 a_prev, b_prev,k_cur, da, db
+integer i,j, counter
+integer, parameter:: imax=10, jmax=10
+real*8 df_da, df_db, grad_a, grad_b, fsi_prv, fsi_cur, k_limiter
+W = dcmplx(wr, 1.0d-5)
+k_cur = wr/phs
+A = k_cur*cos(theta)
+B = k_cur*sin(theta)
+print *, "start new Global Search"
+print *, "A,B,W", A, B, W
+
+call HADSI
+fsi_prv = 1.0E+12   ! to enter loop
+fsi_cur = cdabs(SI)
+counter = 0
+do while (fsi_cur<fsi_prv)
+  counter=counter+1
+  if (counter>300) exit
+  print *, "FSI:", fsi_cur    
+  df_da = DFSI_DX(1)
+  df_db = DFSI_DX(2)
+  grad_a = df_da/sqrt(df_da**2.0+df_db**2.0)
+  grad_b = df_db/sqrt(df_da**2.0+df_db**2.0)
+  a_prev = A
+  b_prev = B
+  fsi_prv = CDABS(SI)
+  k_limiter = 0.01
+  do while (cdabs(SI)>=fsi_prv)
+    k_cur = sqrt(dreal(A)**2.0+dreal(B)**2.0)
+    A = a_prev - k_cur*k_limiter*grad_a
+    B = b_prev - k_cur*k_limiter*grad_b
+    call HADSI
+    if (k_limiter<1.0d-4) exit    
+    k_limiter = k_limiter/2.0
+  end do
+call HADSI
+fsi_cur = cdabs(SI)  
+end do
+fsi_cur = fsi_prv
+A = a_prev
+B = b_prev
+call HADSI
+    
+if (cdabs(SI)<5.0) then            ! empiric
+  print *, "internal iteration:", fsi_cur
+  call POISK2(3)
+else
+  print*,"bad point"
+end if
+print *, "A,B,W", A, B, W
+pause                             
+end subroutine GLOBAL_TIME_GRAD
+
+!###########################################################
 subroutine CF_GLOBAL_SEARCH
 implicit none
 common /HADY2/ A, B, W, R                    &

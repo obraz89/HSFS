@@ -14,7 +14,7 @@ int main(){
 	StabField stab_field(nx, nz);
 	field.trans_to_cyl();
 	// initialize Streamline
-	for (int k_start = 17; k_start>2; k_start--){
+	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");
 		std::cout<<"------------------------------------k_start="<<k_start<<"\n";
 		int i_start = 5;

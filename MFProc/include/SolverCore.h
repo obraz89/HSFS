@@ -6,6 +6,8 @@ extern "C"{
 	extern void SEARCH_MAX_INSTAB_TIME();
 	extern void SEARCH_INITIAL_INSTAB_TIME();
 	extern void NAVSTOK(int&, double&);
+	// debug 
+	extern void GLOBAL_TIME_GRAD(double&, double&, double&);
 	// first step: all COMMONS -> global structs
 	extern struct {
 	double	YNS[SmProfSize],UNS[SmProfSize],UNS1[SmProfSize],UNS2[SmProfSize],

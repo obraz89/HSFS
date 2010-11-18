@@ -39,5 +39,9 @@ void StabSolver::searchMaxInstability(){
 	SEARCH_MAX_INSTAB_TIME();
 };
 void StabSolver::searchGlobal(){
-	SEARCH_INITIAL_INSTAB_TIME();
+	//SEARCH_INITIAL_INSTAB_TIME();
+	double w = 0.06;
+	double phs = 0.8;
+	double angle = 0.0;
+	GLOBAL_TIME_GRAD(w, phs, angle);
 };
