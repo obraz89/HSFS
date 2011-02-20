@@ -3,9 +3,35 @@
 //#include "StreamLine.h"		// streamline concept dropped
 #include "WavePackLine.h"
 #include "StabField.h"
+
+
+
+// for console io operations
 #include <iostream>
 #include <fstream>
-int main(){
+#include <conio.h>
+#include <stdio.h>
+
+// support console
+#ifndef _USE_OLD_OSTREAMS
+using namespace std;
+#endif
+
+// enable console in GUI application
+#include "console.h"
+
+// GUI application
+#include "windows.h"
+
+
+
+int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
+					HINSTANCE	hPrevInstance,		// Previous Instance
+					LPSTR		lpCmdLine,			// Command Line Parameters
+					int			nCmdShow)			// Window Show State
+{
+	// all info redirected to debug console
+	RedirectIOToConsole();
 	int nx=81, ny=161, nz=51;
 	std::string NSFieldName;					// std::cin>> NSFieldName;
 	NSFieldName = "input/new/04.61500.dat";		// now it is for al=2

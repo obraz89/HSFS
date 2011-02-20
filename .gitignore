@@ -1,0 +1,31 @@
+# output
+StabSolverUnited/output/*
+StabSolverUnited/results/*
+# compiler generated (hope will not name source like this)
+*_mod.f90
+# intermed
+*.mod
+*.obj
+# msvs
+*.suo
+*.ncb
+*.vcproj
+*.vfproj
+*.res
+*.manifest
+# libs, exec
+*.lib
+*.dll
+*.exe
+# ??
+*.ilk
+*.idb
+*.u2d
+*.dep
+*.pdb
+*.html
+*.htm
+*.user
+*.dat
+*.txt
+
