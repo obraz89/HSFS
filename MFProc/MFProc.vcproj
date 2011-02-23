@@ -179,10 +179,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\SolverCore.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\StabField.h"
 				>
 			</File>

@@ -175,10 +175,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\stabPoint.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\StabSolver.h"
 				>
 			</File>
