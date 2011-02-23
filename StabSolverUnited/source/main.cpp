@@ -21,9 +21,8 @@ using namespace std;
 #include "console.h"
 
 // GUI application
-#include "windows.h"
-
-
+//#include "windows.h"
+#include "AppManager.h"
 
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
@@ -31,7 +30,11 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					int			nCmdShow)			// Window Show State
 {
 	// all info redirected to debug console
+	// THIS IS NECESSARY BECAUSE 
+	// PAUSE IN FORTRAN LIBS WON'T WORK
+	// 
 	RedirectIOToConsole();
+
 	int nx=81, ny=161, nz=51;
 	std::string NSFieldName;					// std::cin>> NSFieldName;
 	NSFieldName = "input/new/04.61500.dat";		// now it is for al=2

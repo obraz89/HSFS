@@ -5,12 +5,10 @@ StabSolverUnited/results/*
 *_mod.f90
 # intermed
 *.mod
+*.ncb
 *.obj
 # msvs
 *.suo
-*.ncb
-*.vcproj
-*.vfproj
 *.res
 *.manifest
 # libs, exec
