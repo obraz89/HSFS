@@ -21,8 +21,8 @@ using namespace std;
 #include "console.h"
 
 // GUI application
-//#include "windows.h"
-#include "AppManager.h"
+#include "windows.h"
+//#include "AppManager.h"
 
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
