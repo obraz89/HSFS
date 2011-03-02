@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="SolverCore.lib Smooth.lib wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib"
+				AdditionalDependencies="Smooth.lib wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(SolutionDir)\Smooth\debug\&quot;;&quot;$(SolutionDir)\SolverCore\debug\&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(WXROOT)\lib\vc_ddx32_ogl&quot;"
 				GenerateDebugInformation="true"
