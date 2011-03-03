@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-WavePackLine::WavePackLine(const MF_Field &_fld, StabField &_stab_fld, int _i, int _j, int _k):
+WavePackLine::WavePackLine(const MF_Field &_fld, t_StabField &_stab_fld, int _i, int _j, int _k):
 fld_ref(_fld), stab_fld_ref(_stab_fld), line(1), nearest_nodes(1)
 {
 	const Fld_rec& ptr = fld_ref.fld[_i][_j][_k];
@@ -95,7 +95,7 @@ void WavePackLine::find_transition_location(double& x_tr, double& t_tr){
 	std::vector<double> sigmas;
 	Index first_ind = nearest_nodes.back();
 	//SmProfile first_profile(this->fld_ref,first_ind.i, first_ind.k);
-	StabSolver solver(this->fld_ref,first_ind.i, first_ind.k);
+	t_StabSolver solver(this->fld_ref,first_ind.i, first_ind.k);
 	solver.smoothProfile();
 	solver.setParameters();
 	solver.adaptProfile();

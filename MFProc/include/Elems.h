@@ -16,7 +16,7 @@ Index(const Index& _ind, int di, int dj, int dk)
 		double real, imag;
 	};
 // stabdata we want to keep at a point
-	struct StabDataPoint{
+	struct t_StabDataPoint{
 		CompVal a_spat, b_spat, w_spat;
 		CompVal a_time, b_time, w_time;
 		CompVal vga, vgb;	// group velocity

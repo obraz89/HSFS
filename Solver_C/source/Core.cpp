@@ -9,6 +9,6 @@
 #include "StabField.h"
 #include "StabSolver.h"
 
-double StabSolver::solve(const StabDataPoint& stab_point){
+double t_StabSolver::solve(const t_StabDataPoint& stab_point){
 	return 0;
 }

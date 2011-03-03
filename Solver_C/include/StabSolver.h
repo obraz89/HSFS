@@ -1,21 +1,29 @@
 #include "SmProfile.h"
 #include "MF_Field.h"
 #include "StabField.h"
-class StabSolver{
-	// TODO: get SmPRofile out of Stabsolver
-const MF_Field& fld_ref; // to get field parameters and initialize profiles
-const int i_ind, k_ind;
-t_ProfileStab profile;
+#include "ODES.h"
+class t_StabSolver{
+	const MF_Field& _rFldNS; // to get global field params
+	t_StabField& _rFldStab;  // link to stability data field
+	t_ProfileStab* _pProfile; // current profile
+	t_ODES& _odes;
+
+	// forms right hand side for ODES with 2D
+	// Leese-Lin matrix 
+	t_Vec rhs2DStabMatrix(const double& a_y, const t_Vec& a_vars);
+	// -""- with 3D
+	t_Vec rhs3DStabMatrix(const double& a_y, const t_Vec& a_vars);
 public:
-	StabSolver(const MF_Field&, int, int);
-	void setParameters();
+	t_StabSolver(const MF_Field& a_rFld, t_StabField& a_rFldStab, t_ODES& a_odes);
+	// formulate stability task in  
+	// ODES context: RHS - stability matrix and initial vectors
+	void set2DContext(t_ProfileStab& a_profStab);
+	void set3DContext(t_ProfileStab& a_profStab);
 	void searchMaxInstability();
 	void searchGlobal();
 	void smoothProfile();
 	void adaptProfile();
 
-	// form matrix 8x8 of stab eqs at a given ? [y or index]
-	double** form_matrix(double y); 
 	// core function
-	double solve(const StabDataPoint& stab_point);
+	double solve(const t_StabDataPoint& stab_point);
 };

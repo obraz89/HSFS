@@ -6,7 +6,7 @@
 #include <vector>
 #include <fstream>
 MF_Field::MF_Field(std::string _str, int _nx, int _ny, int _nz):
-nx(_nx), ny(_ny), nz(_nz)
+nx(_nx), ny(_ny), nz(_nz), viscLaw(0)
 {
 fld = new Rec**[nx];
 for(int i=0;i<nx;i++) 
@@ -171,7 +171,7 @@ double MF_Field::calc_viscosity(const int i, const int j, const int k) const{
 double MF_Field::calc_mach(const int i, const int j, const int k) const{
 	const Rec& rRec = fld[i][j][k];
 	double vAbs = sqrt(pow(rRec.u,2.0)+pow(rRec.v,2.0)+pow(rRec.w,2.0));
-	return Mach*fld[i][j][k].vAbs/sqrt(rRec.t);
+	return Mach*vAbs/sqrt(rRec.t);
 }
 
 int MF_Field::get_bound_index(const int i_ind, const int k_ind) const

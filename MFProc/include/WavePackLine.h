@@ -9,7 +9,7 @@
 class WavePackLine{
 typedef MF_Field::Rec Fld_rec;
 	const MF_Field& fld_ref;
-	StabField& stab_fld_ref;
+	t_StabField& stab_fld_ref;
 	std::vector<Fld_rec> line;
 	std::vector<Index> nearest_nodes;
 // minumum functionality from Ext_streamline
@@ -17,7 +17,7 @@ typedef MF_Field::Rec Fld_rec;
 	//void interpolate_to_point();
 public:
 // from base to apex!
-	WavePackLine(const MF_Field&, StabField& , int	i_start, int j_start, int z_start);
+	WavePackLine(const MF_Field&, t_StabField& , int i_start, int j_start, int z_start);
 	//void add_node();
 	void print_line(const char*) const;
 	void print_line_to_file() const;
