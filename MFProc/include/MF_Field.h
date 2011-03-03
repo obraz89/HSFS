@@ -6,7 +6,7 @@
 class MF_Field{
 	friend class StreamLine;
 	friend class WavePackLine;
-	friend class SmProfile;
+	friend class t_ProfileNS;
 	friend class StabSolver;
 public:
 	struct Rec{double x,y,z,u,v,w,p,t,r;};
@@ -17,20 +17,26 @@ private:
 		ProfileRec(double _y, double _val):y(_y), val(_val){};
 	};
 	const int nx, ny, nz;
+	const bool viscLaw; // 0 for Suther, 1 for power
 	Rec*** fld;
+
 public:
+	// TODO : initialize by config NS Solver file
 	static const double Theta, Mach,
 					Re, Alpha,
 					L_ref,T_inf, T_wall, 
 					T_mju, Mju_pow, Gamma;
-
+	static const int Visc_type;
 	MF_Field(std::string, int _nx, int _ny, int _nz);
 	~MF_Field();
 	void trans_to_cyl();
 	void create_k_slice (const int k_num) const;
 	void create_i_slice(int i_num);	// на будущее
 	void print_entry(const int i, const int j, const int k) const;
-	double calc_enthalpy(const int i, const int j, const int k) const;
+
+	double calc_enthalpy(const int i, const int j, const int k) const; // TODO: to Index
+	double calc_viscosity(const int i, const int j, const int k) const;
+	double calc_mach(const int i, const int j, const int k) const;
 	int get_bound_index(const int i, const int k) const;
 	double calc_delta(const int i, const int k) const;
 	void get_cf_profile(std::vector<ProfileRec>&, const int i, const int k) const;
@@ -38,8 +44,6 @@ public:
 	double calc_cf_vmax(const int i, const int k) const;
 	void wind_dw_dz(double* dw_dz);
 
-	void get_profiles(const int i, const int k, double* y, double* u, 
-		double* w, double* p, double* t, double* r, double& u_e, double& w_e) const;
 	void get_merid_distrib(const int i) const;
 	void get_profiles(const int i, const int j) const;
 

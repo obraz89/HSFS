@@ -152,6 +152,27 @@ double MF_Field::calc_delta(const int i, const int k) const
 {
 return 0.0;
 };
+// calc nondim viscosity
+double MF_Field::calc_viscosity(const int i, const int j, const int k) const{
+	const Rec& rRec = fld[i][j][k];
+	if (Visc_type==0){
+		// power
+		return pow(rRec.t, Mju_pow);
+	}
+	else {
+		// Suther
+		double loc_t_factor=1.0+0.5*(Gamma-1.0)*pow(calc_mach(i,j,k),2.0);
+		double stag_t_factor=1.0+0.5*(Gamma-1.0)*pow(Mach,2.0);
+		double t_coef = T_mju*loc_t_factor/stag_t_factor;
+		return pow(rRec.t, 1.5)*(1.0+t_coef)/(rRec.t+t_coef);
+	}
+};
+
+double MF_Field::calc_mach(const int i, const int j, const int k) const{
+	const Rec& rRec = fld[i][j][k];
+	double vAbs = sqrt(pow(rRec.u,2.0)+pow(rRec.v,2.0)+pow(rRec.w,2.0));
+	return Mach*fld[i][j][k].vAbs/sqrt(rRec.t);
+}
 
 int MF_Field::get_bound_index(const int i_ind, const int k_ind) const
 {
@@ -288,44 +309,6 @@ double MF_Field::get_cf_wave_dir(const int i_ind, const int k_ind) const
 	return ang_res;
 };
 
-//return profiles in prof, also u_e and w_e - values at the upper bl edge
-//! IMPORTANT: multiplies y and r by coef required by stability solver
-void MF_Field::get_profiles(const int i_ind, const int k_ind, double* y_prof, double* u_prof,double* w_prof,
-							double* p_prof,double* t_prof, double* r_prof, double& u_e, double& w_e) const
-{
-	// moving upstream (from base to apex)
-// for rotated profiles
-/*		int bound_ind = get_bound_index(i_ind,k_ind);
-		const Rec& bound_rec = fld[i_ind][bound_ind][k_ind];
-		double u_e = bound_rec.u;
-		double w_e = bound_rec.w;
-		double ang = atan(w_e/u_e);
-		double cf_wave_dir = get_cf_wave_dir(i_ind, k_ind);*/
-//-------------------------------------------------------------
-		// for non rotated:
-		int bound_ind = get_bound_index(i_ind,k_ind);
-		const Rec& bound_rec = fld[i_ind][bound_ind][k_ind];
-		u_e = bound_rec.u;
-		w_e = bound_rec.w;
-// ------------------------------------------------------------
-		for (int j=0; j<ny; j++)
-		{
-			const Rec& cur_rec = fld[i_ind][j][k_ind];
-			/* rotated velocity profiles [along inviscid streamline]
-			double u_new = cur_rec.u*cos(ang) + cur_rec.w*sin(ang);
-			double w_new = -cur_rec.u*sin(ang) + cur_rec.w*cos(ang);
-			*/ 
-			// not rotated:
-			y_prof[j] = cur_rec.y*sqrt(MF_Field::Re);
-			u_prof[j] = cur_rec.u;
-			w_prof[j] = cur_rec.w;
-			p_prof[j] = cur_rec.p;
-			t_prof[j] = cur_rec.t;
-			r_prof[j] = cur_rec.r;
-
-			r_prof[j]=cur_rec.p/cur_rec.t*MF_Field::Gamma*MF_Field::Mach*MF_Field::Mach;
-		};
-};
 
 void MF_Field::get_profiles(const int i_ind, const int k_ind) const{
 	std::ostringstream to_file_name;

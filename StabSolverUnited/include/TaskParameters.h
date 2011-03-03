@@ -12,3 +12,4 @@ const double MF_Field::T_wall = 300.0;
 //612.0/(1 + 0.5*(gamma -1.)*Mach*Mach);             	// if from Stetson
 const double MF_Field::T_mju = 110.4/T_inf;				//Sutherland law
 const double MF_Field::Mju_pow = 0.7;					// power law
+const int MF_Field::Visc_type = 0;

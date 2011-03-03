@@ -5,7 +5,7 @@ class StabSolver{
 	// TODO: get SmPRofile out of Stabsolver
 const MF_Field& fld_ref; // to get field parameters and initialize profiles
 const int i_ind, k_ind;
-SmProfile profile;
+t_ProfileStab profile;
 public:
 	StabSolver(const MF_Field&, int, int);
 	void setParameters();
