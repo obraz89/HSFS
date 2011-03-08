@@ -6,9 +6,8 @@
 // the function solves system(*) with the input parameters
 // and returns the determinant of residual
 
-#include "StabField.h"
 #include "StabSolver.h"
 
-double t_StabSolver::solve(const t_StabDataPoint& stab_point){
+double t_StabSolver::solve(const t_WaveChars& stab_point){
 	return 0;
 }

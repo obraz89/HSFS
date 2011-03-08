@@ -2,7 +2,7 @@
 #define __WavePackLine__
 #include "MF_Field.h"
 //#include "SmProfile.h"
-#include "SolverCore.h"
+//#include "SolverCore.h"
 #include "StabField.h"
 #include <vector>
 #include "Elems.h"

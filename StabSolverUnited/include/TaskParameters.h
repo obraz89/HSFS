@@ -5,6 +5,7 @@ const double MF_Field::Theta = //0.122173047; 	// 7deg
 const double MF_Field::Re = 1.424E+07;
 const double MF_Field::L_ref =0.381;
 const double MF_Field::Gamma = 1.4;
+const double MF_Field::Pr = 0.72;
 const double MF_Field::Mach = 3.5;
 const double MF_Field::Alpha = 1.0/57.29577951;
 const double MF_Field::T_inf = 90.318;

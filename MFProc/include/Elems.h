@@ -1,5 +1,7 @@
 #ifndef __ELEM_STRUCTS
 #define __ELEM_STRUCTS
+#include <complex>
+typedef std::complex<double> t_CompVal;
 struct Index{
 int i,j,k;
 Index():i(0),j(0),k(0){};
@@ -11,15 +13,11 @@ Index(const Index& _ind, int di, int dj, int dk)
 	k = _ind.k + dk;
 }
 };
-// complex value
-	struct CompVal{
-		double real, imag;
-	};
-// stabdata we want to keep at a point
-	struct t_StabDataPoint{
-		CompVal a_spat, b_spat, w_spat;
-		CompVal a_time, b_time, w_time;
-		CompVal vga, vgb;	// group velocity
+// instability wave characteristics 
+// 
+	struct t_WaveChars{
+		t_CompVal a,b,w;
+		//t_CompVal vga, vgb;	// group velocity
 	};
 inline bool operator==(const Index& a, const Index& b){
 	if ((a.i==b.i)&&(a.j==b.j)&&(a.k==b.k))

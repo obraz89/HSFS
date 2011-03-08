@@ -11,14 +11,15 @@ public:
 	~t_ProfileNS();
 };
 
-class t_ProfileStab : public t_Profile{
-private:
-	t_ProfileNS& rProfNS; 
-	double interpolate(const double& y, double* const arg, double* const fun, const int& size);
+class t_ProfileStab : public t_Profile{	
+private: 
+	double interpolate(const double& y, const t_DblVec& arg, const t_DblVec& fun, const int& a_size) const;
+	int getNearestInd(const double& a_y) const;
 public:
-	t_ProfileStab(t_ProfileNS& a_rProfNS, const int &a_nnodes);
-
-	void setProfiles();
+	double stabRe, Me;
+	t_ProfileStab(const int &a_nnodes);
+	void setProfiles(t_ProfileNS& a_rProfNS);
+	double getValue(const double& a_y, t_DblVec& var_cont) const;
 	~t_ProfileStab();
 };
 

@@ -25,7 +25,7 @@ public:
 	static const double Theta, Mach,
 					Re, Alpha,
 					L_ref,T_inf, T_wall, 
-					T_mju, Mju_pow, Gamma;
+					T_mju, Mju_pow, Gamma, Pr;
 	static const int Visc_type;
 	MF_Field(std::string, int _nx, int _ny, int _nz);
 	~MF_Field();
