@@ -19,7 +19,7 @@ public:
 	double stabRe, Me;
 	t_ProfileStab(const int &a_nnodes);
 	void setProfiles(t_ProfileNS& a_rProfNS);
-	double getValue(const double& a_y, t_DblVec& var_cont) const;
+	double getValue(const double& a_y, const t_DblVec& var_cont) const;
 	~t_ProfileStab();
 };
 

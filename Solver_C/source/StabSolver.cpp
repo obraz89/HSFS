@@ -29,17 +29,12 @@ void t_StabSolver::setParameters(t_ProfileStab& a_profStab){
 	OUT.PB = 0.0;	// ??
 	ABOCT.MAB = 1;	// direct problem
 };*/
+
 // private, to be used in 3D context
-t_Vec t_StabSolver::rhsStabMatrix3D(const double& a_y, const t_Vec& a_vars){
-	// TODO: check input vector dimension and
-	// if it is not of 8 elems throw mega-exception)
-	t_Matrix input(1, 8);
-	for (int i=0; i<8; i++){
-		input[0][i] = a_vars[i];
-	};
-	// vars used in stability matrix 
-	double y = a_y;
-	//double u = -_profStab.
+
+t_SqMatrix t_StabSolver::getStabMatrix3D(const double& a_y) const{
+
+	t_SqMatrix stab_matrix(8);
 	t_CompVal imagUnity(0.0, 1.0);
 
 	const double& stabRe = _profStab.stabRe;
@@ -78,105 +73,199 @@ t_Vec t_StabSolver::rhsStabMatrix3D(const double& a_y, const t_Vec& a_vars){
 	const double dMu2 = mu2*t1*u1 + mu1*u2;
 	const t_CompVal xi = 1.0/(stabRe*inv_mu+imagUnity*vCoefL+gMaMa*dEicon_dt);
 
-	t_SqMatrix stab_matrix(8);
-// first
-	stab_matrix[2][1]=1.0;
-// second
-	stab_matrix[1][2] = imagUnity*stabRe*inv_t*inv_mu*dEicon_dt +
-					   pow(alpha,2) + pow(beta,2);
+	// first
+	stab_matrix[1][0]=1.0;
+	// second
+	stab_matrix[0][1] = imagUnity*stabRe*inv_t*inv_mu*dEicon_dt +
+		pow(alpha,2) + pow(beta,2);
 
-    stab_matrix[2][2] =  - inv_mu*mu1*t1;
+	stab_matrix[1][1] =  - inv_mu*mu1*t1;
 
-	stab_matrix[3][2] = stabRe*inv_t*inv_mu*u1 - 
-						imagUnity*alpha*(inv_mu*mu1*t1+vCoefM*inv_t*t1);
+	stab_matrix[2][1] = stabRe*inv_t*inv_mu*u1 - 
+		imagUnity*alpha*(inv_mu*mu1*t1+vCoefM*inv_t*t1);
 
-	stab_matrix[4][2] = alpha*(imagUnity*stabRe*inv_mu -
-						vCoefM*gMaMa*dEicon_dt);
+	stab_matrix[3][1] = alpha*(imagUnity*stabRe*inv_mu -
+		vCoefM*gMaMa*dEicon_dt);
 
-	stab_matrix[5][2] = vCoefM*alpha*inv_t*dEicon_dt - inv_mu*dMu2;
+	stab_matrix[4][1] = vCoefM*alpha*inv_t*dEicon_dt - inv_mu*dMu2;
 
-	stab_matrix[6][2] = -inv_mu*mu1*u1;
-// third
-	stab_matrix[1][3] = -imagUnity*alpha;
+	stab_matrix[5][1] = -inv_mu*mu1*u1;
+	// third
+	stab_matrix[0][2] = -imagUnity*alpha;
+
+	stab_matrix[2][2] = inv_t*t1;
+
+	stab_matrix[3][2] = -imagUnity*gMaMa*dEicon_dt;
+
+	stab_matrix[4][2] = imagUnity*inv_t*dEicon_dt;
+
+	stab_matrix[6][2] = -imagUnity*beta;
+	// fourth
+	stab_matrix[0][3] = -imagUnity*xi*alpha*t1*
+		(2.0*inv_mu*mu1 + vCoefL*inv_t);
+
+	stab_matrix[1][3] = -imagUnity*xi*alpha;
+
+	stab_matrix[2][3] = xi*(-alpha*alpha-beta*beta+
+		vCoefL*inv_t*inv_mu*mu1*t1*t1+
+		vCoefL*inv_t*t2-
+		imagUnity*stabRe*inv_t*inv_mu*dEicon_dt);
+
+	stab_matrix[3][3] = -imagUnity*xi*vCoefL*gMaMa*
+		(
+		(inv_mu*mu1*t1+inv_t*t1)*dEicon_dt+
+		alpha*u1+beta*w1
+		);
+
+	stab_matrix[4][3] = imagUnity*xi*
+		(
+		(inv_mu*mu1+vCoefL*inv_t)*(alpha*u1+beta*w1)+
+		vCoefL*inv_t*inv_mu*mu1*t1*dEicon_dt
+		);
+
+	stab_matrix[5][3] = imagUnity*xi*vCoefL*inv_t*dEicon_dt;
+
+	stab_matrix[6][3] = -imagUnity*xi*beta*
+		(2.0*inv_mu*mu1*t1 + vCoefL*inv_t*t1);
+
+	stab_matrix[7][3] = -imagUnity*xi*beta;
+	// fifth
+	stab_matrix[5][4]=1.0;
+	// sixth
+	stab_matrix[1][5] = -2.0*MF_Field::Pr*g_1MaMa*u1;
+
+	stab_matrix[2][5] = MF_Field::Pr*
+		(
+		stabRe*inv_t*inv_mu*t1 - 
+		2.0*imagUnity*g_1MaMa*(alpha*u1+beta*w1)
+		);
+
+	stab_matrix[3][5] = -imagUnity*stabRe*MF_Field::Pr*inv_mu*g_1MaMa*dEicon_dt;
+
+	stab_matrix[4][5] = imagUnity*stabRe*MF_Field::Pr*inv_t*inv_mu*dEicon_dt +
+		alpha*alpha + beta*beta - 
+		g_1MaMa*MF_Field::Pr*inv_mu*mu1*(u1*u1+w1*w1)-
+		inv_mu*(mu2*t1*t1+mu1*t2);
+	stab_matrix[5][5] = -2.0*inv_mu*mu1*t1;
+
+	stab_matrix[7][5] = -2.0*MF_Field::Pr*g_1MaMa*w1;
+	// seventh
+	stab_matrix[7][6]=1.0;
+	// last
+	stab_matrix[2][7] = -imagUnity*beta*(inv_mu*mu1*t1+vCoefM*inv_t*t1)+
+		stabRe*inv_mu*inv_t*w1;
+
+	stab_matrix[3][7] = imagUnity*stabRe*beta*inv_mu-
+		vCoefM*beta*gMaMa*dEicon_dt;
+
+	stab_matrix[4][7] = vCoefM*beta*inv_t*dEicon_dt-
+		inv_mu*(mu2*t1*w1+mu1*w2);
+
+	stab_matrix[5][7] = -inv_mu*mu1*w1;
+
+	stab_matrix[6][7] = imagUnity*stabRe*inv_t*inv_mu*dEicon_dt +
+		alpha*alpha + beta*beta;
+
+	stab_matrix[7][7] = -inv_mu*mu1*t1;
+	return stab_matrix;
+};
+
+t_Vec t_StabSolver::formRHS3D(const double& a_y, const t_Vec& a_vars){
+	// TODO: check input vector dimension and
+	// if it is not of 8 elems throw mega-exception)
+	t_SqMatrix stab_matrix = getStabMatrix3D(a_y);
+	t_Matrix input(1, 8);
+	for (int i=0; i<8; i++){
+		input[0][i] = a_vars[i];
+	};
+	// vars used in stability matrix 
 	
-	stab_matrix[3][3] = inv_t*t1;
-
-	stab_matrix[4][3] = -imagUnity*gMaMa*dEicon_dt;
-
-	stab_matrix[5][3] = imagUnity*inv_t*dEicon_dt;
-
-	stab_matrix[7][3] = -imagUnity*beta;
-// fourth
-	stab_matrix[1][4] = -imagUnity*xi*alpha*t1*
-						(2.0*inv_mu*mu1 + vCoefL*inv_t);
-
-	stab_matrix[2][4] = -imagUnity*xi*alpha;
-
-	stab_matrix[3][4] = xi*(-alpha*alpha-beta*beta+
-							vCoefL*inv_t*inv_mu*mu1*t1*t1+
-							vCoefL*inv_t*t2-
-							imagUnity*stabRe*inv_t*inv_mu*dEicon_dt);
-
-	stab_matrix[4][4] = -imagUnity*xi*vCoefL*gMaMa*
-						 (
-							(inv_mu*mu1*t1+inv_t*t1)*dEicon_dt+
-							alpha*u1+beta*w1
-						 );
-	
-	stab_matrix[5][4] = imagUnity*xi*
-						(
-							(inv_mu*mu1+vCoefL*inv_t)*(alpha*u1+beta*w1)+
-							vCoefL*inv_t*inv_mu*mu1*t1*dEicon_dt
-						);
-
-	stab_matrix[6][4] = imagUnity*xi*vCoefL*inv_t*dEicon_dt;
-	
-	stab_matrix[7][4] = -imagUnity*xi*beta*
-						 (2.0*inv_mu*mu1*t1 + vCoefL*inv_t*t1);
-	
-	stab_matrix[8][4] = -imagUnity*xi*beta;
-// fifth
-    stab_matrix[6][5]=1.0;
-// sixth
-	stab_matrix[2][6] = -2.0*MF_Field::Pr*g_1MaMa*u1;
-
-	stab_matrix[3][6] = MF_Field::Pr*
-						(
-							stabRe*inv_t*inv_mu*t1 - 
-							2.0*imagUnity*g_1MaMa*(alpha*u1+beta*w1)
-						);
-
-	stab_matrix[4][6] = -imagUnity*stabRe*MF_Field::Pr*inv_mu*g_1MaMa*dEicon_dt;
-
-	stab_matrix[5][6] = imagUnity*stabRe*MF_Field::Pr*inv_t*inv_mu*dEicon_dt +
-						alpha*alpha + beta*beta - 
-						g_1MaMa*MF_Field::Pr*inv_mu*mu1*(u1*u1+w1*w1)-
-						inv_mu*(mu2*t1*t1+mu1*t2);
-	stab_matrix[6][6] = -2.0*inv_mu*mu1*t1;
-	
-	stab_matrix[8][6] = -2.0*MF_Field::Pr*g_1MaMa*w1;
-// seventh
-	stab_matrix[8][7]=1.0;
-// last
-	stab_matrix[3][8] = -imagUnity*beta*(inv_mu*mu1*t1+vCoefM*inv_t*t1)+
-						 stabRe*inv_mu*inv_t*w1;
-
-	stab_matrix[4][8] = imagUnity*stabRe*beta*inv_mu-
-						vCoefM*beta*gMaMa*dEicon_dt;
-
-	stab_matrix[5][8] = vCoefM*beta*inv_t*dEicon_dt-
-						inv_mu*(mu2*t1*w1+mu1*w2);
-
-	stab_matrix[6][8] = -inv_mu*mu1*w1;
-	
-	stab_matrix[7][8] = imagUnity*stabRe*inv_t*inv_mu*dEicon_dt +
-						alpha*alpha + beta*beta;
-
-	stab_matrix[8][8] = -inv_mu*mu1*t1;
 	// after multiplication we have a rhs vector - matrix 1x8
 	t_Matrix output = stab_matrix.mul(input); 
 	return output[0];
 };
+
+t_Matrix t_StabSolver::getAsymptotics3D(const t_WaveChars& a_waveChars) const{
+	t_Matrix initial_vectors(4,8);
+	t_SqMatrix b_coef(4);
+	t_Vec lambda(4,0.0);
+	const double& y_e = _profStab.y.back();
+	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
+	t_SqMatrix outer_matrix = getStabMatrix3D(y_e);	
+
+	// TODO: what is all this about?
+
+	b_coef[0][0]=outer_matrix[0][1];
+	b_coef[1][0]=outer_matrix[3][1];
+	b_coef[2][0]=outer_matrix[4][1];
+	for (int i=1; i<3; i++){
+		b_coef[i][1] =  outer_matrix[i+2][1]*outer_matrix[1][3]+
+						outer_matrix[i+2][2]*outer_matrix[2][3]+
+						outer_matrix[i+2][5]*outer_matrix[5][3]+
+						outer_matrix[i+2][7]*outer_matrix[7][3];
+		b_coef[i][2] = outer_matrix[i+2][5];
+		b_coef[i][3] = outer_matrix[i+2][7];
+	};
+	b_coef[3][3] = outer_matrix[0][1];
+	//
+
+	t_CompVal s1 = 0.5*(b_coef[1][1]+b_coef[2][2]);
+	t_CompVal s2 = sqrt(
+							0.25*std::pow(b_coef[1][1]-b_coef[2][2],2)+
+							b_coef[2][1]*b_coef[1][2]
+						);
+	lambda[0] = -sqrt(b_coef[0][0]);
+	lambda[1] = -sqrt(s1+s2);
+	lambda[2] = -sqrt(s1-s2);
+	lambda[3] = lambda[0];
+
+	b_coef[0][0] = 1.0;
+	b_coef[1][0] = 0.0;
+	b_coef[2][0] = 0.0;
+	b_coef[3][0] = 0.0;
+	for (int i=1; i<3; i++){
+		t_CompVal l2 = std::pow(lambda[i],2);
+		t_CompVal denom = outer_matrix[0][1] - l2;
+		b_coef[0][i] = (
+							(l2 - outer_matrix[4][5])*outer_matrix[3][1]+
+							outer_matrix[4][1]*outer_matrix[3][5]
+					   )/denom;
+
+		b_coef[1][i] = outer_matrix[4][5] - l2;
+		b_coef[2][i] = -outer_matrix[3][5];
+		b_coef[3][i] = (
+							outer_matrix[3][5]*outer_matrix[4][7]+
+							(l2 - outer_matrix[4][5])*outer_matrix[3][7]
+						)/denom;
+	};
+
+	b_coef[0][3]=0.0;
+	b_coef[1][3]=0.0;
+	b_coef[2][3]=0.0;
+	b_coef[3][3]=1.0;
+	
+	for (int i=0; i<4; i++){	
+		initial_vectors[i][0] = b_coef[0][i];
+		initial_vectors[i][1] = lambda[i]*b_coef[0][i];
+		initial_vectors[i][2] = (
+									outer_matrix[0][2]*b_coef[0][i]+
+									outer_matrix[3][2]*b_coef[1][i]+
+									outer_matrix[4][2]*b_coef[2][i]+
+									outer_matrix[6][2]*b_coef[3][i]
+								)/lambda[i];
+
+		initial_vectors[i][3] = b_coef[1][i];
+		initial_vectors[i][4] = b_coef[2][i];
+		initial_vectors[i][5] = lambda[i]*b_coef[2][i];
+		initial_vectors[i][6] = b_coef[3][i];
+		initial_vectors[i][7] = (
+									outer_matrix[3][7]*b_coef[1][i]+
+									outer_matrix[4][7]*b_coef[2][i]+
+									outer_matrix[6][7]*b_coef[3][i]
+								)/lambda[i];
+	}
+	return initial_vectors;
+}
 
 void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesNS, const int& a_nnodesStab){
 	t_ProfileNS profNS(_rFldNS, a_nnodesNS);
@@ -189,9 +278,11 @@ void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a
 	return;
 }
 
-t_WaveChars t_StabSolver::searchMaxInstability(const t_WaveChars& intial_guess){
+t_WaveChars t_StabSolver::searchMaxInstability(const t_WaveChars& initial_guess){
 	// rewrite fortran |
 	//SEARCH_MAX_INSTAB_TIME();
+	t_WaveChars max_instab = initial_guess;
+	return max_instab;
 };
 void t_StabSolver::searchGlobal(){
 	//SEARCH_INITIAL_INSTAB_TIME();

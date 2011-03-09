@@ -188,7 +188,7 @@ int t_ProfileStab::getNearestInd(const double &a_y) const{
 		return rgt;
 }
 
-double t_ProfileStab::getValue(const double &a_y, t_DblVec &var_cont) const{
+double t_ProfileStab::getValue(const double &a_y, const t_DblVec &var_cont) const{
 	return interpolate(a_y, y, var_cont, nnodes);
 }
 
