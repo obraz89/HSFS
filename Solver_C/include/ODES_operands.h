@@ -1,9 +1,11 @@
 #include <vector>
 #include <complex>
 // all computations with double precision
+#ifndef __ODES_OPERANDS
+#define __ODES_OPERANDS
 typedef std::complex<double> t_Complex;
 class t_Vec;
-typedef t_Vec (*pFunRHS)(const double&, const t_Vec&);
+//typedef t_Vec (*pFunRHS)(const double&, const t_Vec&);
 class t_Vec{
 	std::vector< t_Complex > _cont;
 // no default constructors 
@@ -56,3 +58,4 @@ public:
 	t_Complex det() const;
 	t_SqMatrix inverse() const;
 };
+#endif //__ODES_OPERANDS

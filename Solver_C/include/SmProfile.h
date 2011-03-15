@@ -1,5 +1,6 @@
 #include "Profile.h"
-
+#ifndef __SM_PROFILE
+#define __SM_PROFILE
 class t_ProfileNS : public t_Profile{
 private:
 	const MF_Field& rFld;
@@ -23,3 +24,4 @@ public:
 	~t_ProfileStab();
 };
 
+#endif // __SM_PROFILE

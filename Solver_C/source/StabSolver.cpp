@@ -1,7 +1,7 @@
 #include "StabSolver.h"
 //#include "SolverCore.h"
-t_StabSolver::t_StabSolver(const MF_Field& a_rFldNS, t_StabField& a_rFldStab, t_ODES& a_odes):
-_rFldNS(a_rFldNS), _rFldStab(a_rFldStab), _odes(a_odes), _profStab(0){};
+t_StabSolver::t_StabSolver(const MF_Field& a_rFldNS, t_StabField& a_rFldStab):
+_rFldNS(a_rFldNS), _rFldStab(a_rFldStab), _profStab(0){};
 // obsolete
 /*
 void t_StabSolver::setParameters(t_ProfileStab& a_profStab){
@@ -268,13 +268,13 @@ t_Matrix t_StabSolver::getAsymptotics3D(const t_WaveChars& a_waveChars) const{
 }
 
 void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesNS, const int& a_nnodesStab){
+	// TODO: _profStab.resize(); ... setProfiles() 
+	// without overhead of local allocs 
 	t_ProfileNS profNS(_rFldNS, a_nnodesNS);
 	profNS.setProfiles(i_ind, k_ind);
 	t_ProfileStab profStab(a_nnodesStab);
 	profStab.setProfiles(profNS);
 	_profStab = profStab;
-	// TODO: set odes context ??? 2D vs 3D
-
 	return;
 }
 

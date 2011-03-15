@@ -1,24 +1,9 @@
 #include "ODES.h"
 #include <iostream>
-// task dimension (solution vectors will be of 2*a_dim size)
-// range of indep var - uniform grid
-// number of nodes
-// RHS
-// initial_vectors
-t_ODES::t_ODES(const int& a_dim, const double& a_var_start, 
-			   const double& a_var_end, const int& a_nnodes,
-			   pFunRHS const a_pFunRHS, const t_Matrix& a_initial_vectors):
-	_dim(a_dim), _nnodes(a_nnodes), _pFunRHS(a_pFunRHS), varRange(a_nnodes), 
-	solution(a_nnodes, t_Matrix(a_dim, 2*a_dim)){
-		solution[0] = a_initial_vectors;
-		for (int i=0; i<varRange.size(); i++){
-			double range = a_var_end - a_var_start;
-			varRange[i] = a_var_start + range/double(a_nnodes-1)*double(i);
-		};
-};
-t_ODES::t_ODES(const int& a_dim, const int& a_nnodes):
-	_dim(a_dim), _nnodes(a_nnodes), varRange(a_nnodes), 
-	solution(a_nnodes, t_Matrix(a_dim, 2*a_dim)){};
+
+t_ODES::t_ODES(const int &a_dim, const int &a_nnodes):
+_dim(a_dim), _nnodes(a_nnodes), varRange(a_nnodes), 
+solution(a_nnodes, t_Matrix(a_dim, 2*a_dim)){};
 
 void t_ODES::resizeGrid(const int& a_newNnodes){
 	_nnodes = a_newNnodes;
@@ -34,10 +19,10 @@ void t_ODES::resizeGrid(const int& a_newNnodes){
 t_Vec t_ODES::stepRK(const int& ind, const t_Vec& h){
 	double x = this->varRange[ind];
 	double step = this->varRange[ind+1] - x;
-	t_Vec k1 = this->_pFunRHS(x, h);
-	t_Vec k2 = this->_pFunRHS(x + 0.5*step, h+0.5*step*k1);
-	t_Vec k3 = this->_pFunRHS(x + 0.5*step, h+0.5*step*k2);
-	t_Vec k4 = this->_pFunRHS(x + step, h+step*k3);
+	t_Vec k1 = this->formRHS(x, h);
+	t_Vec k2 = this->formRHS(x + 0.5*step, h+0.5*step*k1);
+	t_Vec k3 = this->formRHS(x + 0.5*step, h+0.5*step*k2);
+	t_Vec k4 = this->formRHS(x + step, h+step*k3);
 	// at x+dx
 	return (h+1.0/6.0*step*(k1+2.0*k2+2.0*k3+k4));
 };

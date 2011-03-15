@@ -1,6 +1,6 @@
 #include <vector>
-#ifndef __SMPROFILE
-#define __SMPROFILE
+#ifndef __BASE_PROFILE
+#define __BASE_PROFILE
 class MF_Field;
 typedef std::vector<double> t_DblVec;
 // TODO: separate profile from solver
@@ -19,4 +19,4 @@ public:
 	~t_Profile();
 };
 
-#endif // __SMPROFILE
+#endif // __BASE_PROFILE

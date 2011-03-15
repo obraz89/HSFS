@@ -1,5 +1,4 @@
 #include "ODES_operands.h"
-
 class t_ODES {
 private:
 	// _dim - for 2D dim=3 for 3D dim=4
@@ -10,7 +9,6 @@ private:
 	//		(after orthogonalization)
 	const int _dim;
 	int _nnodes;
-	pFunRHS _pFunRHS;
 	struct t_OrthPoint{
 		t_OrthPoint(const int& a_ind, const int& a_dim);
 		t_SqMatrix orthMatrix;
@@ -37,7 +35,9 @@ private:
 	t_Complex detGS(const t_Matrix& sol, const int& rank) const;
 	t_Complex minorGS(const t_Matrix& sol, const int& dim, const int& nExcludeCol) const; // rank = dim+1 
 	void ortho(const int& nnode);	
-	
+
+	virtual t_Vec formRHS(const double& a_y, const t_Vec& a_var) = 0;
+	virtual void setInitials() = 0; 	
 public:
 	// members
 	std::vector<double> varRange;
@@ -47,16 +47,10 @@ public:
 	// eigenfunctions are of interest (not eigenvalues)
 	std::vector<t_Matrix> solution; 
 
-	//methods - full constructor - was used only for debug, obsolete
-	t_ODES( const int& a_dim, const double& a_var_start, 
-			const double& a_var_end, const int& a_nnodes,
-			pFunRHS const a_pFunRHS, const t_Matrix& a_initial_vectors);
-
 	t_ODES(const int& a_dim, const int& a_nnodes);
 	// to change grid size
 	void resizeGrid(const int& a_newNnodes);
 	void solve();
 	std::vector<t_Matrix> reconstruct();
-	~t_ODES(){};
-	
+	virtual ~t_ODES(){};	
 };

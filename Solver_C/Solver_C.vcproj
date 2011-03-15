@@ -157,6 +157,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\ODES_stab.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\operands.cpp"
 				>
 			</File>
@@ -180,6 +184,10 @@
 			</File>
 			<File
 				RelativePath=".\include\ODES_operands.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\ODES_stab.h"
 				>
 			</File>
 			<File
