@@ -18,6 +18,7 @@ Index(const Index& _ind, int di, int dj, int dk)
 	struct t_WaveChars{
 		t_CompVal a,b,w;
 		//t_CompVal vga, vgb;	// group velocity
+		t_CompVal resid;
 	};
 inline bool operator==(const Index& a, const Index& b){
 	if ((a.i==b.i)&&(a.j==b.j)&&(a.k==b.k))

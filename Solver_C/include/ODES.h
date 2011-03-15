@@ -38,6 +38,7 @@ private:
 
 	virtual t_Vec formRHS(const double& a_y, const t_Vec& a_var) = 0;
 	virtual void setInitials() = 0; 	
+	virtual t_Complex getResidual() = 0;
 public:
 	// members
 	std::vector<double> varRange;
@@ -50,7 +51,7 @@ public:
 	t_ODES(const int& a_dim, const int& a_nnodes);
 	// to change grid size
 	void resizeGrid(const int& a_newNnodes);
-	void solve();
+	virtual void solve();
 	std::vector<t_Matrix> reconstruct();
 	virtual ~t_ODES(){};	
 };

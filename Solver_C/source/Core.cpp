@@ -6,8 +6,10 @@
 // the function solves system(*) with the input parameters
 // and returns the determinant of residual
 
-#include "StabSolver.h"
+#include "ODES_Stab.h"
 
-double t_StabSolver::solve(const t_WaveChars& stab_point){
-	return 0;
+double t_StabSolver::solve(t_StabODES& _alg_solver, const t_WaveChars& stab_point){
+	this->_waveChars = stab_point;
+	_alg_solver.solve();
+	return 0.0;
 }

@@ -7,4 +7,6 @@ public:
 	~t_StabODES();
 	t_Vec formRHS(const double a_y, const t_Vec& a_var) const;
 	void setInitials();
+	void solve();
+	virtual t_Complex getResidual();
 };

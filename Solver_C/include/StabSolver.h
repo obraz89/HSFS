@@ -9,7 +9,6 @@ class t_StabSolver{
 	t_ProfileStab _profStab;
 	t_WaveChars _waveChars;  // to keep current state of wave 
 							 // used in rhs
-
 	// container for initial guesses at a point
 	std::vector<t_WaveChars> _initWaves;
 
@@ -39,5 +38,5 @@ public:
 	// core function
 	// returns the value of residual 
 	// for a given wave
-	double solve(const t_WaveChars& wave_chars);
+	double solve(t_StabODES& a_alg_solver, const t_WaveChars& a_wave_chars);
 };

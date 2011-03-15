@@ -10,6 +10,28 @@ void t_StabODES::setInitials(){
 	solution[0] = _stab_solver.getAsymptotics3D(_stab_solver._waveChars);
 };
 
+t_Complex t_StabODES::getResidual(){
+	return 0.0;
+}
+
+void t_StabODES::solve(){
+	setInitials();
+	t_ODES::solve();
+	_stab_solver._waveChars.resid = getResidual();
+};
+
+t_Complex t_StabODES::getResidual3D(){
+	const t_Matrix& wall_func = solution.back();
+	t_SqMatrix res_mat(4);
+	for (int i=0; i<4; i++){
+		res_mat[i][0] = wall_func[i][0];
+		res_mat[i][1] = wall_func[i][2];
+		res_mat[i][2] = wall_func[i][4];
+		res_mat[i][3] = wall_func[i][6];
+	};
+	return res_mat.det();
+};
+
 t_StabODES::~t_StabODES(){
 
 };
