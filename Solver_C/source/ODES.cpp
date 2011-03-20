@@ -16,13 +16,13 @@ void t_ODES::resizeGrid(const int& a_newNnodes){
 	t_ODES::t_OrthPoint::t_OrthPoint(const int &a_ind, const int &a_dim)
 		:ind(a_ind), orthMatrix(a_dim){};
 
-t_Vec t_ODES::stepRK(const int& ind, const t_Vec& h){
+t_Vec t_ODES::stepRK3D(const int& ind, const t_Vec& h){
 	double x = this->varRange[ind];
 	double step = this->varRange[ind+1] - x;
-	t_Vec k1 = this->formRHS(x, h);
-	t_Vec k2 = this->formRHS(x + 0.5*step, h+0.5*step*k1);
-	t_Vec k3 = this->formRHS(x + 0.5*step, h+0.5*step*k2);
-	t_Vec k4 = this->formRHS(x + step, h+step*k3);
+	t_Vec k1 = this->formRHS3D(x, h);
+	t_Vec k2 = this->formRHS3D(x + 0.5*step, h+0.5*step*k1);
+	t_Vec k3 = this->formRHS3D(x + 0.5*step, h+0.5*step*k2);
+	t_Vec k4 = this->formRHS3D(x + step, h+step*k3);
 	// at x+dx
 	return (h+1.0/6.0*step*(k1+2.0*k2+2.0*k3+k4));
 };
@@ -42,7 +42,7 @@ void t_ODES::solve(){
 		};
 		// get solution
 		for (int j=0; j<this->_dim;j++){
-			solution[i+1][j] = stepRK(i, solution[i][j]);
+			solution[i+1][j] = stepRK3D(i, solution[i][j]);
 		}
 
 	}

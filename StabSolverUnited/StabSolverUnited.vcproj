@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WXROOT)/lib/vc_ddx32_ogl/mswud/&quot;;&quot;$(SolutionDir)MFProc\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(WXROOT)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C/include&quot;;&quot;$(WXROOT)/lib/vc_ddx32_ogl/mswud/&quot;;&quot;$(SolutionDir)MFProc\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(WXROOT)\include&quot;"
 				PreprocessorDefinitions="WIN32;WINVER=0x0400;__WXMSW__;_WINDOWS;WXUSINGDLL;wxUSE_GUI=1;UNICODE;_UNICODE;_DEBUG;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"

@@ -4,7 +4,7 @@ t_ODES(a_dim, a_nnodes), _stab_solver(a_stab_solver){
 	a_stab_solver._pMath_solver = this;
 };
 
-t_Vec t_StabODES::formRHS(const double a_y, const t_Vec &a_var) const{
+t_Vec t_StabODES::formRHS3D(const double& a_y, const t_Vec &a_var) const{
 	return _stab_solver.formRHS3D(a_y, a_var);
 };
 

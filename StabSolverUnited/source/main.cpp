@@ -1,6 +1,6 @@
 #include "TaskParameters.h"
 #include "MF_Field.h"
-
+#include "StabField.h"
 #include "ODES_Stab.h"
 #include "StabSolver.h"
 
@@ -45,12 +45,19 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	FILE* file = fopen("output/transitions.dat", "a+");
 // read-process raw field
 	MF_Field field(NSFieldName,nx,ny,nz);
-	StabField stab_field(nx, nz);
+	t_StabField stab_field(nx, nz);
 	field.trans_to_cyl();
 // set up ODES & StabSolver
 	t_StabSolver stab_solver(field, stab_field);
-	t_StabODES math_solver(TASK_DIM, 0, stab_solver);
+	t_StabODES math_solver(3, 0, stab_solver);
 // iterate over start positions for wave pack lines
+	// DEBUG
+	stab_solver.set3DContext(70, 50, 161, 161);
+	t_WaveChars w_init;
+	w_init.w = 0.06;
+	w_init.a = 0.06/0.8;
+	w_init.b = 0.0;
+	stab_solver.solve(w_init);
 	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");
 		std::cout<<"------------------------------------k_start="<<k_start<<"\n";
@@ -59,13 +66,12 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		/*StreamLine str_line(field, i_start,80, k_start);
 		for (int i=0; i<1000; i++) str_line.add_node();
 		str_line.find_transition_location(x_tr, t_tr);*/
-		WavePackLine wp_line(field, stab_field,70, 50, k_start);
-		wp_line.find_transition_location(x_tr, t_tr);
+//		WavePackLine wp_line(field, stab_field,70, 50, k_start);
+//		wp_line.find_transition_location(x_tr, t_tr);
 		//wp_line.print_line_to_file();
 		//to_f_trans<<x_tr<<"\t"<<t_tr<<"\n";
-		fprintf(file,"%f\t%f\n", x_tr, t_tr);
-		fclose(file);
-		//str_line.print_line("v");
+//		fprintf(file,"%f\t%f\n", x_tr, t_tr);
+//		fclose(file);
 	}
 	
 	//to_f_trans.close();

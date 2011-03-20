@@ -24,7 +24,9 @@ private:
 	// solution[i] - vectors of solution at i point of grid  0 < i < _nnodes - 1
 	// solution[i][j] - particular vector 0 < j < _ndim - 1
 	// solution[i][j][k] - k-component of eigenvector (raw)
-	t_Vec stepRK(const int& ind, const t_Vec& fun); 
+
+	//t_Vec stepRK2D(const int& ind, const t_Vec& fun); 
+	t_Vec stepRK3D(const int& ind, const t_Vec& fun); 
 	bool needOrtho(const t_Matrix& vecs); 
 	// Gramm - Shmidt determinant of rank k, basis v0, v1, ...
 	// Ermith matrix
@@ -36,10 +38,11 @@ private:
 	t_Complex minorGS(const t_Matrix& sol, const int& dim, const int& nExcludeCol) const; // rank = dim+1 
 	void ortho(const int& nnode);	
 
-	virtual t_Vec formRHS(const double& a_y, const t_Vec& a_var) = 0;
+	//virtual t_Vec formRHS2D(const double& a_y, const t_Vec& a_var) = 0;
+	virtual t_Vec formRHS3D(const double& a_y, const t_Vec& a_var) const = 0;
 	virtual void setInitials() = 0; 	
 	virtual t_Complex getResidual3D() = 0;
-	virtual t_Complex getResidual2D() = 0;
+	//virtual t_Complex getResidual2D() = 0;
 public:
 	// members
 	std::vector<double> varRange;
