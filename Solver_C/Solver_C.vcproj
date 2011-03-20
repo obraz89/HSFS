@@ -206,6 +206,10 @@
 				RelativePath=".\include\StabSolver.h"
 				>
 			</File>
+			<File
+				RelativePath=".\include\structs.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

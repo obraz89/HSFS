@@ -8,8 +8,8 @@
 
 #include "ODES_Stab.h"
 
-double t_StabSolver::solve(t_StabODES& _alg_solver, const t_WaveChars& stab_point){
+double t_StabSolver::solve(const t_WaveChars& stab_point){
 	this->_waveChars = stab_point;
-	_alg_solver.solve();
+	_pMath_solver->solve();
 	return 0.0;
 }

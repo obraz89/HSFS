@@ -1,14 +1,20 @@
+#ifndef __STAB_SOLVER
+#define __STAB_SOLVER
 #include "SmProfile.h"
 #include "MF_Field.h"
 #include "StabField.h"
 #include "ODES_operands.h"
+#include "structs.h"
+
+class t_StabODES;
+
 class t_StabSolver{
 	friend class t_StabODES;
 	const MF_Field& _rFldNS; // to get global field params
 	t_StabField& _rFldStab;  // link to stability data field
-	t_ProfileStab _profStab;
+	t_ProfileStab _profStab; // current profile
 	t_WaveChars _waveChars;  // to keep current state of wave 
-							 // used in rhs
+	t_StabODES* _pMath_solver; // ODES solver
 	// container for initial guesses at a point
 	std::vector<t_WaveChars> _initWaves;
 
@@ -32,11 +38,10 @@ public:
 	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesNS, const int& a_nnodesStab);
 	t_WaveChars searchMaxInstability(const t_WaveChars& init_guess);
 	void searchGlobal();
-	void smoothProfile();
-	void adaptProfile();
 
 	// core function
 	// returns the value of residual 
 	// for a given wave
-	double solve(t_StabODES& a_alg_solver, const t_WaveChars& a_wave_chars);
+	double solve(const t_WaveChars& a_wave_chars);
 };
+#endif // __STAB_SOLVER

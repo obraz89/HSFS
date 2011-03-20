@@ -1,6 +1,10 @@
 #include "TaskParameters.h"
 #include "MF_Field.h"
-//#include "StreamLine.h"		// streamline concept dropped
+
+#include "ODES_Stab.h"
+#include "StabSolver.h"
+
+
 #include "WavePackLine.h"
 #include "StabField.h"
 
@@ -39,10 +43,14 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	std::string NSFieldName;					// std::cin>> NSFieldName;
 	NSFieldName = "input/new/04.61500.dat";		// now it is for al=2
 	FILE* file = fopen("output/transitions.dat", "a+");
+// read-process raw field
 	MF_Field field(NSFieldName,nx,ny,nz);
 	StabField stab_field(nx, nz);
 	field.trans_to_cyl();
-	// initialize Streamline
+// set up ODES & StabSolver
+	t_StabSolver stab_solver(field, stab_field);
+	t_StabODES math_solver(TASK_DIM, 0, stab_solver);
+// iterate over start positions for wave pack lines
 	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");
 		std::cout<<"------------------------------------k_start="<<k_start<<"\n";
@@ -53,13 +61,15 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 		str_line.find_transition_location(x_tr, t_tr);*/
 		WavePackLine wp_line(field, stab_field,70, 50, k_start);
 		wp_line.find_transition_location(x_tr, t_tr);
-		wp_line.print_line_to_file();
+		//wp_line.print_line_to_file();
 		//to_f_trans<<x_tr<<"\t"<<t_tr<<"\n";
 		fprintf(file,"%f\t%f\n", x_tr, t_tr);
 		fclose(file);
 		//str_line.print_line("v");
 	}
+	
 	//to_f_trans.close();
+
 	getchar();
 	return 0;
 }

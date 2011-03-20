@@ -1,11 +1,11 @@
 #include "StabField.h"
-#include "SolverCore.h"
+#include "Elems.h"
 t_StabField::t_StabField(int _nx, int _nz):nx(_nx), nz(_nz){
-	max_values = new t_WaveChars*[nx];
-	init_values = new t_WaveChars*[nx];
+	max_values = new t_StabDataPoint*[nx];
+	init_values = new t_StabDataPoint*[nx];
 	for (int i=0; i<nx; i++){
-		max_values[i] = new t_WaveChars[nz];
-		init_values[i] = new t_WaveChars[nz];
+		max_values[i] = new t_StabDataPoint[nz];
+		init_values[i] = new t_StabDataPoint[nz];
 	}
 }
 
@@ -24,7 +24,7 @@ void t_StabField::write_max(int i_ind, int k_ind){
 	//max_values[i_ind][k_ind].vgb = VGRC.VB;
 };
 
-const t_StabDataPoint& t_StabField::read_max(int i, int k) const{
+const t_StabField::t_StabDataPoint& t_StabField::read_max(int i, int k) const{
 	return this->max_values[i][k]; 
 };
 

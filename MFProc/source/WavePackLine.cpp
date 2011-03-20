@@ -90,16 +90,13 @@ ind_nrst.j = pos_lft;
 return ind_nrst;
 }
 
-void WavePackLine::find_transition_location(double& x_tr, double& t_tr){
-	// moving from base to apex 
-	std::vector<double> sigmas;
+void WavePackLine::find_transition_location(double& x_tr, double& t_tr, t_StabSolver& a_stab_solver){
+	// moving from base to apex!!! 
 	Index first_ind = nearest_nodes.back();
-	//SmProfile first_profile(this->fld_ref,first_ind.i, first_ind.k);
-	t_StabSolver solver(this->fld_ref,first_ind.i, first_ind.k);
-	solver.smoothProfile();
-	solver.setParameters();
-	solver.adaptProfile();
-	solver.searchGlobal();
+	
+	a_stab_solver.set3DContext(first_ind.i, first_ind.k, nnodesNS, nnodesStab);
+
+	
 	solver.searchMaxInstability();
 	stab_fld_ref.write_max(first_ind.i, first_ind.k);
 	sigmas.push_back(SOLVER_OUTPUT.SIGMA_SPAT.real);

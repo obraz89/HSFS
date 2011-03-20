@@ -38,7 +38,8 @@ private:
 
 	virtual t_Vec formRHS(const double& a_y, const t_Vec& a_var) = 0;
 	virtual void setInitials() = 0; 	
-	virtual t_Complex getResidual() = 0;
+	virtual t_Complex getResidual3D() = 0;
+	virtual t_Complex getResidual2D() = 0;
 public:
 	// members
 	std::vector<double> varRange;

@@ -1,8 +1,7 @@
-#ifndef __WavePackLine__
-#define __WavePackLine__
+#ifndef __WAVE_PACK
+#define __WAVE_PACK
 #include "MF_Field.h"
-//#include "SmProfile.h"
-//#include "SolverCore.h"
+#include "StabSolver.h"
 #include "StabField.h"
 #include <vector>
 #include "Elems.h"
@@ -21,7 +20,7 @@ public:
 	//void add_node();
 	void print_line(const char*) const;
 	void print_line_to_file() const;
-	void find_transition_location(double&, double&);
+	void find_transition_location(double& x_tr, double& theta_tr, t_StabSolver& a_stab_solver);
 	~WavePackLine();
 };
-#endif
+#endif  // __WAVE_PACK

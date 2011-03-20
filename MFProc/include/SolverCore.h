@@ -1,3 +1,4 @@
+/*
 #ifndef __SOLVERCORE
 #define __SOLVERCORE
 #include "Elems.h"
@@ -54,3 +55,4 @@ extern "C"{
 	} HADY2;
 }
 #endif // __SOLVERCORE
+*/
