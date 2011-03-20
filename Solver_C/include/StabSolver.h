@@ -34,8 +34,8 @@ public:
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors
 	// and binds solver to a stability profile
-	void set2DContext(const int& i_ind, const int& k_ind, const int& a_nnodesNS, const int& a_nnodesStab);
-	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesNS, const int& a_nnodesStab);
+	void set2DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
+	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 	t_WaveChars searchMaxInstability(const t_WaveChars& init_guess);
 	void searchGlobal();
 

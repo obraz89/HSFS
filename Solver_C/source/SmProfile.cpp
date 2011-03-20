@@ -3,25 +3,61 @@
 #include "MF_Field.h"
 #include <cmath>
 
+// TODO: each method for t_Profile
 t_Profile::t_Profile(const int &a_nnodes):
 nnodes(a_nnodes), y(nnodes, 0.0),
 u(nnodes, 0.0), u1(nnodes, 0.0), u2(nnodes, 0.0),
 w(nnodes, 0.0), w1(nnodes, 0.0), w2(nnodes, 0.0),
 t(nnodes, 0.0), t1(nnodes, 0.0), t2(nnodes, 0.0),
 mu(nnodes, 0.0), mu1(nnodes, 0.0), mu2(nnodes, 0.0),
-p(nnodes, 0.0), r(nnodes, 0.0){};
+p(nnodes, 0.0), r(nnodes, 0.0), _foreach(){
+	_foreach.push_back(&y);
+	_foreach.push_back(&u);
+	_foreach.push_back(&u1);
+	_foreach.push_back(&u2);
+	_foreach.push_back(&w);
+	_foreach.push_back(&w1);
+	_foreach.push_back(&w2);
+	_foreach.push_back(&t);
+	_foreach.push_back(&t1);
+	_foreach.push_back(&t2);
+	_foreach.push_back(&mu);
+	_foreach.push_back(&mu1);
+	_foreach.push_back(&mu2);
+	_foreach.push_back(&p);
+	_foreach.push_back(&r);
+};
 
 t_Profile::~t_Profile(){};
 
+void t_Profile::resize(int new_size){
+	std::vector<t_DblVec*>::iterator iter = _foreach.begin();
+	while (iter!=_foreach.end()){
+		(*iter)->resize(new_size);
+		iter++;
+	}
+	nnodes = new_size;
+}
 
-t_ProfileNS::t_ProfileNS(const MF_Field& a_rFld, const int &a_nnodes):rFld(a_rFld), t_Profile(a_nnodes){};
+
+t_ProfileNS::t_ProfileNS(const MF_Field& a_rFld):rFld(a_rFld), t_Profile(0){};
 t_ProfileNS::~t_ProfileNS(){};
 
 t_ProfileStab::t_ProfileStab(const int &a_nnodes):t_Profile(a_nnodes){};
 t_ProfileStab::~t_ProfileStab(){};
 
 void t_ProfileNS::setProfiles(const int& a_i ,const int& a_k){
-		int selfSize = this->size();
+		int bound_ind = rFld.get_bound_index(a_i, a_k);
+		// empiric  - 3 thickn of BL to be used in stab comps
+		double bl_thick = rFld.fld[a_i][bound_ind][a_k].y;
+		double prof_thick = 3.0*bl_thick;
+		double cur_y = bl_thick;
+		int cur_y_ind = bound_ind;
+		while((cur_y<prof_thick)&&(cur_y_ind<rFld.ny)){
+			cur_y_ind++;
+			cur_y = rFld.fld[a_i][cur_y_ind][a_k].y;
+		};
+		this->resize(cur_y_ind);
 // for rotated profiles
 /*		int bound_ind = get_bound_index(i_ind,k_ind);
 		const Rec& bound_rec = fld[i_ind][bound_ind][k_ind];
@@ -31,15 +67,15 @@ void t_ProfileNS::setProfiles(const int& a_i ,const int& a_k){
 		double cf_wave_dir = get_cf_wave_dir(i_ind, k_ind);*/
 //-------------------------------------------------------------
 		// for non rotated:
-		int bound_ind = rFld.get_bound_index(a_i,a_k);
-		const MF_Field::Rec& bound_rec = rFld.fld[a_i][bound_ind][a_k];
+		const MF_Field::Rec& bound_rec = rFld.fld[a_i][cur_y_ind][a_k];
+		xDist = bound_rec.x;
 		uExt = bound_rec.u;
 		wExt = bound_rec.w;
 		tExt = bound_rec.t;
 		rhoExt = bound_rec.r;
-		dynViscExt = rFld.calc_viscosity(a_i, bound_ind, a_k); 
+		dynViscExt = rFld.calc_viscosity(a_i, cur_y_ind, a_k); 
 // ------------------------------------------------------------
-		for (int j=0; j<selfSize; j++)
+		for (int j=0; j<nnodes; j++)
 		{
 			const MF_Field::Rec& cur_rec = rFld.fld[a_i][j][a_k];
 			/* rotated velocity profiles [along inviscid streamline]
@@ -64,21 +100,21 @@ void t_ProfileNS::setProfiles(const int& a_i ,const int& a_k){
 
 	// FORTRAN CALLING CONVENTION
 	// 
-	SMOOTH_3D_PROFILES(&y[0], &u[0], &selfSize, &u1[0], &u2[0]);
-	SMOOTH_3D_PROFILES(&y[0], &w[0], &selfSize, &w1[0], &w2[0]);
-	SMOOTH_3D_PROFILES(&y[0], &t[0], &selfSize, &t1[0], &t2[0]);
-	SMOOTH_3D_PROFILES(&y[0], &mu[0], &selfSize, &mu1[0], &mu2[0]);
+	SMOOTH_3D_PROFILES(&y[0], &u[0], &nnodes, &u1[0], &u2[0]);
+	SMOOTH_3D_PROFILES(&y[0], &w[0], &nnodes, &w1[0], &w2[0]);
+	SMOOTH_3D_PROFILES(&y[0], &t[0], &nnodes, &t1[0], &t2[0]);
+	SMOOTH_3D_PROFILES(&y[0], &mu[0], &nnodes, &mu1[0], &mu2[0]);
 	// TODO: check status and set flag ala initialized
 }
 
 double t_ProfileStab::interpolate(const double& a_y, const t_DblVec& arg, const t_DblVec& fun,  const int& a_size) const{
-/*	  use parabplic interpolation
+/*	  use parabolic interpolation
 	  y-point of interpolation
 	  arg - argument array 
 	  fun - function array 
 */	
 	if (a_size<=3){std::cerr<<"3 points or less; can't interpolate";return 0.0;}
-	int k = getNearestInd(a_y);
+	int k = getNearestInd(a_y, arg);
 	int lft_ind, mid_ind, rgt_ind;
 	if (k==0){
 		lft_ind=0;
@@ -169,20 +205,20 @@ void t_ProfileStab::setProfiles(t_ProfileNS& a_rProfNS){
 	}
 };
 
-int t_ProfileStab::getNearestInd(const double &a_y) const{
-	if (a_y<=y[0]) return 0;
-	if (a_y>=y[size()-1]) return size()-1;
+int t_ProfileStab::getNearestInd(const double &a_y, const t_DblVec& a_vec) const{
+	if (a_y<=a_vec[0]) return 0;
+	if (a_y>=a_vec.back()) return a_vec.size()-1;
 	int lft = 0;
-	int rgt = size()-1;
+	int rgt = a_vec.size()-1;
 	int mid;
 	while (rgt-lft>1){
 		mid = (lft+rgt)/2;
-		if (a_y>=y[mid]) 
+		if (a_y>=a_vec[mid]) 
 			lft=mid;
 		else
 			rgt=mid;
 	}
-	if (abs(a_y-y[lft])<abs(a_y-y[rgt]))
+	if (abs(a_y-a_vec[lft])<abs(a_y-a_vec[rgt]))
 		return lft;
 	else
 		return rgt;

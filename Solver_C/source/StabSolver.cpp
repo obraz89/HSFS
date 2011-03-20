@@ -267,10 +267,11 @@ t_Matrix t_StabSolver::getAsymptotics3D(const t_WaveChars& a_waveChars) const{
 	return initial_vectors;
 }
 
-void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesNS, const int& a_nnodesStab){
+
+void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab){
 	// TODO: _profStab.resize(); ... setProfiles() 
 	// without overhead of local allocs 
-	t_ProfileNS profNS(_rFldNS, a_nnodesNS);
+	t_ProfileNS profNS(_rFldNS);
 	profNS.setProfiles(i_ind, k_ind);
 	t_ProfileStab profStab(a_nnodesStab);
 	profStab.setProfiles(profNS);

@@ -9,6 +9,9 @@ t_Vec t_StabODES::formRHS3D(const double& a_y, const t_Vec &a_var) const{
 };
 
 void t_StabODES::setInitials(){
+	if (solution.size()==0) {
+		solution.resize(1, t_Matrix(_dim, 2*_dim));
+	};
 	solution[0] = _stab_solver.getAsymptotics3D(_stab_solver._waveChars);
 };
 

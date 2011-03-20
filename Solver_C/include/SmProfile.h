@@ -5,9 +5,9 @@ class t_ProfileNS : public t_Profile{
 private:
 	const MF_Field& rFld;
 public:
-	int iMF, kMF;
+	//int iMF, kMF;
 	double xDist, uExt, wExt, dynViscExt, rhoExt, tExt;	//,crossFlowAngle;
-	t_ProfileNS(const MF_Field& rFld, const int& nnodes);
+	t_ProfileNS(const MF_Field& rFld);
 	void setProfiles(const int& a_i, const int& a_k);
 	~t_ProfileNS();
 };
@@ -15,7 +15,7 @@ public:
 class t_ProfileStab : public t_Profile{	
 private: 
 	double interpolate(const double& y, const t_DblVec& arg, const t_DblVec& fun, const int& a_size) const;
-	int getNearestInd(const double& a_y) const;
+	int getNearestInd(const double& a_y, const t_DblVec& a_vec) const;
 public:
 	double stabRe, Me;
 	t_ProfileStab(const int &a_nnodes);

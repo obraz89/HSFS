@@ -1,6 +1,13 @@
 #include "ODES_operands.h"
 class t_ODES {
 private:
+	struct t_OrthPoint{
+	t_OrthPoint(const int& a_ind, const int& a_dim);
+	t_SqMatrix orthMatrix;
+	int ind;
+};
+	std::vector<t_OrthPoint> _orthStack;
+protected:
 	// _dim - for 2D dim=3 for 3D dim=4
 	// _nnodes - number of grid nodes interval is splitted into
 	// _pFunRHS - reference to the right hand side function 
@@ -9,12 +16,6 @@ private:
 	//		(after orthogonalization)
 	const int _dim;
 	int _nnodes;
-	struct t_OrthPoint{
-		t_OrthPoint(const int& a_ind, const int& a_dim);
-		t_SqMatrix orthMatrix;
-		int ind;
-	};
-	std::vector<t_OrthPoint> _orthStack;
 	// methods
 	// stepRK - Runge-Kutta step for a particular vector, returns solution vector
 	// needOrtho - check if orthogonalization is needed for current basis
