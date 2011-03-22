@@ -49,7 +49,6 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	field.trans_to_cyl();
 // set up ODES & StabSolver
 	t_StabSolver stab_solver(field, stab_field);
-	t_StabODES math_solver(3, 0, stab_solver);
 // iterate over start positions for wave pack lines
 	// DEBUG
 	stab_solver.set3DContext(70, 50, 161);
@@ -57,15 +56,14 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	w_init.w = 0.06;
 	w_init.a = 0.06/0.8;
 	w_init.b = 0.0;
-	stab_solver.solve(w_init);
+	t_Complex base_resid = stab_solver.solve(w_init);
+	std::cout<<"Base Resid:"<<base_resid<<std::endl;
+/*	
 	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");
 		std::cout<<"------------------------------------k_start="<<k_start<<"\n";
 		int i_start = 5;
 		double x_tr, t_tr;
-		/*StreamLine str_line(field, i_start,80, k_start);
-		for (int i=0; i<1000; i++) str_line.add_node();
-		str_line.find_transition_location(x_tr, t_tr);*/
 //		WavePackLine wp_line(field, stab_field,70, 50, k_start);
 //		wp_line.find_transition_location(x_tr, t_tr);
 		//wp_line.print_line_to_file();
@@ -73,7 +71,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 //		fprintf(file,"%f\t%f\n", x_tr, t_tr);
 //		fclose(file);
 	}
-	
+*/	
 	//to_f_trans.close();
 
 	getchar();

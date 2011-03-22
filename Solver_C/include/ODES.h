@@ -14,7 +14,7 @@ protected:
 	//		(for stability rhs = A*f, f - one of solution vectors)
 	// _orthMatrix - matrix of transition from initial basis to current 
 	//		(after orthogonalization)
-	const int _dim;
+	int _dim;
 	int _nnodes;
 	// methods
 	// stepRK - Runge-Kutta step for a particular vector, returns solution vector
@@ -40,8 +40,7 @@ protected:
 	void ortho(const int& nnode);	
 
 	//virtual t_Vec formRHS2D(const double& a_y, const t_Vec& a_var) = 0;
-	virtual t_Vec formRHS3D(const double& a_y, const t_Vec& a_var) const = 0;
-	virtual void setInitials() = 0; 	
+	virtual t_Vec formRHS3D(const double& a_y, const t_Vec& a_var) const = 0; 	
 	virtual t_Complex getResidual3D() = 0;
 	//virtual t_Complex getResidual2D() = 0;
 public:
@@ -53,9 +52,11 @@ public:
 	// eigenfunctions are of interest (not eigenvalues)
 	std::vector<t_Matrix> solution; 
 
-	t_ODES(const int& a_dim, const int& a_nnodes);
+	t_ODES();
 	// to change grid size
-	void resizeGrid(const int& a_newNnodes);
+	virtual void set3DContext();
+	//virtual void set2DContext() = 0;
+	virtual void resizeGrid(const int& a_newNnodes);
 	virtual void solve();
 	std::vector<t_Matrix> reconstruct();
 	virtual ~t_ODES(){};	

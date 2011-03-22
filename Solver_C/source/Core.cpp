@@ -6,10 +6,12 @@
 // the function solves system(*) with the input parameters
 // and returns the determinant of residual
 
-#include "ODES_Stab.h"
+#include "StabSolver.h"
 
-double t_StabSolver::solve(const t_WaveChars& stab_point){
+t_Complex t_StabSolver::solve(const t_WaveChars& stab_point){
 	this->_waveChars = stab_point;
-	_pMath_solver->solve();
-	return 0.0;
+	this->_math_solver.setInitials(getAsymptotics3D(stab_point));
+	_math_solver.solve();
+	_waveChars.resid = _math_solver.getResidual3D();
+	return _waveChars.resid ;
 }

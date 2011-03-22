@@ -49,6 +49,7 @@ t_ProfileStab::~t_ProfileStab(){};
 void t_ProfileNS::setProfiles(const int& a_i ,const int& a_k){
 		int bound_ind = rFld.get_bound_index(a_i, a_k);
 		// empiric  - 3 thickn of BL to be used in stab comps
+		// DEBUG - 1 thick
 		double bl_thick = rFld.fld[a_i][bound_ind][a_k].y;
 		double prof_thick = 3.0*bl_thick;
 		double cur_y = bl_thick;
@@ -199,9 +200,23 @@ void t_ProfileStab::setProfiles(t_ProfileNS& a_rProfNS){
 		w1[i]=w1[i]*y_scale/u_e;
 	    w2[i]=w2[i]*pow(y_scale,2)/u_e;
 // new
+// instead of derivs for viscosity special coefs mu1 mu2 are stored:
+// dmy/dy = mu1*(dt/dy);
+// d2my/dy2 = mu2*(dt/dy)^2.0 + mu1*(d2t/dy2)
 		mu[i]=mu[i]/mu_e;
-		mu1[i]=mu1[i]*y_scale/mu_e;
-		mu2[i]=mu2[i]*pow(y_scale,2)/mu_e;
+		if (MF_Field::Visc_type==0){
+			const double& visc_power = MF_Field::Mju_pow;
+			mu1[i]=visc_power*pow(t[i],visc_power-1.0);
+			mu2[i]=visc_power*(visc_power-1.0)*pow(t[i],visc_power-2.0);
+		}
+		else{
+// TODO: check Stagnation ?
+		    const double& lt=t[i];
+			const double& t_coef=MF_Field::T_mju*(1.0+t_e);
+			mu1[i]=1.5*mu[i]/lt-mu[i]/(lt+t_coef);
+			mu2[i]=1.5*(mu1[i]-mu[i]/lt)/lt-
+				   (mu1[i]-mu[i]/(lt+t_coef))/(lt+t_coef);
+		}
 	}
 };
 

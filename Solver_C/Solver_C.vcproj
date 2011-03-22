@@ -187,10 +187,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\ODES_stab.h"
-				>
-			</File>
-			<File
 				RelativePath=".\include\Profile.h"
 				>
 			</File>

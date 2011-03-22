@@ -1,15 +1,21 @@
 #include "ODES.h"
 #include <iostream>
+// default 3D context
+t_ODES::t_ODES():
+_dim(4), _nnodes(), varRange(), 
+solution(0, t_Matrix(_dim, _dim)){};
 
-t_ODES::t_ODES(const int &a_dim, const int &a_nnodes):
-_dim(a_dim), _nnodes(a_nnodes), varRange(a_nnodes), 
-solution(a_nnodes, t_Matrix(a_dim, 2*a_dim)){};
+void t_ODES::set3DContext(){
+		_dim = 4;
+		solution.clear();
+		varRange.clear();
+		_orthStack.clear();
+};
 
 void t_ODES::resizeGrid(const int& a_newNnodes){
 	_nnodes = a_newNnodes;
 	varRange.resize(a_newNnodes);
 	solution.resize(a_newNnodes, t_Matrix(_dim, 2*_dim));
-	_orthStack.clear();
 };
 
 // orthoStack
@@ -63,7 +69,8 @@ t_Complex t_ODES::detGS(const t_Matrix& sol, const int& rank) const{
 		}
 	}
 	t_Complex det = mat.det();
-	if (abs(det.imag())>1.0e-6) std::cerr<<"GS determinant error: determinant is complex(\n";
+	if (abs(det.imag()/det.real())>1.0e-6) std::cerr<<"GS determinant error: determinant is complex; imag:"
+										 <<abs(det.imag())<<std::endl;
 	return mat.det();
 }
 

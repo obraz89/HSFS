@@ -1,7 +1,9 @@
 #include "StabSolver.h"
 //#include "SolverCore.h"
 t_StabSolver::t_StabSolver(const MF_Field& a_rFldNS, t_StabField& a_rFldStab):
-_rFldNS(a_rFldNS), _rFldStab(a_rFldStab), _profStab(0){};
+_rFldNS(a_rFldNS), _rFldStab(a_rFldStab), _profStab(0), _math_solver(){
+	_math_solver._pStab_solver = this;
+};
 // obsolete
 /*
 void t_StabSolver::setParameters(t_ProfileStab& a_profStab){
@@ -170,7 +172,7 @@ t_SqMatrix t_StabSolver::getStabMatrix3D(const double& a_y) const{
 	return stab_matrix;
 };
 
-t_Vec t_StabSolver::formRHS3D(const double& a_y, const t_Vec& a_vars){
+t_Vec t_StabSolver::formRHS3D(const double& a_y, const t_Vec& a_vars) const{
 	// TODO: check input vector dimension and
 	// if it is not of 8 elems throw mega-exception)
 	t_SqMatrix stab_matrix = getStabMatrix3D(a_y);
@@ -269,13 +271,19 @@ t_Matrix t_StabSolver::getAsymptotics3D(const t_WaveChars& a_waveChars) const{
 
 
 void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab){
-	// TODO: _profStab.resize(); ... setProfiles() 
-	// without overhead of local allocs 
+	_math_solver.set3DContext();
+	_math_solver.resizeGrid(a_nnodesStab);
+
 	t_ProfileNS profNS(_rFldNS);
 	profNS.setProfiles(i_ind, k_ind);
-	t_ProfileStab profStab(a_nnodesStab);
-	profStab.setProfiles(profNS);
-	_profStab = profStab;
+
+	_profStab.resize(a_nnodesStab);
+	_profStab.setProfiles(profNS);
+
+	for (int j=0; j<a_nnodesStab; j++){
+		_math_solver.varRange[j] = _profStab.y[a_nnodesStab-1-j];
+	}
+
 	return;
 }
 
