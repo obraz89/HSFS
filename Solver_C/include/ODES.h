@@ -28,7 +28,7 @@ protected:
 
 	//t_Vec stepRK2D(const int& ind, const t_Vec& fun); 
 	t_Vec stepRK3D(const int& ind, const t_Vec& fun); 
-	bool needOrtho(const t_Matrix& vecs); 
+	virtual bool needOrtho(const t_Matrix& vecs)=0; 
 	// Gramm - Shmidt determinant of rank k, basis v0, v1, ...
 	// Ermith matrix
 	//	( (v0, v0)		(v1, v0)*		 ... (v[k-1], v0)*		)

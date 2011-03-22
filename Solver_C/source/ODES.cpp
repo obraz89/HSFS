@@ -33,11 +33,6 @@ t_Vec t_ODES::stepRK3D(const int& ind, const t_Vec& h){
 	return (h+1.0/6.0*step*(k1+2.0*k2+2.0*k3+k4));
 };
 
-bool t_ODES::needOrtho(const t_Matrix& vecs){
-// ???
-	return true;
-};
-
 void t_ODES::solve(){
 	for (int i=0; i<this->_nnodes-1; i++){
 		// ortho ...

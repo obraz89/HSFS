@@ -57,7 +57,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	w_init.a = 0.06/0.8;
 	w_init.b = 0.0;
 	t_Complex base_resid = stab_solver.solve(w_init);
-	std::cout<<"Base Resid:"<<base_resid<<std::endl;
+	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
 /*	
 	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");

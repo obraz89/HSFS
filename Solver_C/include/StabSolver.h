@@ -17,6 +17,7 @@ class t_StabSolver{
 		t_Vec formRHS3D(const double& a_y, const t_Vec& a_var) const;
 		virtual t_Complex getResidual3D();
 		void setInitials(t_Matrix a_init_vectors);
+		bool needOrtho(const t_Matrix& a_cur_sol);
 		void solve();
 	};
 	t_StabODES _math_solver;
