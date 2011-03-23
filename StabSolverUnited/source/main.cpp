@@ -51,7 +51,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	t_StabSolver stab_solver(field, stab_field);
 // iterate over start positions for wave pack lines
 	// DEBUG
-	stab_solver.set3DContext(70, 50, 161);
+	stab_solver.set3DContext(70, 50, 150);
 	t_WaveChars w_init;
 	w_init.w = 0.06;
 	w_init.a = 0.06/0.8;

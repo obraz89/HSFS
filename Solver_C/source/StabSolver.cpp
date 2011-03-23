@@ -293,10 +293,3 @@ t_WaveChars t_StabSolver::searchMaxInstability(const t_WaveChars& initial_guess)
 	t_WaveChars max_instab = initial_guess;
 	return max_instab;
 };
-void t_StabSolver::searchGlobal(){
-	//SEARCH_INITIAL_INSTAB_TIME();
-	double w = 0.06;
-	double phs = 0.8;
-	double angle = 0.0;
-	//GLOBAL_TIME_GRAD(w, phs, angle);
-};

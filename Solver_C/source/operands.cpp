@@ -155,7 +155,8 @@ void t_SqMatrix::setToUnity(){
 		};
 	};
 };
-
+// TODO: rewrite with robust procedures
+// e.g. Gauss
 t_SqMatrix t_SqMatrix::inverse() const{
 	int dim = this->nCols;
 	t_SqMatrix ret(dim);
