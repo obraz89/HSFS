@@ -55,12 +55,12 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	stab_solver.set3DContext(70, 50, 150);
 	t_WaveChars w_init;
 	w_init.w = 0.06;
-	w_init.a = 0.06/0.8;
+	w_init.a = 0.02/0.8;
 	w_init.b = 0.0;
 	//t_Complex base_resid = stab_solver.solve(w_init);
 	//std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
 	t_EigenGS gs_solver(field, 5);
-	gs_solver.setContext(70, 50, w_init.a.real(), w_init.b.real(), 20);
+	gs_solver.setContext(70, 50, w_init.a.real(), w_init.b.real(), 100);
 	gs_solver.search();
 /*	
 	for (int k_start = 50; k_start>2; k_start--){

@@ -29,11 +29,11 @@ void t_EigenGS::setContext(const int a_i, const int a_k,
 		_grid[i] = (double)(i)*del;
 	};
 };
-// semi-flag is true if it is k+1/2 point
+// semi-flag is true if it is k-1/2 point
 void t_EigenGS::getMetricCoefs(const int& a_nnode, double& f1, double& f2, double& f3, const bool semi_flag) const{
 	double cur_eta = _grid[a_nnode];
 	if (semi_flag){
-		cur_eta+=0.5*(_grid[a_nnode+1]-_grid[a_nnode]);
+		cur_eta-=0.5*(_grid[a_nnode]-_grid[a_nnode-1]);
 	};
 	f3 = pow(_b_coef - cur_eta,2)/(_a_coef*_b_coef);
 	f2 = -2.0*pow(_b_coef - cur_eta,3)/
@@ -54,7 +54,7 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	// get physical y
 	double cur_eta = _grid[a_nnode];
 	if (a_semi_flag){
-		cur_eta+=0.5*(_grid[a_nnode+1]-_grid[a_nnode]);
+		cur_eta-=0.5*(_grid[a_nnode]-_grid[a_nnode-1]);
 	};
 	const double a_y = _a_coef*cur_eta/(_b_coef-cur_eta);
 
@@ -105,7 +105,7 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	// fourth
 	_B[0][3] = 2.0*g_1MaMa*MF_Field::Pr*u1;
 	// k'/k ??
-	_B[3][3] = -mu1*t1*inv_mu;
+	_B[3][3] = -2.0*mu1*t1*inv_mu;
 	_B[4][3] = 2.0*g_1MaMa*MF_Field::Pr*w1;
 	// last
 	_B[1][4] = imagUnity*_beta*lf;
@@ -174,75 +174,76 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 // a_eq_id={0,1,3,4} <--> {1,2,4,5} - SO
 void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
 								 const int a_nnode, const int a_eq_id){
-	if ((a_nnode==0)||(a_nnode==_nnodes-1)){
-		std::cerr<<"GS: SO template on boundary!\n";
+	if (a_nnode==0){
+		std::cerr<<"GS: SO template on bottom boundary!\n";
 	};
 	bool first_block=false;
-	bool last_block=false;
 	if (a_nnode==1){
 		first_block=true;
-		// 11 points template
-		_insert_vals.resize(2*_n_vars+1,0.0);
-		_insert_inds.resize(2*_n_vars+1,0);
+		// small template 2 point
+		_insert_vals.resize(2*_n_vars,0.0);
+		_insert_inds.resize(2*_n_vars,0);
 	}else{
-		if (a_nnode==_nnodes-2){
-			last_block=true;
-			_insert_vals.resize(2*_n_vars,0.0);
-			_insert_inds.resize(2*_n_vars,0);
+		if (a_nnode==_nnodes-1){
+			// "fake" template
+			// for diag matrix
+			_insert_vals.resize(1,0.0);
+			_insert_inds.resize(1,0);
+			_insert_vals[0] = 1.0;
+			_insert_inds[0] = (a_nnode-1)*_n_vars+a_eq_id;
+			return;
 		}else{
 			// full 3-point template
 			_insert_vals.resize(3*_n_vars,0.0);
 			_insert_inds.resize(3*_n_vars,0);
 		};
+		
 	};
-
-	setMatrices(a_nnode, false);
 	// large and small index bases
-	int l_base;
+	int l_base = first_block ? 0 : (a_nnode-2)*_n_vars;
 	int s_base=0;
-	if (first_block){
-		l_base=0;
-	}else{
-		l_base = 1+ (a_nnode-2)*_n_vars;
-	};
 // uniform grid
-	const double step = _grid[a_nnode+1] - _grid[a_nnode];
+	const double step = _grid[a_nnode] - _grid[a_nnode-1];
 	const double inv_step = 1.0/step;
 	const double inv_step2 = inv_step*inv_step;
 	double f1, f2, f3;
 	getMetricCoefs(a_nnode, f1, f2, f3, false);
 	if (!first_block){
-		// j-1 : u,v,w,t + j-1/2 : p
 	// first five elements in inserts
+	// f~[j-1] : u,v,0,w,t
 		for (int i=0; i<_n_vars; i++){
-		// staggered mesh)
-		// f^(k-1/2):
 			if (i==2){
-				_insert_vals[s_base+i] = 
-					-f3*inv_step*a_MMat[i][a_eq_id]
-					+0.5*_C[i][a_eq_id];
+				_insert_vals[s_base+i] = 0.0;
 			// f~(k-1):
 			}else{
 				_insert_vals[s_base+i] = 
 					(f1*inv_step2-0.5*f2*inv_step)*a_LMat[i][a_eq_id]
-					-0.5*inv_step*a_RMat[i][a_eq_id];
+					-0.5*inv_step*f3*a_MMat[i][a_eq_id];
 			};
 			_insert_inds[s_base+i] = l_base + i;
 		};
 		l_base+=_n_vars;
 		s_base+=_n_vars;
-	}else{
-		// p[1/2] term
-		_insert_vals[0]=
-			-f3*inv_step*a_MMat[2][a_eq_id]
-			+0.5*_C[2][a_eq_id];
-		_insert_inds[0]=0;
-		l_base+=1;
-		s_base+=1;
 	};
 	
 	// fill central 5 points: 
-	// u,v,w,t for k
+	// f~[j] + f^[j-1/2]
+	for (int i=0; i<_n_vars; i++){
+		if (i==2){
+			_insert_vals[s_base+i] = 
+				-f3*inv_step*a_MMat[i][a_eq_id]
+				+0.5*a_RMat[i][a_eq_id];
+		}else{
+			_insert_vals[s_base+i] = 
+				-2.0*f1*inv_step2*a_LMat[i][a_eq_id]
+				+a_RMat[i][a_eq_id];
+		};	
+		_insert_inds[s_base+i] = l_base + i;
+	};
+	l_base+=_n_vars;
+	s_base+=_n_vars;
+	// fill last five points
+	// f~[j+1] + f^[j+1/2]
 	for (int i=0; i<_n_vars; i++){
 		if (i==2){
 			_insert_vals[s_base+i] = 
@@ -250,65 +251,40 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 				+0.5*a_RMat[i][a_eq_id];
 		}else{
 			_insert_vals[s_base+i] = 
-				-2.0*f1*inv_step2*a_LMat[i][a_eq_id]
-				+0.5*a_RMat[i][a_eq_id];
+				(f1*inv_step2+0.5*f2*inv_step)*a_LMat[i][a_eq_id]
+				+0.5*inv_step*f3*a_MMat[i][a_eq_id];
 		};	
 		_insert_inds[s_base+i] = l_base + i;
 	};
-	l_base+=_n_vars;
-	s_base+=_n_vars;
-	// fill last five points
-	if (!last_block){
-		for (int i=0; i<_n_vars; i++){
-			if (i==2){
-				// really zero
-				_insert_vals[s_base+i] = 0.0; 
-			}else{
-				_insert_vals[s_base+i] = 
-					(f1*inv_step2+0.5*f2*inv_step)*a_LMat[i][a_eq_id]
-					+0.5*inv_step*a_MMat[i][a_eq_id];
-			};	
-		_insert_inds[s_base+i] = l_base + i;
-		};
+	// DEBUG
+	double del = 1.0/(double)(_nnodes-1);
+	for (int i=0; i<_insert_vals.size(); i++){
+	//	_insert_vals[i]*=pow(del,2);
 	};
+	// DEBUG		
 	// _insert_vals and _insert_inds filled
 };
 // we have only one first order continuity equation 
 // a_eq_id = 2 
-// this template is in staggered point a_nnode + 1/2
+// this template is in staggered point a_nnode - 1/2
 void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
 								 const int a_nnode, const int a_eq_id){
 	bool first_block=false;
-	bool last_block=false;
-	if (a_nnode==0){
+	if (a_nnode==1){
 		first_block=true;
-		// six-point chunck
-		_insert_vals.resize(_n_vars+1, 0.0);
-		_insert_inds.resize(_n_vars+1, 0);
+		// small template 
+		_insert_vals.resize(_n_vars, 0.0);
+		_insert_inds.resize(_n_vars, 0);
 	}else{
-		if (a_nnode==_nnodes-2){
-			//five-point chunck
-			last_block=true;
-			_insert_vals.resize(_n_vars, 0.0);
-			_insert_inds.resize(_n_vars, 0);
-		}else{
-			// full 2-point template
-			// ten-point chunck
-			_insert_vals.resize(2*_n_vars, 0.0);
-			_insert_inds.resize(2*_n_vars, 0);
-		};
+		// full 2-point template
+		_insert_vals.resize(2*_n_vars, 0.0);
+		_insert_inds.resize(2*_n_vars, 0);
 	};
-	setMatrices(a_nnode, true);
 	// large and small index bases
-	int l_base;
+	int l_base = first_block ? 0 : (a_nnode-2)*_n_vars;
 	int s_base=0;
-	if (first_block){
-		l_base = 0;
-	}else{
-		l_base = 1 + (a_nnode - 1)*_n_vars;
-	};
 // uniform grid
-	const double step = _grid[a_nnode+1] - _grid[a_nnode];
+	const double step = _grid[a_nnode] - _grid[a_nnode-1];
 	const double inv_step = 1.0/step;
 	const double inv_step2 = inv_step*inv_step;
 	double f1, f2, f3;
@@ -316,10 +292,10 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 	if (!first_block){
 		for (int i=0; i<_n_vars; i++){
 		// staggered mesh)
-		// f~(k)+ f^(k+1/2):
+		// f~(k-1):
 			if (i==2){
 				_insert_vals[s_base+i] = 
-					a_RMat[i][a_eq_id];
+					0.0;
 			}else{
 				_insert_vals[s_base+i] = 
 					-f3*inv_step*a_MMat[i][a_eq_id];
@@ -328,25 +304,23 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 		};
 		l_base+=_n_vars;
 		s_base+=_n_vars;
-	}else{
-		// first block fill first elememt p[1/2]:
-		_insert_vals[0] = a_RMat[2][a_eq_id];
-		_insert_inds[0] = 0;
-		l_base+=1;
-		s_base+=1;
 	};
-	// f~(k+1) plus f^(k+3/2)=0:
-	if (!last_block){
-		for (int i=0; i<_n_vars; i++){
-			if (i==2){
-				_insert_vals[s_base+i] = 0.0;
-			}else{
-				_insert_vals[s_base+i] = 
-					f3*inv_step*a_MMat[i][a_eq_id];
-			};
-			_insert_inds[s_base+i] = l_base + i;
+	// f~(k) + f^(k-1/2):
+	for (int i=0; i<_n_vars; i++){
+		if (i==2){
+			_insert_vals[s_base+i] = a_RMat[i][a_eq_id];
+		}else{
+			_insert_vals[s_base+i] = 
+				f3*inv_step*a_MMat[i][a_eq_id];
 		};
+		_insert_inds[s_base+i] = l_base + i;
+	};
+	// DEBUG
+	double del = 1.0/(double)(_nnodes-1);
+	for (int i=0; i<_insert_vals.size(); i++){
+		//_insert_vals[i]*=del;
 	}
+	// DEBUG
 	// filled FO template
 };
 
@@ -359,7 +333,7 @@ int t_EigenGS::search(){
   PetscReal   	 error, tol, re, im;
   PetscScalar 	 kr, ki;
   PetscErrorCode ierr;
-  PetscInt    	 nev, maxit, i, Istart, Iend, col[3], its, lits, nconv;
+  PetscInt    	 nev, maxit, Istart, Iend, col[3], its, lits, nconv;
   PetscTruth     FirstBlock=PETSC_FALSE, LastBlock=PETSC_FALSE;
   PetscViewer 	 viewer;
   PetscTruth  	 flg;
@@ -376,9 +350,9 @@ int t_EigenGS::search(){
   if (comm_size!=1){
 	  std::cerr<<"This is first step: uniprocessor usage only!\n";
 	  return -1;
-  }
+  };
 
-  int large_matrix_size = (_n_vars-1)*(_nnodes-2)+(_nnodes-1);
+  int large_matrix_size = (_nnodes-1)*(_n_vars);
 
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
   ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,large_matrix_size, large_matrix_size);CHKERRQ(ierr);
@@ -404,47 +378,41 @@ int t_EigenGS::search(){
 	  return -1;
     }else{
 	  // fill A~ by rows
-	  //fill first line - FO 1/2
-		fill_FO_template(_B, _C, 0,2);
-		int n_inserts = _insert_inds.size();
-		int zero_ind = 0;
-		ierr = MatSetValues(A,1,&zero_ind,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
-		// fill all chuncks
-	    for (int i=1; i<_nnodes-1; i++){
+	    for (int i=1; i<_nnodes; i++){
 		  for (int j=0; j<_n_vars; j++){
 			  if (j==2){
+				  setMatrices(i, true);
 				fill_FO_template(_B, _C, i,j);
 			  }else{
+				  // optimize setMatrices
+				  setMatrices(i, false);
 				fill_SO_template(_A, _B, _C, i,j);
 			  };
 			int n_inserts = _insert_inds.size();
-			int row_num = 1+_n_vars*(i-1)+j;
+			int row_num = _n_vars*(i-1)+j;
 			ierr = MatSetValues(A,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
-		  }
+		}
 		
 	    };
 	  // fill B~ by rows, order must be the same as in A
 
 		t_SqMatrix zero_A(5);
 		t_SqMatrix zero_B(5);
-	  //fill first line - FO 1/2
-		fill_FO_template(zero_B, _C, 0,2);
-		n_inserts = _insert_inds.size();
-		ierr = MatSetValues(B,1,&zero_ind,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
-		// fill all chuncks
-	    for (int i=1; i<_nnodes-1; i++){
+	  for (int i=1; i<_nnodes; i++){
 		  for (int j=0; j<_n_vars; j++){
 			  if (j==2){
-				fill_FO_template(zero_B, _C, i,j);
+				  setMatrices(i, true);
+				fill_FO_template(zero_B, _CW, i,j);
 			  }else{
-				fill_SO_template(zero_A, zero_B, _C, i,j);
+				  // optimize setMatrices
+				  setMatrices(i, false);
+				fill_SO_template(zero_A, zero_B, _CW, i,j);
 			  };
 			int n_inserts = _insert_inds.size();
-			int row_num = 1+_n_vars*(i-1)+j;
+			int row_num = _n_vars*(i-1)+j;
 			ierr = MatSetValues(B,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
-		  }
-		
-	    };		
+		}
+	  }
     }
 	// matrices A,B filled, assemble then
 	ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
@@ -495,7 +463,7 @@ int t_EigenGS::search(){
 		ierr = PetscPrintf(PETSC_COMM_WORLD,
          "           k             ||Ax-kBx||/||kx||\n"
          "  --------------------- ------------------\n" );CHKERRQ(ierr);
-		for( i=0; i<nconv; i++ ) {
+		for(PetscInt i=0; i<nconv; i++ ) {
 			ierr = EPSGetEigenpair(eps,i,&kr,&ki,PETSC_NULL,PETSC_NULL);CHKERRQ(ierr);
 
 			ierr = EPSComputeRelativeError(eps,i,&error);CHKERRQ(ierr);
