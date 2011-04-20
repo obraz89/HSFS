@@ -53,6 +53,10 @@ public:
 	std::vector<t_Matrix> solution; 
 
 	t_ODES();
+	//getters
+	int getTaskDim() const{
+		return this->_dim;
+    }
 	// to change grid size
 	virtual void set3DContext();
 	//virtual void set2DContext() = 0;

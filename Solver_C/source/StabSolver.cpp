@@ -172,6 +172,184 @@ t_SqMatrix t_StabSolver::getStabMatrix3D(const double& a_y) const{
 	return stab_matrix;
 };
 
+// old - can be used only in local spectral procedures
+void t_StabSolver::setMatSplitByW3D_88(const double& a_y, t_SqMatrix& mat_no_w, t_SqMatrix& mat_w) const{
+	t_CompVal imagUnity(0.0, 1.0);
+
+	const double& stabRe = _profStab.stabRe;
+	const double& Me = _profStab.Me;
+	const double gMaMa = MF_Field::Gamma*Me*Me;
+	const double g_1MaMa = (MF_Field::Gamma-1.0)*Me*Me;
+
+	const double u = _profStab.getValue(a_y, _profStab.u);
+	const double u1 = _profStab.getValue(a_y, _profStab.u1);
+	const double u2 = _profStab.getValue(a_y, _profStab.u2);
+
+	const double w = _profStab.getValue(a_y, _profStab.w);
+	const double w1 = _profStab.getValue(a_y, _profStab.w1);
+	const double w2 = _profStab.getValue(a_y, _profStab.w2);
+
+	const double t = _profStab.getValue(a_y, _profStab.t);
+	const double t1 = _profStab.getValue(a_y, _profStab.t1);
+	const double t2 = _profStab.getValue(a_y, _profStab.t2);
+
+	const double mu = _profStab.getValue(a_y, _profStab.mu);
+	const double mu1 = _profStab.getValue(a_y, _profStab.mu1);
+	const double mu2 = _profStab.getValue(a_y, _profStab.mu2);
+
+	const double inv_t = 1.0/t;
+	const double inv_mu = 1.0/mu;
+
+	const double vCoefL = 2.0/3.0*(0.0+2.0); //TODO: second Visc coef instead of 0.0
+	const double vCoefS = 2.0/3.0*(0.0-1.0); // 
+	const double vCoefM = 1.0+vCoefS;
+
+	const t_CompVal& alpha = _waveChars.a;
+	const t_CompVal& beta = _waveChars.b;
+
+	const t_CompVal dEicon_no_W = alpha*u + beta*w ;
+	const t_CompVal dEicon_W = -1.0;
+	const double dMu2 = mu2*t1*u1 + mu1*u2;
+	const t_CompVal xi = 1.0/(stabRe*inv_mu+imagUnity*vCoefL+gMaMa*dEicon_no_W);
+// set no_W matrix
+// of size 5rowsx8cols
+	// first <--> "2"
+	mat_no_w[0][0] = imagUnity*stabRe*inv_t*inv_mu*dEicon_no_W +
+		pow(alpha,2) + pow(beta,2);
+
+	mat_no_w[1][0] =  - inv_mu*mu1*t1;
+
+	mat_no_w[2][0] = stabRe*inv_t*inv_mu*u1 - 
+		imagUnity*alpha*(inv_mu*mu1*t1+vCoefM*inv_t*t1);
+
+	mat_no_w[3][0] = alpha*(imagUnity*stabRe*inv_mu -
+		vCoefM*gMaMa*dEicon_no_W);
+
+	mat_no_w[4][0] = vCoefM*alpha*inv_t*dEicon_no_W - inv_mu*dMu2;
+
+	mat_no_w[5][0] = -inv_mu*mu1*u1;
+	// second <--> "3"
+	mat_no_w[0][1] = -imagUnity*alpha;
+
+	mat_no_w[2][1] = inv_t*t1;
+
+	mat_no_w[3][1] = -imagUnity*gMaMa*dEicon_no_W;
+
+	mat_no_w[4][1] = imagUnity*inv_t*dEicon_no_W;
+
+	mat_no_w[6][1] = -imagUnity*beta;
+	// third <--> "4"
+	mat_no_w[0][2] = -imagUnity*xi*alpha*t1*
+		(2.0*inv_mu*mu1 + vCoefL*inv_t);
+
+	mat_no_w[1][2] = -imagUnity*xi*alpha;
+
+	mat_no_w[2][2] = xi*(-alpha*alpha-beta*beta+
+		vCoefL*inv_t*inv_mu*mu1*t1*t1+
+		vCoefL*inv_t*t2-
+		imagUnity*stabRe*inv_t*inv_mu*dEicon_no_W);
+
+	mat_no_w[3][2] = -imagUnity*xi*vCoefL*gMaMa*
+		(
+		(inv_mu*mu1*t1+inv_t*t1)*dEicon_no_W+
+		alpha*u1+beta*w1
+		);
+
+	mat_no_w[4][2] = imagUnity*xi*
+		(
+		(inv_mu*mu1+vCoefL*inv_t)*(alpha*u1+beta*w1)+
+		vCoefL*inv_t*inv_mu*mu1*t1*dEicon_no_W
+		);
+
+	mat_no_w[5][2] = imagUnity*xi*vCoefL*inv_t*dEicon_no_W;
+
+	mat_no_w[6][2] = -imagUnity*xi*beta*
+		(2.0*inv_mu*mu1*t1 + vCoefL*inv_t*t1);
+
+	mat_no_w[7][2] = -imagUnity*xi*beta;
+	// fourth <--> "6"
+	mat_no_w[1][3] = -2.0*MF_Field::Pr*g_1MaMa*u1;
+
+	mat_no_w[2][3] = MF_Field::Pr*
+		(
+		stabRe*inv_t*inv_mu*t1 - 
+		2.0*imagUnity*g_1MaMa*(alpha*u1+beta*w1)
+		);
+
+	mat_no_w[3][3] = -imagUnity*stabRe*MF_Field::Pr*inv_mu*g_1MaMa*dEicon_no_W;
+
+	mat_no_w[4][3] = imagUnity*stabRe*MF_Field::Pr*inv_t*inv_mu*dEicon_no_W +
+		alpha*alpha + beta*beta - 
+		g_1MaMa*MF_Field::Pr*inv_mu*mu1*(u1*u1+w1*w1)-
+		inv_mu*(mu2*t1*t1+mu1*t2);
+	mat_no_w[5][3] = -2.0*inv_mu*mu1*t1;
+
+	mat_no_w[7][3] = -2.0*MF_Field::Pr*g_1MaMa*w1;
+	// fifth <--> "8"
+	mat_no_w[2][4] = -imagUnity*beta*(inv_mu*mu1*t1+vCoefM*inv_t*t1)+
+		stabRe*inv_mu*inv_t*w1;
+
+	mat_no_w[3][4] = imagUnity*stabRe*beta*inv_mu-
+		vCoefM*beta*gMaMa*dEicon_no_W;
+
+	mat_no_w[4][4] = vCoefM*beta*inv_t*dEicon_no_W-
+		inv_mu*(mu2*t1*w1+mu1*w2);
+
+	mat_no_w[5][4] = -inv_mu*mu1*w1;
+
+	mat_no_w[6][4] = imagUnity*stabRe*inv_t*inv_mu*dEicon_no_W +
+		alpha*alpha + beta*beta;
+
+	mat_no_w[7][4] = -inv_mu*mu1*t1;
+// set W matrix
+// of the same sizes
+// 5rows x 8 cols
+	// first <--> part of "2", 3 non-zeros
+	mat_w[0][0] = imagUnity*stabRe*inv_t*inv_mu*dEicon_W;
+
+	mat_w[3][0] = alpha*( -	vCoefM*gMaMa*dEicon_W);
+
+	mat_w[4][0] = vCoefM*alpha*inv_t*dEicon_W;
+
+	// second <--> part of "3", 2 non-zeros
+
+	mat_w[3][1] = -imagUnity*gMaMa*dEicon_W;
+
+	mat_w[4][1] = imagUnity*inv_t*dEicon_W;
+
+	// third <--> "4", 4 non-zeros, a lot)
+
+	mat_w[2][2] = xi*(-imagUnity*stabRe*inv_t*inv_mu*dEicon_W);
+
+	mat_w[3][2] = -imagUnity*xi*vCoefL*gMaMa*
+		(
+		(inv_mu*mu1*t1+inv_t*t1)*dEicon_W
+		);
+
+	mat_w[4][2] = imagUnity*xi*
+		(
+		vCoefL*inv_t*inv_mu*mu1*t1*dEicon_W
+		);
+
+	mat_w[5][2] = imagUnity*xi*vCoefL*inv_t*dEicon_W;
+
+	// fourth <--> part of "6", 2 non-zeros
+
+	mat_w[3][3] = -imagUnity*stabRe*MF_Field::Pr*inv_mu*g_1MaMa*dEicon_W;
+
+	mat_w[4][3] = imagUnity*stabRe*MF_Field::Pr*inv_t*inv_mu*dEicon_W;
+
+	// fifth <--> "8", 3 non-zeros
+
+	mat_w[3][4] = -vCoefM*beta*gMaMa*dEicon_W;
+
+	mat_w[4][4] = vCoefM*beta*inv_t*dEicon_W;
+
+	mat_w[6][4] = imagUnity*stabRe*inv_t*inv_mu*dEicon_W;
+
+	return;
+};
+
 t_Vec t_StabSolver::formRHS3D(const double& a_y, const t_Vec& a_vars) const{
 	// TODO: check input vector dimension and
 	// if it is not of 8 elems throw mega-exception)

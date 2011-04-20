@@ -11,6 +11,7 @@ class t_StabODES;
 class t_StabSolver{
 	class t_StabODES : public t_ODES{
 	public:
+		// "parent"
 		t_StabSolver* _pStab_solver;
 		t_StabODES(); 
 		~t_StabODES();	
@@ -20,16 +21,24 @@ class t_StabSolver{
 		bool needOrtho(const t_Matrix& a_cur_sol);
 		void solve();
 	};
+	// algebraic solver
 	t_StabODES _math_solver;
+
 	const MF_Field& _rFldNS; // to get global field params
 	t_StabField& _rFldStab;  // link to stability data field
 	t_ProfileStab _profStab; // current profile
+
 	t_WaveChars _waveChars;  // to keep current state of wave 
 	// container for initial guesses at a point
 	std::vector<t_WaveChars> _initWaves;
 
 	// form stability matrix
+	// it is very slow to generate and pass matrices every time 
 	t_SqMatrix getStabMatrix3D(const double& a_y) const;
+	void setStabMatrix3D(const double& a_y, t_SqMatrix& a_matrix) const;
+	// old
+	void setMatSplitByW3D_88(const double& a_y, t_SqMatrix& mat_no_w, t_SqMatrix& mat_w) const;
+	
 	t_Vec formRHS2D(const double& a_y, const t_Vec& a_var);
 	// rhs function by stab matrix
 	// input for ODES
@@ -42,13 +51,15 @@ class t_StabSolver{
 public:
 	t_StabSolver(const MF_Field& a_rFld, t_StabField& a_rFldStab);
 	~t_StabSolver(){};
+	inline int getTaskDim(){return _math_solver.getTaskDim();};
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors
 	// and binds solver to a stability profile
 	void set2DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 	t_WaveChars searchMaxInstability(const t_WaveChars& init_guess);
-	void searchGlobal();
+	// return error code in petsc context
+	int searchGlobal(const int& a_nnodes, const int& a_neigen);
 
 	// core function
 	// returns the value of residual 

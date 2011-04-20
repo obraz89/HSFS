@@ -8,7 +8,8 @@
 #include "WavePackLine.h"
 #include "StabField.h"
 
-
+// debug
+#include "EigenGS.h"
 
 // for console io operations
 #include <iostream>
@@ -56,8 +57,11 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	w_init.w = 0.06;
 	w_init.a = 0.06/0.8;
 	w_init.b = 0.0;
-	t_Complex base_resid = stab_solver.solve(w_init);
-	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
+	//t_Complex base_resid = stab_solver.solve(w_init);
+	//std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
+	t_EigenGS gs_solver(field, 5);
+	gs_solver.setContext(70, 50, w_init.a.real(), w_init.b.real(), 20);
+	gs_solver.search();
 /*	
 	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");

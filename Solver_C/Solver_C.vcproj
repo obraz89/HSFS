@@ -40,7 +40,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(SolutionDir)MFProc/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(SolutionDir)MFProc/include&quot;;&quot;C:\libs\math\petsc\petsc-3.1-p8\include&quot;;&quot;C:\libs\math\petsc\petsc-3.1-p8\win32_MTd_cmplx\include&quot;;&quot;C:\libs\math\slepc\slepc-3.1-p6\include&quot;;&quot;C:\libs\math\slepc\slepc-3.1-p6\win32_MTd_cmplx\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,6 +61,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
+				AdditionalDependencies="mpi.lib libpetsc.lib libslepc.lib"
+				AdditionalLibraryDirectories="C:\libs\parallel\MPICH2\lib;&quot;C:\libs\math\petsc\petsc-3.1-p8\win32_MTd_cmplx\lib&quot;;&quot;C:\libs\math\slepc\slepc-3.1-p6\win32_MTd_cmplx\lib&quot;"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -153,6 +155,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\EigenGS.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\ODES.cpp"
 				>
 			</File>
@@ -178,6 +184,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\include\EigenGs.h"
+				>
+			</File>
 			<File
 				RelativePath=".\include\ODES.h"
 				>
