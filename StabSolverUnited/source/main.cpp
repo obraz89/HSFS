@@ -14,6 +14,7 @@
 // for console io operations
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <conio.h>
 #include <stdio.h>
 
@@ -54,14 +55,21 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	// DEBUG
 	stab_solver.set3DContext(70, 50, 150);
 	t_WaveChars w_init;
-	w_init.w = 0.06;
-	w_init.a = 0.02/0.8;
-	w_init.b = 0.0;
-	//t_Complex base_resid = stab_solver.solve(w_init);
-	//std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
-	t_EigenGS gs_solver(field, 5);
-	gs_solver.setContext(70, 50, w_init.a.real(), w_init.b.real(), 100);
-	gs_solver.search();
+	w_init.w = t_Complex(3.85e-2, 2.55e-3);
+	w_init.a = 6.26e-2;
+	w_init.b = 0.1573;
+	t_Complex base_resid = stab_solver.solve(w_init);
+	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
+	/*t_EigenGS gs_solver(field, 5);
+	int gs_nnodes = 81;
+	gs_solver.setContext(70, 50, w_init.a.real(), w_init.b.real(), gs_nnodes);
+	gs_solver.getSpectrum();
+	std::string f_name;
+	std::ostringstream _str;
+	_str<<"spectrum_N="<<gs_nnodes<<".dat";
+	f_name = _str.str();
+	gs_solver.writeSpectrum(&f_name[0]);
+	*/
 /*	
 	for (int k_start = 50; k_start>2; k_start--){
 		file = fopen("output/transitions.dat", "a+");

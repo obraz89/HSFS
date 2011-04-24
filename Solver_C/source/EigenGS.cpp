@@ -1,5 +1,7 @@
 #include "EigenGS.h"
 #include "slepceps.h"
+#include <iostream>
+#include <fstream>
 // task dim =5 3D
 // 4 for 2D
 t_EigenGS::t_EigenGS(const MF_Field& a_rFld, const int a_task_dim):
@@ -77,11 +79,11 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	const double inv_t = 1.0/t;
 	const double inv_mu = 1.0/mu;
 	// k''/k:
-	const double mu_coef = mu1*t1*inv_mu;
-	const double k2k = 2.0*pow(mu_coef,2)-mu_coef;
+	//const double mu_coef = mu1*t1*inv_mu;
+	const double k2k = inv_mu*(mu2*pow(t1,2)+mu1*t2);	//2.0*pow(mu_coef,2)-mu_coef;
 
 	const double dzeta_noW = _alpha*u + _beta*w;
-	const double dzeta_W = -1.0;
+	const double dzeta_W = 1.0;
 
 // set _A
 	_A.setToUnity();
@@ -298,7 +300,8 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 					0.0;
 			}else{
 				_insert_vals[s_base+i] = 
-					-f3*inv_step*a_MMat[i][a_eq_id];
+					-f3*inv_step*a_MMat[i][a_eq_id]
+					+0.5*a_RMat[i][a_eq_id];
 			};
 			_insert_inds[s_base+i] = l_base + i;
 		};
@@ -311,7 +314,8 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 			_insert_vals[s_base+i] = a_RMat[i][a_eq_id];
 		}else{
 			_insert_vals[s_base+i] = 
-				f3*inv_step*a_MMat[i][a_eq_id];
+				f3*inv_step*a_MMat[i][a_eq_id]
+				+0.5*a_RMat[i][a_eq_id];
 		};
 		_insert_inds[s_base+i] = l_base + i;
 	};
@@ -324,7 +328,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 	// filled FO template
 };
 
-int t_EigenGS::search(){
+int t_EigenGS::getSpectrum(){
   static char help[]="Global Search\n";
   // slepc locals
   Mat         	 A,B;		  
@@ -435,10 +439,10 @@ int t_EigenGS::search(){
 
 	//  Create eigensolver context
 	ierr = EPSCreate(PETSC_COMM_WORLD,&eps);CHKERRQ(ierr);
-	//ierr = EPSSetType(eps, EPSARNOLDI);
+	ierr = EPSSetType(eps, EPSARNOLDI);
 	ierr = EPSSetDimensions(eps, large_matrix_size, PETSC_DECIDE, PETSC_DECIDE);
 	ierr = EPSSetOperators(eps,A,B);CHKERRQ(ierr);
-
+	PetscPrintf(PETSC_COMM_WORLD, "matrices assembly: OK");
 	//   Set solver parameters at runtime
 	//ierr = EPSSetFromOptions(eps);CHKERRQ(ierr);
 
@@ -458,29 +462,32 @@ int t_EigenGS::search(){
   
 	ierr = EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
 	ierr = PetscPrintf(PETSC_COMM_WORLD," Number of converged approximate eigenpairs: %d\n\n",nconv);CHKERRQ(ierr);
-
+	_spectrum.resize(nconv, 0.0);
 	if (nconv>0) {
 		ierr = PetscPrintf(PETSC_COMM_WORLD,
          "           k             ||Ax-kBx||/||kx||\n"
          "  --------------------- ------------------\n" );CHKERRQ(ierr);
+
 		for(PetscInt i=0; i<nconv; i++ ) {
 			ierr = EPSGetEigenpair(eps,i,&kr,&ki,PETSC_NULL,PETSC_NULL);CHKERRQ(ierr);
-
 			ierr = EPSComputeRelativeError(eps,i,&error);CHKERRQ(ierr);
 
 			#if defined(PETSC_USE_COMPLEX)
 				re = PetscRealPart(kr);
 				im = PetscImaginaryPart(kr);
+				_spectrum[i] = std::complex<double>(re, im);
 			#else
 				re = kr;
 				im = ki;
 			#endif
+			/*
 			if( im != 0.0 ) {
 				ierr = PetscPrintf(PETSC_COMM_WORLD," % 6f %+6f i",re,im);CHKERRQ(ierr);
 			} else {
 				ierr = PetscPrintf(PETSC_COMM_WORLD,"       % 6f      ",re); CHKERRQ(ierr);
-			}
+			}*/
 			ierr = PetscPrintf(PETSC_COMM_WORLD," % 12g\n",error);CHKERRQ(ierr);
+
 		}
 		ierr = PetscPrintf(PETSC_COMM_WORLD,"\n" );CHKERRQ(ierr);
 	}
@@ -492,3 +499,12 @@ int t_EigenGS::search(){
   return 0;
 
 };
+
+void t_EigenGS::writeSpectrum(const std::string &a_filename){
+	std::ofstream to_f(&a_filename[0]);
+	for (int i=0; i<_spectrum.size(); i++){
+		to_f<<_spectrum[i].real()<<"\t"<<_spectrum[i].imag()<<std::endl;
+	};
+}
+
+
