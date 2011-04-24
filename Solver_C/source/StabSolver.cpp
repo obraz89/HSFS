@@ -471,3 +471,47 @@ t_WaveChars t_StabSolver::searchMaxInstability(const t_WaveChars& initial_guess)
 	t_WaveChars max_instab = initial_guess;
 	return max_instab;
 };
+// input: mode defines the value to be adjusted
+// 0 : alpha (spatial)
+// 1 : beta (spatial)
+// 2 : freq (temporal)
+void t_StabSolver::adjustLocal(t_WaveChars &a_wave_chars, int a_mode){
+	// parameters
+	const t_Complex d_arg = 1.0e-5;
+	const int max_iters = 50;
+	const double tol = 1.0e-4;
+	// ensure that there is a base residual
+	solve(a_wave_chars);
+	t_WaveChars backup = a_wave_chars;
+	t_Complex *choose_arg;
+	if (a_mode==0){
+		choose_arg = &(a_wave_chars.a);
+	}else{
+		if (a_mode==1){
+			choose_arg = &(a_wave_chars.b);
+		}else{
+			choose_arg = &(a_wave_chars.w);
+		};
+	};
+	t_Complex& arg = *choose_arg;
+	t_Complex arg_base = arg;
+	t_Complex res_base = a_wave_chars.resid;
+	t_Complex deriv;
+	for (int i=0; i<max_iters; i++){
+		// check if we are converged
+		if (std::norm(a_wave_chars.resid)<tol){
+			return;
+		};
+		// newton iteration
+		arg+=d_arg;
+		solve(a_wave_chars);
+		deriv = d_arg/(a_wave_chars.resid - res_base);
+		arg = arg_base - res_base*deriv;
+		solve(a_wave_chars);
+		arg_base = arg;
+		res_base = a_wave_chars.resid;
+		std::cout<<"Cur SI"<<res_base<<std::endl;
+	};
+	std::cerr<<"Local Search Error: no convergence"<<std::endl;
+	a_wave_chars = backup;
+};

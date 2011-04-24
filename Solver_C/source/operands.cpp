@@ -131,6 +131,7 @@ t_Complex t_SqMatrix::det() const{
 	// calculate determinant by first row (0):
 	// det = SUM(j)((-1)^(0+j)*det(d(0,j)))
 	// d(0,j) - algebraic minor
+	// TODO: rewrite with gauss (QR)
 	if (this->nCols==1){
 		//const t_Matrix& self = *this;
 		//return self[0][0]*self[1][1] - self[0][1]*self[1][0];

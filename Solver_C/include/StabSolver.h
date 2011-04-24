@@ -33,7 +33,7 @@ class t_StabSolver{
 	std::vector<t_WaveChars> _initWaves;
 
 	// form stability matrix
-	// it is very slow to generate and pass matrices every time 
+	// TOFIX:it is very slow to generate and pass matrices every time 
 	t_SqMatrix getStabMatrix3D(const double& a_y) const;
 	void setStabMatrix3D(const double& a_y, t_SqMatrix& a_matrix) const;
 	// old
@@ -60,11 +60,11 @@ public:
 	t_WaveChars searchMaxInstability(const t_WaveChars& init_guess);
 	// return error code in petsc context
 	int searchGlobal(const int& a_nnodes, const int& a_neigen);
-
+	void adjustLocal(t_WaveChars& a_wave_chars, int a_mode);
 	// core function
 	// returns the value of residual 
 	// for a given wave
-	t_Complex solve(const t_WaveChars& a_wave_chars);
+	t_Complex solve(t_WaveChars& a_wave_chars);
 
 };
 #endif // __STAB_SOLVER

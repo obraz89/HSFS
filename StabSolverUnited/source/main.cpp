@@ -60,6 +60,7 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	w_init.b = 0.1573;
 	t_Complex base_resid = stab_solver.solve(w_init);
 	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
+	stab_solver.adjustLocal(w_init, 2);
 	/*t_EigenGS gs_solver(field, 5);
 	int gs_nnodes = 81;
 	gs_solver.setContext(70, 50, w_init.a.real(), w_init.b.real(), gs_nnodes);

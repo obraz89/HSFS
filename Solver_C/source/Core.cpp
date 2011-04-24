@@ -8,10 +8,12 @@
 
 #include "StabSolver.h"
 
-t_Complex t_StabSolver::solve(const t_WaveChars& stab_point){
+t_Complex t_StabSolver::solve(t_WaveChars& stab_point){
 	this->_waveChars = stab_point;
 	this->_math_solver.setInitials(getAsymptotics3D(stab_point));
 	_math_solver.solve();
-	_waveChars.resid = _math_solver.getResidual3D();
-	return _waveChars.resid ;
+	t_Complex resid = _math_solver.getResidual3D();
+	_waveChars.resid = resid;
+	stab_point.resid = resid;
+	return resid;
 }
