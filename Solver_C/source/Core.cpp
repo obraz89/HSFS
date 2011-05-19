@@ -10,7 +10,7 @@
 
 t_Complex t_StabSolver::solve(t_WaveChars& stab_point){
 	this->_waveChars = stab_point;
-	this->_math_solver.setInitials(getAsymptotics3D(stab_point));
+	this->_math_solver.setInitials(_getAsymptotics3D(stab_point));
 	_math_solver.solve();
 	t_Complex resid = _math_solver.getResidual3D();
 	_waveChars.resid = resid;

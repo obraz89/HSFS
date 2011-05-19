@@ -6,8 +6,6 @@
 #include "ODES.h"
 #include "structs.h"
 
-class t_StabODES;
-
 class t_StabSolver{
 	class t_StabODES : public t_ODES{
 	public:
@@ -32,23 +30,32 @@ class t_StabSolver{
 	// container for initial guesses at a point
 	std::vector<t_WaveChars> _initWaves;
 
-	// form stability matrix
+// stab matrix comps
+
 	// TOFIX:it is very slow to generate and pass matrices every time 
-	t_SqMatrix getStabMatrix3D(const double& a_y) const;
-	void setStabMatrix3D(const double& a_y, t_SqMatrix& a_matrix) const;
-	// old
-	void setMatSplitByW3D_88(const double& a_y, t_SqMatrix& mat_no_w, t_SqMatrix& mat_w) const;
+	t_SqMatrix _getStabMatrix3D(const double& a_y) const;
+	void _setStabMatrix3D(const double& a_y, t_SqMatrix& a_matrix) const;
 	
-	t_Vec formRHS2D(const double& a_y, const t_Vec& a_var);
+	t_Vec _formRHS2D(const double& a_y, const t_Vec& a_var);
 	// rhs function by stab matrix
 	// input for ODES
-	t_Vec formRHS3D(const double& a_y, const t_Vec& a_var) const;
+	t_Vec _formRHS3D(const double& a_y, const t_Vec& a_var) const;
 	// forms initial vectors for integration from outside down to wall
 	// 2D
-	t_Matrix getAsymptotics2D(const t_WaveChars& a_waveChars) const;
+	t_Matrix _getAsymptotics2D(const t_WaveChars& a_waveChars) const;
 	// 3D
-	t_Matrix getAsymptotics3D(const t_WaveChars& a_waveChars) const;
+	t_Matrix _getAsymptotics3D(const t_WaveChars& a_waveChars) const;
+
+// Max instab search realization
+	// group velocity computations
+	void _calcGroupVelocity(t_WaveChars& a_wave_chars);
+	// maximize wi with wr fixed
+	t_WaveChars _getStationaryMaxInstabTime(const t_WaveChars& a_waveChars);
+	// search most unstable wave from the initial guess
+	// all params wr, alpha, beta are varied
+	t_WaveChars _getMaxInstabTime(const t_WaveChars& init_guess);
 public:
+	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
 	t_StabSolver(const MF_Field& a_rFld, t_StabField& a_rFldStab);
 	~t_StabSolver(){};
 	inline int getTaskDim(){return _math_solver.getTaskDim();};
@@ -57,14 +64,14 @@ public:
 	// and binds solver to a stability profile
 	void set2DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
-	t_WaveChars searchMaxInstability(const t_WaveChars& init_guess);
-	// return error code in petsc context
-	int searchGlobal(const int& a_nnodes, const int& a_neigen);
-	void adjustLocal(t_WaveChars& a_wave_chars, int a_mode);
+
+	// search for nearest eigenmode
+	// this is analogue to POISK in FORTRAN code
+	void adjustLocal(t_WaveChars& a_wave_chars, t_MODE a_mode);
 	// core function
 	// returns the value of residual 
 	// for a given wave
 	t_Complex solve(t_WaveChars& a_wave_chars);
-
+	
 };
 #endif // __STAB_SOLVER

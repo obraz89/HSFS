@@ -3,7 +3,7 @@ t_StabSolver::t_StabODES::t_StabODES():
 t_ODES(), _pStab_solver(){};
 
 t_Vec t_StabSolver::t_StabODES::formRHS3D(const double& a_y, const t_Vec &a_var) const{
-	return _pStab_solver->formRHS3D(a_y, a_var);
+	return _pStab_solver->_formRHS3D(a_y, a_var);
 };
 
 bool t_StabSolver::t_StabODES::needOrtho(const t_Matrix& a_cur_sol){

@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 class MF_Field{
-	friend class StreamLine;
 	friend class WavePackLine;
 	friend class t_ProfileNS;
 	friend class StabSolver;

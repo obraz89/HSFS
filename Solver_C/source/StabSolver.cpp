@@ -34,7 +34,7 @@ void t_StabSolver::setParameters(t_ProfileStab& a_profStab){
 
 // private, to be used in 3D context
 
-t_SqMatrix t_StabSolver::getStabMatrix3D(const double& a_y) const{
+t_SqMatrix t_StabSolver::_getStabMatrix3D(const double& a_y) const{
 
 	t_SqMatrix stab_matrix(8);
 	t_CompVal imagUnity(0.0, 1.0);
@@ -173,7 +173,7 @@ t_SqMatrix t_StabSolver::getStabMatrix3D(const double& a_y) const{
 };
 
 // old - can be used only in local spectral procedures
-void t_StabSolver::setMatSplitByW3D_88(const double& a_y, t_SqMatrix& mat_no_w, t_SqMatrix& mat_w) const{
+/*void t_StabSolver::setMatSplitByW3D_88(const double& a_y, t_SqMatrix& mat_no_w, t_SqMatrix& mat_w) const{
 	t_CompVal imagUnity(0.0, 1.0);
 
 	const double& stabRe = _profStab.stabRe;
@@ -348,12 +348,12 @@ void t_StabSolver::setMatSplitByW3D_88(const double& a_y, t_SqMatrix& mat_no_w, 
 	mat_w[6][4] = imagUnity*stabRe*inv_t*inv_mu*dEicon_W;
 
 	return;
-};
+};*/
 
-t_Vec t_StabSolver::formRHS3D(const double& a_y, const t_Vec& a_vars) const{
+t_Vec t_StabSolver::_formRHS3D(const double& a_y, const t_Vec& a_vars) const{
 	// TODO: check input vector dimension and
 	// if it is not of 8 elems throw mega-exception)
-	t_SqMatrix stab_matrix = getStabMatrix3D(a_y);
+	t_SqMatrix stab_matrix = _getStabMatrix3D(a_y);
 	t_Matrix input(1, 8);
 	for (int i=0; i<8; i++){
 		input[0][i] = a_vars[i];
@@ -365,13 +365,13 @@ t_Vec t_StabSolver::formRHS3D(const double& a_y, const t_Vec& a_vars) const{
 	return output[0];
 };
 
-t_Matrix t_StabSolver::getAsymptotics3D(const t_WaveChars& a_waveChars) const{
+t_Matrix t_StabSolver::_getAsymptotics3D(const t_WaveChars& a_waveChars) const{
 	t_Matrix initial_vectors(4,8);
 	t_SqMatrix b_coef(4);
 	t_Vec lambda(4,0.0);
 	const double& y_e = _profStab.y.back();
 	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
-	t_SqMatrix outer_matrix = getStabMatrix3D(y_e);	
+	t_SqMatrix outer_matrix = _getStabMatrix3D(y_e);	
 
 	// TODO: what is all this about?
 
@@ -465,17 +465,91 @@ void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a
 	return;
 }
 
-t_WaveChars t_StabSolver::searchMaxInstability(const t_WaveChars& initial_guess){
-	// rewrite fortran |
-	//SEARCH_MAX_INSTAB_TIME();
-	t_WaveChars max_instab = initial_guess;
-	return max_instab;
+/*   COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) */        
+void t_StabSolver::_calcGroupVelocity(t_WaveChars &a_wave_chars){
+	// empiric constant - tolerance
+	const double dd = 1.0e-6;
+	// ensure that we are in eigen 
+	adjustLocal(a_wave_chars, W_MODE);
+
+	t_WaveChars left_chars = a_wave_chars;
+	t_WaveChars rght_chars = a_wave_chars;
+	// dalpha
+	left_chars.a-=dd;
+	rght_chars.a+=dd;
+    adjustLocal(left_chars, W_MODE);
+	adjustLocal(rght_chars, W_MODE);
+	a_wave_chars.vga = 0.5*(rght_chars.w - left_chars.w)/dd;
+
+	// reset left, right
+	left_chars = a_wave_chars;
+	rght_chars = a_wave_chars;
+
+	left_chars.b-=dd;
+	rght_chars.b+=dd;
+    adjustLocal(left_chars, W_MODE);
+	adjustLocal(rght_chars, W_MODE);
+	a_wave_chars.vgb = 0.5*(rght_chars.w - left_chars.w)/dd;
+}
+
+t_WaveChars t_StabSolver::_getStationaryMaxInstabTime(const t_WaveChars& initial_guess){
+	t_WaveChars cur_wave = initial_guess;
+	t_WaveChars def_wave = initial_guess;
+	t_Complex gv;
+	double da, db;     
+
+	do{
+		adjustLocal(def_wave, W_MODE);   
+		_calcGroupVelocity(def_wave);
+		db = 0.01*def_wave.a.real();
+		double coef = def_wave.vgb.real()/def_wave.vga.real();
+		da = -coef*db;
+
+		cur_wave.a = def_wave.a + da;
+		cur_wave.b = def_wave.b + db;
+		cur_wave.w = def_wave.w;
+		adjustLocal(cur_wave, W_MODE);
+
+		if (cur_wave.w.imag()<def_wave.w.imag()){
+			db = -db;
+			da = -coef*db;
+			cur_wave.a = def_wave.a + da;
+			cur_wave.b = def_wave.b + db;
+			cur_wave.w = def_wave.w;
+			adjustLocal(cur_wave, W_MODE);		
+		}	
+	} while(def_wave.w.imag()<cur_wave.w.imag());
+	std::cout<<"STAT:A="<<def_wave.a.real()<<"; B="<<def_wave.b.real()<<"\n----:W="
+		<<def_wave.w<<std::endl;
+	return def_wave;
+};
+
+t_WaveChars t_StabSolver::_getMaxInstabTime(const t_WaveChars &init_guess){
+	// empiric half percent per iteration
+	double dar = 0.005*init_guess.a.real();
+	t_WaveChars base_wave = _getStationaryMaxInstabTime(init_guess);
+	_calcGroupVelocity(base_wave);
+	t_WaveChars next_wave = base_wave;
+	next_wave.a+=dar;
+	next_wave.w+=base_wave.vga*dar;
+	next_wave = _getStationaryMaxInstabTime(next_wave);
+	// do we move in proper direction ?
+	if (next_wave.w.imag()<base_wave.w.imag()){
+		dar = -dar;
+	};
+	
+	do{
+		base_wave = next_wave;
+		_calcGroupVelocity(base_wave);
+		next_wave.a+=dar;
+		next_wave.w+=base_wave.vga*dar;
+		next_wave = _getStationaryMaxInstabTime(next_wave);
+	} while (base_wave.w.imag()>next_wave.w.imag());
+	return base_wave;
 };
 // input: mode defines the value to be adjusted
-// 0 : alpha (spatial)
-// 1 : beta (spatial)
-// 2 : freq (temporal)
-void t_StabSolver::adjustLocal(t_WaveChars &a_wave_chars, int a_mode){
+// see stabsolver.h for mode enum definition
+void t_StabSolver::adjustLocal(t_WaveChars &a_wave_chars, t_StabSolver::t_MODE a_mode){
 	// parameters
 	const t_Complex d_arg = 1.0e-5;
 	const int max_iters = 50;
@@ -484,10 +558,10 @@ void t_StabSolver::adjustLocal(t_WaveChars &a_wave_chars, int a_mode){
 	solve(a_wave_chars);
 	t_WaveChars backup = a_wave_chars;
 	t_Complex *choose_arg;
-	if (a_mode==0){
+	if (a_mode==A_MODE){
 		choose_arg = &(a_wave_chars.a);
 	}else{
-		if (a_mode==1){
+		if (a_mode==B_MODE){
 			choose_arg = &(a_wave_chars.b);
 		}else{
 			choose_arg = &(a_wave_chars.w);
