@@ -26,7 +26,6 @@ class t_StabSolver{
 	// keep current stability_matrix
 	t_SqMatrix _stab_matrix;
 	const MF_Field& _rFldNS; // to get global field params
-	t_StabField& _rFldStab;  // link to stability data field
 	t_ProfileStab _profStab; // current profile
 
 	t_WaveChars _waveChars;  // to keep current state of wave 
@@ -59,7 +58,7 @@ class t_StabSolver{
 	t_WaveChars _getMaxInstabTime(const t_WaveChars& init_guess);
 public:
 	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
-	t_StabSolver(const MF_Field& a_rFld, t_StabField& a_rFldStab);
+	t_StabSolver(const MF_Field& a_rFld);
 	~t_StabSolver(){};
 	inline int getTaskDim(){return _math_solver.getTaskDim();};
 	// formulate stability task in  

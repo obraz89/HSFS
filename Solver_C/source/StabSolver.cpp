@@ -1,7 +1,7 @@
 #include "StabSolver.h"
 //#include "SolverCore.h"
-t_StabSolver::t_StabSolver(const MF_Field& a_rFldNS, t_StabField& a_rFldStab):
-_rFldNS(a_rFldNS), _rFldStab(a_rFldStab), _profStab(0), 
+t_StabSolver::t_StabSolver(const MF_Field& a_rFldNS):
+_rFldNS(a_rFldNS), _profStab(0), 
 // default is 3D - 8x8 stab matrix
 _math_solver(), _stab_matrix(8){
 	_math_solver._pStab_solver = this;
