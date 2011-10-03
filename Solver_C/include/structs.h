@@ -1,3 +1,4 @@
+#include "Elems.h"
 #ifndef __STAB_ELEMS
 #define __STAB_ELEMS
 // instability wave characteristics 
