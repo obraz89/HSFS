@@ -6,6 +6,8 @@
 #include "ODES.h"
 #include "structs.h"
 
+// TODO: make different inheritance for 2D and 3D
+
 class t_StabSolver{
 	class t_StabODES : public t_ODES{
 	public:
@@ -21,7 +23,8 @@ class t_StabSolver{
 	};
 	// algebraic solver
 	t_StabODES _math_solver;
-
+	// keep current stability_matrix
+	t_SqMatrix _stab_matrix;
 	const MF_Field& _rFldNS; // to get global field params
 	t_StabField& _rFldStab;  // link to stability data field
 	t_ProfileStab _profStab; // current profile
@@ -33,18 +36,18 @@ class t_StabSolver{
 // stab matrix comps
 
 	// TOFIX:it is very slow to generate and pass matrices every time 
-	t_SqMatrix _getStabMatrix3D(const double& a_y) const;
-	void _setStabMatrix3D(const double& a_y, t_SqMatrix& a_matrix) const;
+	//const t_SqMatrix& _getStabMatrix3D(const double& a_y) const;
+	void _setStabMatrix3D(const double& a_y);
 	
 	t_Vec _formRHS2D(const double& a_y, const t_Vec& a_var);
 	// rhs function by stab matrix
 	// input for ODES
-	t_Vec _formRHS3D(const double& a_y, const t_Vec& a_var) const;
+	t_Vec _formRHS3D(const double& a_y, const t_Vec& a_var);
 	// forms initial vectors for integration from outside down to wall
 	// 2D
-	t_Matrix _getAsymptotics2D(const t_WaveChars& a_waveChars) const;
+	t_Matrix _getAsymptotics2D(const t_WaveChars& a_waveChars);
 	// 3D
-	t_Matrix _getAsymptotics3D(const t_WaveChars& a_waveChars) const;
+	t_Matrix _getAsymptotics3D(const t_WaveChars& a_waveChars);
 
 // Max instab search realization
 	// group velocity computations
@@ -62,9 +65,13 @@ public:
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors
 	// and binds solver to a stability profile
+
+	// TODO: all methods below must be private, this is only for debug
 	void set2DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
-
+	// load initial approaches
+	// from EigenSearch solver
+	void setInitWaves(const std::vector<t_WaveChars>&);
 	// search for nearest eigenmode
 	// this is analogue to POISK in FORTRAN code
 	void adjustLocal(t_WaveChars& a_wave_chars, t_MODE a_mode);
@@ -72,6 +79,9 @@ public:
 	// returns the value of residual 
 	// for a given wave
 	t_Complex solve(t_WaveChars& a_wave_chars);
+	// interface 
+	t_WaveChars getMaxWave(const int& i_ind, const int& k_ind,
+							const int& a_nnodesStab, const std::vector<t_WaveChars>& a_inits);
 	
 };
 #endif // __STAB_SOLVER
