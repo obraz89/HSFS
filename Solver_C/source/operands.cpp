@@ -182,3 +182,7 @@ t_SqMatrix& t_SqMatrix::operator=(const t_Matrix& rval){
 	base = rval;
 	return *this;
 }
+
+void t_SqMatrix::resize(int a_size){
+	_cont.resize(a_size, t_Vec(a_size, 0.0));
+};

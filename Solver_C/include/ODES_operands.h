@@ -35,7 +35,7 @@ t_Vec operator*(const t_Complex&, const t_Vec&);
 // if matrix A is mul by set of vectors  h={h1, h2,} this means h*A ( like "basis" transition)
 
 class t_Matrix{
-private:
+protected:
 	std::vector<t_Vec> _cont;
 public:
 	int nCols, nRows;
@@ -55,6 +55,7 @@ public:
 	t_SqMatrix& operator=(const t_Matrix& rval);
 	~t_SqMatrix();
 	void setToUnity();
+	void resize(int a_size);
 	t_Complex det() const;
 	t_SqMatrix inverse() const;
 };
