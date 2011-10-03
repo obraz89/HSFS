@@ -328,8 +328,12 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 	// filled FO template
 };
 
-int t_EigenGS::getSpectrum(){
+int t_EigenGS::getSpectrum(const int a_i, const int a_k, 
+	     			  const double& a_alpha, const double& a_beta,
+					  const int a_nnodes){
   static char help[]="Global Search\n";
+  // conext
+  setContext(a_i, a_k, a_alpha, a_beta, a_nnodes);
   // slepc locals
   Mat         	 A,B;		  
   EPS         	 eps;		  
@@ -507,4 +511,22 @@ void t_EigenGS::writeSpectrum(const std::string &a_filename){
 	};
 }
 
+std::vector<t_WaveChars> t_EigenGS::getDiscreteModes(const int a_i, const int a_k, 
+	     			  const double& a_alpha, const double& a_beta,
+					  const int a_nnodes){
+	std::vector<t_WaveChars> inits;
+	getSpectrum(a_i, a_k, a_alpha, a_beta, a_nnodes);
+	// select discrete modes
+	// TODO: empirics!!!
+	for (int i=0; i<_spectrum.size(); i++){
+		if (_spectrum[i].imag()>1.0e-5){
+			t_WaveChars init_wave;
+			init_wave.a = _alpha;
+			init_wave.b = _beta;
+			init_wave.w = _spectrum[i];
+			inits.push_back(init_wave);
+		}
+	}
+	return inits;
+};
 

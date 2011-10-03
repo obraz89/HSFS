@@ -1,6 +1,8 @@
 #include "StabSolver.h"
 #include <string>
 class t_EigenGS{
+	// TODO: store current i,k to check
+	// if context is already set
 	const MF_Field& _rFldNS;
 	// temporal
 	double _alpha, _beta;
@@ -23,12 +25,16 @@ class t_EigenGS{
 						  const int a_nnode, const int a_eq_id);
 	// 
 	void select();
-	
+	void setContext(const int a_i, const int a_k, 
+	     			  const double& a_alpha, const double& a_beta,
+					  const int a_nnodes);
 public:
 	t_EigenGS(const MF_Field& a_rFld, const int a_task_dim);
-	void setContext(const int a_i, const int a_k, 
-					  const double& a_alpha, const double& a_beta,
+	int getSpectrum(const int a_i, const int a_k, 
+	     			  const double& a_alpha, const double& a_beta,
 					  const int a_nnodes);
-	int getSpectrum();
+	std::vector<t_WaveChars> getDiscreteModes(const int a_i, const int a_k, 
+	     			  const double& a_alpha, const double& a_beta,
+					  const int a_nnodes);
 	void writeSpectrum(const std::string& a_filename);
 };
