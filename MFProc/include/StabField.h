@@ -1,17 +1,15 @@
-#include "Elems.h"
+#include <vector>
+#include "structs.h"
 #ifndef __StabField__
 #define __StabField__
 class t_StabField{
-	struct t_StabDataPoint{
-	};
 	const int nx;
 	const int nz;
-	t_StabDataPoint **init_values, **max_values;  
+	std::vector<std::vector<t_WaveChars>> _values;  
 public:
 	t_StabField(int _nx, int _nz);
-	void write_max(int i, int k);	// fake
-	t_StabDataPoint& read_init(int i, int k) const;
-	const t_StabDataPoint& read_max(int i, int k) const;
+	void write(const int i, const int k, const t_WaveChars val);	// fake
+	const t_WaveChars& read(int i, int k) const;
 	~t_StabField();
 };
 #endif	

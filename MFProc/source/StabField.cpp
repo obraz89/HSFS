@@ -1,30 +1,12 @@
 #include "StabField.h"
-#include "Elems.h"
-t_StabField::t_StabField(int _nx, int _nz):nx(_nx), nz(_nz){
-	max_values = new t_StabDataPoint*[nx];
-	init_values = new t_StabDataPoint*[nx];
-	for (int i=0; i<nx; i++){
-		max_values[i] = new t_StabDataPoint[nz];
-		init_values[i] = new t_StabDataPoint[nz];
-	}
-}
+t_StabField::t_StabField(int a_nx, int a_nz):nx(a_nx), nz(a_nz), _values(a_nx, std::vector<t_WaveChars>(a_nz)){}
 
-t_StabField::~t_StabField(){
-	for (int i=0; i<nx; i++){
-		delete[] max_values[i];
-		delete[] init_values[i];
-	}
-	delete[] max_values, init_values;
-}
-void t_StabField::write_max(int i_ind, int k_ind){
-	//max_values[i_ind][k_ind].a_spat = SOLVER_OUTPUT.A_SPAT;
-	//max_values[i_ind][k_ind].b_spat = SOLVER_OUTPUT.B_SPAT;
-	//max_values[i_ind][k_ind].w_spat = SOLVER_OUTPUT.W_SPAT;
-	//max_values[i_ind][k_ind].vga = VGRC.VA;
-	//max_values[i_ind][k_ind].vgb = VGRC.VB;
+t_StabField::~t_StabField(){};
+void t_StabField::write(const int i_ind, const int k_ind, const t_WaveChars val){
+	_values[i_ind][k_ind]=val;
 };
 
-const t_StabField::t_StabDataPoint& t_StabField::read_max(int i, int k) const{
-	return this->max_values[i][k]; 
+const t_WaveChars& t_StabField::read(int i, int k) const{
+	return this->_values[i][k]; 
 };
 
