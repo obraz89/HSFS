@@ -349,7 +349,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
   int mpi_rank, comm_size;
 
   // pass command line arguments
-  SlepcInitialize((int*)0,(char***)0,(char*)0,help);
+  //SlepcInitialize((int*)0,(char***)0,(char*)0,help);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_nnodes);CHKERRQ(ierr);
 
   MPI_Comm_size(PETSC_COMM_WORLD, &comm_size);
@@ -499,7 +499,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
   ierr = EPSDestroy(eps);CHKERRQ(ierr);
   ierr = MatDestroy(A);CHKERRQ(ierr);
   ierr = MatDestroy(B);CHKERRQ(ierr);
-  ierr = SlepcFinalize();CHKERRQ(ierr);
+  //ierr = SlepcFinalize();CHKERRQ(ierr);
   return 0;
 
 };
@@ -528,5 +528,25 @@ std::vector<t_WaveChars> t_EigenGS::getDiscreteModes(const int a_i, const int a_
 		}
 	}
 	return inits;
+};
+
+t_WaveChars t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes){
+	// This is the most interesting question : ask AVF
+	double a_min = 0.01;
+	double a_max = 1.5;
+	double b_min = 0.01;
+	double b_max = 1.5;
+	int n_a = 30;
+	int n_b = 30;
+	std::vector<t_WaveChars> all_initials;
+	for (int i=0; i<n_a; i++){
+		for(int j=0; j<n_b; j++){
+			double a = a_min + (a_max-a_min)/double(n_a)*i;
+			double b = b_min + (b_max-b_min)/double(n_b)*j;
+			std::vector<t_WaveChars> inits = getDiscreteModes(a_i, a_k, a, b, a_nnodes);
+			all_initials.push_back(t_WaveChars::find_max_instab(inits));
+		}
+	}
+	return t_WaveChars::find_max_instab(all_initials);
 };
 

@@ -1,4 +1,11 @@
-#include "StabSolver.h"
+#ifndef __EigenGS__
+#define __EigenGS__
+#include "math_operands.h"
+#include "SmProfile.h"
+#include "MF_Field.h"
+#include "StabField.h"
+#include "structs.h"
+
 #include <string>
 class t_EigenGS{
 	// TODO: store current i,k to check
@@ -36,5 +43,8 @@ public:
 	std::vector<t_WaveChars> getDiscreteModes(const int a_i, const int a_k, 
 	     			  const double& a_alpha, const double& a_beta,
 					  const int a_nnodes);
+	// parameters ?
+	t_WaveChars searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes);
 	void writeSpectrum(const std::string& a_filename);
 };
+#endif // __EigenGs__

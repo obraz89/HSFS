@@ -9,6 +9,7 @@
 #include "StabField.h"
 
 // debug
+#include "slepceps.h"
 #include "EigenGS.h"
 
 // for console io operations
@@ -50,43 +51,50 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	t_StabField stab_field(nx, nz);
 	field.trans_to_cyl();
 // set up ODES & StabSolver
-	t_StabSolver stab_solver(field, stab_field);
-// iterate over start positions for wave pack lines
-	// DEBUG
-	stab_solver.set3DContext(70, 50, 150);
+	t_StabSolver stab_solver(field);
+// field of max instab frequencies
+	t_StabField max_freq_fld(nx, nz);
+	// core debug
 	t_WaveChars w_init;
 	w_init.w = t_Complex(3.85e-2, 2.55e-3);
 	w_init.a = 0.102;
 	w_init.b = 0.2577;
-	/*t_Complex base_resid = stab_solver.solve(w_init);
+	/*
+	stab_solver.set3DContext(70,50, 150);
+	t_Complex base_resid = stab_solver.solve(w_init);
 	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
-	stab_solver.adjustLocal(w_init, 2);
+	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
+	return 0;
 	*/
+	SlepcInitialize((int*)0,(char***)0,(char*)0,"hello world");
 	t_EigenGS gs_solver(field, 5);
 	int gs_nnodes = 41;
-	gs_solver.setContext(70, 10, w_init.a.real(), w_init.b.real(), gs_nnodes);
-	gs_solver.getSpectrum();
+	t_WaveChars max_instab = gs_solver.searchMaxInstabGlob(70,50,gs_nnodes);
+	max_instab.print();
+	//std::vector<t_WaveChars> inits = gs_solver.getDiscreteModes(70,10,w_init.a.real(), w_init.b.real(), gs_nnodes);
+	//gs_solver.setContext();
+	// GS Debug
+	/*
+	gs_solver.getSpectrum(70, 50, w_init.a.real(), w_init.b.real(), gs_nnodes);
 	std::string f_name;
 	std::ostringstream _str;
-	_str<<"spectrum_lee_N="<<gs_nnodes<<".dat";
+	_str<<"spectrum_bp0.5_N="<<gs_nnodes<<".dat";
 	f_name = _str.str();
 	gs_solver.writeSpectrum(&f_name[0]);
-/*	
-	for (int k_start = 50; k_start>2; k_start--){
-		file = fopen("output/transitions.dat", "a+");
-		std::cout<<"------------------------------------k_start="<<k_start<<"\n";
-		int i_start = 5;
-		double x_tr, t_tr;
-//		WavePackLine wp_line(field, stab_field,70, 50, k_start);
-//		wp_line.find_transition_location(x_tr, t_tr);
-		//wp_line.print_line_to_file();
-		//to_f_trans<<x_tr<<"\t"<<t_tr<<"\n";
-//		fprintf(file,"%f\t%f\n", x_tr, t_tr);
-//		fclose(file);
-	}
-*/	
-	//to_f_trans.close();
+	*/
 
+// try collecting all in one flow
+/*
+for (int k = 0; k<nz; k++){
+	for (int i=10; i<nx; i++){
+		//std::vector<t_WaveChars> inits = gs_solver.getDiscreteModes(i, k,
+		stab_solver.getMaxWave(
+	}	
+}
+*/	
+//to_f_trans.close();
+	int ierr = SlepcFinalize();CHKERRQ(ierr);
+	getchar();
 	getchar();
 	return 0;
 }
