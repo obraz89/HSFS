@@ -189,11 +189,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\ODES.h"
+				RelativePath=".\include\math_operands.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\ODES_operands.h"
+				RelativePath=".\include\ODES.h"
 				>
 			</File>
 			<File
