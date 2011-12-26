@@ -1,56 +1,115 @@
-#include "MF_Field.h"
-#include <cmath>
-#include <iostream>
-#include <sstream>
-#include <string>
-#include <vector>
-#include <fstream>
-MF_Field::MF_Field(std::string _str, int _nx, int _ny, int _nz):
-nx(_nx), ny(_ny), nz(_nz), viscLaw(0)
-{
-fld = new Rec**[nx];
-for(int i=0;i<nx;i++) 
-{
-	fld[i] = new Rec*[ny];
-	for(int j=0;j<ny;j++)
+#include "MeanFlow.h"
+
+void t_MeanFlow::_allocate(){
+	const int& Nx = Params.Nx;
+	const int& Ny = Params.Ny;
+	const int& Nz = Params.Nz;
+
+	_fld = new t_Rec**[Nx];
+	for(int i=0;i<Nx;i++) 
 	{
-		fld[i][j] =new Rec[nz];
-	};
+		_fld[i] = new t_Rec*[Ny];
+		for(int j=0;j<Ny;j++)
+		{
+			_fld[i][j] = new t_Rec[Nz];
+		};
+	}
 }
-FILE* fld_file = fopen(&_str[0],"rb");
+t_MeanFlow::t_MeanFlow(const char* a_config_fname):
+Params(a_config_fname)
+{
+_allocate();
+const int& Nx = Params.Nx;
+const int& Ny = Params.Ny;
+const int& Nz = Params.Nz;
+FILE* fld_file = fopen(&Params._mf_bin_path[0],"rb");
 //reverse order!! k,j,i
-for(int k=0; k<nz; k++)	
-	for (int j=0; j<ny; j++)
-		for(int i=0; i<nx; i++){
-			Rec& ptr = fld[i][j][k];
+for(int k=0; k<Nz; k++)	
+	for (int j=0; j<Ny; j++)
+		for(int i=0; i<Nx; i++){
+			t_Rec& ptr = _fld[i][j][k];
 			fread(&ptr.x,sizeof(double),1,fld_file);
 			fread(&ptr.y,sizeof(double),1,fld_file);
 			fread(&ptr.z,sizeof(double),1,fld_file);
 		}
-for(int k=0; k<nz; k++)	
-	for (int j=0; j<ny; j++)
-		for(int i=0; i<nx; i++){
-			Rec& ptr = fld[i][j][k];
+for(int k=0; k<Nz; k++)	
+	for (int j=0; j<Ny; j++)
+		for(int i=0; i<Nx; i++){
+			t_Rec& ptr = _fld[i][j][k];
 			fread(&ptr.u,sizeof(double),1,fld_file);
 			fread(&ptr.v,sizeof(double),1,fld_file);
 			fread(&ptr.w,sizeof(double),1,fld_file);
 			fread(&ptr.p,sizeof(double),1,fld_file);
 			fread(&ptr.t,sizeof(double),1,fld_file);
-			ptr.r=Gamma*Mach*Mach*ptr.p/ptr.t;
+			double gmama = Params.Gamma*Params.Mach*Params.Mach;
+			ptr.r=gmama*ptr.p/ptr.t;
 		};
 
 fclose(fld_file);
 };
-MF_Field::~MF_Field()
+
+t_MeanFlow::t_MeanFlow(const char* a_config_fname2D, bool axesym, int kk):
+Params(a_config_fname2D, kk){
+_allocate();
+const int& Nx = Params.Nx;
+const int& Ny = Params.Ny;
+const int& Nz = Params.Nz;
+FILE* fld_file = fopen(&Params._mf_bin_path[0],"rb");
+double gmama = Params.Gamma*Params.Mach*Params.Mach;
+// in 2D fields the packing is by column
+t_Rec base_rec2D;
+for (int i=0; i<Nx; i++){
+	for (int j=0; j<Ny; j++){
+		fread(&base_rec2D.x,sizeof(double),1,fld_file);
+		fread(&base_rec2D.y,sizeof(double),1,fld_file);
+		fread(&base_rec2D.u,sizeof(double),1,fld_file);
+		fread(&base_rec2D.v,sizeof(double),1,fld_file);
+		fread(&base_rec2D.p,sizeof(double),1,fld_file);
+		fread(&base_rec2D.t,sizeof(double),1,fld_file);
+		base_rec2D.r=gmama*base_rec2D.p/base_rec2D.t;
+		for (int k=0; k<Nz; k++){
+			t_Rec& rRec = _fld[i][j][k];
+			if (axesym){
+				double psi = 2*M_PI/double(Nz-1)*k;
+				rRec.x = base_rec2D.x;
+				rRec.y = base_rec2D.y*cos(psi);
+				rRec.z = base_rec2D.y*sin(psi);
+				rRec.u = base_rec2D.u;
+				rRec.v = base_rec2D.v*cos(psi);
+				rRec.w = base_rec2D.v*sin(psi);
+				rRec.p = base_rec2D.p;
+				rRec.t = base_rec2D.t;
+				rRec.r = base_rec2D.r;
+			}else{
+				// ???
+				double z_span = 1.0;
+				rRec = base_rec2D;
+				rRec.z = k-0.5; // z from -0.5 to 0.5
+				rRec.w = 0.0;
+			};
+		}
+	}
+}
+
+};
+t_MeanFlow::~t_MeanFlow()
 {
-	for (int i=0; i<nx; i++)
+	for (int i=0; i<Params.Nx; i++)
 	{
-		for (int j=0; j<ny; j++) delete[] fld[i][j];
-		delete[] fld[i];
+		for (int j=0; j<Params.Ny; j++) delete[] _fld[i][j];
+		delete[] _fld[i];
 	}
 };
 
-void MF_Field::trans_to_cyl(){
+const t_MeanFlow::t_Rec& t_MeanFlow::get_rec(const t_MeanFlow::t_GridIndex& ind) const{
+	return _fld[ind.i][ind.j][ind.k];
+};
+
+const t_MeanFlow::t_Rec& t_MeanFlow::get_rec(int i, int j , int k) const{
+	return _fld[i][j][k];
+};
+/*
+void t_MeanFlow::trans_to_cyl(){
 for(int i=0; i<nx; i++)
 	for (int j=0; j<ny; j++)
 		for (int k=0; k<nz; k++){				
@@ -63,7 +122,7 @@ for(int i=0; i<nx; i++)
 			if (R>0.0) 
 			{
 				psi = acos(old_rec.x/R);
-				alpha = psi - MF_Field::Theta;
+				alpha = psi - t_MeanFlow::Theta;
 			}
 			else 
 				alpha = 3.141592654;
@@ -97,28 +156,29 @@ for(int i=0; i<nx; i++)
 			ptr.r = old_rec.r;
 		};
 };
-
-void MF_Field::create_k_slice(const int k_num) const{
+*/
+/*
+void t_MeanFlow::create_k_slice(const int k_num) const{
 std::ostringstream _to_slice;
 std::ostringstream _to_slice_txt;
 //_to_slice<<"output/slice_k="<<k_num<<"_al="<<int(Alpha*58.0)<<".dat";
-_to_slice<<"output/slice_k="<<k_num<<"_al="<<int(Alpha*58.0)<<"_new.dat";
+_to_slice<<"output/slice_k="<<k_num<<"_al="<<int(Params.Alpha*58.0)<<"_new.dat";
 std::string filename = _to_slice.str();
 FILE* out = fopen(&filename[0], "wb");
-for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++){ 
-		const Rec& ptr = fld[i][j][k_num];
+for (int j=0; j<Params.Ny; j++)
+	for (int i=0; i<Params.Nx; i++){ 
+		const t_Rec& ptr = _fld[i][j][k_num];
 		double X, Y;
-		X = ptr.x*cos(MF_Field::Theta) - ptr.y*sin(MF_Field::Theta);
-		Y = ptr.x*sin(MF_Field::Theta) + ptr.y*cos(MF_Field::Theta);
+		X = ptr.x*cos(Params::Theta) - ptr.y*sin(t_MeanFlow::Theta);
+		Y = ptr.x*sin(t_MeanFlow::Theta) + ptr.y*cos(t_MeanFlow::Theta);
 		fwrite(&X, sizeof(double),1,out);
 		fwrite(&Y, sizeof(double),1,out);
 	};
 
-for (int j=0; j<ny; j++)
-	for (int i=0; i<nx; i++)
+for (int j=0; j<Params.Ny; j++)
+	for (int i=0; i<Params.Nx; i++)
 	{
-		const Rec& ptr = fld[i][j][k_num];
+		const t_Rec& ptr = _fld[i][j][k_num];
 		fwrite(&ptr.u, sizeof(double),1,out);
 		fwrite(&ptr.v, sizeof(double),1,out);
 		fwrite(&ptr.w, sizeof(double),1,out);
@@ -129,52 +189,52 @@ for (int j=0; j<ny; j++)
 std::cout<<"Binary data file for 2D viewer created, k="<<k_num<<"\n";
 fclose(out);
 };
-
-void MF_Field::print_entry(const int i, const int j, const int k) const
+*/
+void t_MeanFlow::print_entry(const int i, const int j, const int k) const
 {
-const Rec& p = fld[i][j][k];
+const t_Rec& p = _fld[i][j][k];
 std::cout<<i<<";"<<j<<";"<<k
 	<<"\nX:"<<p.x<<"  Y:"<<p.y<<"  Z:"<<p.z
 	<<"\nU:"<<p.u<<"  V:"<<p.v<<"  W:"<<p.w
 	<<"\nP:"<<p.p<<"  T:"<<p.t<<" Ro:"<<p.r<<"\n";
 };
 
-double MF_Field::calc_enthalpy(const int i, const int j, const int k) const
+double t_MeanFlow::calc_enthalpy(const int i, const int j, const int k) const
 {
 double cp_t, v_2;
-const Rec& ptr = fld[i][j][k];
-cp_t = ptr.t/((Gamma-1.0)*Mach*Mach);
+const t_Rec& ptr = _fld[i][j][k];
+cp_t = ptr.t/((Params.Gamma-1.0)*Params.Mach*Params.Mach);
 v_2 = 0.5*(pow(ptr.u,2.0)+pow(ptr.v,2.0)+pow(ptr.w,2.0));
 return (cp_t + v_2);
 };
 
-double MF_Field::calc_delta(const int i, const int k) const
+double t_MeanFlow::calc_delta(const int i, const int k) const
 {
 return 0.0;
 };
 // calc nondim viscosity
-double MF_Field::calc_viscosity(const int i, const int j, const int k) const{
-	const Rec& rRec = fld[i][j][k];
-	if (Visc_type==0){
+double t_MeanFlow::calc_viscosity(const int i, const int j, const int k) const{
+	const t_Rec& rRec = _fld[i][j][k];
+	if (Params.ViscType==Params.ViscPower){
 		// power
-		return pow(rRec.t, Mju_pow);
+		return pow(rRec.t, Params.Mju_pow);
 	}
 	else {
 		// Suther
-		double loc_t_factor=1.0+0.5*(Gamma-1.0)*pow(calc_mach(i,j,k),2.0);
-		double stag_t_factor=1.0+0.5*(Gamma-1.0)*pow(Mach,2.0);
-		double t_coef = T_mju*loc_t_factor/stag_t_factor;
+		double loc_t_factor=1.0+0.5*(Params.Gamma-1.0)*pow(calc_mach(i,j,k),2.0);
+		double stag_t_factor=1.0+0.5*(Params.Gamma-1.0)*pow(Params.Mach,2.0);
+		double t_coef = Params.T_mju*loc_t_factor/stag_t_factor;
 		return pow(rRec.t, 1.5)*(1.0+t_coef)/(rRec.t+t_coef);
 	}
 };
 
-double MF_Field::calc_mach(const int i, const int j, const int k) const{
-	const Rec& rRec = fld[i][j][k];
+double t_MeanFlow::calc_mach(const int i, const int j, const int k) const{
+	const t_Rec& rRec = _fld[i][j][k];
 	double vAbs = sqrt(pow(rRec.u,2.0)+pow(rRec.v,2.0)+pow(rRec.w,2.0));
-	return Mach*vAbs/sqrt(rRec.t);
+	return Params.Mach*vAbs/sqrt(rRec.t);
 }
 
-int MF_Field::get_bound_index(const int i_ind, const int k_ind) const
+int t_MeanFlow::get_bound_index(const int i_ind, const int k_ind) const
 {
 	/* for spec. xz_plane_ind. = {i,0,k} computes {i,j,k},
 	   j is boundary layer border index;
@@ -198,7 +258,51 @@ while(!brd_rchd)
 return (j);
 };
 
-void MF_Field::get_merid_distrib(const int i_ind) const
+double t_MeanFlow::calc_gridline_distance(ALONG_LINE along_line, t_GridIndex from, t_GridIndex to) const{
+	int* pChgInd=NULL;
+	int n = 0;
+	t_GridIndex cur_ind = from, tmp, prev_ind;
+	switch(along_line){
+		case ALONG_LINE::I:
+			pChgInd = &(cur_ind.i);
+			if (to.i<from.i){
+				tmp = to;
+				to = from;
+				from = tmp;
+			}
+			n = to.i - from.i;
+			break;
+		case ALONG_LINE::J:
+			pChgInd = &(cur_ind.j);
+			if (to.j<from.j){
+				tmp = to;
+				to = from;
+				from = tmp;
+			}
+			n = to.j - from.j;
+			break;
+		case ALONG_LINE::K:
+			if (to.k<from.k){
+				tmp = to;
+				to = from;
+				from = tmp;
+			}
+			pChgInd = &(cur_ind.k);
+			n = to.k - from.k;
+			break;
+	}
+	double distance = 0.0;
+	for (int m=0; m<n; m++){
+		prev_ind = cur_ind;
+		(*pChgInd)++;
+		distance+=calc_distance(prev_ind, cur_ind);
+	}
+	return distance;
+}
+//##############################################
+// old croosflow low level mess
+/*
+void t_MeanFlow::get_merid_distrib(const int i_ind) const
 {
 	std::ostringstream _to_file_name;
 	std::string filename;
@@ -209,9 +313,10 @@ void MF_Field::get_merid_distrib(const int i_ind) const
 	for (int k=0;k<nz;k++){
 	int bound_ind = get_bound_index(i_ind,k);
 	std::cout<<k<<" : "<<bound_ind<<"\n";
-	const Rec& bound_rec = fld[i_ind][bound_ind][k];
-	double re1_e = Gamma*Mach*Mach*bound_rec.p*bound_rec.u/pow(bound_rec.t,1.75)*Re/L_ref;
-	double m_e = bound_rec.u*Mach/sqrt(bound_rec.t);
+	const Rec& bound_rec = _fld[i_ind][bound_ind][k];
+	double gMaMa = Params.Gamma*Params.Mach*Params.Mach;
+	double re1_e = gMaMa*bound_rec.p*bound_rec.u/pow(bound_rec.t,1.75)*Params.Re/Params.L_ref;
+	double m_e = bound_rec.u*Params.Mach/sqrt(bound_rec.t);
 	_to_file<<double(k)/double(nz)*3.1415<<" \t "
 			<<bound_rec.w<<" \t "
 			<<bound_rec.u<<" \t "
@@ -220,17 +325,17 @@ void MF_Field::get_merid_distrib(const int i_ind) const
 	_to_file.close();
 }
 
-void MF_Field::get_cf_profile(std::vector<ProfileRec>& prof, const int i_ind, const int k_ind) const
+void t_MeanFlow::get_cf_profile(std::vector<ProfileRec>& prof, const int i_ind, const int k_ind) const
 {
 	int bound_ind = get_bound_index(i_ind,k_ind);
-	const Rec& bound_rec = fld[i_ind][bound_ind][k_ind];
+	const Rec& bound_rec = _fld[i_ind][bound_ind][k_ind];
 	double u_e = bound_rec.u;
 	double w_e = bound_rec.w;
 	double ang = atan(w_e/u_e);
 	prof.clear();
 	for (int j=0; j<ny; j++)
 	{
-		const Rec& cur_rec = fld[i_ind][j][k_ind];
+		const Rec& cur_rec = _fld[i_ind][j][k_ind];
 		double u_new = cur_rec.u*cos(ang) + cur_rec.w*sin(ang);
 		double w_new = -cur_rec.u*sin(ang) + cur_rec.w*cos(ang);
 		prof.push_back(ProfileRec(cur_rec.y, w_new));
@@ -238,7 +343,7 @@ void MF_Field::get_cf_profile(std::vector<ProfileRec>& prof, const int i_ind, co
 };
 
 //--------------------PRIVATE PART
-void MF_Field::get_cf_prof_rotated
+void t_MeanFlow::get_cf_prof_rotated
 (const int i_ind, const int k_ind, const double ang, std::vector<double>& profile) const
 {
 	int bound_ind = get_bound_index(i_ind,k_ind);
@@ -252,7 +357,7 @@ void MF_Field::get_cf_prof_rotated
 	return;
 };
 
-int MF_Field::get_cf_zero_index(const std::vector<double>& profile) const
+int t_MeanFlow::get_cf_zero_index(const std::vector<double>& profile) const
 {
 	for(int j=1; j<profile.size()-1; j++)
 		if (profile[j-1]*profile[j+1]<0.0)
@@ -260,7 +365,7 @@ int MF_Field::get_cf_zero_index(const std::vector<double>& profile) const
 	return 0;
 };
 
-int MF_Field::get_cf_infl_index(const std::vector<double>& profile) const
+int t_MeanFlow::get_cf_infl_index(const std::vector<double>& profile) const
 {
 	std::vector<double> w2yy_prof(profile.size(), 0); 
 	for (int j=1; j<w2yy_prof.size()-2; j++)
@@ -273,7 +378,7 @@ int MF_Field::get_cf_infl_index(const std::vector<double>& profile) const
 	return profile.size()-1;
 };
 
-double MF_Field::get_cf_wave_dir(const int i_ind, const int k_ind) const
+double t_MeanFlow::get_cf_wave_dir(const int i_ind, const int k_ind) const
 {
 	const int bound_ind = get_bound_index(i_ind, k_ind);
 	const Rec& ptr = fld[i_ind][bound_ind][k_ind];
@@ -310,7 +415,7 @@ double MF_Field::get_cf_wave_dir(const int i_ind, const int k_ind) const
 };
 
 
-void MF_Field::get_profiles(const int i_ind, const int k_ind) const{
+void t_MeanFlow::get_profiles(const int i_ind, const int k_ind) const{
 	std::ostringstream to_file_name;
 	std::string filename;
 	to_file_name<<"output/profiles_i="<<i_ind<<"_k="
@@ -319,15 +424,18 @@ void MF_Field::get_profiles(const int i_ind, const int k_ind) const{
 	std::ofstream s_to_file(&filename[0]);
 	s_to_file<<" y[ft] \t u[ft/s] \t u/a[] \t w[ft/s] \n";
 
-	double u_inf_dim = MF_Field::Mach*sqrt(MF_Field::Gamma*8.31*MF_Field::T_inf/0.029);
+	double u_inf_dim = t_MeanFlow::Mach*sqrt(t_MeanFlow::Gamma*8.31*t_MeanFlow::T_inf/0.029);
 	std::vector<ProfileRec> w_prof;
 	get_cf_profile(w_prof, i_ind, k_ind);
 	for (int j=0; j<ny; j++){
 		const Rec& cur_rec = fld[i_ind][j][k_ind];
-	s_to_file<< cur_rec.y*MF_Field::L_ref/0.3048 << " \t "	// [ft]
+	s_to_file<< cur_rec.y*t_MeanFlow::L_ref/0.3048 << " \t "	// [ft]
 			 << cur_rec.u*u_inf_dim/0.3048<< " \t "			// [ft/s]
-			 << MF_Field::Mach*cur_rec.u/sqrt(cur_rec.t)<< " \t "  //[]
+			 << t_MeanFlow::Mach*cur_rec.u/sqrt(cur_rec.t)<< " \t "  //[]
 			 << w_prof[j].val*u_inf_dim/0.3048<<"\n";				// [ft/s]
 	};
 	s_to_file.close();
+//##############################################################
+
 };
+*/
