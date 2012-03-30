@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="StabSolverUnited"
+	ProjectGUID="{8DFC3F83-8727-4C24-8DBC-92CA7EB8F1A8}"
+	VCNestedProjectGUID="{F202129E-08B1-4D05-8C9A-1CEB26ACAA02}"
+	VCNestedProjectFileName="StabSolverUnited.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>

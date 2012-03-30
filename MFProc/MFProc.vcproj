@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="MFProc"
 	ProjectGUID="{899E509B-8839-4E1B-8EBD-8DF2B6334720}"
 	RootNamespace="MFProc"
 	Keyword="Win32Proj"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
 			Name="Win32"
+		/>
+		<Platform
+			Name="x64"
 		/>
 	</Platforms>
 	<ToolFiles>
@@ -40,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(BOOST_ROOT)&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -143,6 +147,136 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(BOOST_ROOT)&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="Smooth.lib SolverCore.lib"
+				AdditionalLibraryDirectories="&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(SolutionDir)\Smooth\debug\&quot;;&quot;$(SolutionDir)\SolverCore\debug\&quot;"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="1"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="3"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="Smooth.lib SolverCore.lib"
+				AdditionalLibraryDirectories="&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(SolutionDir)\Smooth\release\&quot;;&quot;$(SolutionDir)\SolverCore\release\&quot;"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -153,7 +287,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\source\MF_Field.cpp"
+				RelativePath=".\source\MeanFlow.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\MeanFlowParams.cpp"
 				>
 			</File>
 			<File
@@ -162,6 +300,14 @@
 			</File>
 			<File
 				RelativePath=".\source\WavePackLine.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\WavePackLineMax.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\source\WavePackLineMono.cpp"
 				>
 			</File>
 		</Filter>
@@ -175,7 +321,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\MF_Field.h"
+				RelativePath=".\include\MeanFlow.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\ParseHelper.h"
 				>
 			</File>
 			<File
