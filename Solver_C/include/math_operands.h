@@ -1,10 +1,22 @@
-#include <vector>
-#include <complex>
 // all computations with double precision
 #ifndef __ODES_OPERANDS
 #define __ODES_OPERANDS
+#include <vector>
+#include <complex>
+#include <cmath>
+#include "boost/numeric/mtl/mtl.hpp"
 typedef std::complex<double> t_Complex;
-class t_Vec;
+typedef std::complex<double> t_CompVal;
+typedef std::vector<double> t_DblVec;
+using namespace mtl;
+// TODO : replace my matrix t_Matrix
+// by this one
+// and then rename Matrix to t_Matrix
+typedef vector::parameters<tag::col_major, vector::fixed::dimension<3> > _param_fixed_vec3;
+typedef matrix::parameters<tag::col_major, mtl::index::c_index, mtl::fixed::dimensions<3, 3> > _param_fixed_mat33;
+typedef  mtl::dense2D<double, _param_fixed_mat33> t_SqMat3;
+typedef  mtl::dense_vector<double, _param_fixed_vec3> t_Vec3;
+typedef mtl::dense_vector<t_CompVal, _param_fixed_vec3> t_CompVec3;
 //typedef t_Vec (*pFunRHS)(const double&, const t_Vec&);
 class t_Vec{
 	std::vector< t_Complex > _cont;
