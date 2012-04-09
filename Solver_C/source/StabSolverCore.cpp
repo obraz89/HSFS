@@ -8,7 +8,7 @@
 
 #include "StabSolver.h"
 
-t_Complex t_StabSolver::solve(t_WaveChars& stab_point){
+t_Complex t_StabSolver::solve(t_WCharsLoc& stab_point){
 	this->_waveChars = stab_point;
 	this->_math_solver.setInitials(_getAsymptotics3D(stab_point));
 	_math_solver.solve();

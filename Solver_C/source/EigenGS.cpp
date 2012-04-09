@@ -4,8 +4,8 @@
 #include <fstream>
 // task dim =5 3D
 // 4 for 2D
-t_EigenGS::t_EigenGS(const MF_Field& a_rFld, const int a_task_dim):
-_rFldNS(a_rFld), _n_vars(a_task_dim), _profStab(0),
+t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld, const int a_task_dim):
+_rFldNS(a_rFld), _n_vars(a_task_dim), _profStab(a_rFld),
 _A(a_task_dim), _B(a_task_dim), _C(a_task_dim), _CW(a_task_dim){
 	// keep max size : SO template 15 point for 3D
 };
@@ -16,14 +16,12 @@ void t_EigenGS::setContext(const int a_i, const int a_k,
 	_alpha = a_alpha;
 	_beta = a_beta;
 	t_ProfileNS profNS(_rFldNS);
-	profNS.setProfiles(a_i, a_k);
+	profNS.initialize(a_i, a_k);
 	_nnodes = a_nnodes;
-	_profStab.resize(a_nnodes);
 	_grid.resize(a_nnodes);
-
-	_profStab.setProfiles(profNS);
+	_profStab.initialize(profNS, a_nnodes);
 	
-	double y_max = _profStab.y.back() - _profStab.y[0];
+	double y_max = _profStab.get_thick() - _profStab.get_y(0);
 	_a_coef = 1.0*y_max; // play with coef
 	_b_coef = 1.0 + _a_coef/y_max;
 	double del = 1.0/(double)(_nnodes-1);	
@@ -49,8 +47,10 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 
 	const double& stabRe = _profStab.stabRe;
 	const double& Me = _profStab.Me;
-	const double gMaMa = MF_Field::Gamma*Me*Me;
-	const double g_1MaMa = (MF_Field::Gamma-1.0)*Me*Me;
+	const t_MeanFlow::t_Params& mf_params = _rFldNS.Params;
+	const double gMaMa = mf_params.Gamma*Me*Me;
+	const double g_1MaMa = (mf_params.Gamma-1.0)*Me*Me;
+	const double Pr = mf_params.Pr;
 
 	// rename a_y is not input but lazy to rewrite
 	// get physical y
@@ -59,7 +59,8 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 		cur_eta-=0.5*(_grid[a_nnode]-_grid[a_nnode-1]);
 	};
 	const double a_y = _a_coef*cur_eta/(_b_coef-cur_eta);
-
+	t_ProfRec rec = _profStab.get_rec(a_y);
+	/*
 	const double u = _profStab.getValue(a_y, _profStab.u);
 	const double u1 = _profStab.getValue(a_y, _profStab.u1);
 	const double u2 = _profStab.getValue(a_y, _profStab.u2);
@@ -75,14 +76,14 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	const double mu = _profStab.getValue(a_y, _profStab.mu);
 	const double mu1 = _profStab.getValue(a_y, _profStab.mu1);
 	const double mu2 = _profStab.getValue(a_y, _profStab.mu2);
-
-	const double inv_t = 1.0/t;
-	const double inv_mu = 1.0/mu;
+	*/
+	const double inv_t = 1.0/rec.t;
+	const double inv_mu = 1.0/rec.mu;
 	// k''/k:
 	//const double mu_coef = mu1*t1*inv_mu;
-	const double k2k = inv_mu*(mu2*pow(t1,2)+mu1*t2);	//2.0*pow(mu_coef,2)-mu_coef;
+	const double k2k = inv_mu*(rec.mu2*pow(rec.t1,2)+rec.mu1*rec.t2);	//2.0*pow(mu_coef,2)-mu_coef;
 
-	const double dzeta_noW = _alpha*u + _beta*w;
+	const double dzeta_noW = _alpha*rec.u + _beta*rec.w;
 	const double dzeta_W = 1.0;
 
 // set _A
@@ -94,72 +95,72 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	const double ls = 2.0; // 2 + lambda/mu
 
 	// first row
-	_B[0][0] = inv_mu*mu1*t1;
+	_B[0][0] = inv_mu*rec.mu1*rec.t1;
 	_B[1][0] = imagUnity*_alpha*lf;
-	_B[3][0] = inv_mu*mu1*u1;
+	_B[3][0] = inv_mu*rec.mu1*rec.u1;
 	//second row
 	_B[0][1] = imagUnity*_alpha*lf/ls;
 	_B[1][1] = _B[0][0];
-	_B[2][1] = -stabRe/(ls*mu);
+	_B[2][1] = -stabRe/(ls*rec.mu);
 	_B[4][1] = imagUnity*_beta*lf/ls;
 	// third
 	_B[1][2] = 1.0;
 	// fourth
-	_B[0][3] = 2.0*g_1MaMa*MF_Field::Pr*u1;
+	_B[0][3] = 2.0*g_1MaMa*Pr*rec.u1;
 	// k'/k ??
-	_B[3][3] = -2.0*mu1*t1*inv_mu;
-	_B[4][3] = 2.0*g_1MaMa*MF_Field::Pr*w1;
+	_B[3][3] = -2.0*rec.mu1*rec.t1*inv_mu;
+	_B[4][3] = 2.0*g_1MaMa*Pr*rec.w1;
 	// last
 	_B[1][4] = imagUnity*_beta*lf;
-	_B[3][4] = inv_mu*mu1*w1;
-	_B[4][4] = inv_mu*mu1*t1;
+	_B[3][4] = inv_mu*rec.mu1*rec.w1;
+	_B[4][4] = inv_mu*rec.mu1*rec.t1;
 // clear C - no freq terms
 	// first row
 	_C[0][0] = -imagUnity*dzeta_noW*stabRe*inv_mu*inv_t
 		       -(ls*pow(_alpha,2)+pow(_beta,2));
 
-	_C[1][0] = -stabRe*u1*inv_mu*inv_t
-		       +imagUnity*_alpha*inv_mu*mu1*t1;
+	_C[1][0] = -stabRe*rec.u1*inv_mu*inv_t
+		       +imagUnity*_alpha*inv_mu*rec.mu1*rec.t1;
 
 	_C[2][0] = -imagUnity*_alpha*stabRe*inv_mu;
 
-	_C[3][0] = inv_mu*(mu1*u2 + mu2*t1*u1);
+	_C[3][0] = inv_mu*(rec.mu1*rec.u2 + rec.mu2*rec.t1*rec.u1);
 	_C[4][0] = -_alpha*_beta*lf;
 	// second
 
-	_C[0][1] = imagUnity*_alpha*inv_mu*mu1*t1*lz/ls;
+	_C[0][1] = imagUnity*_alpha*inv_mu*rec.mu1*rec.t1*lz/ls;
 
-	_C[1][1] = -imagUnity*dzeta_noW*stabRe/(ls*mu*t)
+	_C[1][1] = -imagUnity*dzeta_noW*stabRe/(ls*rec.mu*rec.t)
 		       -(pow(_alpha,2)+pow(_beta,2))/ls;
 
-	_C[3][1] = imagUnity*inv_mu*mu1*(_alpha*u1+_beta*w1)/ls;
-	_C[4][1] = imagUnity*_beta*inv_mu*mu1*t1*lz/ls;
+	_C[3][1] = imagUnity*inv_mu*rec.mu1*(_alpha*rec.u1+_beta*rec.w1)/ls;
+	_C[4][1] = imagUnity*_beta*inv_mu*rec.mu1*rec.t1*lz/ls;
 	// third
 	_C[0][2] = imagUnity*_alpha;
-	_C[1][2] = -t1*inv_t;
+	_C[1][2] = -rec.t1*inv_t;
 	_C[2][2] = imagUnity*gMaMa*dzeta_noW;
 	_C[3][2] = -imagUnity*dzeta_noW*inv_t;
 	_C[4][2] = imagUnity*_beta;
 	//fourh
-	_C[1][3] = MF_Field::Pr*
+	_C[1][3] = Pr*
 			   (
-			    2.0*imagUnity*g_1MaMa*(_alpha*u1 + _beta*w1)
-			    -stabRe*t1*inv_mu*inv_t);
+			    2.0*imagUnity*g_1MaMa*(_alpha*rec.u1 + _beta*rec.w1)
+			    -stabRe*rec.t1*inv_mu*inv_t);
 
-	_C[2][3] = imagUnity*dzeta_noW*g_1MaMa*MF_Field::Pr
+	_C[2][3] = imagUnity*dzeta_noW*g_1MaMa*Pr
 		       *stabRe*inv_mu;
 
-	_C[3][3] = -imagUnity*dzeta_noW*stabRe*MF_Field::Pr*inv_mu*inv_t
+	_C[3][3] = -imagUnity*dzeta_noW*stabRe*Pr*inv_mu*inv_t
 		       -(pow(_alpha,2)+pow(_beta,2))
-			   +g_1MaMa*MF_Field::Pr*inv_mu*mu1*(pow(u1,2)+pow(w1,2))
+			   +g_1MaMa*Pr*inv_mu*rec.mu1*(pow(rec.u1,2)+pow(rec.w1,2))
 			   +k2k;
 	// last at least
 	_C[0][4] = -_alpha*_beta*lf;
-	_C[1][4] = imagUnity*_beta*inv_mu*mu1*t1
-		       -stabRe*w1*inv_mu*inv_t;
+	_C[1][4] = imagUnity*_beta*inv_mu*rec.mu1*rec.t1
+		       -stabRe*rec.w1*inv_mu*inv_t;
 
 	_C[2][4] = -imagUnity*_beta*stabRe*inv_mu;
-	_C[3][4] = inv_mu*mu1*w2 + inv_mu*mu2*t1*w1;
+	_C[3][4] = inv_mu*rec.mu1*rec.w2 + inv_mu*rec.mu2*rec.t1*rec.w1;
 
 	_C[4][4] = -imagUnity*dzeta_noW*stabRe*inv_mu*inv_t
 		       -(pow(_alpha,2)+ls*pow(_beta,2));
@@ -168,8 +169,8 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	_CW[1][1] = -imagUnity*dzeta_W*stabRe/ls*inv_mu*inv_t;
 	_CW[2][2] = imagUnity*gMaMa*dzeta_W;
 	_CW[3][2] = -imagUnity*dzeta_W*inv_t;
-	_CW[2][3] = imagUnity*dzeta_W*g_1MaMa*MF_Field::Pr*stabRe*inv_mu;
-	_CW[3][3] = -imagUnity*dzeta_W*stabRe*MF_Field::Pr*inv_mu*inv_t;
+	_CW[2][3] = imagUnity*dzeta_W*g_1MaMa*Pr*stabRe*inv_mu;
+	_CW[3][3] = -imagUnity*dzeta_W*stabRe*Pr*inv_mu*inv_t;
 	_CW[4][4] = -imagUnity*dzeta_W*stabRe*inv_mu*inv_t;
 
 };
@@ -342,9 +343,9 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
   PetscScalar 	 kr, ki;
   PetscErrorCode ierr;
   PetscInt    	 nev, maxit, Istart, Iend, col[3], its, lits, nconv;
-  PetscTruth     FirstBlock=PETSC_FALSE, LastBlock=PETSC_FALSE;
+  PetscBool     FirstBlock=PETSC_FALSE, LastBlock=PETSC_FALSE;
   PetscViewer 	 viewer;
-  PetscTruth  	 flg;
+  PetscBool  	 flg;
   // to fill matrices
   int mpi_rank, comm_size;
 
@@ -432,13 +433,13 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	// view matrices if viewable)
 	if (large_matrix_size<200){
 		PetscViewerCreate(PETSC_COMM_WORLD, &viewer);
-		PetscViewerSetType(viewer, PETSC_VIEWER_ASCII);
+		PetscViewerSetType(viewer, PETSCVIEWERASCII);
 		PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_COMMON);
 		PetscViewerASCIIOpen(PETSC_COMM_WORLD, "A_VIEW.txt", &viewer);
 		ierr = MatView(A, viewer);CHKERRQ(ierr);
 		PetscViewerASCIIOpen(PETSC_COMM_WORLD, "B_VIEW.txt", &viewer);
 		ierr = MatView(B, viewer);CHKERRQ(ierr);
-		PetscViewerDestroy(viewer);
+		PetscViewerDestroy(&viewer);
 	}
 
 	//  Create eigensolver context
@@ -496,9 +497,9 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 		ierr = PetscPrintf(PETSC_COMM_WORLD,"\n" );CHKERRQ(ierr);
 	}
   
-  ierr = EPSDestroy(eps);CHKERRQ(ierr);
-  ierr = MatDestroy(A);CHKERRQ(ierr);
-  ierr = MatDestroy(B);CHKERRQ(ierr);
+  ierr = EPSDestroy(&eps);CHKERRQ(ierr);
+  ierr = MatDestroy(&A);CHKERRQ(ierr);
+  ierr = MatDestroy(&B);CHKERRQ(ierr);
   //ierr = SlepcFinalize();CHKERRQ(ierr);
   return 0;
 
@@ -511,16 +512,16 @@ void t_EigenGS::writeSpectrum(const std::string &a_filename){
 	};
 }
 
-std::vector<t_WaveChars> t_EigenGS::getDiscreteModes(const int a_i, const int a_k, 
+std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_k, 
 	     			  const double& a_alpha, const double& a_beta,
 					  const int a_nnodes){
-	std::vector<t_WaveChars> inits;
+	std::vector<t_WCharsLoc> inits;
 	getSpectrum(a_i, a_k, a_alpha, a_beta, a_nnodes);
 	// select discrete modes
 	// TODO: empirics!!!
 	for (int i=0; i<_spectrum.size(); i++){
 		if (_spectrum[i].imag()>1.0e-5){
-			t_WaveChars init_wave;
+			t_WCharsLoc init_wave;
 			init_wave.a = _alpha;
 			init_wave.b = _beta;
 			init_wave.w = _spectrum[i];
@@ -530,7 +531,7 @@ std::vector<t_WaveChars> t_EigenGS::getDiscreteModes(const int a_i, const int a_
 	return inits;
 };
 
-t_WaveChars t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes){
+t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes){
 	// This is the most interesting question : ask AVF
 	double a_min = 0.01;
 	double a_max = 1.5;
@@ -538,15 +539,15 @@ t_WaveChars t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const i
 	double b_max = 1.5;
 	int n_a = 30;
 	int n_b = 30;
-	std::vector<t_WaveChars> all_initials;
+	std::vector<t_WCharsLoc> all_initials;
 	for (int i=0; i<n_a; i++){
 		for(int j=0; j<n_b; j++){
 			double a = a_min + (a_max-a_min)/double(n_a)*i;
 			double b = b_min + (b_max-b_min)/double(n_b)*j;
-			std::vector<t_WaveChars> inits = getDiscreteModes(a_i, a_k, a, b, a_nnodes);
-			all_initials.push_back(t_WaveChars::find_max_instab(inits));
+			std::vector<t_WCharsLoc> inits = getDiscreteModes(a_i, a_k, a, b, a_nnodes);
+			all_initials.push_back(t_WCharsLoc::find_max_instab(inits));
 		}
 	}
-	return t_WaveChars::find_max_instab(all_initials);
+	return t_WCharsLoc::find_max_instab(all_initials);
 };
 
