@@ -28,7 +28,7 @@ public:
 		std::string _mf_bin_path;
 		int Nx, Ny, Nz;
 		enum t_ViscType{ViscPower, ViscSuther} ViscType;
-		double  Mach, Re, Alpha,
+		double  Mach, Re, Alpha,	// Alpha ?
 				L_ref, T_inf, T_wall, 
 				T_mju, Mju_pow, Gamma, Pr;
 	};
@@ -50,21 +50,26 @@ public:
 	// initialize by 2D config file (expand 2D field)
 	t_MeanFlow(const char* a_config_fname2D, bool axesym, int kk);
 	~t_MeanFlow();
-	//void trans_to_cyl();
 	// getters
 	const t_Params& get_params() const;
 	const t_Rec& get_rec(const t_GridIndex& ind) const;
 	const t_Rec& get_rec(int i, int j, int k) const;
+	t_GridIndex get_nearest_index(double x, double y, double z) const;
+	t_GridIndex get_nearest_index(t_Rec) const;
+	t_Rec interpolate_to_point(double x, double y, double z) const;
 	void create_k_slice (const int k_num) const;
-	void create_i_slice(int i_num);	// на будущее
+	void create_i_slice(int i_num);
 	void print_entry(const int i, const int j, const int k) const;
 
 	double calc_enthalpy(const int i, const int j, const int k) const; // TODO: to Index
 	double calc_enthalpy(const t_GridIndex& ind) const;
+
 	double calc_viscosity(const int i, const int j, const int k) const;
 	double calc_viscosity(const t_GridIndex& ind) const;
+
 	double calc_mach(const int i, const int j, const int k) const;
 	double calc_mach(const t_GridIndex& ind) const;
+
 	double calc_distance(const t_GridIndex&, const t_GridIndex&) const;
 	// calculate distance along gridline
 	// if we calc distance between (i_0, j1, k1) and (i_1, j2, k2)
@@ -74,6 +79,8 @@ public:
 
 	int get_bound_index(const int i, const int k) const;
 	double calc_delta(const int i, const int k) const;
+	// this is old mess
+	// TODO: keep usefull stuff
 /*
 	void get_cf_profile(std::vector<ProfileRec>&, const int i, const int k) const;
 	double get_cf_wave_dir(const int i, const int k) const;
@@ -117,5 +124,8 @@ inline bool operator==(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_Gri
 inline bool operator!=(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_GridIndex &b){
 	return !(a==b);
 }
+
+typedef t_MeanFlow::t_Rec t_FldRec;
+typedef t_MeanFlow::t_GridIndex t_Index;
 
 #endif //__t_MeanFlow

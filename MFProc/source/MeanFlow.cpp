@@ -299,6 +299,73 @@ double t_MeanFlow::calc_gridline_distance(ALONG_LINE along_line, t_GridIndex fro
 	}
 	return distance;
 }
+
+t_Index t_MeanFlow::get_nearest_index(double x, double y, double z) const{
+	t_Index ind_nrst;
+	double x_cmp = 0.;
+
+	int pos_lft = 0;
+	int pos_rgt = Params.Nx-1;
+	while(pos_rgt-pos_lft>1) {
+		ind_nrst.i = (pos_lft + pos_rgt)/2;
+		const t_Rec& p = get_rec(ind_nrst); //_rFldMF.fld[ind_nrst.i][ind_nrst.j][ind_nrst.k];
+		x_cmp = p.x;
+		if (x>=x_cmp) 
+			pos_lft = ind_nrst.i;
+		else 
+			pos_rgt = ind_nrst.i;
+	};
+	if (abs(x - get_rec(pos_lft,0,0).x)<abs(x - get_rec(pos_rgt,0,0).x))
+		ind_nrst.i = pos_lft;
+	else
+		ind_nrst.i = pos_rgt;
+
+	double z_cmp = 0.;
+	pos_lft = 0;
+	pos_rgt = Params.Nz-1;
+	while(pos_rgt-pos_lft>1) {
+		ind_nrst.k = (pos_lft + pos_rgt)/2;
+		const t_Rec& p = get_rec(ind_nrst);
+		z_cmp = p.z;
+		if (z>=z_cmp) 
+			pos_lft = ind_nrst.k;
+		else 
+			pos_rgt = ind_nrst.k;
+	};
+	if (abs(z - get_rec(ind_nrst.i,0,pos_lft).z)<abs(z - get_rec(ind_nrst.i,0,pos_rgt).z))
+		ind_nrst.k = pos_lft;
+	else
+		ind_nrst.k = pos_rgt;
+
+	double y_cmp = 0.;
+	pos_lft = 0;
+	pos_rgt = Params.Ny-1;
+	while(pos_rgt-pos_lft>1) {
+		ind_nrst.j = (pos_lft + pos_rgt)/2;
+		const t_Rec& p = get_rec(ind_nrst);
+		y_cmp = p.y;
+		if (y>=y_cmp) 
+			pos_lft = ind_nrst.j;
+		else 
+			pos_rgt = ind_nrst.j;
+	};
+	ind_nrst.j = pos_lft;
+
+	return ind_nrst;
+}
+t_Index t_MeanFlow::get_nearest_index(t_Rec rec) const{
+	return get_nearest_index(rec.x, rec.y, rec.z);
+};
+
+t_FldRec t_MeanFlow::interpolate_to_point(double x, double y, double z) const{
+	// TODO: good interpolation !!!!!!!!!!!!!!!!!!!!!!!!!
+	// for now the worst variant:
+	t_FldRec ret = get_rec(get_nearest_index(x,y,z));
+	ret.x = x;
+	ret.y = y;
+	ret.z = z;
+	return ret;
+}
 //##############################################
 // old croosflow low level mess
 /*

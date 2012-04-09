@@ -12,7 +12,7 @@ std::string t_MeanFlow::t_Params::_get_conf_dir(std::string conf_path){
 	int found=conf_path.find_last_of("/\\");
 	return conf_path.substr(0, found);
 }
-t_MeanFlow::t_Params::_init(const std::string a_conf_file_path){
+void t_MeanFlow::t_Params::_init(const std::string a_conf_file_path){
 	// start parsing config file
 	std::ifstream f_str(&a_conf_file_path[0]);
 	std::stringstream s_buf;
@@ -120,11 +120,10 @@ t_MeanFlow::t_Params::_init(const std::string a_conf_file_path){
 	// for now it is necessary to change by hand
 	Pr = 0.72;
 	Gamma = 1.4;
-	T_mju = 110.4;
+	T_inf = 90.318;
+	T_mju = 110.4/T_inf;
 	Mju_pow = 0.75;
-
-	L_ref = 1.0;
-	T_inf = 100.0;
+	L_ref = 0.381;
 	Alpha = 2.0;
 	ViscType = ViscPower; // power
 };
