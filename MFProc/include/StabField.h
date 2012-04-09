@@ -1,5 +1,5 @@
 #include <vector>
-#include "structs.h"
+#include "WaveChars.h"
 #ifndef __StabField__
 #define __StabField__
 class t_StabField{
