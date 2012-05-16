@@ -88,7 +88,7 @@
 			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="2"
 			CharacterSet="1"
 			>
 			<Tool
@@ -110,11 +110,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\shared\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(SolutionDir)/SmallMat/include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;MFPROC_EXP"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
@@ -130,12 +130,15 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				AdditionalDependencies="SolverCore.lib"
-				AdditionalLibraryDirectories="&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(SolutionDir)\Smooth\debug\&quot;;&quot;$(SolutionDir)\SolverCore\debug\&quot;"
+				Name="VCLinkerTool"
+				AdditionalDependencies="smooth.lib imsl.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)/Smooth/$(PlatformName)/$(ConfigurationName)&quot;;&quot;$(CTT_DIR)\lib\em64t&quot;"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -145,6 +148,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -295,19 +301,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\source\StabField.cpp"
+				RelativePath=".\MFGridIndex.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\WavePackLine.cpp"
+				RelativePath=".\source\Profile.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\WavePackLineMax.cpp"
+				RelativePath=".\source\ProfileNS.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\source\WavePackLineMono.cpp"
+				RelativePath=".\source\ProfileStab.cpp"
 				>
 			</File>
 		</Filter>
@@ -317,6 +323,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath=".\include\impexp.h"
+				>
+			</File>
+			<File
 				RelativePath=".\include\MeanFlow.h"
 				>
 			</File>
@@ -325,11 +335,19 @@
 				>
 			</File>
 			<File
-				RelativePath=".\include\StabField.h"
+				RelativePath=".\include\Profile.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\WavePackLine.h"
+				RelativePath=".\include\ProfileNS.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\ProfileStab.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\Smooth.h"
 				>
 			</File>
 		</Filter>

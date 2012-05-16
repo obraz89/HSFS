@@ -11,12 +11,14 @@
 #include <fstream>
 #include <string>
 #include <vector>
-class t_MeanFlow{
+
+#include "impexp.h"
+class MFPROC_IMPEXP t_MeanFlow{
 public:
 	struct t_Rec{
 		double x,y,z,u,v,w,p,t,r;
 	};
-	class t_Params{
+	class MFPROC_IMPEXP t_Params{
 		std::string _get_conf_dir(std::string conf_path);
 		void _init(const std::string a_config_fname);
 	public:
@@ -39,7 +41,7 @@ private:
 	t_Rec*** _fld;
 
 public:
-	struct t_GridIndex{
+	struct MFPROC_IMPEXP t_GridIndex{
 		int i,j,k;
 		t_GridIndex();
 		t_GridIndex(int, int, int);
@@ -114,17 +116,8 @@ inline t_MeanFlow::t_Rec operator-(const t_MeanFlow::t_Rec& rec1, const t_MeanFl
 		return res;
 	};
 
-inline bool operator==(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_GridIndex &b){
-	if ((a.i==b.i)&&(a.j==b.j)&&(a.k==b.k))
-		return true;
-	else 
-		return false;
-};
-
-inline bool operator!=(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_GridIndex &b){
-	return !(a==b);
-}
-
+extern bool operator==(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_GridIndex &b);
+extern bool operator!=(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_GridIndex &b);
 typedef t_MeanFlow::t_Rec t_FldRec;
 typedef t_MeanFlow::t_GridIndex t_Index;
 

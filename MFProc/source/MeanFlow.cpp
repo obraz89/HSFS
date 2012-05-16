@@ -101,6 +101,10 @@ t_MeanFlow::~t_MeanFlow()
 	}
 };
 
+const t_MeanFlow::t_Params& t_MeanFlow::get_params() const{
+	return Params;
+};
+
 const t_MeanFlow::t_Rec& t_MeanFlow::get_rec(const t_MeanFlow::t_GridIndex& ind) const{
 	return _fld[ind.i][ind.j][ind.k];
 };
@@ -298,7 +302,16 @@ double t_MeanFlow::calc_gridline_distance(ALONG_LINE along_line, t_GridIndex fro
 		distance+=calc_distance(prev_ind, cur_ind);
 	}
 	return distance;
-}
+};
+
+double t_MeanFlow::calc_distance(const t_GridIndex& a, const t_GridIndex& b) const{
+	const t_Rec& r1 = get_rec(a);
+	const t_Rec& r2 = get_rec(b);
+	double dx = r1.x - r2.x;
+	double dy = r1.y - r2.y;
+	double dz = r1.z - r2.z;
+	return sqrt(dx*dx+dy*dy+dz*dz);
+};
 
 t_Index t_MeanFlow::get_nearest_index(double x, double y, double z) const{
 	t_Index ind_nrst;
