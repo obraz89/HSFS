@@ -97,6 +97,84 @@
 			/>
 		</Configuration>
 		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="1"
+			CharacterSet="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud/&quot;;&quot;$(WX_DIR)\include&quot;;&quot;$(SolutionDir)MFProc\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
+				PreprocessorDefinitions="WIN32;WINVER=0x0400;__WXMSW__;_WINDOWS;WXUSINGDLL;wxUSE_GUI=1;UNICODE;_UNICODE;_DEBUG;__WXDEBUG__"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="0"
+				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
+				DebugInformationFormat="4"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLinkerTool"
+				AdditionalDependencies="wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib libpetsc.lib libslepc.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib mpi.lib"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(SolutionDir)\Smooth\debug\&quot;;&quot;$(SolutionDir)\SolverCore\debug\&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="17"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
@@ -149,84 +227,6 @@
 				RandomizedBaseAddress="1"
 				DataExecutionPrevention="0"
 				TargetMachine="1"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCManifestTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
-			ConfigurationType="1"
-			CharacterSet="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-				TargetEnvironment="3"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)Solver_C/include&quot;;&quot;$(WXROOT)/lib/vc_ddx32_ogl/mswud/&quot;;&quot;$(SolutionDir)MFProc\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(WXROOT)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
-				PreprocessorDefinitions="WIN32;WINVER=0x0400;__WXMSW__;_WINDOWS;WXUSINGDLL;wxUSE_GUI=1;UNICODE;_UNICODE;_DEBUG;__WXDEBUG__"
-				MinimalRebuild="true"
-				BasicRuntimeChecks="3"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
-				WarningLevel="3"
-				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="4"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLinkerTool"
-				AdditionalDependencies="Smooth.lib wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib libf2cblas.lib libf2clapack.lib libpetsc.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(SolutionDir)\Smooth\debug\&quot;;&quot;$(SolutionDir)\SolverCore\debug\&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(WXROOT)\lib\vc_ddx32_ogl&quot;;&quot;C:\libs\math\petsc\petsc-3.1-p8\win32_MTd_cmplx\lib&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="2"
-				RandomizedBaseAddress="1"
-				DataExecutionPrevention="0"
-				TargetMachine="17"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -356,14 +356,6 @@
 			</File>
 			<File
 				RelativePath=".\include\console.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\GetParamsFromNS.h"
-				>
-			</File>
-			<File
-				RelativePath=".\include\TaskParameters.h"
 				>
 			</File>
 		</Filter>

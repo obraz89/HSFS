@@ -1,5 +1,5 @@
-#include "TaskParameters.h"
-#include "MF_Field.h"
+#include "MeanFlow.h"
+/*
 #include "StabField.h"
 #include "ODES_Stab.h"
 #include "StabSolver.h"
@@ -9,8 +9,9 @@
 #include "StabField.h"
 
 // debug
+*/
 #include "slepceps.h"
-#include "EigenGS.h"
+//#include "EigenGS.h"
 
 // for console io operations
 #include <iostream>
@@ -41,24 +42,23 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	// PAUSE IN FORTRAN LIBS WON'T WORK
 	// 
 	RedirectIOToConsole();
-
-	int nx=81, ny=161, nz=51;
-	std::string NSFieldName;					// std::cin>> NSFieldName;
-	NSFieldName = "input/new/04.61500.dat";		// now it is for al=2
+	// TODO: make SSU config file
+	std::string NSFieldName = "input/new/04.61500.dat";		// now it is for al=2
 	FILE* file = fopen("output/transitions.dat", "a+");
-// read-process raw field
-	MF_Field field(NSFieldName,nx,ny,nz);
-	t_StabField stab_field(nx, nz);
-	field.trans_to_cyl();
-// set up ODES & StabSolver
-	t_StabSolver stab_solver(field);
-// field of max instab frequencies
-	t_StabField max_freq_fld(nx, nz);
+// read-process mean flow
+//	t_MeanFlow mf_field(&NSFieldName[0]);
+//	const t_MeanFlow::t_Params& mf_params = mf_field.get_params();
+// stability field
+	//t_StabField stab_field(mf_params.Nx, mf_params.Nz);
+// set up solver context
+	//t_StabSolver stab_solver(mf_field);
 	// core debug
+	/*
 	t_WaveChars w_init;
 	w_init.w = t_Complex(3.85e-2, 2.55e-3);
 	w_init.a = 0.102;
 	w_init.b = 0.2577;
+	*/
 	/*
 	stab_solver.set3DContext(70,50, 150);
 	t_Complex base_resid = stab_solver.solve(w_init);
@@ -66,11 +66,17 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
 	return 0;
 	*/
+
 	SlepcInitialize((int*)0,(char***)0,(char*)0,"hello world");
-	t_EigenGS gs_solver(field, 5);
+	// gs debug
+	/*
+	t_EigenGS gs_solver(mf_field, 5);
 	int gs_nnodes = 41;
 	t_WaveChars max_instab = gs_solver.searchMaxInstabGlob(70,50,gs_nnodes);
 	max_instab.print();
+	*/
+
+
 	//std::vector<t_WaveChars> inits = gs_solver.getDiscreteModes(70,10,w_init.a.real(), w_init.b.real(), gs_nnodes);
 	//gs_solver.setContext();
 	// GS Debug
