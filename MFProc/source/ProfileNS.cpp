@@ -9,14 +9,15 @@ void t_ProfileNS::initialize(int a_i , int a_k){
 	_bl_bound_ind = _rFld.get_bound_index(a_i, a_k);
 	// empiric  - 3 thickn of BL to be used in stab comps
 	// !!!
-	double bl_thick = _rFld.get_rec(a_i, _bl_bound_ind, a_k).y; //fld[a_i][bound_ind][a_k].y
+	double bl_thick = _rFld.calc_distance(t_Index(a_i, _bl_bound_ind, a_k), 
+										  t_Index(a_i, 0, a_k));
 	double prof_thick = 3.0*bl_thick;
 	double cur_y = bl_thick;
 	int cur_y_ind = _bl_bound_ind;
 	while((cur_y<prof_thick)&&(cur_y_ind<_rFld.Params.Ny)){
 		cur_y_ind++;
-// TODO: make accessor to _y to optimize
-		cur_y = _rFld.get_rec(a_i, cur_y_ind, a_k).y;
+		cur_y = _rFld.calc_distance(t_Index(a_i, cur_y_ind, a_k), 
+									t_Index(a_i, 0, a_k));
 	};
 	this->_resize(cur_y_ind);
 	const t_MeanFlow::t_Rec& bound_rec = _rFld.get_rec(a_i, cur_y_ind, a_k);
