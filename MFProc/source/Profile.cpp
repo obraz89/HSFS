@@ -112,6 +112,9 @@ void t_Profile::_init_extractor(){
 	_extract_map.push_back(t_Extractor(&t_Rec::t1, &t_Profile::_t1));
 	_extract_map.push_back(t_Extractor(&t_Rec::t2, &t_Profile::_t2));
 
+	_extract_map.push_back(t_Extractor(&t_Rec::mu, &t_Profile::_mu));
+	_extract_map.push_back(t_Extractor(&t_Rec::mu1, &t_Profile::_mu1));
+	_extract_map.push_back(t_Extractor(&t_Rec::mu2, &t_Profile::_mu2));
 
 	_extract_map.push_back(t_Extractor(&t_Rec::p, &t_Profile::_p));
 	_extract_map.push_back(t_Extractor(&t_Rec::r, &t_Profile::_r));
