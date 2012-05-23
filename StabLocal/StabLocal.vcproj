@@ -133,6 +133,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="libpetsc.lib libslepc.lib mpi.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)\$(ConfigurationName)&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;"
+				GenerateDebugInformation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"

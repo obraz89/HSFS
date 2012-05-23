@@ -133,6 +133,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="smooth.lib imsl.lib"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)/Smooth/$(PlatformName)/$(ConfigurationName)&quot;;&quot;$(CTT_DIR)\lib\em64t&quot;"
+				GenerateDebugInformation="true"
 			/>
 			<Tool
 				Name="VCALinkTool"
