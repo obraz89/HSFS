@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\source\parallelEnvWrap.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\StabSolver.cpp"
 				>
 			</File>
@@ -325,6 +329,10 @@
 			</File>
 			<File
 				RelativePath=".\include\impexp.h"
+				>
+			</File>
+			<File
+				RelativePath=".\include\parallelEnvWrap.h"
 				>
 			</File>
 			<File

@@ -1,8 +1,10 @@
 #include "MeanFlow.h"
+
+#include "parallelEnvWrap.h"
+#include "StabSolver.h"
 /*
 #include "StabField.h"
 #include "ODES_Stab.h"
-#include "StabSolver.h"
 
 
 #include "WavePackLine.h"
@@ -10,7 +12,6 @@
 
 // debug
 */
-#include "slepceps.h"
 //#include "EigenGS.h"
 
 // for console io operations
@@ -43,31 +44,29 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	// 
 	RedirectIOToConsole();
 	// TODO: make SSU config file
-	std::string NSFieldName = "input/new/04.61500.dat";		// now it is for al=2
+	std::string NSFieldName = "input/new/alpha=2.ini";
 	FILE* file = fopen("output/transitions.dat", "a+");
 // read-process mean flow
-//	t_MeanFlow mf_field(&NSFieldName[0]);
-//	const t_MeanFlow::t_Params& mf_params = mf_field.get_params();
+	t_MeanFlow mf_field(&NSFieldName[0]);
+	const t_MeanFlow::t_Params& mf_params = mf_field.get_params();
 // stability field
 	//t_StabField stab_field(mf_params.Nx, mf_params.Nz);
 // set up solver context
-	//t_StabSolver stab_solver(mf_field);
-	// core debug
-	/*
-	t_WaveChars w_init;
+	t_StabSolver stab_solver(mf_field);
+	// core debug	
+	t_WCharsLoc w_init;
 	w_init.w = t_Complex(3.85e-2, 2.55e-3);
 	w_init.a = 0.102;
 	w_init.b = 0.2577;
-	*/
-	/*
+
+	
 	stab_solver.set3DContext(70,50, 150);
 	t_Complex base_resid = stab_solver.solve(w_init);
 	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
-	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
-	return 0;
-	*/
 
-	SlepcInitialize((int*)0,(char***)0,(char*)0,"hello world");
+	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
+
+	stablocal::slepc_initialize((int*)0,(char***)0,(char*)0,"hello world");
 	// gs debug
 	/*
 	t_EigenGS gs_solver(mf_field, 5);
@@ -99,8 +98,7 @@ for (int k = 0; k<nz; k++){
 }
 */	
 //to_f_trans.close();
-	int ierr = SlepcFinalize();CHKERRQ(ierr);
-	getchar();
-	getchar();
+	stablocal::slepc_finalize();
+	//int ierr = SlepcFinalize();CHKERRQ(ierr);
 	return 0;
 }
