@@ -122,12 +122,13 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\$(ProjectName)\include&quot;;../components/smallmat/include;../components/stabglobal/include;../components/stablocal/include;../components/meanflow/include;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud/&quot;;&quot;$(WX_DIR)\include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\$(ProjectName)\include&quot;;../shared/include;../components/smallmat/include;../components/stabglobal/include;../components/stablocal/include;../components/meanflow/include;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud/&quot;;&quot;$(WX_DIR)\include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
 				PreprocessorDefinitions="WIN32;WINVER=0x0400;__WXMSW__;_WINDOWS;WXUSINGDLL;wxUSE_GUI=1;UNICODE;_UNICODE;_DEBUG;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="1"
+				PrecompiledHeaderThrough="$(SolutionDir)/shared/StdAfx.h"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
@@ -535,6 +536,18 @@
 				</File>
 				<File
 					RelativePath="..\components\StabGlobal\include\WavePackLine.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="shared"
+				>
+				<File
+					RelativePath="..\shared\include\component.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\include\stdafx.h"
 					>
 				</File>
 			</Filter>

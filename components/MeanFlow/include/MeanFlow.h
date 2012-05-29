@@ -6,11 +6,10 @@
 #endif // _USE_MATH_DEFINES
 #include <cmath>
 
-#include <iostream>
 #include <sstream>
 #include <fstream>
-#include <string>
-#include <vector>
+
+#include "component.h"
 
 class  t_MeanFlow{
 public:
