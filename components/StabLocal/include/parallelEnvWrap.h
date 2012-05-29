@@ -1,7 +1,7 @@
-#include "impexp.h"
+
 namespace stablocal{
-	extern int STABLOCAL_IMPEXP slepc_initialize(int*,char***,char*,char*);
-	extern int STABLOCAL_IMPEXP slepc_finalize();
+	extern int  slepc_initialize(int*,char***,char*,char*);
+	extern int  slepc_finalize();
 	/*
 	extern void petcs_initialize();
 	extern void petsc_finalize();

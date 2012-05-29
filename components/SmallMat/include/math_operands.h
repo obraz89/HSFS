@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 #include <boost/numeric/mtl/mtl.hpp>
-#include "impexp.h"
+
 typedef std::complex<double> t_Complex;
 typedef std::complex<double> t_CompVal;
 typedef std::vector<double> t_DblVec;
@@ -17,7 +17,7 @@ typedef  mtl::dense2D<double, _param_fixed_mat33> t_SqMat3;
 typedef  mtl::dense_vector<double, _param_fixed_vec3> t_Vec3;
 typedef mtl::dense_vector<t_CompVal, _param_fixed_vec3> t_CompVec3;
 //typedef t_Vec (*pFunRHS)(const double&, const t_Vec&);
-class SMALLMAT_IMPEXP t_Vec{
+class  t_Vec{
 	std::vector< t_Complex > _cont;
 // no default constructors 
 public:
@@ -35,7 +35,7 @@ public:
 };
 
 // arrrgghhh;
-SMALLMAT_IMPEXP t_Vec operator*(const t_Complex&, const t_Vec&);
+ t_Vec operator*(const t_Complex&, const t_Vec&);
 
 // matrix class
 // operations are column-based
@@ -45,7 +45,7 @@ SMALLMAT_IMPEXP t_Vec operator*(const t_Complex&, const t_Vec&);
 // multiplication implies ordinary right mult: A.mul(B) <=> C=A*B set again by columns: C[i][j] - column j, row i
 // if matrix A is mul by set of vectors  h={h1, h2,} this means h*A ( like "basis" transition)
 
-class SMALLMAT_IMPEXP t_Matrix{
+class  t_Matrix{
 protected:
 	std::vector<t_Vec> _cont;
 public:
@@ -58,7 +58,7 @@ public:
 	~t_Matrix();
 };
 
-class SMALLMAT_IMPEXP t_SqMatrix: public t_Matrix{
+class  t_SqMatrix: public t_Matrix{
 public:
 	t_SqMatrix(const int& dim);
 	// construct a minor from matrix

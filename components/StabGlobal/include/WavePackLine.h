@@ -6,11 +6,11 @@
 #include "StabSolver.h"
 #include "EigenGS.h"
 
-#include "impexp.h"
+
 
 #include <vector>
 
-class STABGLOBAL_IMPEXP t_WavePackLine{
+class  t_WavePackLine{
 protected:
 	const t_MeanFlow& _rFldMF;
 	t_StabSolver& _stab_solver;
@@ -43,14 +43,14 @@ public:
 	virtual ~t_WavePackLine();
 };
 // monochromatic wave packet trajectory
-class STABGLOBAL_IMPEXP t_WPLineMono: public t_WavePackLine{
+class  t_WPLineMono: public t_WavePackLine{
 public:
 	t_WPLineMono(const t_MeanFlow&, t_StabSolver& a_stab_solver, t_EigenGS& a_gs_solver);
 	void retrace_fixed_beta(t_Index start_from, t_WCharsLoc init_wave);
 	void retrace_free_beta(t_Index start_from, t_WCharsLoc init_wave);
 };
 // max increment wave packet trajectory
-class STABGLOBAL_IMPEXP t_WPLineMax: public t_WavePackLine{
+class  t_WPLineMax: public t_WavePackLine{
 	t_WPLineMax(const t_MeanFlow&, t_StabSolver& a_stab_solver, t_EigenGS& a_gs_solver);
 	void retrace(t_Index start_from, t_WCharsLoc init_wave);
 };

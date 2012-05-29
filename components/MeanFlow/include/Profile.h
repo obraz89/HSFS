@@ -3,10 +3,10 @@
 #include <vector>
 #include <iostream>
 #include "math_operands.h"
-#include "impexp.h"
+
 class t_MeanFlow;
 // virtual base profile 
-class MFPROC_IMPEXP t_Profile{
+class  t_Profile{
 public:
 	struct t_Rec{
 		double y,u, u1, u2, w, w1, w2, t, t1, t2, mu, mu1, mu2, p, r;	

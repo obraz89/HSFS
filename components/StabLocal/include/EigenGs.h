@@ -6,9 +6,9 @@
 #include "WaveChars.h"
 #include <string>
 
-#include "impexp.h"
 
-class STABLOCAL_IMPEXP t_EigenGS{
+
+class  t_EigenGS{
 	// TODO: store current i,k to check
 	// if context is already set
 	const t_MeanFlow& _rFldNS;

@@ -5,10 +5,10 @@
 #include "ODES.h"
 #include "WaveChars.h"
 
-#include "impexp.h"
+
 // TODO: make different inheritance for 2D and 3D
 
-class STABLOCAL_IMPEXP t_StabSolver{
+class  t_StabSolver{
 	class t_StabODES : public t_ODES{
 	public:
 		// "parent"

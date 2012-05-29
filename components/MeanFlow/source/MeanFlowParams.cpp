@@ -30,6 +30,8 @@ void t_MeanFlow::t_Params::_init(const std::string a_conf_file_path){
 				boost::split(split_cont, ttl_str, boost::is_any_of("."),boost::token_compress_on);
 				split_cont.back()="dat";
 				_mf_bin_path = _get_conf_dir(a_conf_file_path).append("/").append(boost::join(split_cont, "."));
+				// TODO:
+				// if (!SearchPath(...)) throw BadMFFile;
 				std::cout<<_mf_bin_path<<std::endl;
 				break;
 			}
@@ -108,8 +110,6 @@ void t_MeanFlow::t_Params::_init(const std::string a_conf_file_path){
 			// number of GMRES iters
 				break;
 			// for a while, later decide what to do with .ttl
-			case 24:
-				//_mf_bin_path = parse::get_val<std::string>(cur_line);
 			default:
 				break;
 		}

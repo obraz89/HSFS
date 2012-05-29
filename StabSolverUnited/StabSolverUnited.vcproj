@@ -122,7 +122,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud/&quot;;&quot;$(WX_DIR)\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;;&quot;$(SolutionDir)\SmallMat\include&quot;;&quot;$(SolutionDir)MFProc\include&quot;;&quot;$(SolutionDir)\StabLocal\include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\$(ProjectName)\include&quot;;../components/smallmat/include;../components/stabglobal/include;../components/stablocal/include;../components/meanflow/include;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud/&quot;;&quot;$(WX_DIR)\include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
 				PreprocessorDefinitions="WIN32;WINVER=0x0400;__WXMSW__;_WINDOWS;WXUSINGDLL;wxUSE_GUI=1;UNICODE;_UNICODE;_DEBUG;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -143,9 +143,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib"
+				AdditionalDependencies="wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib imsl.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib mpi.lib libpetsc.lib libslepc.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(SolutionDir)\Smooth\debug\&quot;;&quot;$(SolutionDir)\SolverCore\debug\&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(CTT_DIR)/lib/em64t/&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				RandomizedBaseAddress="1"
@@ -348,6 +348,98 @@
 				Name="shared"
 				>
 			</Filter>
+			<Filter
+				Name="MeanFlow"
+				>
+				<File
+					RelativePath="..\components\MeanFlow\source\MeanFlow.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\MeanFlowParams.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\MFGridIndex.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\Profile.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\ProfileNS.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\ProfileStab.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="StabGlobal"
+				>
+				<File
+					RelativePath="..\components\StabGlobal\source\StabField.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabGlobal\source\WavePackLine.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabGlobal\source\WavePackLineMax.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabGlobal\source\WavePackLineMono.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="StabLocal"
+				>
+				<File
+					RelativePath="..\components\StabLocal\source\EigenGS.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\global_search.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\ODES.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\ODES_stab.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\parallelEnvWrap.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\StabSolver.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\StabSolverCore.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\WaveChars.cpp"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="SmallMat"
+				>
+				<File
+					RelativePath="..\components\SmallMat\source\operands.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -362,6 +454,90 @@
 				RelativePath=".\include\console.h"
 				>
 			</File>
+			<Filter
+				Name="SmallMat"
+				>
+				<File
+					RelativePath="..\components\SmallMat\include\math_operands.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="MeanFlow"
+				>
+				<File
+					RelativePath="..\components\MeanFlow\include\MeanFlow.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\ParseHelper.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\Profile.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\ProfileNS.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\ProfileStab.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\Smooth.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\solvercore.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\include\StreamLine.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="StabLocal"
+				>
+				<File
+					RelativePath="..\components\StabLocal\include\EigenGs.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\include\ODES.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\include\ODES_stab.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\include\parallelEnvWrap.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\include\StabSolver.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\include\WaveChars.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="StabGlobal"
+				>
+				<File
+					RelativePath="..\components\StabGlobal\include\StabField.h"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabGlobal\include\WavePackLine.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Resource Files"

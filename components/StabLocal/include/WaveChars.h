@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#include "impexp.h"
+
 
 // basic wave characteristics
 // a, kn, b - components of wave number k
@@ -12,7 +12,7 @@
 // w - frequency
 // vga, vgn, vgb - components of group velocity
 // vgn=0 in local rf, but non-zero in global rf
-struct STABLOCAL_IMPEXP t_WaveChars{
+struct  t_WaveChars{
 	t_CompVal a, kn, b;
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
@@ -22,7 +22,7 @@ struct STABLOCAL_IMPEXP t_WaveChars{
 // non-dimensional
 // to be used with stab solver and global searcher
 // local RF
-struct STABLOCAL_IMPEXP t_WCharsLoc: public t_WaveChars{
+struct  t_WCharsLoc: public t_WaveChars{
 	t_CompVal resid;
 	static t_WCharsLoc find_max_instab(const std::vector<t_WCharsLoc>& vec);
 	void print(){
@@ -35,7 +35,7 @@ struct STABLOCAL_IMPEXP t_WCharsLoc: public t_WaveChars{
 // to be used with wave pack line
 // store some context from stab comps
 // to restore dimensional wave chars
-struct STABLOCAL_IMPEXP t_WCharsGlob: public t_WaveChars{
+struct  t_WCharsGlob: public t_WaveChars{
 	double stabRe, dels, Me;
 	t_WCharsGlob initialize(const t_CompVec3& k, const t_CompVec3& vg, t_CompVal a_w,
 							double a_stabRe, double a_dels, double a_Me);

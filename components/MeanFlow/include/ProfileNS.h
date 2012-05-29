@@ -4,9 +4,9 @@
 #include "Profile.h"
 #include "smooth.h"
 
-#include "impexp.h"
 
-class MFPROC_IMPEXP t_ProfileNS : public t_Profile{
+
+class  t_ProfileNS : public t_Profile{
 	friend class t_ProfileStab;
 	int _i, _k, _bl_bound_ind;
 public:

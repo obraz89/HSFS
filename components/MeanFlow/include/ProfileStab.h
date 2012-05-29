@@ -1,8 +1,8 @@
 #ifndef __PROFILE_STAB
 #define __PROFILE_STAB
 #include "ProfileNS.h"
-#include "impexp.h"
-class MFPROC_IMPEXP t_ProfileStab : public t_Profile{	
+
+class  t_ProfileStab : public t_Profile{	
 public:
 	double stabRe, Me;
 	// dels is dimensional y_scale: 

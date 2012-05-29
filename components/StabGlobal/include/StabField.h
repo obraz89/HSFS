@@ -2,8 +2,8 @@
 #define __StabField__
 #include <vector>
 #include "WaveChars.h"
-#include "impexp.h"
-class STABGLOBAL_IMPEXP t_StabField{
+
+class  t_StabField{
 	const int nx;
 	const int nz;
 	std::vector<std::vector<t_WaveChars>> _values;  
