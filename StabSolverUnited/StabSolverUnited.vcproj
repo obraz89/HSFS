@@ -348,6 +348,10 @@
 			<Filter
 				Name="shared"
 				>
+				<File
+					RelativePath="..\shared\source\component.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="MeanFlow"
