@@ -43,9 +43,10 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 
 	const double& stabRe = _profStab.stabRe;
 	const double& Me = _profStab.Me;
-	const double gMaMa = _rFldNS.Params.Gamma*Me*Me;
-	const double g_1MaMa = (_rFldNS.Params.Gamma-1.0)*Me*Me;
-	const double Pr = _rFldNS.Params.Pr;
+	const t_MFParams& Params = _rFldNS.base_params();
+	const double gMaMa = Params.Gamma*Me*Me;
+	const double g_1MaMa = (Params.Gamma-1.0)*Me*Me;
+	const double Pr = Params.Pr;
 	t_ProfRec& rec = _profStab.get_rec(a_y);
 	/*
 	const double u = _profStab.getValue(a_y, _profStab.u);
@@ -485,7 +486,7 @@ void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a
 }
 
 void t_StabSolver::set3DContext(const t_Index& ind, const int a_nnodesStab/*=0*/){
-	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.Params.Ny : a_nnodesStab;
+	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.base_params().Ny : a_nnodesStab;
 	set3DContext(ind.i, ind.k, nnodes_stab);
 	return;
 }
@@ -622,7 +623,7 @@ void t_StabSolver::setInitWaves(const std::vector<t_WCharsLoc>& a_inits){
 t_WCharsLoc t_StabSolver::getMaxWave(const int& i_ind, const int& k_ind, 
 									 const std::vector<t_WCharsLoc>& a_inits, const int& a_nnodesStab){
     // to implement somehow "default" parameter
-	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.Params.Ny : a_nnodesStab;
+	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.base_params().Ny : a_nnodesStab;
 	set3DContext(i_ind, k_ind, nnodes_stab);
 	setInitWaves(a_inits);
 	t_WCharsLoc res_wave;

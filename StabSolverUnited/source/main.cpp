@@ -44,14 +44,14 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	// 
 	RedirectIOToConsole();
 	// TODO: make SSU config file
-	std::string NSFieldName = "input/new/alpha=2.ini";
+	wxString configfile =_T("C:/science/devel/StabSolverUnited/StabSolverUnited/input/new/alpha=2.ini");
 	FILE* file = fopen("output/transitions.dat", "a+");
 // read-process mean flow
-	t_MeanFlow mf_field(&NSFieldName[0]);
-	const t_MeanFlow::t_Params& mf_params = mf_field.get_params();
+	t_MFHSFLOW3D mf_field(configfile);
 // stability field
 	//t_StabField stab_field(mf_params.Nx, mf_params.Nz);
 // set up solver context
+
 	t_StabSolver stab_solver(mf_field);
 	// core debug	
 	t_WCharsLoc w_init;

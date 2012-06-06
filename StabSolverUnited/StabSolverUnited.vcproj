@@ -361,11 +361,19 @@
 					>
 				</File>
 				<File
-					RelativePath="..\components\MeanFlow\source\MeanFlowParams.cpp"
+					RelativePath="..\components\MeanFlow\source\MeanFlowHS2D.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\MeanFlowHS3D.cpp"
 					>
 				</File>
 				<File
 					RelativePath="..\components\MeanFlow\source\MFGridIndex.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\MeanFlow\source\MFParams.cpp"
 					>
 				</File>
 				<File
@@ -475,6 +483,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\components\MeanFlow\include\MFParams.h"
+					>
+				</File>
+				<File
 					RelativePath="..\components\MeanFlow\include\ParseHelper.h"
 					>
 				</File>
@@ -546,6 +558,10 @@
 			<Filter
 				Name="shared"
 				>
+				<File
+					RelativePath="..\shared\include\common_data.h"
+					>
+				</File>
 				<File
 					RelativePath="..\shared\include\component.h"
 					>

@@ -24,6 +24,21 @@
 //-----------------------------------------------------------------------------
 
 
+void t_Component::_add_params_group(wxString name, t_ComponentParamsGroup& grp){
+	wxASSERT_MSG( _mapParamsGrps.find(name)==_mapParamsGrps.end(),
+		_("Group '")+name+_("' already exists'")+_("'.")
+		);
+	_mapParamsGrps.insert( std::make_pair(name, &grp) );
+};
+
+void t_Component::load_settings(const wxString& file){
+	// do smth
+};
+
+void t_Component::save_settings(const wxString& file){
+	// do smth
+};
+/*
 t_ComponentParamsGroup& t_Component::get_settings_grp(const char* pszGrpName) throw(t_EComponent)
 {
 	wxString grpName = wxString::FromAscii(pszGrpName);
@@ -34,7 +49,9 @@ t_ComponentParamsGroup& t_Component::get_settings_grp(const char* pszGrpName) th
 	return (*it).second;
 }
 //-----------------------------------------------------------------------------
+*/
 
+/*
 
 void t_Component::load_settings(const wxString& fn) throw(t_EComponent)
 {
@@ -85,7 +102,9 @@ void t_Component::load_settings(const wxString& fn) throw(t_EComponent)
 }
 //-----------------------------------------------------------------------------
 
+*/
 
+/*
 void t_Component::save_settings(const wxString& file) throw(t_EComponent)
 {
 	const wxString& fn = (file.IsEmpty()) ?_paramsFileName :file;
@@ -120,11 +139,68 @@ void t_Component::save_settings(const wxString& file) throw(t_EComponent)
 }
 //-----------------------------------------------------------------------------
 
-
+*/
 ///////////////////////////////////////////////////////////////////////////////
 // class t_ComponentParamsGroup
 ///////////////////////////////////////////////////////////////////////////////
 
+void t_ComponentParamsGroup::_clear_map(){
+	std::map<wxString, t_BaseParam*>::iterator it = _mapParams.begin();
+	while(it!=_mapParams.end()){
+		delete (*it).second;
+		it++;
+	};
+};
+
+void t_ComponentParamsGroup::_add_param(t_BaseParam* pParam){
+	wxASSERT_MSG( _mapParams.find(pParam->name())==_mapParams.end(),
+		_("Param '")+pParam->name()+_("' already exists'")+_("'.")
+		);
+	_mapParams.insert( std::make_pair(pParam->name(), pParam) );
+};
+
+wxFileConfig t_ComponentParamsGroup::_get_config_handle(wxString configfile){
+	return wxFileConfig(
+		_T("SSU"), _T("obraz"),
+		configfile, 
+		wxEmptyString);
+}
+
+void t_ComponentParamsGroup::_load_via_params(wxFileConfig& conf){
+	conf.SetPath(ConfigDomain);
+	conf.SetRecordDefaults();
+	std::map<wxString, t_BaseParam*>::iterator it = _mapParams.begin();
+	while(it!=_mapParams.end()){
+		if (it->second->type()==t_BaseParam::Int){
+			t_CompParamInt* pParam = dynamic_cast<t_CompParamInt*>(it->second);
+			long val;
+			conf.Read(pParam->name(), &val, pParam->get_default());
+			pParam->set_value(val);
+		};
+
+		if (it->second->type()==t_BaseParam::Dbl){
+			t_CompParamDbl* pParam = dynamic_cast<t_CompParamDbl*>(it->second);
+			double val; 
+			conf.Read(pParam->name(), &val, pParam->get_default());
+			pParam->set_value(val);
+		};
+
+		if (it->second->type()==t_BaseParam::Str){
+			t_CompParamStr* pParam = dynamic_cast<t_CompParamStr*>(it->second);
+			wxString val;
+			conf.Read(pParam->name(), &val, pParam->get_default());
+			pParam->set_value(val);
+		};
+		it++;
+	};
+	conf.SetPath(_T("/"));
+};
+
+void t_ComponentParamsGroup::load_via_params(wxString configfile){
+	_load_via_params(_get_config_handle(configfile));
+};
+
+/*
 const t_ComponentParam&
 t_ComponentParamsGroup::get_raw_param(const wxString& parName) const throw(t_EComponent)
 {
@@ -137,8 +213,9 @@ t_ComponentParamsGroup::get_raw_param(const wxString& parName) const throw(t_ECo
 
 	return (*it).second;
 }
+*/
 //-----------------------------------------------------------------------------
-
+/*
 double t_ComponentParamsGroup::get_real_param(const char* pszName) const throw(t_EComponent)
 {
  	wxString parName = wxString::FromAscii(pszName);
@@ -154,7 +231,9 @@ double t_ComponentParamsGroup::get_real_param(const char* pszName) const throw(t
 	return val;
 }
 //-----------------------------------------------------------------------------
+*/
 
+/*
 int t_ComponentParamsGroup::get_int_param(const char* pszName) const throw(t_EComponent)
 {
 	wxString parName = wxString::FromAscii(pszName);
@@ -169,12 +248,14 @@ int t_ComponentParamsGroup::get_int_param(const char* pszName) const throw(t_ECo
 
 	return val;
 }
+*/
 //-----------------------------------------------------------------------------
 
 /** 
  *  @param pszName   Name of the param to get
  *  @param pRefName  try to dereference parameter and assign pRefName if succeeded
  */
+/*
 const wxString& t_ComponentParamsGroup::get_string_param(const char* pszName, wxString* pRefName) const throw(t_EComponent)
 {
 	wxString parName = wxString::FromAscii(pszName);
@@ -207,6 +288,7 @@ err:
 		parName.c_str(), m_name.c_str(), par.get_raw_value().c_str()
 	);
 }
+*/
 //-----------------------------------------------------------------------------
 
 
@@ -214,6 +296,7 @@ err:
 // class t_ComponentParam
 ///////////////////////////////////////////////////////////////////////////////
 
+/*
 bool t_ComponentParam::set_raw_value(const wxString& aVal)
 {
 	if(type==ptInt)
@@ -239,3 +322,4 @@ bool t_ComponentParam::set_raw_value(const wxString& aVal)
 	return true;
 }
 //-----------------------------------------------------------------------------
+*/

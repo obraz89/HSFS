@@ -25,13 +25,14 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	double rho_e = bl_outer_rec.r;
 	double t_e = bl_outer_rec.t;
 	double y_scale = sqrt(mu_e*x/(u_e*rho_e));
+	const t_MFParams& Params = _rFld.base_params();
 	// keep Jacobian to local RF
 	// in order to finally pass it to wavepack line
 	_jacToLocalRF = a_rProfNS._jacToLocalRF;
 
-	this->stabRe = sqrt(_rFld.Params.Re*u_e*rho_e*x/mu_e);
-	this->Me = _rFld.Params.Mach*u_e/sqrt(t_e);
-	this->dels = _rFld.Params.L_ref*y_scale/sqrt(_rFld.Params.Re);
+	this->stabRe = sqrt(Params.Re*u_e*rho_e*x/mu_e);
+	this->Me = Params.Mach*u_e/sqrt(t_e);
+	this->dels = Params.L_ref*y_scale/sqrt(Params.Re);
 	double dy = (a_rProfNS._y[a_rProfNS.size()-1])/((double)this->size());
 	for (int i=0; i<size(); i++){
 		// order important - first interpolate then nondim
@@ -79,15 +80,15 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 // dmy/dy = mu1*(dt/dy);
 // d2my/dy2 = mu2*(dt/dy)^2.0 + mu1*(d2t/dy2)
 		_mu[i]=_mu[i]/mu_e;
-		if (_rFld.Params.ViscType==_rFld.Params.ViscPower){
-			const double& visc_power = _rFld.Params.Mju_pow;
+		if (Params.ViscType==t_MFParams::t_ViscType::ViscPower){
+			const double& visc_power = Params.Mju_pow;
 			_mu1[i]=visc_power*pow(_t[i],visc_power-1.0);
 			_mu2[i]=visc_power*(visc_power-1.0)*pow(_t[i],visc_power-2.0);
 		}
 		else{
 // TODO: check Stagnation ?
 		    const double& lt=_t[i];
-			const double& t_coef=_rFld.Params.T_mju*(1.0+t_e);
+			const double& t_coef=Params.T_mju*(1.0+t_e);
 			_mu1[i]=1.5*_mu[i]/lt-_mu[i]/(lt+t_coef);
 			_mu2[i]=1.5*(_mu1[i]-_mu[i]/lt)/lt-
 				   (_mu1[i]-_mu[i]/(lt+t_coef))/(lt+t_coef);

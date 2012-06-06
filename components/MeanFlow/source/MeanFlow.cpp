@@ -1,110 +1,47 @@
 #include "MeanFlow.h"
 
-void t_MeanFlow::_allocate(){
-	const int& Nx = Params.Nx;
-	const int& Ny = Params.Ny;
-	const int& Nz = Params.Nz;
+void t_MeanFlow::_allocate(int nx, int ny, int nz){
+	if (!_allocated){
+		Nx = nx;
+		Ny = ny;
+		Nz = nz;
 
-	_fld = new t_Rec**[Nx];
-	for(int i=0;i<Nx;i++) 
-	{
-		_fld[i] = new t_Rec*[Ny];
-		for(int j=0;j<Ny;j++)
+		_fld = new t_Rec**[Nx];
+		for(int i=0;i<Nx;i++) 
 		{
-			_fld[i][j] = new t_Rec[Nz];
-		};
-	}
-}
-t_MeanFlow::t_MeanFlow(const char* a_config_fname):
-Params(a_config_fname)
-{
-_allocate();
-const int& Nx = Params.Nx;
-const int& Ny = Params.Ny;
-const int& Nz = Params.Nz;
-FILE* fld_file = fopen(&Params._mf_bin_path[0],"rb");
-//reverse order!! k,j,i
-for(int k=0; k<Nz; k++)	
-	for (int j=0; j<Ny; j++)
-		for(int i=0; i<Nx; i++){
-			t_Rec& ptr = _fld[i][j][k];
-			fread(&ptr.x,sizeof(double),1,fld_file);
-			fread(&ptr.y,sizeof(double),1,fld_file);
-			fread(&ptr.z,sizeof(double),1,fld_file);
-		}
-for(int k=0; k<Nz; k++)	
-	for (int j=0; j<Ny; j++)
-		for(int i=0; i<Nx; i++){
-			t_Rec& ptr = _fld[i][j][k];
-			fread(&ptr.u,sizeof(double),1,fld_file);
-			fread(&ptr.v,sizeof(double),1,fld_file);
-			fread(&ptr.w,sizeof(double),1,fld_file);
-			fread(&ptr.p,sizeof(double),1,fld_file);
-			fread(&ptr.t,sizeof(double),1,fld_file);
-			double gmama = Params.Gamma*Params.Mach*Params.Mach;
-			ptr.r=gmama*ptr.p/ptr.t;
-		};
-
-fclose(fld_file);
-};
-
-t_MeanFlow::t_MeanFlow(const char* a_config_fname2D, bool axesym, int kk):
-Params(a_config_fname2D, kk){
-_allocate();
-const int& Nx = Params.Nx;
-const int& Ny = Params.Ny;
-const int& Nz = Params.Nz;
-FILE* fld_file = fopen(&Params._mf_bin_path[0],"rb");
-double gmama = Params.Gamma*Params.Mach*Params.Mach;
-// in 2D fields the packing is by column
-t_Rec base_rec2D;
-for (int i=0; i<Nx; i++){
-	for (int j=0; j<Ny; j++){
-		fread(&base_rec2D.x,sizeof(double),1,fld_file);
-		fread(&base_rec2D.y,sizeof(double),1,fld_file);
-		fread(&base_rec2D.u,sizeof(double),1,fld_file);
-		fread(&base_rec2D.v,sizeof(double),1,fld_file);
-		fread(&base_rec2D.p,sizeof(double),1,fld_file);
-		fread(&base_rec2D.t,sizeof(double),1,fld_file);
-		base_rec2D.r=gmama*base_rec2D.p/base_rec2D.t;
-		for (int k=0; k<Nz; k++){
-			t_Rec& rRec = _fld[i][j][k];
-			if (axesym){
-				double psi = 2*M_PI/double(Nz-1)*k;
-				rRec.x = base_rec2D.x;
-				rRec.y = base_rec2D.y*cos(psi);
-				rRec.z = base_rec2D.y*sin(psi);
-				rRec.u = base_rec2D.u;
-				rRec.v = base_rec2D.v*cos(psi);
-				rRec.w = base_rec2D.v*sin(psi);
-				rRec.p = base_rec2D.p;
-				rRec.t = base_rec2D.t;
-				rRec.r = base_rec2D.r;
-			}else{
-				// ???
-				double z_span = 1.0;
-				rRec = base_rec2D;
-				rRec.z = k-0.5; // z from -0.5 to 0.5
-				rRec.w = 0.0;
+			_fld[i] = new t_Rec*[Ny];
+			for(int j=0;j<Ny;j++)
+			{
+				_fld[i][j] = new t_Rec[Nz];
 			};
 		}
+		_allocated = true;
 	}
-}
-
 };
+
+t_MeanFlow::t_MeanFlow(int nx, int ny, int nz):_allocated(false){
+	_allocate(nx, ny, nz);
+};
+
+t_MeanFlow::t_MeanFlow():_allocated(false){};
+
 t_MeanFlow::~t_MeanFlow()
 {
-	for (int i=0; i<Params.Nx; i++)
+	for (int i=0; i<Nx; i++)
 	{
-		for (int j=0; j<Params.Ny; j++) delete[] _fld[i][j];
+		for (int j=0; j<Ny; j++) delete[] _fld[i][j];
 		delete[] _fld[i];
 	}
+};
+/*
+void t_MeanFlow::load_settings(wxString configfile){
+	Params.load(configfile);
 };
 
 const t_MeanFlow::t_Params& t_MeanFlow::get_params() const{
 	return Params;
 };
-
+*/
 const t_MeanFlow::t_Rec& t_MeanFlow::get_rec(const t_MeanFlow::t_GridIndex& ind) const{
 	return _fld[ind.i][ind.j][ind.k];
 };
@@ -207,6 +144,7 @@ double t_MeanFlow::calc_enthalpy(const int i, const int j, const int k) const
 {
 double cp_t, v_2;
 const t_Rec& ptr = _fld[i][j][k];
+const t_MFParams& Params = this->base_params();
 cp_t = ptr.t/((Params.Gamma-1.0)*Params.Mach*Params.Mach);
 v_2 = 0.5*(pow(ptr.u,2.0)+pow(ptr.v,2.0)+pow(ptr.w,2.0));
 return (cp_t + v_2);
@@ -219,7 +157,8 @@ return 0.0;
 // calc nondim viscosity
 double t_MeanFlow::calc_viscosity(const int i, const int j, const int k) const{
 	const t_Rec& rRec = _fld[i][j][k];
-	if (Params.ViscType==Params.ViscPower){
+	const t_MFParams& Params = this->base_params();
+	if (Params.ViscType==t_MFParams::t_ViscType::ViscPower){
 		// power
 		return pow(rRec.t, Params.Mju_pow);
 	}
@@ -234,6 +173,7 @@ double t_MeanFlow::calc_viscosity(const int i, const int j, const int k) const{
 
 double t_MeanFlow::calc_mach(const int i, const int j, const int k) const{
 	const t_Rec& rRec = _fld[i][j][k];
+	const t_MFParams& Params = this->base_params();
 	double vAbs = sqrt(pow(rRec.u,2.0)+pow(rRec.v,2.0)+pow(rRec.w,2.0));
 	return Params.Mach*vAbs/sqrt(rRec.t);
 }
@@ -314,6 +254,7 @@ double t_MeanFlow::calc_distance(const t_GridIndex& a, const t_GridIndex& b) con
 };
 
 t_Index t_MeanFlow::get_nearest_index(double x, double y, double z) const{
+	const t_MFParams& Params = this->base_params();
 	t_Index ind_nrst;
 	double x_cmp = 0.;
 

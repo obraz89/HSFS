@@ -10,12 +10,16 @@
 #include <fstream>
 
 #include "component.h"
+#include "MFParams.h"
 
-class  t_MeanFlow{
+class t_MeanFlow{
+private:
+	int Nx, Ny, Nz;
 public:
 	struct t_Rec{
 		double x,y,z,u,v,w,p,t,r;
 	};
+	/*
 	class  t_Params{
 		std::string _get_conf_dir(std::string conf_path);
 		void _init(const std::string a_config_fname);
@@ -33,11 +37,13 @@ public:
 				T_mju, Mju_pow, Gamma, Pr;
 	};
 	const t_Params Params;
+	*/
 	enum ALONG_LINE{I, J, K};
-private:
-	void _allocate();
+protected:
+	bool _allocated;
+	virtual void _allocate(int nx, int ny, int nz);
+	virtual void _init()=0;
 	t_Rec*** _fld;
-
 public:
 	struct  t_GridIndex{
 		int i,j,k;
@@ -45,13 +51,13 @@ public:
 		t_GridIndex(int, int, int);
 		t_GridIndex(const t_GridIndex&, int i=0, int j=0, int k=0);
 	};
-	// initialize by 3D config file (native 3D filed)
-	t_MeanFlow(const char* a_config_fname3D);
-	// initialize by 2D config file (expand 2D field)
-	t_MeanFlow(const char* a_config_fname2D, bool axesym, int kk);
-	~t_MeanFlow();
+	t_MeanFlow();
+	t_MeanFlow(int nx, int ny, int nz);
+	virtual ~t_MeanFlow();
+	// parameters
+	virtual const t_MFParams& base_params() const = 0;
 	// getters
-	const t_Params& get_params() const;
+
 	const t_Rec& get_rec(const t_GridIndex& ind) const;
 	const t_Rec& get_rec(int i, int j, int k) const;
 	t_GridIndex get_nearest_index(double x, double y, double z) const;
@@ -100,6 +106,27 @@ private:
 		(const std::vector<double>& profile) const;
 */
 };
+
+class t_MFHSFLOW3D: public t_MeanFlow, public t_Component{
+private:
+	void _init();
+	void _init_params_grps();
+	t_MFParamsHS3D _params;
+public:
+	t_MFHSFLOW3D(wxString configfile);
+	//virtual void load_settings(const wxString& file) throw(t_EComponent);
+	//virtual void save_settings(const wxString& file) throw(t_EComponent);
+	const t_MFParams& base_params() const;
+};
+
+class t_MFHSFLOW2D: public t_MeanFlow{
+private:
+	void _init();
+	t_MFParamsHS2D _params;
+public:
+	t_MFHSFLOW2D(wxString configfile);
+	const t_MFParams& base_params() const;
+}; 
 
 inline t_MeanFlow::t_Rec operator-(const t_MeanFlow::t_Rec& rec1, const t_MeanFlow::t_Rec& rec2){
 	    t_MeanFlow::t_Rec res;

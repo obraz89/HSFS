@@ -14,7 +14,8 @@ void t_ProfileNS::initialize(int a_i , int a_k){
 	double prof_thick = 3.0*bl_thick;
 	double cur_y = bl_thick;
 	int cur_y_ind = _bl_bound_ind;
-	while((cur_y<prof_thick)&&(cur_y_ind<_rFld.Params.Ny)){
+	const t_MFParams& Params = _rFld.base_params();
+	while((cur_y<prof_thick)&&(cur_y_ind<Params.Ny)){
 		cur_y_ind++;
 		cur_y = _rFld.calc_distance(t_Index(a_i, cur_y_ind, a_k), 
 									t_Index(a_i, 0, a_k));
@@ -73,7 +74,7 @@ void t_ProfileNS::initialize(int a_i , int a_k){
 		// it mul by factor sqrt(ReINF)
 		// as it is for local parallel task we store only y assuming x=z=0
 		// TODO: (good debug check is to assure that)
-		_y[j] = r_ked[1]*sqrt(_rFld.Params.Re);
+		_y[j] = r_ked[1]*sqrt(Params.Re);
 		// again we postulate v==0
 		_u[j] = u_ked[0];
 		_w[j] = u_ked[2];
@@ -81,7 +82,7 @@ void t_ProfileNS::initialize(int a_i , int a_k){
 		_p[j] = mf_rec.p;
 		_t[j] = mf_rec.t;
 		// rho is non-dim as follows
-		double gMaMa = _rFld.Params.Gamma*pow(_rFld.Params.Mach, 2);
+		double gMaMa = Params.Gamma*pow(Params.Mach, 2);
 		_r[j] = mf_rec.p/mf_rec.t*gMaMa;
 		_mu[j]=_rFld.calc_viscosity(a_i, j, a_k);
 	}

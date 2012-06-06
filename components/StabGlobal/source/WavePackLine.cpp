@@ -99,7 +99,7 @@ void t_WavePackLine::print_line_to_file() const{
 	std::vector<t_WPLineRec>::const_iterator fbeg=this->_line.end();
 	fbeg--; 
 	std::ostringstream to_file;
-	to_file<<"output/WPPaths/al="<<_rFldMF.Params.Alpha<<"/WPLine_kstart="<<fbeg->nearest_node.k;
+	to_file<<"output/WPPaths/al="<<_rFldMF.base_params().Alpha<<"/WPLine_kstart="<<fbeg->nearest_node.k;
 	std::ofstream to(&to_file.str()[0]);
 	while (fbeg!=_line.begin()){
 		to<<*fbeg;

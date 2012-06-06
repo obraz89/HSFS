@@ -47,7 +47,7 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 
 	const double& stabRe = _profStab.stabRe;
 	const double& Me = _profStab.Me;
-	const t_MeanFlow::t_Params& mf_params = _rFldNS.Params;
+	const t_MFParams& mf_params = _rFldNS.base_params();
 	const double gMaMa = mf_params.Gamma*Me*Me;
 	const double g_1MaMa = (mf_params.Gamma-1.0)*Me*Me;
 	const double Pr = mf_params.Pr;
