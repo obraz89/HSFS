@@ -24,34 +24,39 @@ void t_MFHSFLOW2D::_init(const wxString& configfile){
 	FILE* fld_file = fopen(_params.mf_bin_path.ToAscii(),"rb");
 	double gmama = _params.Gamma*_params.Mach*_params.Mach;
 	// in 2D fields the packing is by column
-	t_Rec base_rec2D;
-	for (int i=0; i<Nx; i++){
-		for (int j=0; j<Ny; j++){
-			fread(&base_rec2D.x,sizeof(double),1,fld_file);
-			fread(&base_rec2D.y,sizeof(double),1,fld_file);
-			fread(&base_rec2D.u,sizeof(double),1,fld_file);
-			fread(&base_rec2D.v,sizeof(double),1,fld_file);
-			fread(&base_rec2D.p,sizeof(double),1,fld_file);
-			fread(&base_rec2D.t,sizeof(double),1,fld_file);
-			base_rec2D.r=gmama*base_rec2D.p/base_rec2D.t;
+	for (int j=0; j<Ny; j++){
+		for (int i=0; i<Nx; i++){
+			t_Rec& rRec = _fld[i][j][0];
+			fread(&rRec.x,sizeof(double),1,fld_file);
+			fread(&rRec.y,sizeof(double),1,fld_file);
+		}
+	}
+	for (int j=0; j<Ny; j++){
+		for (int i=0; i<Nx; i++){
+			t_Rec& rBaseRec = _fld[i][j][0];
+			fread(&rBaseRec.u,sizeof(double),1,fld_file);
+			fread(&rBaseRec.v,sizeof(double),1,fld_file);
+			fread(&rBaseRec.p,sizeof(double),1,fld_file);
+			fread(&rBaseRec.t,sizeof(double),1,fld_file);
+			rBaseRec.r=gmama*rBaseRec.p/rBaseRec.t;
 			for (int k=0; k<Nz; k++){
 				t_Rec& rRec = _fld[i][j][k];
 				if (_params.MFSym==t_MFParamsHS2D::t_AxeSym::AxeSym){
-					double psi = 2*M_PI/double(Nz-1)*k;
-					rRec.x = base_rec2D.x;
-					rRec.y = base_rec2D.y*cos(psi);
-					rRec.z = base_rec2D.y*sin(psi);
-					rRec.u = base_rec2D.u;
-					rRec.v = base_rec2D.v*cos(psi);
-					rRec.w = base_rec2D.v*sin(psi);
-					rRec.p = base_rec2D.p;
-					rRec.t = base_rec2D.t;
-					rRec.r = base_rec2D.r;
+					double psi = M_PI/double(Nz-1)*k;
+					rRec.x = rBaseRec.x;
+					rRec.y = rBaseRec.y*cos(psi);
+					rRec.z = rBaseRec.y*sin(psi);
+					rRec.u = rBaseRec.u;
+					rRec.v = rBaseRec.v*cos(psi);
+					rRec.w = rBaseRec.v*sin(psi);
+					rRec.p = rBaseRec.p;
+					rRec.t = rBaseRec.t;
+					rRec.r = rBaseRec.r;
 				}else{
 					// ???
 					double z_span = 1.0;
-					rRec = base_rec2D;
-					rRec.z = k-0.5; // z from -0.5 to 0.5
+					rRec = rBaseRec;
+					rRec.z = (-0.5+double(k)/double(Nz-1))*_params.ZSpan; // z from -0.5*ZSpan to 0.5*ZSpan
 					rRec.w = 0.0;
 				};
 			}
