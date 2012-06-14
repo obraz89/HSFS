@@ -101,6 +101,7 @@ t_Matrix t_Matrix::mul(const t_Matrix & r){
 }
 t_Matrix::~t_Matrix(){};
 
+t_SqMatrix::t_SqMatrix():t_Matrix(0,0){};
 t_SqMatrix::t_SqMatrix(const int& dim):t_Matrix(dim, dim){};
 t_SqMatrix::t_SqMatrix(const t_SqMatrix& mat, const int& row, const int& col):t_Matrix(mat.nCols-1, mat.nCols-1){
 	t_Matrix& self = *this;

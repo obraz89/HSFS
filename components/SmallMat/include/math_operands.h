@@ -60,6 +60,7 @@ public:
 
 class  t_SqMatrix: public t_Matrix{
 public:
+	t_SqMatrix();
 	t_SqMatrix(const int& dim);
 	// construct a minor from matrix
 	t_SqMatrix(const t_SqMatrix& mat, const int& raw, const int& col);
