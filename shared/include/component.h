@@ -3,7 +3,7 @@
 // Purpose:     Base classes for plugins/components
 // Author:      Andrey V. Novikov
 // Modified by: Obraz
-// Note: synthax modified
+// Note: syntax modified
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __MY_COMPONENT
 #define __MY_COMPONENT
@@ -292,19 +292,22 @@ public:
 */
 class t_Component{
 protected:
-	//std::map<wxString, t_ComponentParamsGroup> _mapParamsGrps;
 	std::map<wxString, t_ComponentParamsGroup*> _mapParamsGrps;
-	wxString _spec;  // specialization
 	wxString _paramsFileName;
+	wxString _name;
+	wxString _spec;
 	virtual void _init_params_grps()=0;
 	void _add_params_group(wxString name, t_ComponentParamsGroup&);
 public:
 	virtual ~t_Component(){ ; }
+	const wxString& name() const{return _name;};
+	const wxString& spec() const{return _spec;};
 
 
-	t_Component(wxString settingsFN, wxString spec=wxEmptyString) throw(t_EComponent)
+	t_Component(wxString settingsFN, wxString name,wxString spec=wxEmptyString) throw(t_EComponent)
 	{
 		_paramsFileName=settingsFN;
+		_name = name;
 		_spec = spec;
 		//	load_settings(settingsFN);
 	};
@@ -319,6 +322,7 @@ public:
 	virtual wxString get_name() const = 0;
 	virtual wxString get_description() const = 0;
 	*/
+	virtual void initialize(const wxString& file)=0;
 	virtual void load_settings(const wxString& file) throw(t_EComponent);
 	virtual void save_settings(const wxString& file) throw(t_EComponent);
 };
