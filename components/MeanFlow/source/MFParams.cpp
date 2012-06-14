@@ -16,13 +16,15 @@ const int t_MFParams::t_ViscType::ViscSuther=1;
 const int t_MFParamsHS2D::t_AxeSym::AxeSym = 0;
 const int t_MFParamsHS2D::t_AxeSym::Plane  = 1;
 
-t_MFParams::t_MFParams():t_ComponentParamsGroup(MF_CONF_DOMAIN){};
+t_MFParams::t_MFParams():t_ComponentParamsGroup(MF_CONF_DOMAIN){
+		_init_params_map();
+};
 
 t_MFParams::t_MFParams(wxString configfile):t_ComponentParamsGroup(MF_CONF_DOMAIN){
 	_init_params_map();
 	wxFileConfig conf = _get_config_handle(configfile);
 	_load_via_params(conf);
-}
+};
 
 void t_MFParams::_init_params_map(){
 	t_CompParamStr* pMfBin = 
@@ -300,6 +302,10 @@ void t_MFParamsHS2D::load_direct(wxString configfile){
 void t_MFParamsHS3D::load_via_params(wxString configfile){
 	// no additional params
 	t_MFParams::load_via_params(configfile);
+};
+
+void t_MFParamsHS3D::_init_params_map(){
+	t_MFParams::_init_params_map();
 };
 
 void t_MFParamsHS3D::load_direct(wxString configfile){

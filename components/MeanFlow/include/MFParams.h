@@ -35,7 +35,9 @@ public:
 };
 
 class t_MFParamsHS3D : public t_MFParams{
+	void _init_params_map();
 public:
+	t_MFParamsHS3D():t_MFParams(){};
 	t_MFParamsHS3D(wxString configfile):t_MFParams(configfile){};
 	void load_direct(wxString configfile);
 	void load_via_params(wxString configfile);
@@ -44,7 +46,7 @@ public:
 class t_MFParamsHS2D: public t_MFParams{
 	void _init_params_map();
 public:
-	// ???
+	t_MFParamsHS2D():t_MFParams(){};
 	t_MFParamsHS2D(wxString configfile);
 	void load_direct(wxString configfile);
 	void load_via_params(wxString configfile);
