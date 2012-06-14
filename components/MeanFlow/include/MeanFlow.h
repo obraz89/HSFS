@@ -42,7 +42,7 @@ public:
 protected:
 	bool _allocated;
 	virtual void _allocate(int nx, int ny, int nz);
-	virtual void _init()=0;
+	virtual void _init( const wxString& configfile )=0;
 	t_Rec*** _fld;
 public:
 	struct  t_GridIndex{
@@ -109,22 +109,27 @@ private:
 
 class t_MFHSFLOW3D: public t_MeanFlow, public t_Component{
 private:
-	void _init();
+	void _init( const wxString& configfile );
 	void _init_params_grps();
 	t_MFParamsHS3D _params;
 public:
-	t_MFHSFLOW3D(wxString configfile);
+	t_MFHSFLOW3D();
+	t_MFHSFLOW3D(const wxString& configfile);
+	void initialize( const wxString& configfile );
 	//virtual void load_settings(const wxString& file) throw(t_EComponent);
 	//virtual void save_settings(const wxString& file) throw(t_EComponent);
 	const t_MFParams& base_params() const;
 };
 
-class t_MFHSFLOW2D: public t_MeanFlow{
+class t_MFHSFLOW2D: public t_MeanFlow, public t_Component{
 private:
-	void _init();
+	void _init(const wxString& configfile);
+	void _init_params_grps();
 	t_MFParamsHS2D _params;
 public:
-	t_MFHSFLOW2D(wxString configfile);
+	t_MFHSFLOW2D();
+	t_MFHSFLOW2D(const wxString& configfile);
+	void initialize( const wxString& configfile );
 	const t_MFParams& base_params() const;
 }; 
 

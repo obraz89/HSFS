@@ -1,14 +1,26 @@
 #include "MeanFlow.h"
-t_MFHSFLOW2D::t_MFHSFLOW2D(wxString configfile):
-_params(configfile), t_MeanFlow(){
-	_allocate(_params.Nx, _params.Ny, _params.Nz);
-	_init();
+#include "common_data.h"
+
+t_MFHSFLOW2D::t_MFHSFLOW2D():
+t_MeanFlow(), t_Component(wxEmptyString, MF_HSFLOW2D_NAME){};
+
+t_MFHSFLOW2D::t_MFHSFLOW2D(const wxString& configfile):
+t_MeanFlow(), t_Component(configfile, MF_HSFLOW2D_NAME){
+	_init(configfile);
 };
 
-void t_MFHSFLOW2D::_init(){
+void t_MFHSFLOW2D::initialize( const wxString& configfile ){
+	_init(configfile);
+};
+
+void t_MFHSFLOW2D::_init(const wxString& configfile){
+	_init_params_grps();
+	_paramsFileName = configfile;
+	_params.load_via_params(configfile);
 	const int& Nx = _params.Nx;
 	const int& Ny = _params.Ny;
 	const int& Nz = _params.Nz;
+	_allocate(_params.Nx, _params.Ny, _params.Nz);
 	FILE* fld_file = fopen(_params.mf_bin_path.ToAscii(),"rb");
 	double gmama = _params.Gamma*_params.Mach*_params.Mach;
 	// in 2D fields the packing is by column
@@ -47,6 +59,11 @@ void t_MFHSFLOW2D::_init(){
 	}
 	fclose(fld_file);
 };
+
+void t_MFHSFLOW2D::_init_params_grps(){
+	_mapParamsGrps.clear();
+	_add_params_group(_T("default"), _params);
+}
 
 const t_MFParams& t_MFHSFLOW2D::base_params() const{
 	return _params;
