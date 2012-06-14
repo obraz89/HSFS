@@ -1,13 +1,96 @@
+#include "common_data.h"
 #include "EigenGS.h"
 #include "slepceps.h"
 #include <iostream>
 #include <fstream>
-// task dim =5 3D
-// 4 for 2D
-t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld, const int a_task_dim):
-_rFldNS(a_rFld), _n_vars(a_task_dim), _profStab(a_rFld),
-_A(a_task_dim), _B(a_task_dim), _C(a_task_dim), _CW(a_task_dim){
-	// keep max size : SO template 15 point for 3D
+
+// ---------------------------------------
+// t_EigenParams
+static const int N_VARS_DEFAULT = 5;
+static const int N_NODES_DEFAULT = 51;
+static const double THICK_COEF_DEFAULT = 3.0;
+
+t_EigenParams::t_EigenParams():t_ComponentParamsGroup(EIGEN_CONF_DOMAIN){
+	_init_params_map();
+};
+
+t_EigenParams::t_EigenParams(wxString configfile):t_ComponentParamsGroup(EIGEN_CONF_DOMAIN){
+	_init_params_map();
+	load_via_params(configfile);
+};
+
+void t_EigenParams::_init_params_map(){
+	t_CompParamInt* pNVars = 
+		new t_CompParamInt(NVars, _T("NVars"), _T("Number of variables: internal param"));
+	pNVars->set_default(N_VARS_DEFAULT);
+	_add_param(pNVars);
+
+	t_CompParamInt* pNNnodes = 
+		new t_CompParamInt(NNodes, _T("NNodes"), _T("Number of nodes to be used in eigen search"));
+	pNNnodes->set_default(N_NODES_DEFAULT);
+	_add_param(pNNnodes);
+
+	t_CompParamDbl* pThickCoef = 
+		new t_CompParamDbl(ThickCoef, _T("ThickCoef"), _T("Thickness coef : Y = BL thick * coef"));
+	pThickCoef->set_default(THICK_COEF_DEFAULT);
+	_add_param(pThickCoef);
+};
+
+void t_EigenParams::_load_direct(wxFileConfig& conf){
+	conf.SetRecordDefaults(); //write defaults to config file
+	conf.SetPath(ConfigDomain);
+	// do smth
+	conf.SetPath(_T("/"));
+}
+
+void t_EigenParams::load_direct(wxString configfile){
+	_load_direct(_get_config_handle(configfile));
+};
+
+void t_EigenParams::_load_via_params(wxFileConfig& handle){
+	t_ComponentParamsGroup::_load_via_params(handle);
+};
+
+void t_EigenParams::load_via_params(wxString configfile){
+	_load_via_params(_get_config_handle(configfile));
+};
+
+void t_EigenParams::save(wxString configfile){
+	// for future
+};
+
+
+// ~t_EigenParams
+// ---------------------------------------
+
+
+
+t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld, const wxString& configfile):
+_rFldNS(a_rFld), _profStab(a_rFld), _params(configfile), t_Component(configfile, EIGEN3D_NAME){
+	_init(configfile);
+};
+
+t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld):
+_rFldNS(a_rFld), _profStab(a_rFld), _params(), t_Component(wxEmptyString, EIGEN3D_NAME){};
+
+
+void t_EigenGS::_init(const wxString& configfile){
+	_paramsFileName = configfile;
+	_init_params_grps();
+	_params.load_via_params(configfile);
+	_A.resize(_params.NVars);
+	_B.resize(_params.NVars);
+	_C.resize(_params.NVars);
+	_CW.resize(_params.NVars);
+};
+
+void t_EigenGS::initialize(const wxString& configfile){
+	_init(configfile);
+};
+
+void t_EigenGS::_init_params_grps(){
+	_mapParamsGrps.clear();
+	_add_params_group(_T("default"), _params);
 };
 
 void t_EigenGS::setContext(const int a_i, const int a_k, 
@@ -17,15 +100,15 @@ void t_EigenGS::setContext(const int a_i, const int a_k,
 	_beta = a_beta;
 	t_ProfileNS profNS(_rFldNS);
 	profNS.initialize(a_i, a_k);
-	_nnodes = a_nnodes;
+	_params.NNodes = a_nnodes;
 	_grid.resize(a_nnodes);
 	_profStab.initialize(profNS, a_nnodes);
 	
 	double y_max = _profStab.get_thick() - _profStab.get_y(0);
 	_a_coef = 1.0*y_max; // play with coef
 	_b_coef = 1.0 + _a_coef/y_max;
-	double del = 1.0/(double)(_nnodes-1);	
-	for (int i=0; i<_nnodes; i++){
+	double del = 1.0/(double)(a_nnodes-1);	
+	for (int i=0; i<a_nnodes; i++){
 		_grid[i] = (double)(i)*del;
 	};
 };
@@ -184,26 +267,26 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 	if (a_nnode==1){
 		first_block=true;
 		// small template 2 point
-		_insert_vals.resize(2*_n_vars,0.0);
-		_insert_inds.resize(2*_n_vars,0);
+		_insert_vals.resize(2*_params.NVars,0.0);
+		_insert_inds.resize(2*_params.NVars,0);
 	}else{
-		if (a_nnode==_nnodes-1){
+		if (a_nnode==_params.NNodes-1){
 			// "fake" template
 			// for diag matrix
 			_insert_vals.resize(1,0.0);
 			_insert_inds.resize(1,0);
 			_insert_vals[0] = 1.0;
-			_insert_inds[0] = (a_nnode-1)*_n_vars+a_eq_id;
+			_insert_inds[0] = (a_nnode-1)*_params.NVars+a_eq_id;
 			return;
 		}else{
 			// full 3-point template
-			_insert_vals.resize(3*_n_vars,0.0);
-			_insert_inds.resize(3*_n_vars,0);
+			_insert_vals.resize(3*_params.NVars,0.0);
+			_insert_inds.resize(3*_params.NVars,0);
 		};
 		
 	};
 	// large and small index bases
-	int l_base = first_block ? 0 : (a_nnode-2)*_n_vars;
+	int l_base = first_block ? 0 : (a_nnode-2)*_params.NVars;
 	int s_base=0;
 // uniform grid
 	const double step = _grid[a_nnode] - _grid[a_nnode-1];
@@ -214,7 +297,7 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 	if (!first_block){
 	// first five elements in inserts
 	// f~[j-1] : u,v,0,w,t
-		for (int i=0; i<_n_vars; i++){
+		for (int i=0; i<_params.NVars; i++){
 			if (i==2){
 				_insert_vals[s_base+i] = 0.0;
 			// f~(k-1):
@@ -225,13 +308,13 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 			};
 			_insert_inds[s_base+i] = l_base + i;
 		};
-		l_base+=_n_vars;
-		s_base+=_n_vars;
+		l_base+=_params.NVars;
+		s_base+=_params.NVars;
 	};
 	
 	// fill central 5 points: 
 	// f~[j] + f^[j-1/2]
-	for (int i=0; i<_n_vars; i++){
+	for (int i=0; i<_params.NVars; i++){
 		if (i==2){
 			_insert_vals[s_base+i] = 
 				-f3*inv_step*a_MMat[i][a_eq_id]
@@ -243,11 +326,11 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 		};	
 		_insert_inds[s_base+i] = l_base + i;
 	};
-	l_base+=_n_vars;
-	s_base+=_n_vars;
+	l_base+=_params.NVars;
+	s_base+=_params.NVars;
 	// fill last five points
 	// f~[j+1] + f^[j+1/2]
-	for (int i=0; i<_n_vars; i++){
+	for (int i=0; i<_params.NVars; i++){
 		if (i==2){
 			_insert_vals[s_base+i] = 
 				f3*inv_step*a_MMat[i][a_eq_id]
@@ -260,7 +343,7 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 		_insert_inds[s_base+i] = l_base + i;
 	};
 	// DEBUG
-	double del = 1.0/(double)(_nnodes-1);
+	double del = 1.0/(double)(_params.NNodes-1);
 	for (int i=0; i<_insert_vals.size(); i++){
 	//	_insert_vals[i]*=pow(del,2);
 	};
@@ -276,15 +359,15 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 	if (a_nnode==1){
 		first_block=true;
 		// small template 
-		_insert_vals.resize(_n_vars, 0.0);
-		_insert_inds.resize(_n_vars, 0);
+		_insert_vals.resize(_params.NVars, 0.0);
+		_insert_inds.resize(_params.NVars, 0);
 	}else{
 		// full 2-point template
-		_insert_vals.resize(2*_n_vars, 0.0);
-		_insert_inds.resize(2*_n_vars, 0);
+		_insert_vals.resize(2*_params.NVars, 0.0);
+		_insert_inds.resize(2*_params.NVars, 0);
 	};
 	// large and small index bases
-	int l_base = first_block ? 0 : (a_nnode-2)*_n_vars;
+	int l_base = first_block ? 0 : (a_nnode-2)*_params.NVars;
 	int s_base=0;
 // uniform grid
 	const double step = _grid[a_nnode] - _grid[a_nnode-1];
@@ -293,7 +376,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 	double f1, f2, f3;
 	getMetricCoefs(a_nnode, f1, f2, f3, true);
 	if (!first_block){
-		for (int i=0; i<_n_vars; i++){
+		for (int i=0; i<_params.NVars; i++){
 		// staggered mesh)
 		// f~(k-1):
 			if (i==2){
@@ -306,11 +389,11 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 			};
 			_insert_inds[s_base+i] = l_base + i;
 		};
-		l_base+=_n_vars;
-		s_base+=_n_vars;
+		l_base+=_params.NVars;
+		s_base+=_params.NVars;
 	};
 	// f~(k) + f^(k-1/2):
-	for (int i=0; i<_n_vars; i++){
+	for (int i=0; i<_params.NVars; i++){
 		if (i==2){
 			_insert_vals[s_base+i] = a_RMat[i][a_eq_id];
 		}else{
@@ -321,7 +404,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 		_insert_inds[s_base+i] = l_base + i;
 	};
 	// DEBUG
-	double del = 1.0/(double)(_nnodes-1);
+	double del = 1.0/(double)(_params.NNodes-1);
 	for (int i=0; i<_insert_vals.size(); i++){
 		//_insert_vals[i]*=del;
 	}
@@ -351,7 +434,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 
   // pass command line arguments
   //SlepcInitialize((int*)0,(char***)0,(char*)0,help);
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_nnodes);CHKERRQ(ierr);
+  ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_params.NNodes);CHKERRQ(ierr);
 
   MPI_Comm_size(PETSC_COMM_WORLD, &comm_size);
   MPI_Comm_rank(PETSC_COMM_WORLD, &mpi_rank);
@@ -361,7 +444,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	  return -1;
   };
 
-  int large_matrix_size = (_nnodes-1)*(_n_vars);
+  int large_matrix_size = (_params.NNodes-1)*(_params.NVars);
 
   ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
   ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,large_matrix_size, large_matrix_size);CHKERRQ(ierr);
@@ -387,8 +470,8 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	  return -1;
     }else{
 	  // fill A~ by rows
-	    for (int i=1; i<_nnodes; i++){
-		  for (int j=0; j<_n_vars; j++){
+	    for (int i=1; i<_params.NNodes; i++){
+		  for (int j=0; j<_params.NVars; j++){
 			  if (j==2){
 				  setMatrices(i, true);
 				fill_FO_template(_B, _C, i,j);
@@ -398,7 +481,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 				fill_SO_template(_A, _B, _C, i,j);
 			  };
 			int n_inserts = _insert_inds.size();
-			int row_num = _n_vars*(i-1)+j;
+			int row_num = _params.NVars*(i-1)+j;
 			ierr = MatSetValues(A,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
 		}
 		
@@ -407,8 +490,8 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 
 		t_SqMatrix zero_A(5);
 		t_SqMatrix zero_B(5);
-	  for (int i=1; i<_nnodes; i++){
-		  for (int j=0; j<_n_vars; j++){
+	  for (int i=1; i<_params.NNodes; i++){
+		  for (int j=0; j<_params.NVars; j++){
 			  if (j==2){
 				  setMatrices(i, true);
 				fill_FO_template(zero_B, _CW, i,j);
@@ -418,7 +501,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 				fill_SO_template(zero_A, zero_B, _CW, i,j);
 			  };
 			int n_inserts = _insert_inds.size();
-			int row_num = _n_vars*(i-1)+j;
+			int row_num = _params.NVars*(i-1)+j;
 			ierr = MatSetValues(B,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
 		}
 	  }

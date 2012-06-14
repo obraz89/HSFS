@@ -4,17 +4,32 @@
 #include "ProfileStab.h"
 #include "MeanFlow.h"
 #include "WaveChars.h"
+
+#include "component.h"
+#include "wx/FileConf.h"
 #include <string>
 
 
+class t_EigenParams: public t_ComponentParamsGroup{
+protected:
+	virtual void _init_params_map();
+	virtual void _load_direct(wxFileConfig& handle);
+	virtual void _load_via_params(wxFileConfig& handle);
+public:
+	t_EigenParams();
+	t_EigenParams(wxString configfile);
+	int NVars, NNodes;
+	double ThickCoef;
+	virtual void load_direct(wxString configfile);
+	virtual void load_via_params(wxString configfile);
+	virtual void save(wxString configfile);
+};
 
-class  t_EigenGS{
-	// TODO: store current i,k to check
-	// if context is already set
+class  t_EigenGS: public t_Component{
 	const t_MeanFlow& _rFldNS;
+	t_EigenParams _params;
 	// temporal
 	double _alpha, _beta;
-	int _n_vars, _nnodes;
 	t_ProfileStab _profStab;
 	double _a_coef, _b_coef;
 	t_DblVec _grid;
@@ -24,6 +39,7 @@ class  t_EigenGS{
 	t_SqMatrix _A, _B, _C, _CW;
 	std::vector<t_Complex> _insert_vals;
 	std::vector<int> _insert_inds;
+	void _init_params_grps();
 	int getInternalIndex(const int a_j, const int a_k) const;
 	void getMetricCoefs(const int& nnode, double& f1, double& f2, double& f3, const bool a_semi_flag) const;
 	void setMatrices(const int a_nnode, const bool a_semi_flag);
@@ -37,7 +53,10 @@ class  t_EigenGS{
 	     			  const double& a_alpha, const double& a_beta,
 					  const int a_nnodes);
 public:
-	t_EigenGS(const t_MeanFlow& a_rFld, const int a_task_dim);
+	t_EigenGS(const t_MeanFlow& rFldNS);
+	t_EigenGS(const t_MeanFlow& a_rFld, const wxString& configfile);
+	void _init(const wxString& configfile);
+	void initialize(const wxString& configfile);
 	int getSpectrum(const int a_i, const int a_k, 
 	     			  const double& a_alpha, const double& a_beta,
 					  const int a_nnodes);
