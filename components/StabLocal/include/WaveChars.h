@@ -17,6 +17,10 @@ struct  t_WaveChars{
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
 	virtual t_WaveChars initialize(const t_CompVec3& k, const t_CompVec3& vg, t_CompVal a_w);
+	friend inline std::ostream& operator<<(std::ostream& str, t_WaveChars ww){
+		str<<"a:"<<ww.a<<std::endl<<"b:"<<ww.b<<std::endl<<"w:"<<ww.w<<std::endl;
+		return str;
+	};
 };
 // instability wave characteristics 
 // non-dimensional
