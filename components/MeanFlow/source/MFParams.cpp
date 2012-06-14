@@ -286,9 +286,14 @@ void t_MFParamsHS2D::_init_params_map(){
 	t_MFParams::_init_params_map();
 	
 	t_CompParamInt* pAxeSym = 
-		new t_CompParamInt(MFSym, _T("Gamma"), _T("Specific heat ratio"));
+		new t_CompParamInt(MFSym, _T("AxeSym"), _T("Is 2D flow axesym or plane"));
 	pAxeSym->set_default(0l);
 	_add_param(pAxeSym);
+
+	t_CompParamDbl* pZSpan = 
+		new t_CompParamDbl(ZSpan, _T("ZSpan"), _T("For a plane field only - z span"));
+	pZSpan->set_default(1.0);
+	_add_param(pZSpan);
 };
 
 void t_MFParamsHS2D::load_via_params(wxString configfile){

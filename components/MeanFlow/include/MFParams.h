@@ -63,7 +63,7 @@ public:
 		};
 	};
 	t_AxeSym MFSym;
-	double z_spane;
+	double ZSpan;
 };
 
 #endif  // __MEAN_FLOW_PARAMS
