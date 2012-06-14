@@ -338,6 +338,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\AppManager.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\source\console.cpp"
 				>
 			</File>
@@ -348,6 +352,10 @@
 			<Filter
 				Name="shared"
 				>
+				<File
+					RelativePath="..\shared\source\common_data.cpp"
+					>
+				</File>
 				<File
 					RelativePath="..\shared\source\component.cpp"
 					>
