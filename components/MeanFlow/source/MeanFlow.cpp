@@ -320,6 +320,16 @@ t_FldRec t_MeanFlow::interpolate_to_point(double x, double y, double z) const{
 	ret.z = z;
 	return ret;
 }
+
+// Rec output helper
+std::ostream& std_manip::_format_fixed(std::ostream& os, double val){
+	os.width(12);
+	os.precision(6);
+	int old_flags = os.flags(std::ios::left|std::ios::fixed);
+	os<<val;
+	os.flags(old_flags);
+	return os;
+};
 //##############################################
 // old croosflow low level mess
 /*
