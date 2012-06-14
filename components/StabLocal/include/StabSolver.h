@@ -1,14 +1,28 @@
 #ifndef __STAB_SOLVER
 #define __STAB_SOLVER
+#include "component.h"
 #include "MeanFlow.h"
 #include "ProfileStab.h"
 #include "ODES.h"
 #include "WaveChars.h"
 
+class t_StabSolverParams: public t_ComponentParamsGroup{
+protected:
+	virtual void _init_params_map();
+	virtual void _load_direct(wxFileConfig& handle);
+	virtual void _load_via_params(wxFileConfig& handle);
+public:
+	t_StabSolverParams();
+	t_StabSolverParams(wxString configfile);
+	int NVars, NNodes;
+	double ThickCoef;
+	virtual void load_direct(wxString configfile);
+	virtual void load_via_params(wxString configfile);
+	virtual void save(wxString configfile);
+};
 
-// TODO: make different inheritance for 2D and 3D
-
-class  t_StabSolver{
+// this is a basic 3D stability solver
+class  t_StabSolver: public t_Component{
 	class t_StabODES : public t_ODES{
 	public:
 		// "parent"
@@ -23,6 +37,7 @@ class  t_StabSolver{
 	};
 	// algebraic solver
 	t_StabODES _math_solver;
+	t_StabSolverParams _params;
 	// keep current stability_matrix
 	t_SqMatrix _stab_matrix;
 	const t_MeanFlow& _rFldNS; // to get global field params
@@ -33,8 +48,7 @@ class  t_StabSolver{
 	std::vector<t_WCharsLoc> _initWaves;
 
 // stab matrix comps
-
-	// TOFIX:it is very slow to generate and pass matrices every time 
+	void _init_params_grps();
 	//const t_SqMatrix& _getStabMatrix3D(const double& a_y) const;
 	void _setStabMatrix3D(const double& a_y);
 	
@@ -59,8 +73,11 @@ class  t_StabSolver{
 public:
 	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
 	t_StabSolver(const t_MeanFlow& a_rFld);
+	t_StabSolver(const t_MeanFlow& a_rFld, const wxString& configfile);
 	~t_StabSolver(){};
 	inline int getTaskDim(){return _math_solver.getTaskDim();};
+	void _init(const wxString& configfile);
+	void initialize(const wxString& configfile);
 	t_WCharsGlob popGlobalWaveChars();
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors

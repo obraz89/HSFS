@@ -1,10 +1,98 @@
 #include "StabSolver.h"
-//#include "SolverCore.h"
+#include "common_data.h"
+
+
+static const int STAB_MATRIX_DIM = 8;
+
+
+// ---------------------------------------
+// t_StabSolverParams
+static const int N_VARS_DEFAULT = 5;
+static const int N_NODES_DEFAULT = 51;
+static const double THICK_COEF_DEFAULT = 3.0;
+// small increment to compute smth like
+// dw/da : (w(a+DELTA) - w(a))/DELTA
+static const double DELTA_SMALL = 1.0e-6;
+
+t_StabSolverParams::t_StabSolverParams():t_ComponentParamsGroup(STABSOLVER_CONF_DOMAIN){
+	_init_params_map();
+};
+
+t_StabSolverParams::t_StabSolverParams(wxString configfile):t_ComponentParamsGroup(STABSOLVER_CONF_DOMAIN){
+	_init_params_map();
+	load_via_params(configfile);
+};
+
+void t_StabSolverParams::_init_params_map(){
+	t_CompParamInt* pNVars = 
+		new t_CompParamInt(NVars, _T("NVars"), _T("Number of variables: internal param"));
+	pNVars->set_default(N_VARS_DEFAULT);
+	_add_param(pNVars);
+
+	t_CompParamInt* pNNnodes = 
+		new t_CompParamInt(NNodes, _T("NNodes"), _T("Number of nodes to be used in stability computations"));
+	pNNnodes->set_default(N_NODES_DEFAULT);
+	_add_param(pNNnodes);
+
+	t_CompParamDbl* pThickCoef = 
+		new t_CompParamDbl(ThickCoef, _T("ThickCoef"), _T("Thickness coef : Y = BL thick * coef"));
+	pThickCoef->set_default(THICK_COEF_DEFAULT);
+	_add_param(pThickCoef);
+};
+
+void t_StabSolverParams::_load_direct(wxFileConfig& conf){
+	conf.SetRecordDefaults(); //write defaults to config file
+	conf.SetPath(ConfigDomain);
+	// do smth
+	conf.SetPath(_T("/"));
+}
+
+void t_StabSolverParams::load_direct(wxString configfile){
+	_load_direct(_get_config_handle(configfile));
+};
+
+void t_StabSolverParams::_load_via_params(wxFileConfig& handle){
+	t_ComponentParamsGroup::_load_via_params(handle);
+};
+
+void t_StabSolverParams::load_via_params(wxString configfile){
+	_load_via_params(_get_config_handle(configfile));
+};
+
+void t_StabSolverParams::save(wxString configfile){
+	// for future
+};
+
+
+// ~t_StabSolverParams
+// ---------------------------------------
+
 t_StabSolver::t_StabSolver(const t_MeanFlow& a_rFldNS):
 _rFldNS(a_rFldNS), _profStab(a_rFldNS), 
-// default is 3D - 8x8 stab matrix
-_math_solver(), _stab_matrix(8){
+_math_solver(), _stab_matrix(STAB_MATRIX_DIM),
+_params(), t_Component(wxEmptyString, STABSOLVER3D_NAME){
 	_math_solver._pStab_solver = this;
+};
+t_StabSolver::t_StabSolver(const t_MeanFlow& a_rFldNS, const wxString& configfile):
+_rFldNS(a_rFldNS), _profStab(a_rFldNS), 
+_math_solver(), _stab_matrix(STAB_MATRIX_DIM),
+_params(configfile), t_Component(configfile, EIGEN3D_NAME){
+	_math_solver._pStab_solver = this;
+	_init(configfile);
+};
+void t_StabSolver::_init(const wxString& configfile){
+	_paramsFileName = configfile;
+	_init_params_grps();
+	_params.load_via_params(configfile);
+};
+
+void t_StabSolver::initialize(const wxString& configfile){
+	_init(configfile);
+};
+
+void t_StabSolver::_init_params_grps(){
+	_mapParamsGrps.clear();
+	_add_params_group(_T("default"), _params);
 };
 // obsolete
 /*
@@ -474,8 +562,8 @@ void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a
 	profNS.initialize(i_ind, k_ind);
 	_profStab.initialize(profNS, a_nnodesStab);
 
-	if (_stab_matrix.nCols!=8){
-		_stab_matrix.resize(8);
+	if (_stab_matrix.nCols!=STAB_MATRIX_DIM){
+		_stab_matrix.resize(STAB_MATRIX_DIM);
 	}
 
 	for (int j=0; j<a_nnodesStab; j++){
@@ -494,7 +582,7 @@ void t_StabSolver::set3DContext(const t_Index& ind, const int a_nnodesStab/*=0*/
 /*   COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) */        
 void t_StabSolver::_calcGroupVelocity(t_WCharsLoc &a_wave_chars){
 	// empiric constant - tolerance
-	const double dd = 1.0e-6;
+	const double dd = DELTA_SMALL;
 	// ensure that we are in eigen 
 	adjustLocal(a_wave_chars, W_MODE);
 
