@@ -62,7 +62,7 @@ void t_AppManager::load_settings(wxString configfile){
 	std::map<wxString, t_Component*>::iterator it = _mapComponents.begin();
 	while (it!=_mapComponents.end()){
 		try{
-			std::cout<<"Initializing:"<<it->second->name().c_str()<<std::endl;
+			std::wcout<<"Initializing:"<<it->second->name().c_str()<<std::endl;
 			it->second->initialize(configfile);
 			it++;
 		}catch(const t_EComponent& e){
