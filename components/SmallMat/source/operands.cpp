@@ -183,5 +183,6 @@ t_SqMatrix& t_SqMatrix::operator=(const t_Matrix& rval){
 }
 
 void t_SqMatrix::resize(int a_size){
+	nCols=nRows=a_size;
 	_cont.resize(a_size, t_Vec(a_size, 0.0));
 };
