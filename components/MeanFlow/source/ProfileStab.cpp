@@ -33,6 +33,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	this->stabRe = sqrt(Params.Re*u_e*rho_e*x/mu_e);
 	this->Me = Params.Mach*u_e/sqrt(t_e);
 	this->dels = Params.L_ref*y_scale/sqrt(Params.Re);
+	this->ue_dim = _rFld.calc_c_dim(a_rProfNS._i, a_rProfNS._bl_bound_ind, a_rProfNS._k)*Me;
 	double dy = (a_rProfNS._y[a_rProfNS.size()-1])/((double)this->size());
 	for (int i=0; i<size(); i++){
 		// order important - first interpolate then nondim
