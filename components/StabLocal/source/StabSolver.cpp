@@ -614,6 +614,9 @@ void t_StabSolver::_calcGroupVelocity(t_WCharsLoc &a_wave_chars){
 	rght_chars.a+=dd;
     adjustLocal(left_chars, W_MODE);
 	adjustLocal(rght_chars, W_MODE);
+	if (left_chars.w == rght_chars.w){
+		throw t_UnPhysWave();
+	};
 	a_wave_chars.vga = 0.5*(rght_chars.w - left_chars.w)/dd;
 
 	// reset left, right

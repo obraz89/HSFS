@@ -101,6 +101,8 @@ public:
 	t_Complex solve(t_WCharsLoc& a_wave_chars);
 	t_WCharsLoc getMaxWave(const int& i_ind, const int& k_ind,
 							const std::vector<t_WCharsLoc>& a_inits, const int& a_nnodesStab=0);
+	// exceptions
+	class t_UnPhysWave{};
 	
 };
 #endif // __STAB_SOLVER
