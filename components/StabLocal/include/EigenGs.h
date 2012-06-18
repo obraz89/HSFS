@@ -20,6 +20,7 @@ public:
 	t_EigenParams(wxString configfile);
 	int NVars, NNodes;
 	double ThickCoef;
+	double W_Threshold;
 	virtual void load_direct(wxString configfile);
 	virtual void load_via_params(wxString configfile);
 	virtual void save(wxString configfile);
@@ -41,7 +42,7 @@ class  t_EigenGS: public t_Component{
 	std::vector<int> _insert_inds;
 	void _init_params_grps();
 	int getInternalIndex(const int a_j, const int a_k) const;
-	void getMetricCoefs(const int& nnode, double& f1, double& f2, double& f3, const bool a_semi_flag) const;
+	void getMetricCoefs(const int nnode, double& f1, double& f2, double& f3, const bool a_semi_flag) const;
 	void setMatrices(const int a_nnode, const bool a_semi_flag);
 	void fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
 						  const int a_nnode, const int a_eq_id);
@@ -50,21 +51,23 @@ class  t_EigenGS: public t_Component{
 	// 
 	void select();
 	void setContext(const int a_i, const int a_k, 
-	     			  const double& a_alpha, const double& a_beta,
+	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes);
+	void _init(const wxString& configfile);
 public:
+	enum t_Mode{A_MODE=0, B_MODE};
 	t_EigenGS(const t_MeanFlow& rFldNS);
 	t_EigenGS(const t_MeanFlow& a_rFld, const wxString& configfile);
-	void _init(const wxString& configfile);
 	void initialize(const wxString& configfile);
 	int getSpectrum(const int a_i, const int a_k, 
-	     			  const double& a_alpha, const double& a_beta,
+	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes);
 	std::vector<t_WCharsLoc> getDiscreteModes(const int a_i, const int a_k, 
-	     			  const double& a_alpha, const double& a_beta,
+	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes);
 	// parameters ?
 	t_WCharsLoc searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes);
+	t_WCharsLoc searchMaxInstabFixed(const int a_i, const int a_k, const int a_nnodes, t_Mode mode, double fixed_val);
 	void writeSpectrum(const std::string& a_filename);
 };
 #endif // __EigenGs__

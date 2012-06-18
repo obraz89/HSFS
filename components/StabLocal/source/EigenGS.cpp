@@ -9,6 +9,7 @@
 static const int N_VARS_DEFAULT = 5;
 static const int N_NODES_DEFAULT = 51;
 static const double THICK_COEF_DEFAULT = 3.0;
+static const double W_THRESHOLD_DEFAULT = 1.0e-5;
 
 t_EigenParams::t_EigenParams():t_ComponentParamsGroup(EIGEN_CONF_DOMAIN){
 	_init_params_map();
@@ -34,6 +35,11 @@ void t_EigenParams::_init_params_map(){
 		new t_CompParamDbl(ThickCoef, _T("ThickCoef"), _T("Thickness coef : Y = BL thick * coef"));
 	pThickCoef->set_default(THICK_COEF_DEFAULT);
 	_add_param(pThickCoef);
+
+	t_CompParamDbl* pWThreshold = 
+		new t_CompParamDbl(W_Threshold, _T("FreqThreshold"), _T("freq>=threshold means that wave is really candidate to instability mode"));
+	pWThreshold->set_default(W_THRESHOLD_DEFAULT);
+	_add_param(pWThreshold);
 };
 
 void t_EigenParams::_load_direct(wxFileConfig& conf){
@@ -94,7 +100,7 @@ void t_EigenGS::_init_params_grps(){
 };
 
 void t_EigenGS::setContext(const int a_i, const int a_k, 
-					  const double& a_alpha, const double& a_beta,
+					  const double a_alpha, const double a_beta,
 					  const int a_nnodes){
 	_alpha = a_alpha;
 	_beta = a_beta;
@@ -113,7 +119,7 @@ void t_EigenGS::setContext(const int a_i, const int a_k,
 	};
 };
 // semi-flag is true if it is k-1/2 point
-void t_EigenGS::getMetricCoefs(const int& a_nnode, double& f1, double& f2, double& f3, const bool semi_flag) const{
+void t_EigenGS::getMetricCoefs(const int a_nnode, double& f1, double& f2, double& f3, const bool semi_flag) const{
 	double cur_eta = _grid[a_nnode];
 	if (semi_flag){
 		cur_eta-=0.5*(_grid[a_nnode]-_grid[a_nnode-1]);
@@ -413,7 +419,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 };
 
 int t_EigenGS::getSpectrum(const int a_i, const int a_k, 
-	     			  const double& a_alpha, const double& a_beta,
+	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes){
   static char help[]="Global Search\n";
   // conext
@@ -596,14 +602,14 @@ void t_EigenGS::writeSpectrum(const std::string &a_filename){
 }
 
 std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_k, 
-	     			  const double& a_alpha, const double& a_beta,
+	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes){
 	std::vector<t_WCharsLoc> inits;
 	getSpectrum(a_i, a_k, a_alpha, a_beta, a_nnodes);
 	// select discrete modes
 	// TODO: empirics!!!
 	for (int i=0; i<_spectrum.size(); i++){
-		if (_spectrum[i].imag()>1.0e-5){
+		if (_spectrum[i].imag()>_params.W_Threshold){
 			t_WCharsLoc init_wave;
 			init_wave.a = _alpha;
 			init_wave.b = _beta;
@@ -631,6 +637,28 @@ t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const i
 			all_initials.push_back(t_WCharsLoc::find_max_instab(inits));
 		}
 	}
+	return t_WCharsLoc::find_max_instab(all_initials);
+};
+
+t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, const int a_nnodes, t_Mode mode, double fixed_val){
+	double a,b;
+	double *pArg;
+	std::vector<t_WCharsLoc> all_initials;
+	if (mode==A_MODE){
+		b = fixed_val;
+		pArg = &a;
+	}else{
+		a = fixed_val;
+		pArg = &b;
+	};
+	double arg_min = 0.01;
+	double arg_max = 1.5;
+	int n = 100;
+	for (int i=0; i<n; i++){
+		*pArg = arg_min + (arg_max-arg_min)/double(n)*i;
+		std::vector<t_WCharsLoc> inits = getDiscreteModes(a_i, a_k, a, b, a_nnodes);
+		all_initials.push_back(t_WCharsLoc::find_max_instab(inits));
+	};
 	return t_WCharsLoc::find_max_instab(all_initials);
 };
 
