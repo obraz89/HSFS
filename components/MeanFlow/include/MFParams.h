@@ -28,7 +28,8 @@ public:
 	t_ViscType ViscType;
 	double  Mach, Re, Alpha,	// Alpha ?
 		L_ref, T_inf, T_wall, 
-		T_mju, Mju_pow, Gamma, Pr;
+		T_mju, Mju_pow, Gamma, Pr,
+		Mol_weight, R_Gas;
 	virtual void load_direct(wxString configfile);
 	virtual void load_via_params(wxString configfile);
 	virtual void save(wxString configfile);

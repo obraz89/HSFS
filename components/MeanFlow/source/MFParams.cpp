@@ -101,6 +101,16 @@ void t_MFParams::_init_params_map(){
 		new t_CompParamDbl(Mju_pow, _T("Mju_pow"), _T("power viscosity law coef"));
 	pMjuPow->set_default(0.75);
 	_add_param(pMjuPow);
+
+	t_CompParamDbl* pMolWeight = 
+		new t_CompParamDbl(Mol_weight, _T("Mol_Weight"), _T("Dimensional molecular weight of the gas[kg/mol*K]"));
+	pMolWeight->set_default(0.027); // air
+	_add_param(pMolWeight);
+
+	t_CompParamDbl* pRGas = 
+		new t_CompParamDbl(R_Gas, _T("R_Gas"), _T("Dimensional universal gas constant [J/mol*K]"));
+	pRGas->set_default(8.31);
+	_add_param(pRGas);
 };
 
 void t_MFParams::_load_direct(wxFileConfig& conf){
