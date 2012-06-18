@@ -1,7 +1,9 @@
 # output
 StabSolverUnited/output/*
+StabSolverUnited/__tests__/*
 StabSolverUnited/results/*
 _UpgradeReport_Files/*
+x64/*
 # compiler generated (hope will not name source like this)
 *_mod.f90
 # intermed
@@ -21,10 +23,10 @@ _UpgradeReport_Files/*
 *.idb
 *.u2d
 *.dep
+*.user
 *.pdb
 *.html
 *.htm
-*.user
 *.dat
 *.txt
 *.dg
