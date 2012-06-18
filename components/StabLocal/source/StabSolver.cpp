@@ -10,6 +10,11 @@ static const int STAB_MATRIX_DIM = 8;
 static const int N_VARS_DEFAULT = 5;
 static const int N_NODES_DEFAULT = 51;
 static const double THICK_COEF_DEFAULT = 3.0;
+
+// adjust procedure parameters
+static const double ADJUST_STEP_DEFAULT = 1.0e-5;
+static const double ADJUST_TOL_DEFAULT  = 1.0e-4;
+static const int ADJUST_MAX_ITER_DEFAULT= 50;
 // small increment to compute smth like
 // dw/da : (w(a+DELTA) - w(a))/DELTA
 static const double DELTA_SMALL = 1.0e-6;
@@ -38,6 +43,21 @@ void t_StabSolverParams::_init_params_map(){
 		new t_CompParamDbl(ThickCoef, _T("ThickCoef"), _T("Thickness coef : Y = BL thick * coef"));
 	pThickCoef->set_default(THICK_COEF_DEFAULT);
 	_add_param(pThickCoef);
+
+	t_CompParamDbl* pAdjustStep = 
+		new t_CompParamDbl(AdjustStep, _T("AdjustStep"), _T("Adjust : Newton iteration argument step"));
+	pAdjustStep->set_default(ADJUST_STEP_DEFAULT);
+	_add_param(pAdjustStep);
+
+	t_CompParamDbl* pAdjustTol = 
+		new t_CompParamDbl(AdjustTol, _T("AdjustTol"), _T("Adjust : Converged criterion"));
+	pAdjustTol->set_default(ADJUST_TOL_DEFAULT);
+	_add_param(pAdjustTol);
+
+	t_CompParamInt* pAdjustMaxIter = 
+		new t_CompParamInt(AdjustMaxIter, _T("AdjustMaxIter"), _T("Adjust : Iterations number limit"));
+	pAdjustMaxIter->set_default(ADJUST_MAX_ITER_DEFAULT);
+	_add_param(pAdjustMaxIter);
 };
 
 void t_StabSolverParams::_load_direct(wxFileConfig& conf){
@@ -551,7 +571,8 @@ t_WCharsGlob t_StabSolver::popGlobalWaveChars(){
 	k_glob = jac*k_ked;
 	vg_glob = jac*vg_ked;
 	t_WCharsGlob chars_glob;
-	return chars_glob.initialize(k_glob, vg_glob, _waveChars.w,_profStab.stabRe, _profStab.dels, _profStab.Me);
+	chars_glob.set_vals(k_glob, vg_glob, _waveChars.w,_profStab);
+	return chars_glob;
 };
 
 void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab){
@@ -665,9 +686,9 @@ t_WCharsLoc t_StabSolver::_getMaxInstabTime(const t_WCharsLoc &init_guess){
 // see stabsolver.h for mode enum definition
 void t_StabSolver::adjustLocal(t_WCharsLoc &a_wave_chars, t_StabSolver::t_MODE a_mode){
 	// parameters
-	const t_Complex d_arg = 1.0e-5;
-	const int max_iters = 50;
-	const double tol = 1.0e-4;
+	const t_Complex d_arg = _params.AdjustStep;
+	const int max_iters = _params.AdjustMaxIter;
+	const double tol = _params.AdjustTol;
 	// ensure that there is a base residual
 	solve(a_wave_chars);
 	t_WCharsLoc backup = a_wave_chars;

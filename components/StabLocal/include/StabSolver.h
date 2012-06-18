@@ -16,6 +16,8 @@ public:
 	t_StabSolverParams(wxString configfile);
 	int NVars, NNodes;
 	double ThickCoef;
+	double AdjustTol, AdjustStep;
+	int AdjustMaxIter;
 	virtual void load_direct(wxString configfile);
 	virtual void load_via_params(wxString configfile);
 	virtual void save(wxString configfile);
