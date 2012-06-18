@@ -338,15 +338,15 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\AppManager.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\source\console.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\source\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\TaskManager.cpp"
 				>
 			</File>
 			<Filter
@@ -358,6 +358,10 @@
 				</File>
 				<File
 					RelativePath="..\shared\source\component.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\source\io_helpers.cpp"
 					>
 				</File>
 			</Filter>
@@ -468,11 +472,11 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\include\AppManager.h"
+				RelativePath=".\include\console.h"
 				>
 			</File>
 			<File
-				RelativePath=".\include\console.h"
+				RelativePath=".\include\TaskManager.h"
 				>
 			</File>
 			<Filter
@@ -572,6 +576,10 @@
 				</File>
 				<File
 					RelativePath="..\shared\include\component.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\include\io_helpers.h"
 					>
 				</File>
 				<File

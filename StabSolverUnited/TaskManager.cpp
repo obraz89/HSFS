@@ -1,10 +1,15 @@
-#include "AppManager.h"
+#include "TaskManager.h"
 #include "MeanFlow.h"
 #include "StabSolver.h"
 #include "EigenGs.h"
 #include "common_data.h"
 
-t_AppManager::t_AppManager(wxString task_configfile){
+t_TaskManager::t_TaskManager(wxString task_configfile){
+	_init(task_configfile);
+	_initialized = true;
+};
+
+void t_TaskManager::_init(wxString task_configfile){
 	wxFileConfig& conf = _get_config_handle(task_configfile);
 	conf.SetRecordDefaults();
 	_add_mf(conf);
@@ -12,14 +17,19 @@ t_AppManager::t_AppManager(wxString task_configfile){
 	_add_eigen_gs(conf);
 };
 
-wxFileConfig t_AppManager::_get_config_handle(wxString configfile){
+void t_TaskManager::initialize(wxString task_configfile){
+	if (!_initialized){
+		_init(task_configfile);
+	};
+};
+wxFileConfig t_TaskManager::_get_config_handle(wxString configfile){
 	return wxFileConfig(
 		_T("SSU"), _T("obraz"),
 		configfile, 
 		wxEmptyString);
 }
 
-void t_AppManager::_add_mf(wxFileConfig& conf){
+void t_TaskManager::_add_mf(wxFileConfig& conf){
 	wxString mf_type;
 	conf.Read(_T("MF_Type"), &mf_type, MF_HSFLOW3D_NAME);
 	if (mf_type==MF_HSFLOW3D_NAME){
@@ -34,7 +44,7 @@ void t_AppManager::_add_mf(wxFileConfig& conf){
 	_add_component(dynamic_cast<t_Component*>(_pMF));
 };
 
-void t_AppManager::_add_stab_solver(wxFileConfig& conf){
+void t_TaskManager::_add_stab_solver(wxFileConfig& conf){
 	// for now it is the only stab solver:
 	wxString ss_type;
 	conf.Read(_T("StabSolver_Type"), &ss_type, STABSOLVER3D_NAME);
@@ -42,7 +52,7 @@ void t_AppManager::_add_stab_solver(wxFileConfig& conf){
 	_add_component(_pStabSolver);
 };
 
-void t_AppManager::_add_eigen_gs(wxFileConfig& conf){
+void t_TaskManager::_add_eigen_gs(wxFileConfig& conf){
 	// for now it is the only stab solver:
 	wxString gs_type;
 	conf.Read(_T("EigenGS_Type"), &gs_type, EIGEN3D_NAME);
@@ -50,7 +60,7 @@ void t_AppManager::_add_eigen_gs(wxFileConfig& conf){
 	_add_component(_pEigenGS);
 };
 
-void t_AppManager::_add_component(t_Component* pComp){
+void t_TaskManager::_add_component(t_Component* pComp){
 	const wxString& name = pComp->name();
 	wxASSERT_MSG( _mapComponents.find(name)==_mapComponents.end(),
 		_("Component '")+name+_("' already added'")+_("'.")
@@ -58,7 +68,7 @@ void t_AppManager::_add_component(t_Component* pComp){
 	_mapComponents.insert( std::make_pair(name, pComp) );
 };
 
-void t_AppManager::load_settings(wxString configfile){
+void t_TaskManager::load_settings(wxString configfile){
 	std::map<wxString, t_Component*>::iterator it = _mapComponents.begin();
 	while (it!=_mapComponents.end()){
 		try{
@@ -75,7 +85,11 @@ void t_AppManager::load_settings(wxString configfile){
 	};
 };
 
-t_AppManager::~t_AppManager(){
+void t_TaskManager::run_test(void (*pTestFun)(t_TaskManager&)){
+	pTestFun(*this);
+};
+
+t_TaskManager::~t_TaskManager(){
 	std::map<wxString, t_Component*>::iterator it = _mapComponents.begin();
 	while (it!=_mapComponents.end()){
 		delete it->second;
