@@ -439,7 +439,7 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
   int mpi_rank, comm_size;
 
   // pass command line arguments
-  //SlepcInitialize((int*)0,(char***)0,(char*)0,help);
+  SlepcInitialize((int*)0,(char***)0,(char*)0,help);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_params.NNodes);CHKERRQ(ierr);
 
   MPI_Comm_size(PETSC_COMM_WORLD, &comm_size);
@@ -539,7 +539,8 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	PetscPrintf(PETSC_COMM_WORLD, "matrices assembly: OK");
 	//   Set solver parameters at runtime
 	//ierr = EPSSetFromOptions(eps);CHKERRQ(ierr);
-
+	
+	
 	ierr = EPSSolve(eps);CHKERRQ(ierr);
 
 	ierr = EPSGetIterationNumber(eps, &its);CHKERRQ(ierr);
@@ -558,9 +559,9 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	ierr = PetscPrintf(PETSC_COMM_WORLD," Number of converged approximate eigenpairs: %d\n\n",nconv);CHKERRQ(ierr);
 	_spectrum.resize(nconv, 0.0);
 	if (nconv>0) {
-		ierr = PetscPrintf(PETSC_COMM_WORLD,
-         "           k             ||Ax-kBx||/||kx||\n"
-         "  --------------------- ------------------\n" );CHKERRQ(ierr);
+		//ierr = PetscPrintf(PETSC_COMM_WORLD,
+        // "           k             ||Ax-kBx||/||kx||\n"
+        // "  --------------------- ------------------\n" );CHKERRQ(ierr);
 
 		for(PetscInt i=0; i<nconv; i++ ) {
 			ierr = EPSGetEigenpair(eps,i,&kr,&ki,PETSC_NULL,PETSC_NULL);CHKERRQ(ierr);
@@ -574,22 +575,17 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 				re = kr;
 				im = ki;
 			#endif
-			/*
-			if( im != 0.0 ) {
-				ierr = PetscPrintf(PETSC_COMM_WORLD," % 6f %+6f i",re,im);CHKERRQ(ierr);
-			} else {
-				ierr = PetscPrintf(PETSC_COMM_WORLD,"       % 6f      ",re); CHKERRQ(ierr);
-			}*/
-			ierr = PetscPrintf(PETSC_COMM_WORLD," % 12g\n",error);CHKERRQ(ierr);
+			//ierr = PetscPrintf(PETSC_COMM_WORLD," % 12g\n",error);CHKERRQ(ierr);
 
 		}
 		ierr = PetscPrintf(PETSC_COMM_WORLD,"\n" );CHKERRQ(ierr);
 	}
+	
   
   ierr = EPSDestroy(&eps);CHKERRQ(ierr);
   ierr = MatDestroy(&A);CHKERRQ(ierr);
   ierr = MatDestroy(&B);CHKERRQ(ierr);
-  //ierr = SlepcFinalize();CHKERRQ(ierr);
+  ierr = SlepcFinalize();CHKERRQ(ierr);
   return 0;
 
 };
