@@ -361,6 +361,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\shared\source\EnvInit.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\shared\source\io_helpers.cpp"
 					>
 				</File>
@@ -438,10 +442,6 @@
 				</File>
 				<File
 					RelativePath="..\components\StabLocal\source\ODES_stab.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\components\StabLocal\source\parallelEnvWrap.cpp"
 					>
 				</File>
 				<File
@@ -543,10 +543,6 @@
 					>
 				</File>
 				<File
-					RelativePath="..\components\StabLocal\include\parallelEnvWrap.h"
-					>
-				</File>
-				<File
 					RelativePath="..\components\StabLocal\include\StabSolver.h"
 					>
 				</File>
@@ -576,6 +572,10 @@
 				</File>
 				<File
 					RelativePath="..\shared\include\component.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\include\EnvInit.h"
 					>
 				</File>
 				<File
