@@ -11,21 +11,7 @@
 
 #include "component.h"
 #include "MFParams.h"
-
-#include <iostream>
-
-namespace std_manip{
-	typedef std::ostream& (*OManip)(std::ostream &os, double val);
-	std::ostream& _format_fixed(std::ostream& os, double val);
-	class t_OmanipDbl{
-		double _val;
-		OManip _formatter;
-	public:
-		t_OmanipDbl(double val, OManip formatter):_val(val), _formatter(formatter){};
-		friend std::ostream& operator<<(std::ostream& os, t_OmanipDbl m){return m._formatter(os, m._val);};
-	};
-	inline t_OmanipDbl format_hlpr(double val){return t_OmanipDbl(val,_format_fixed);};
-};
+#include "io_helpers.h"
 
 class t_MeanFlow{
 private:
@@ -35,15 +21,15 @@ public:
 	public:
 		double x,y,z,u,v,w,p,t,r;
 		friend std::ostream& operator<<(std::ostream& os, t_Rec rec){
-			os<<"x:"<<std_manip::format_hlpr(rec.x)<<
-				"y:"<<std_manip::format_hlpr(rec.y)<<
-				"z:"<<std_manip::format_hlpr(rec.z)<<std::endl
-			  <<"u:"<<std_manip::format_hlpr(rec.u)<<
-			    "v:"<<std_manip::format_hlpr(rec.v)<<
-				"w:"<<std_manip::format_hlpr(rec.w)<<std::endl
-			  <<"p:"<<std_manip::format_hlpr(rec.p)<<
-			    "t:"<<std_manip::format_hlpr(rec.t)<<
-				"r:"<<std_manip::format_hlpr(rec.r)<<std::endl;
+			os<<"x:"<<std_manip::format_fixed_dbl(rec.x)<<
+				"y:"<<std_manip::format_fixed_dbl(rec.y)<<
+				"z:"<<std_manip::format_fixed_dbl(rec.z)<<std::endl
+			  <<"u:"<<std_manip::format_fixed_dbl(rec.u)<<
+			    "v:"<<std_manip::format_fixed_dbl(rec.v)<<
+				"w:"<<std_manip::format_fixed_dbl(rec.w)<<std::endl
+			  <<"p:"<<std_manip::format_fixed_dbl(rec.p)<<
+			    "t:"<<std_manip::format_fixed_dbl(rec.t)<<
+				"r:"<<std_manip::format_fixed_dbl(rec.r)<<std::endl;
 			return os;
 		};
 	};
@@ -100,6 +86,14 @@ public:
 
 	double calc_viscosity(const int i, const int j, const int k) const;
 	double calc_viscosity(const t_GridIndex& ind) const;
+	// dimensional cinematic viscosity
+	double calc_cin_visc_inf() const;
+	double calc_cin_visc_dim(const int i, const int j, const int k) const;
+	double calc_cin_visc_dim(const t_GridIndex& ind)  const;
+	// dimensional
+	double calc_u_inf() const;
+	double calc_c_dim(int i, int j, int k) const;
+	double calc_c_dim(const t_GridIndex& ind) const;
 
 	double calc_mach(const int i, const int j, const int k) const;
 	double calc_mach(const t_GridIndex& ind) const;

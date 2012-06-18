@@ -171,6 +171,42 @@ double t_MeanFlow::calc_viscosity(const int i, const int j, const int k) const{
 	}
 };
 
+double t_MeanFlow::calc_viscosity(const t_GridIndex& ind) const{
+	return calc_viscosity(ind.i, ind.j, ind.k);
+};
+
+// dimensional infinity cinematic viscosity
+double t_MeanFlow::calc_cin_visc_inf() const{
+	const t_MFParams& Params = base_params();
+	double u_inf_dim = calc_u_inf();
+	return u_inf_dim*Params.L_ref/Params.Re;
+};
+
+double t_MeanFlow::calc_cin_visc_dim(const int i, const int j, const int k) const{
+	double nju_inf = calc_cin_visc_inf();
+	return nju_inf*calc_viscosity(i, j, k)/get_rec(i,j,k).r;
+};
+
+double t_MeanFlow::calc_cin_visc_dim(const t_GridIndex& ind) const{
+	return calc_cin_visc_dim(ind.i, ind.j, ind.k);
+};
+
+double t_MeanFlow::calc_c_dim(int i, int j, int k) const{
+	const t_MFParams& Params = base_params();
+	double t_dim = get_rec(i,j,k).t*Params.T_inf;
+	return sqrt(Params.Gamma*Params.R_Gas*t_dim/Params.Mol_weight);
+};
+
+double t_MeanFlow::calc_c_dim(const t_GridIndex& ind) const{
+	return calc_c_dim(ind.i, ind.j, ind.k);
+};
+
+double t_MeanFlow::calc_u_inf() const{
+	const t_MFParams& Params = base_params();
+	return Params.Mach*
+		sqrt(Params.Gamma*Params.R_Gas*Params.T_inf/Params.Mol_weight);
+};
+
 double t_MeanFlow::calc_mach(const int i, const int j, const int k) const{
 	const t_Rec& rRec = _fld[i][j][k];
 	const t_MFParams& Params = this->base_params();
@@ -320,16 +356,6 @@ t_FldRec t_MeanFlow::interpolate_to_point(double x, double y, double z) const{
 	ret.z = z;
 	return ret;
 }
-
-// Rec output helper
-std::ostream& std_manip::_format_fixed(std::ostream& os, double val){
-	os.width(12);
-	os.precision(6);
-	int old_flags = os.flags(std::ios::left|std::ios::fixed);
-	os<<val;
-	os.flags(old_flags);
-	return os;
-};
 //##############################################
 // old croosflow low level mess
 /*
