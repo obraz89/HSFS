@@ -601,7 +601,7 @@ void t_StabSolver::set3DContext(const t_Index& ind, const int a_nnodesStab/*=0*/
 }
 
 /*   COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) */        
-void t_StabSolver::_calcGroupVelocity(t_WCharsLoc &a_wave_chars){
+void t_StabSolver::calcGroupVelocity(t_WCharsLoc &a_wave_chars){
 	// empiric constant - tolerance
 	const double dd = DELTA_SMALL;
 	// ensure that we are in eigen 
@@ -638,7 +638,7 @@ t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime(const t_WCharsLoc& initial
 
 	do{
 		adjustLocal(def_wave, W_MODE);   
-		_calcGroupVelocity(def_wave);
+		calcGroupVelocity(def_wave);
 		db = 0.01*def_wave.a.real();
 		double coef = def_wave.vgb.real()/def_wave.vga.real();
 		da = -coef*db;
@@ -666,7 +666,7 @@ t_WCharsLoc t_StabSolver::_getMaxInstabTime(const t_WCharsLoc &init_guess){
 	// empiric half percent per iteration
 	double dar = 0.005*init_guess.a.real();
 	t_WCharsLoc base_wave = _getStationaryMaxInstabTime(init_guess);
-	_calcGroupVelocity(base_wave);
+	calcGroupVelocity(base_wave);
 	t_WCharsLoc next_wave = base_wave;
 	next_wave.a+=dar;
 	next_wave.w+=base_wave.vga*dar;
@@ -678,7 +678,7 @@ t_WCharsLoc t_StabSolver::_getMaxInstabTime(const t_WCharsLoc &init_guess){
 	
 	do{
 		base_wave = next_wave;
-		_calcGroupVelocity(base_wave);
+		calcGroupVelocity(base_wave);
 		next_wave.a+=dar;
 		next_wave.w+=base_wave.vga*dar;
 		next_wave = _getStationaryMaxInstabTime(next_wave);

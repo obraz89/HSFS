@@ -66,7 +66,6 @@ class  t_StabSolver: public t_Component{
 
 // Max instab search realization
 	// group velocity computations
-	void _calcGroupVelocity(t_WCharsLoc& a_wave_chars);
 	// maximize wi with wr fixed
 	t_WCharsLoc _getStationaryMaxInstabTime(const t_WCharsLoc& a_waveChars);
 	// search most unstable wave from the initial guess
@@ -95,6 +94,7 @@ public:
 	// search for nearest eigenmode
 	// this is analogue to POISK in FORTRAN code
 	void adjustLocal(t_WCharsLoc& a_wave_chars, t_MODE a_mode);
+	void calcGroupVelocity(t_WCharsLoc& a_wave_chars);
 	// core function
 	// returns the value of residual 
 	// for a given wave
