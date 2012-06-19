@@ -31,9 +31,16 @@ public:
 								  t_CompVal a_w, 
 								  const t_ProfileStab& prof_stab);
 	friend inline std::ostream& operator<<(std::ostream& str, t_WaveChars ww){
-		str<<"a:"<<std_manip::format_fixed_cmplx(ww.a)<<std::endl<<
-			"b:"<<std_manip::format_fixed_cmplx(ww.b)<<std::endl<<
-			"w:"<<std_manip::format_fixed_cmplx(ww.w)<<std::endl;
+		str.width(4);
+		str<<"a:"<<std_manip::format_fixed_cmplx(ww.a)<<std::endl;
+		str.width(4);
+		str<<"b:"<<std_manip::format_fixed_cmplx(ww.b)<<std::endl;
+		str.width(4);
+		str<<"w:"<<std_manip::format_fixed_cmplx(ww.w)<<std::endl;
+		str.width(4);
+		str<<"vga:"<<std_manip::format_fixed_cmplx(ww.vga)<<std::endl;
+		str.width(4);
+		str<<"vgb:"<<std_manip::format_fixed_cmplx(ww.vgb)<<std::endl;
 		return str;
 	};
 	void print(){
