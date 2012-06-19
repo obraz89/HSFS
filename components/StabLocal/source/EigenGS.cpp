@@ -101,20 +101,22 @@ void t_EigenGS::_init_params_grps(){
 
 void t_EigenGS::setContext(const int a_i, const int a_k, 
 					  const double a_alpha, const double a_beta,
-					  const int a_nnodes){
+					  const int a_nnodes/*=0*/){
+	if (a_nnodes>0){
+		_params.NNodes = a_nnodes;
+	}
 	_alpha = a_alpha;
 	_beta = a_beta;
 	t_ProfileNS profNS(_rFldNS);
 	profNS.initialize(a_i, a_k);
-	_params.NNodes = a_nnodes;
-	_grid.resize(a_nnodes);
-	_profStab.initialize(profNS, a_nnodes);
+	_grid.resize(_params.NNodes);
+	_profStab.initialize(profNS, _params.NNodes);
 	
 	double y_max = _profStab.get_thick() - _profStab.get_y(0);
 	_a_coef = 1.0*y_max; // play with coef
 	_b_coef = 1.0 + _a_coef/y_max;
-	double del = 1.0/(double)(a_nnodes-1);	
-	for (int i=0; i<a_nnodes; i++){
+	double del = 1.0/(double)(_params.NNodes-1);	
+	for (int i=0; i<_params.NNodes; i++){
 		_grid[i] = (double)(i)*del;
 	};
 };
@@ -420,7 +422,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_R
 
 int t_EigenGS::getSpectrum(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes){
+					  const int a_nnodes/*=0*/){
   static char help[]="Global Search\n";
   // conext
   setContext(a_i, a_k, a_alpha, a_beta, a_nnodes);
@@ -438,8 +440,6 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
   // to fill matrices
   int mpi_rank, comm_size;
 
-  // pass command line arguments
-  SlepcInitialize((int*)0,(char***)0,(char*)0,help);
   ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_params.NNodes);CHKERRQ(ierr);
 
   MPI_Comm_size(PETSC_COMM_WORLD, &comm_size);
@@ -585,7 +585,6 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
   ierr = EPSDestroy(&eps);CHKERRQ(ierr);
   ierr = MatDestroy(&A);CHKERRQ(ierr);
   ierr = MatDestroy(&B);CHKERRQ(ierr);
-  ierr = SlepcFinalize();CHKERRQ(ierr);
   return 0;
 
 };
@@ -599,7 +598,7 @@ void t_EigenGS::writeSpectrum(const std::string &a_filename){
 
 std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes){
+					  const int a_nnodes/*=0*/){
 	std::vector<t_WCharsLoc> inits;
 	getSpectrum(a_i, a_k, a_alpha, a_beta, a_nnodes);
 	// select discrete modes
@@ -616,7 +615,7 @@ std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_
 	return inits;
 };
 
-t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes){
+t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes/*=0*/){
 	// This is the most interesting question : ask AVF
 	double a_min = 0.01;
 	double a_max = 1.5;
@@ -636,7 +635,7 @@ t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const i
 	return t_WCharsLoc::find_max_instab(all_initials);
 };
 
-t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, const int a_nnodes, t_Mode mode, double fixed_val){
+t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/*=0*/){
 	double a,b;
 	double *pArg;
 	std::vector<t_WCharsLoc> all_initials;
@@ -648,7 +647,7 @@ t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, const 
 		pArg = &b;
 	};
 	double arg_min = 0.01;
-	double arg_max = 1.5;
+	double arg_max = 0.15;
 	int n = 100;
 	for (int i=0; i<n; i++){
 		*pArg = arg_min + (arg_max-arg_min)/double(n)*i;

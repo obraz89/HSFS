@@ -52,7 +52,7 @@ class  t_EigenGS: public t_Component{
 	void select();
 	void setContext(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes);
+					  const int a_nnodes=0);
 	void _init(const wxString& configfile);
 public:
 	enum t_Mode{A_MODE=0, B_MODE};
@@ -61,13 +61,13 @@ public:
 	void initialize(const wxString& configfile);
 	int getSpectrum(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes);
+					  const int a_nnodes=0);
 	std::vector<t_WCharsLoc> getDiscreteModes(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes);
+					  const int a_nnodes=0);
 	// parameters ?
-	t_WCharsLoc searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes);
-	t_WCharsLoc searchMaxInstabFixed(const int a_i, const int a_k, const int a_nnodes, t_Mode mode, double fixed_val);
+	t_WCharsLoc searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes=0);
+	t_WCharsLoc searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes=0);
 	void writeSpectrum(const std::string& a_filename);
 };
 #endif // __EigenGs__
