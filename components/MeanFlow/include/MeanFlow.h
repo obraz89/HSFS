@@ -64,6 +64,13 @@ public:
 		t_GridIndex();
 		t_GridIndex(int, int, int);
 		t_GridIndex(const t_GridIndex&, int i=0, int j=0, int k=0);
+		friend std::ostream& operator<<(std::ostream& str, const t_GridIndex& ind){
+			return str<<"["
+					  <<ind.i<<";"
+					  <<ind.j<<";"
+					  <<ind.k
+					  <<"]";
+		};
 	};
 	t_MeanFlow();
 	t_MeanFlow(int nx, int ny, int nz);
