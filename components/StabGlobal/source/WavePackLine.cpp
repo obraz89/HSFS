@@ -28,26 +28,23 @@ bool t_WavePackLine::_near_leading_edge() const{
 	return false;
 }
 
-void t_WavePackLine::print_line(const char *file_name = NULL) const
+std::ostream& t_WavePackLine::_print_line(std::ostream& str) const
 {
-	std::cout<<"----------------------------------Line:\n";
 	std::vector<t_WPLineRec>::const_iterator beg = _line.begin();
 	while(beg!=_line.end()) 
 	{
-		std::cout<<'('
+		str<<'('
 			<<beg->mean_flow.x<<";"
 			<<beg->mean_flow.y<<";"
 			<<beg->mean_flow.z<<");["
 			<<beg->nearest_node.i<<";"
 			<<beg->nearest_node.j<<";"
 			<<beg->nearest_node.k<<"]"<<"\n";
+		str<<beg->wave_chars;
 		beg++;
 	};
-};
-std::ostream& operator<<(std::ostream& str, t_WavePackLine line){
-	line.print_line();
 	return str;
-}
+};
 // TODO: make strict algorithm
 // (now it search 'on surface'), see below
 // TODO: move to t_MeanFlow
@@ -93,21 +90,3 @@ void WavePackLine::find_transition_location(double& x_tr, double& t_tr, t_StabSo
 
 };
 */
-
-void t_WavePackLine::print_line_to_file() const{
-	
-	std::vector<t_WPLineRec>::const_iterator fbeg=this->_line.end();
-	fbeg--; 
-	std::ostringstream to_file;
-	to_file<<"output/WPPaths/al="<<_rFldMF.base_params().Alpha<<"/WPLine_kstart="<<fbeg->nearest_node.k;
-	std::ofstream to(&to_file.str()[0]);
-	while (fbeg!=_line.begin()){
-		to<<*fbeg;
-		//const t_FldRec& fdata_ref = _rFldMF.get_rec(ibeg->i,0, ibeg->k);
-		//const StabDataPoint& sdata_ref = _rFldStab.read_max(ibeg->i, ibeg->k);
-		//double angle = atan(sdata_ref.b_spat.real/sdata_ref.a_spat.real) - atan(sdata_ref.vgb.real/sdata_ref.vga.real);
-		//fprintf(f, "%f\t%f\t%f\t%f\t%f\t%f\n", fdata_ref.x, fdata_ref.z, sdata_ref.a_spat.real, sdata_ref.b_spat.real, sdata_ref.w_spat.real, angle);
-		fbeg--;
-	}
-	//fclose(f);
-}
