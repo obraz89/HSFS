@@ -79,6 +79,7 @@ public:
 	inline int getTaskDim(){return _math_solver.getTaskDim();};
 	void _init(const wxString& configfile);
 	void initialize(const wxString& configfile);
+	inline const t_StabScales& scales()const{return _profStab.scales();};
 	t_WCharsGlob popGlobalWaveChars();
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors
@@ -94,15 +95,23 @@ public:
 	// search for nearest eigenmode
 	// this is analogue to POISK in FORTRAN code
 	void adjustLocal(t_WCharsLoc& a_wave_chars, t_MODE a_mode);
+	// search for an eigenmode with a given wr (wr_fixed)
+	// from initial guess wave_chars
+	// A_MODE - keep beta fixed (for ex b=0)
+	// B_MODE - keep alpha fixed (?)
+	// wave_chars.w should be close enough to w_fixed
+	void getEigenWFixed(double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode);
 	void calcGroupVelocity(t_WCharsLoc& a_wave_chars);
 	// core function
 	// returns the value of residual 
 	// for a given wave
 	t_Complex solve(t_WCharsLoc& a_wave_chars);
+	std::vector<t_WCharsLoc> filterInitWaves(const std::vector<t_WCharsLoc>& all_initials);
 	t_WCharsLoc getMaxWave(const int& i_ind, const int& k_ind,
 							const std::vector<t_WCharsLoc>& a_inits, const int& a_nnodesStab=0);
 	// exceptions
 	class t_UnPhysWave{};
+	class t_WrongMode{};
 	
 };
 #endif // __STAB_SOLVER

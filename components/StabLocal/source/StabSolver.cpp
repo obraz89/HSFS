@@ -149,8 +149,8 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 	//t_SqMatrix stab_matrix(8);
 	t_CompVal imagUnity(0.0, 1.0);
 
-	const double& stabRe = _profStab.stabRe;
-	const double& Me = _profStab.Me;
+	const double& stabRe = _profStab.scales().ReStab;
+	const double& Me = _profStab.scales().Me;
 	const t_MFParams& Params = _rFldNS.base_params();
 	const double gMaMa = Params.Gamma*Me*Me;
 	const double g_1MaMa = (Params.Gamma-1.0)*Me*Me;
@@ -564,18 +564,11 @@ t_Matrix t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
 }
 
 t_WCharsGlob t_StabSolver::popGlobalWaveChars(){
-	t_CompVec3 k_ked, vg_ked, k_glob, vg_glob;
-	k_ked = _waveChars.a, 0, _waveChars.b;
-	vg_ked = _waveChars.vga, 0, _waveChars.vgb;
-	t_SqMat3 jac = _profStab.getJac();
-	k_glob = jac*k_ked;
-	vg_glob = jac*vg_ked;
-	t_WCharsGlob chars_glob;
-	chars_glob.set_vals(k_glob, vg_glob, _waveChars.w,_profStab);
-	return chars_glob;
+	return t_WCharsGlob(_waveChars,_profStab);
 };
 
-void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab){
+void t_StabSolver::set3DContext
+(const int& i_ind, const int& k_ind, const int& a_nnodesStab){
 	_math_solver.set3DContext();
 	_math_solver.resizeGrid(a_nnodesStab);
 
@@ -594,16 +587,18 @@ void t_StabSolver::set3DContext(const int& i_ind, const int& k_ind, const int& a
 	return;
 }
 
-void t_StabSolver::set3DContext(const t_Index& ind, const int a_nnodesStab/*=0*/){
+void t_StabSolver::set3DContext
+(const t_Index& ind, const int a_nnodesStab/*=0*/){
 	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.base_params().Ny : a_nnodesStab;
 	set3DContext(ind.i, ind.k, nnodes_stab);
 	return;
 }
 
 /*   COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) */        
-void t_StabSolver::calcGroupVelocity(t_WCharsLoc &a_wave_chars){
+void t_StabSolver::calcGroupVelocity
+(t_WCharsLoc &a_wave_chars){
 	// empiric constant - tolerance
-	const double dd = DELTA_SMALL;
+	const double dd = 0.001*a_wave_chars.a.real();//DELTA_SMALL;
 	// ensure that we are in eigen 
 	adjustLocal(a_wave_chars, W_MODE);
 
@@ -630,7 +625,8 @@ void t_StabSolver::calcGroupVelocity(t_WCharsLoc &a_wave_chars){
 	a_wave_chars.vgb = 0.5*(rght_chars.w - left_chars.w)/dd;
 }
 
-t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime(const t_WCharsLoc& initial_guess){
+t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime
+(const t_WCharsLoc& initial_guess){
 	t_WCharsLoc cur_wave = initial_guess;
 	t_WCharsLoc def_wave = initial_guess;
 	t_Complex gv;
@@ -662,7 +658,8 @@ t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime(const t_WCharsLoc& initial
 	return def_wave;
 };
 
-t_WCharsLoc t_StabSolver::_getMaxInstabTime(const t_WCharsLoc &init_guess){
+t_WCharsLoc t_StabSolver::_getMaxInstabTime
+(const t_WCharsLoc &init_guess){
 	// empiric half percent per iteration
 	double dar = 0.005*init_guess.a.real();
 	t_WCharsLoc base_wave = _getStationaryMaxInstabTime(init_guess);
@@ -687,7 +684,8 @@ t_WCharsLoc t_StabSolver::_getMaxInstabTime(const t_WCharsLoc &init_guess){
 };
 // input: mode defines the value to be adjusted
 // see stabsolver.h for mode enum definition
-void t_StabSolver::adjustLocal(t_WCharsLoc &a_wave_chars, t_StabSolver::t_MODE a_mode){
+void t_StabSolver::adjustLocal
+(t_WCharsLoc &a_wave_chars, t_StabSolver::t_MODE a_mode){
 	// parameters
 	const t_Complex d_arg = _params.AdjustStep;
 	const int max_iters = _params.AdjustMaxIter;
@@ -730,6 +728,63 @@ void t_StabSolver::adjustLocal(t_WCharsLoc &a_wave_chars, t_StabSolver::t_MODE a
 
 void t_StabSolver::setInitWaves(const std::vector<t_WCharsLoc>& a_inits){
 	this->_initWaves = a_inits;
+};
+
+std::vector<t_WCharsLoc> t_StabSolver::filterInitWaves
+(const std::vector<t_WCharsLoc>& all_initials){
+	const double close_tol = 0.1;
+	std::vector<t_WCharsLoc> good_initials;
+	std::vector<t_WCharsLoc>::const_iterator iter;
+	t_WCharsLoc init_wave;
+	for (iter = all_initials.begin(); iter<all_initials.end(); iter++){
+		const t_WCharsLoc& init_wave = *iter;
+		t_WCharsLoc adj_wave = init_wave;
+		try{
+			adjustLocal(adj_wave, t_MODE::W_MODE);
+			if (abs(adj_wave.w.real()-init_wave.w.real())<
+				close_tol*abs(adj_wave.w.real()+init_wave.w.real())){
+					good_initials.push_back(adj_wave);
+			};
+		}catch(t_UnPhysWave){
+			// oh shit!
+		};
+	};
+	return good_initials;
+};
+
+void t_StabSolver::getEigenWFixed
+(double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode){
+	t_WCharsLoc backup = wave_chars;
+	t_Complex *pVg, *pArg;
+	if (mode==A_MODE){
+		pArg = &wave_chars.a;
+		pVg  = &wave_chars.vga;
+	}else{
+		if (mode==B_MODE){
+			pArg = &wave_chars.b;
+			pVg  = &wave_chars.vgb;
+		}else{
+			throw t_WrongMode();
+		}
+	}
+	double resid=1.0;
+	double dwr, darg;
+	t_Complex vg;
+	adjustLocal(wave_chars, W_MODE);
+	int n_iter=0;
+	do{
+		dwr = wr_fixed - wave_chars.w.real();
+		vg = *pVg;
+		darg = (dwr/vg).real();
+		*pArg+= darg;
+		wave_chars.w+= dwr;
+		adjustLocal(wave_chars, W_MODE);
+		resid = abs((dwr)/wr_fixed);
+		if (n_iter++>_params.AdjustMaxIter){
+			wxLogError(_("In GetEigenWFixed: no convergence"));
+			return;
+		};
+	} while (resid>=_params.AdjustTol);
 };
 
 t_WCharsLoc t_StabSolver::getMaxWave(const int& i_ind, const int& k_ind, 

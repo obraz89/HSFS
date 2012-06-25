@@ -30,10 +30,12 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	// in order to finally pass it to wavepack line
 	_jacToLocalRF = a_rProfNS._jacToLocalRF;
 
-	this->stabRe = sqrt(Params.Re*u_e*rho_e*x/mu_e);
-	this->Me = Params.Mach*u_e/sqrt(t_e);
-	this->dels = Params.L_ref*y_scale/sqrt(Params.Re);
-	this->ue_dim = _rFld.calc_c_dim(a_rProfNS._i, a_rProfNS._bl_bound_ind, a_rProfNS._k)*Me;
+	_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x/mu_e);
+	_scales.Me = Params.Mach*u_e/sqrt(t_e);
+	_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+	_scales.UeDim = 
+		_rFld.calc_c_dim(a_rProfNS._i, a_rProfNS._bl_bound_ind, a_rProfNS._k)*_scales.Me;
+	_scales.Ue = u_e;
 	double dy = (a_rProfNS._y[a_rProfNS.size()-1])/((double)this->size());
 	for (int i=0; i<size(); i++){
 		// order important - first interpolate then nondim

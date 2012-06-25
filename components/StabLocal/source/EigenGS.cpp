@@ -136,8 +136,8 @@ void t_EigenGS::getMetricCoefs(const int a_nnode, double& f1, double& f2, double
 void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	t_CompVal imagUnity(0.0, 1.0);
 
-	const double& stabRe = _profStab.stabRe;
-	const double& Me = _profStab.Me;
+	const double& stabRe = _profStab.scales().ReStab;
+	const double& Me = _profStab.scales().Me;
 	const t_MFParams& mf_params = _rFldNS.base_params();
 	const double gMaMa = mf_params.Gamma*Me*Me;
 	const double g_1MaMa = (mf_params.Gamma-1.0)*Me*Me;
@@ -615,6 +615,8 @@ std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_
 	return inits;
 };
 
+
+
 t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes/*=0*/){
 	// This is the most interesting question : ask AVF
 	double a_min = 0.01;
@@ -635,7 +637,7 @@ t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const i
 	return t_WCharsLoc::find_max_instab(all_initials);
 };
 
-t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/*=0*/){
+std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/* =0 */){
 	double a,b;
 	double *pArg;
 	std::vector<t_WCharsLoc> all_initials;
@@ -646,14 +648,21 @@ t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, t_Mode
 		a = fixed_val;
 		pArg = &b;
 	};
-	double arg_min = 0.01;
-	double arg_max = 0.15;
+	double arg_min = 0.1;
+	double arg_max = 0.95;
 	int n = 100;
 	for (int i=0; i<n; i++){
+		std::cout<<"GS fixed: "<<i<<"% done\n";
 		*pArg = arg_min + (arg_max-arg_min)/double(n)*i;
 		std::vector<t_WCharsLoc> inits = getDiscreteModes(a_i, a_k, a, b, a_nnodes);
 		all_initials.push_back(t_WCharsLoc::find_max_instab(inits));
 	};
+	return all_initials;
+};
+
+t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/*=0*/){
+	const std::vector<t_WCharsLoc>& all_initials = 
+		searchInstabFixed(a_i, a_k, mode, fixed_val, a_nnodes);
 	return t_WCharsLoc::find_max_instab(all_initials);
 };
 

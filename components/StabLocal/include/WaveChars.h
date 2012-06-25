@@ -1,6 +1,7 @@
 #ifndef __STAB_ELEMS
 #define __STAB_ELEMS
 #include "math_operands.h"
+#include "ProfileStab.h"
 #include <vector>
 #include <iostream>
 #include "io_helpers.h"
@@ -14,23 +15,24 @@
 // vga, vgn, vgb - components of group velocity
 // vgn=0 in local rf, but non-zero in global rf
 
-class t_ProfileStab;
 class  t_WaveChars{
-	// hmm
-	//const t_MeanFlow& _rFld;
+protected:
+	t_StabScales _scales;
+	void _to_dim(t_WaveChars& dim) const;
+	t_WaveChars& _set_vals(const t_CompVec3& k, 
+		const t_CompVec3& vg, 
+		t_CompVal a_w, 
+		const t_ProfileStab& prof_stab);
 public:
+	const t_StabScales& scales() const{return _scales;};
+	void set_scales(const t_StabScales&scales){_scales = scales;};
 	t_CompVal a, kn, b;
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
-	// dels - dimensional length scale delta
-	double stabRe, dels, Me;
-	// ue_dim - dimensional velocity at upper bl bound
-	double ue_dim;
-	virtual t_WaveChars& set_vals(const t_CompVec3& k, 
-								  const t_CompVec3& vg, 
-								  t_CompVal a_w, 
-								  const t_ProfileStab& prof_stab);
 	friend inline std::ostream& operator<<(std::ostream& str, t_WaveChars ww){
+		str<<"ReStab:"<<std_manip::format_fixed_dbl(ww.scales().ReStab);
+		str<<"FreqScale:"<<std_manip::format_fixed_dbl(ww.scales().FreqScale());
+		str<<std::endl;
 		str.width(4);
 		str<<"a:"<<std_manip::format_fixed_cmplx(ww.a)<<std::endl;
 		str.width(4);
@@ -53,19 +55,20 @@ public:
 // to be used with stab solver and global searcher
 // local RF
 class t_WCharsLocDim;
+
 class t_WCharsLoc: public t_WaveChars{
+	friend class t_WCharsLocDim;
 public:
 	t_CompVal resid;
-	static t_WCharsLoc find_max_instab(const std::vector<t_WCharsLoc>& vec);
 	t_WCharsLocDim to_dim() const;
+	static t_WCharsLoc find_max_instab(const std::vector<t_WCharsLoc>& vec);
 };
 
 // local dimensional
 class t_WCharsLocDim : public t_WaveChars{
-	friend class t_WCharsLoc;
-	// private copy constructor
-	t_WCharsLocDim(const t_WCharsLoc& wc_loc):t_WaveChars(wc_loc){};
+	t_WCharsLocDim();
 public:
+	t_WCharsLocDim(const t_WCharsLoc& wloc){wloc._to_dim(*this);};
 	t_WCharsLoc to_nondim(const t_ProfileStab& rProf) const;
 
 };
@@ -76,10 +79,15 @@ public:
 // store some context from stab comps
 // to restore dimensional wave chars
 class t_WCharsGlobDim;
-struct  t_WCharsGlob: public t_WaveChars{
+class  t_WCharsGlob: public t_WaveChars{
+	t_WCharsGlob();
+public:
+	t_WCharsGlob(const t_WCharsLoc&, const t_ProfileStab&);
+	t_WCharsGlobDim to_dim() const;
 };
 
 class t_WCharsGlobDim: public t_WaveChars{
-
+public:
+	t_WCharsGlob to_nondim() const;
 };
 #endif // __STAB_ELEMS

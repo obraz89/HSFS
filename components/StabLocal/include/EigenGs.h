@@ -65,8 +65,14 @@ public:
 	std::vector<t_WCharsLoc> getDiscreteModes(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes=0);
-	// parameters ?
+	// get all initials vartying a and b
+	// max - choose wave with max wi
+	//std::vector<t_WCharsLoc> searchInstabGlob(const int a_i, const int a_k, const int a_nnodes=0);
 	t_WCharsLoc searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes=0);
+	// get all initials vartying a or b and keeping other param(b or a) fixed
+	// for a plane wave for example keep b=0
+	// max - choose wave with max wi
+	std::vector<t_WCharsLoc> searchInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes=0);
 	t_WCharsLoc searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes=0);
 	void writeSpectrum(const std::string& a_filename);
 };
