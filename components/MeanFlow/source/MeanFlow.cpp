@@ -1,4 +1,5 @@
 #include "MeanFlow.h"
+#include "math_operands.h"
 
 void t_MeanFlow::_allocate(int nx, int ny, int nz){
 	if (!_allocated){
@@ -289,7 +290,201 @@ double t_MeanFlow::calc_distance(const t_GridIndex& a, const t_GridIndex& b) con
 	return sqrt(dx*dx+dy*dy+dz*dz);
 };
 
-t_Index t_MeanFlow::get_nearest_index(double x, double y, double z) const{
+// for now first order
+void t_MeanFlow::_calc_dir_vec(t_Vec3& vec, t_Index ind, ALONG_LINE along_line) const{
+	t_Rec dd;
+	const t_MFParams& Params = this->base_params();
+	switch (along_line)
+	{
+	case I:
+		if (ind.i==0){
+			t_Index adj_ind(ind, 1, 0, 0);
+			dd = get_rec(adj_ind) - get_rec(ind);
+		}else{
+			if (ind.i==Params.Nx){
+				t_Index adj_ind(ind, -1, 0, 0);
+				dd = get_rec(ind) - get_rec(adj_ind);
+			}else{
+				t_Index adj_ind_p(ind, 1, 0, 0);
+				t_Index adj_ind_m(ind, -1, 0, 0);
+				dd = get_rec(adj_ind_p) - get_rec(adj_ind_m);
+			};
+		};
+		break;
+	case J:
+		if (ind.j==0){
+			t_Index adj_ind(ind, 0, 1, 0);
+			dd = get_rec(adj_ind) - get_rec(ind);
+		}else{
+			if (ind.j==Params.Ny){
+				t_Index adj_ind(ind, 0, -1, 0);
+				dd = get_rec(ind) - get_rec(adj_ind);
+			}else{
+				t_Index adj_ind_p(ind, 0, 1, 0);
+				t_Index adj_ind_m(ind, 0, -1, 0);
+				dd = get_rec(adj_ind_p) - get_rec(adj_ind_m);
+			};
+		};
+		break;
+	case K:
+		if (ind.k==0){
+			t_Index adj_ind(ind, 0, 0, 1);
+			dd = get_rec(adj_ind) - get_rec(ind);
+		}else{
+			if (ind.i==Params.Nz){
+				t_Index adj_ind(ind, 0, 0, -1);
+				dd = get_rec(ind) - get_rec(adj_ind);
+			}else{
+				t_Index adj_ind_p(ind, 0, 0, 1);
+				t_Index adj_ind_m(ind, 0, 0, -1);
+				dd = get_rec(adj_ind_p) - get_rec(adj_ind_m);
+			}
+		}
+		break;
+	}
+	vec = dd.x, dd.y, dd.z;
+};
+
+void t_MeanFlow::_calc_gridline_dirs
+(t_Vec3 &i_dir, t_Vec3& j_dir, t_Vec3& k_dir, t_Index ind) const{
+	_calc_dir_vec(i_dir, ind, I);
+	_calc_dir_vec(j_dir, ind, J);
+	_calc_dir_vec(k_dir, ind, K);
+};
+
+// this is really interesting
+bool t_MeanFlow::_is_inside(const t_Vec3& point, t_Index diag1, t_Index diag2) const{
+	// base index
+	// to get "canonical" diagonal
+	// [i,j,k] <~> [i+1, j+1, k+1]
+	t_Index base = _get_base_ind(diag1, diag2);
+	// in most cases di=dj=dk=1
+	int di = abs(diag1.i - diag2.i);
+	int dj = abs(diag1.j - diag2.j);
+	int dk = abs(diag1.k - diag2.k);
+	t_Vec3 rbase = get_rec(base).r_vec();
+	t_Vec3 r;
+	r = point - rbase;
+	t_Vec3 bvec_i, bvec_j, bvec_k;
+	bvec_i = get_rec(t_Index(base, di, 0,  0)).r_vec() - rbase;
+	bvec_j = get_rec(t_Index(base, 0,  dj, 0)).r_vec() - rbase;
+	bvec_k = get_rec(t_Index(base, 0,  0, dk)).r_vec() - rbase;
+	t_Vec3 bvecs[3] = {bvec_i, bvec_j, bvec_k};
+	// get cell reference length
+	double l_ref = 0.0;
+	for (int i=0; i<3; i++){
+		double cur_norm = mtl::vector::two_norm(bvecs[i]);
+		if (cur_norm>l_ref) l_ref = cur_norm;
+	};
+	// normalize
+	for (int i=0; i<3; i++){
+		r[i]/=l_ref;
+		for (int j=0; j<3; j++){
+			bvecs[i][j]/=l_ref;
+		};
+	};
+	t_SqMat3 gramm, inv_gramm;
+	for (int i=0; i<3; i++){
+		for (int j=0; j<3; j++){
+			gramm[i][j] = mtl::vector::dot(bvecs[i], bvecs[j]);
+		};
+	};
+	inv_gramm = mtl::matrix::inv(gramm);
+	t_Vec3 rhs;
+	rhs = mtl::vector::dot(r, bvec_i),
+		  mtl::vector::dot(r, bvec_j),
+		  mtl::vector::dot(r, bvec_k);
+				
+	t_Vec3 coefs;
+	coefs = inv_gramm*rhs;
+	bool inside = true;
+	for (int i=0; i<3; i++){
+		if ((coefs[i]>1.0)||(coefs[i]<0.0)) inside=false;
+	};
+	return inside;
+};
+
+bool t_MeanFlow::_check_ind(const t_Index& ind) const{
+	const t_MFParams& Params = base_params();
+	return ((ind.i<Params.Nx)&&(ind.j<Params.Ny)&&(ind.k<Params.Nz)&&
+			(ind.i>=0)&&(ind.j>=0)&&(ind.k>=0));
+};
+
+t_Index t_MeanFlow::_get_nearest_node
+(const t_Vec3& point, t_Index diag1, t_Index diag2) const{
+t_Index ret;
+const t_MFParams& Params = base_params();
+// why not)
+double min_dst = calc_distance(t_Index(0,0,0),t_Index(Params.Nx-1, 0,0));
+t_Index base = _get_base_ind(diag1, diag2);
+// in most cases di=dj=dk=1
+int di = abs(diag1.i - diag2.i);
+int dj = abs(diag1.j - diag2.j);
+int dk = abs(diag1.k - diag2.k);
+for (int i=0;i<2; i++){
+	for (int j=0; j<2; j++){
+		for (int k=0; k<2; k++){
+			t_Index vertex(base, di*i, dj*j, dk*k);
+			t_Vec3 dr;
+			dr = get_rec(vertex).r_vec() - point;
+			if (mtl::vector::two_norm(dr)<min_dst){
+				ret = vertex;
+			};
+		};
+	};
+};
+return ret;
+};
+
+t_Index t_MeanFlow::_get_base_ind(t_Index diag1, t_Index diag2) const{
+	t_Index base;
+	base.i = (diag1.i<diag2.i) ? diag1.i : diag2.i;
+	base.j = (diag1.j<diag2.j) ? diag1.j : diag2.j;
+	base.k = (diag1.k<diag2.k) ? diag1.k : diag2.k;	
+	return base;
+};
+
+t_Index t_MeanFlow::_get_nearest_index_loc
+(t_Index start_from, const t_Vec3& point) const{
+	t_Index cur_ind = start_from;
+	t_Index nxt_ind = start_from;
+	t_Vec3 i_dir, j_dir, k_dir;
+	int di, dj, dk;
+	do{
+		if (_check_ind(cur_ind)){
+			cur_ind = nxt_ind;
+			t_Vec3 Dir;
+			Dir = point - get_rec(cur_ind).r_vec();
+			_calc_gridline_dirs(i_dir, j_dir, k_dir, cur_ind);
+			di = (mtl::vector::dot(i_dir, Dir)>0.0) ? 1 : -1;
+			dj = (mtl::vector::dot(j_dir, Dir)>0.0) ? 1 : -1;
+			dk = (mtl::vector::dot(k_dir, Dir)>0.0) ? 1 : -1;
+			nxt_ind = t_Index(cur_ind, di, dj, dk);
+		}else{
+			std::cerr<<"Error: In GetNearestIndexLoc: Bad Index\n";
+			return cur_ind;
+		}
+	} while (!_is_inside(point, cur_ind, nxt_ind));
+	return _get_nearest_node(point, cur_ind, nxt_ind);
+};
+
+t_Index t_MeanFlow::get_nearest_index_loc(t_GridIndex start_from, t_Rec rec) const{
+	t_Vec3 point = rec.r_vec();
+	return _get_nearest_index_loc(start_from, point);
+};
+
+t_Index t_MeanFlow::get_nearest_index_loc(t_GridIndex start_from, t_GeomPoint geom_point) const{
+	t_Vec3 point = geom_point.vec();
+	return _get_nearest_index_loc(start_from, point);
+};
+//old (bad) version
+t_Index t_MeanFlow::get_nearest_index_raw(t_GeomPoint geom_point) const{
+	// lazy to rewrite)
+	double x = geom_point.x;
+	double y = geom_point.y;
+	double z = geom_point.z;
+	t_Vec3 point;
+	point = x, y, z;
 	const t_MFParams& Params = this->base_params();
 	t_Index ind_nrst;
 	double x_cmp = 0.;
@@ -343,17 +538,18 @@ t_Index t_MeanFlow::get_nearest_index(double x, double y, double z) const{
 
 	return ind_nrst;
 }
-t_Index t_MeanFlow::get_nearest_index(t_Rec rec) const{
-	return get_nearest_index(rec.x, rec.y, rec.z);
+
+t_Index t_MeanFlow::get_nearest_index_raw(t_Rec rec) const{
+	return get_nearest_index_raw(rec.get_xyz());
 };
 
-t_FldRec t_MeanFlow::interpolate_to_point(double x, double y, double z) const{
+t_FldRec t_MeanFlow::interpolate_to_point(t_GeomPoint point) const{
 	// TODO: good interpolation !!!!!!!!!!!!!!!!!!!!!!!!!
 	// for now the worst variant:
-	t_FldRec ret = get_rec(get_nearest_index(x,y,z));
-	ret.x = x;
-	ret.y = y;
-	ret.z = z;
+	t_Index nrst_raw = get_nearest_index_raw(point);
+	t_Index nrst_ind = get_nearest_index_loc(nrst_raw, point);
+	t_FldRec ret = get_rec(nrst_ind);
+	ret.set_xyz(point);
 	return ret;
 }
 //##############################################
