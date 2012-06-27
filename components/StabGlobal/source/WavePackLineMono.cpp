@@ -3,12 +3,12 @@
 t_WPLineMono::t_WPLineMono(const t_MeanFlow& a_fld, t_StabSolver& a_stab_solver, t_EigenGS& a_gs_solver)
 :t_WavePackLine(a_fld, a_stab_solver, a_gs_solver){}
 
-void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Direction downstream){
+void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction){
 	t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 	double wr_dim = init_wave_dim.w.real();
 	double time_direction;
 	std::vector<t_WPLineRec>* pLine;
-	if (downstream){
+	if (direction==DOWNSTREAM){
 		pLine = &_line_down;
 		time_direction = 1.0;
 	}else{
@@ -16,6 +16,12 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 		time_direction = -1.0;
 	};
 	t_WCharsLoc last_wchars_loc = init_wave;
+
+	// check initial
+	_stab_solver.set3DContext(start_from);
+	_stab_solver.getEigenWFixed(init_wave.w.real(), init_wave, t_StabSolver::A_MODE);
+	_stab_solver.calcGroupVelocity(init_wave);
+
 	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWaveChars(), start_from);
 	// march until neutral point
 	// or field boundary is reached
@@ -24,15 +30,15 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 		t_WPLineRec& last_rec = pLine->back();
 		double dt = 0.01*time_direction;
 		t_Vec3 vg, dr;
-		vg = last_rec.wave_chars.vga.real(), last_rec.wave_chars.vgn.real(), last_rec.wave_chars.vgb.real();
+		vg = last_rec.wave_chars.vga.real(), 
+			 last_rec.wave_chars.vgn.real(), 
+			 last_rec.wave_chars.vgb.real();
 		dr = vg*dt;
 		// TODO: IMPORTANT! BE ALWAYS ON SURFACE
-		t_FldRec new_rec_mf = 
-			_rFldMF.interpolate_to_point(
-				last_rec.mean_flow.x + dr[0],
-				last_rec.mean_flow.y + dr[1],
-				last_rec.mean_flow.z + dr[2]);
-		t_Index new_rec_nrst_ind = _rFldMF.get_nearest_index(new_rec_mf);
+		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+t_GeomPoint(dr); 
+		t_FldRec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
+		t_Index new_rec_nrst_ind = 
+			_rFldMF.get_nearest_index_loc(last_rec.nearest_node, new_rec_mf);
 		// !
 		t_WCharsLoc new_wave_chars(last_wchars_loc);
 		_stab_solver.set3DContext(new_rec_nrst_ind);

@@ -1,6 +1,8 @@
 #include "MeanFlow.h"
 #include "common_data.h"
 
+using namespace common::cmpnts;
+
 t_MFHSFLOW2D::t_MFHSFLOW2D():
 t_MeanFlow(), t_Component(wxEmptyString, MF_HSFLOW2D_NAME){};
 

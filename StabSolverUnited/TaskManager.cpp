@@ -4,6 +4,8 @@
 #include "EigenGs.h"
 #include "common_data.h"
 
+using namespace common::cmpnts;
+
 t_TaskManager::t_TaskManager(wxString task_configfile){
 	_init(task_configfile);
 	_initialized = true;

@@ -1,9 +1,9 @@
 #include "StabSolver.h"
 #include "common_data.h"
 
+using namespace common::cmpnts;
 
 static const int STAB_MATRIX_DIM = 8;
-
 
 // ---------------------------------------
 // t_StabSolverParams

@@ -1,6 +1,8 @@
 #include "MeanFlow.h"
 #include "common_data.h"
 
+using namespace common::cmpnts;
+
 t_MFHSFLOW3D::t_MFHSFLOW3D():
 t_MeanFlow(), t_Component(wxEmptyString, MF_HSFLOW3D_NAME){
 	// init params map etc - to bind to GUI

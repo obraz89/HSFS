@@ -10,6 +10,8 @@
 #include "wx/string.h"
 #include "common_data.h"
 
+using namespace common::cmpnts;
+
 const int t_MFParams::t_ViscType::ViscPower=0;
 const int t_MFParams::t_ViscType::ViscSuther=1;
 

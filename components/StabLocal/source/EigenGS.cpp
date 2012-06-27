@@ -4,6 +4,8 @@
 #include <iostream>
 #include <fstream>
 
+using namespace common::cmpnts;
+
 // ---------------------------------------
 // t_EigenParams
 static const int N_VARS_DEFAULT = 5;
