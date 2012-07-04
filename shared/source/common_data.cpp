@@ -12,6 +12,3 @@ const wxString cmpnts::EIGEN3D_NAME = _T("EigenGS");
 const wxString cmpnts::MF_CONF_DOMAIN = _T("MeanFlow");
 const wxString cmpnts::STABSOLVER_CONF_DOMAIN = _T("StabSolver");
 const wxString cmpnts::EIGEN_CONF_DOMAIN= _T("EigenGS");
-
-wxString io::LOG_FILE = _T("log.txt");
-wxString io::LOG_DIR = _T("");

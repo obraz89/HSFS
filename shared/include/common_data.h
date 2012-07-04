@@ -12,7 +12,6 @@ namespace common{
 		extern const wxString STABSOLVER_CONF_DOMAIN;
 	};
 	namespace io{
-		extern wxString LOG_DIR;
 		extern wxString LOG_FILE;
 	};
 };
