@@ -277,10 +277,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)MFProc\include&quot;;&quot;$(SolutionDir)$(ProjectName)\include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
-				RuntimeLibrary="1"
-				UsePrecompiledHeader="0"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\$(ProjectName)\include&quot;;../shared/include;../components/smallmat/include;../components/stabglobal/include;../components/stablocal/include;../components/meanflow/include;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud/&quot;;&quot;$(WX_DIR)\include&quot;;&quot;$(BOOST_DIR)&quot;;&quot;$(MTL_DIR)\include&quot;;&quot;$(PETSC_DIR)\include&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\include&quot;;&quot;$(SLEPC_DIR)\include&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\include&quot;;&quot;$(MPICH2_DIR)\include&quot;"
+				PreprocessorDefinitions="WINVER=0x0400;NDEBUG;__WXMSW__;_WINDOWS;WXUSINGDLL;wxUSE_GUI=1;UNICODE;_UNICODE"
+				RuntimeLibrary="3"
+				UsePrecompiledHeader="1"
+				PrecompiledHeaderThrough="$(SolutionDir)/shared/StdAfx.h"
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
@@ -296,10 +297,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="wxmsw28ud_core.lib wxbase28ud.lib comctl32.lib rpcrt4.lib winmm.lib imsl.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib mpi.lib libpetsc.lib libslepc.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(SolutionDir)\Smooth\release\&quot;;&quot;$(SolutionDir)\SolverCore\release\&quot;;&quot;$(VNI_DIR)/lib/ia32/&quot;"
-				GenerateDebugInformation="true"
-				SubSystem="1"
+				AdditionalLibraryDirectories="&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(CTT_DIR)/lib/em64t/&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
+				IgnoreDefaultLibraryNames=""
+				GenerateDebugInformation="false"
+				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				RandomizedBaseAddress="1"
