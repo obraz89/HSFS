@@ -368,6 +368,10 @@
 					RelativePath="..\shared\source\io_helpers.cpp"
 					>
 				</File>
+				<File
+					RelativePath="..\shared\source\log.cpp"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="MeanFlow"
@@ -583,7 +587,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\shared\include\log.h"
+					>
+				</File>
+				<File
 					RelativePath="..\shared\include\stdafx.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\include\string_conv.h"
 					>
 				</File>
 			</Filter>

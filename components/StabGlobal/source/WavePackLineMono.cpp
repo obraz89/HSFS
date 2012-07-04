@@ -1,5 +1,5 @@
 #include "WavePackLine.h"
-
+#include "log.h"
 t_WPLineMono::t_WPLineMono(const t_MeanFlow& a_fld, t_StabSolver& a_stab_solver, t_EigenGS& a_gs_solver)
 :t_WavePackLine(a_fld, a_stab_solver, a_gs_solver){}
 
@@ -48,7 +48,9 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 		_stab_solver.calcGroupVelocity(new_wave_chars);
 		new_wave_chars.set_scales(_stab_solver.scales());
 		//debug msg
-		std::cout<<"nearest node:"<<new_rec_nrst_ind<<std::endl;
+		t_Log log;
+		log<<"nearest node:"<<new_rec_nrst_ind<<"\n";
+		log<<"wchars loc  :"<<new_wave_chars<<"\n";
 		//~debug msg
 		_add_node(*pLine, new_rec_mf, _stab_solver.popGlobalWaveChars(), new_rec_nrst_ind);
 		last_wchars_loc = new_wave_chars;
