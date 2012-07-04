@@ -4,11 +4,37 @@
 #include "EigenGs.h"
 #include "common_data.h"
 
+#include "log.h"
+
 using namespace common::cmpnts;
 
-t_TaskManager::t_TaskManager(wxString task_configfile){
-	_init(task_configfile);
-	_initialized = true;
+//----------------------------------------------------------------t_TaskParams
+
+t_TaskParams::t_TaskParams(wxString a_case_dir)
+:t_ComponentParamsGroup(_T("")){
+	_init_params_map();
+	// decide what to do later
+	case_dir = a_case_dir;
+	cmpnt_file = _T("main.cmpnt");
+	config_file= _T("main.ini");
+	log_file = _T("log.txt");
+};
+
+void t_TaskParams::_init_params_map(){};
+
+//----------------------------------------------------------------t_TaskManager
+
+t_TaskManager::t_TaskManager(wxString case_dir):_params(case_dir){
+	if( ! wxFileName::DirExists(case_dir) )
+		if( ! wxFileName::Mkdir(case_dir, 0755) )
+		{
+			wxLogError(_("Can't create case dir '%s'"), case_dir.c_str());
+			exit(EXIT_FAILURE);
+		};
+
+	_init(_params.expand_path(_params.cmpnt_file));
+
+	t_Log::bind(_params.expand_path(_params.log_file));
 };
 
 void t_TaskManager::_init(wxString task_configfile){
@@ -17,13 +43,11 @@ void t_TaskManager::_init(wxString task_configfile){
 	_add_mf(conf);
 	_add_stab_solver(conf);
 	_add_eigen_gs(conf);
+
+	// redirect all logging to $case_dir/log.txt
+	wxString log_path = _params.expand_path(_params.log_file);
 };
 
-void t_TaskManager::initialize(wxString task_configfile){
-	if (!_initialized){
-		_init(task_configfile);
-	};
-};
 wxFileConfig t_TaskManager::_get_config_handle(wxString configfile){
 	return wxFileConfig(
 		_T("SSU"), _T("obraz"),
@@ -70,12 +94,13 @@ void t_TaskManager::_add_component(t_Component* pComp){
 	_mapComponents.insert( std::make_pair(name, pComp) );
 };
 
-void t_TaskManager::load_settings(wxString configfile){
+void t_TaskManager::load_settings(){
+	wxString config_path = _params.expand_path(_params.config_file);
 	std::map<wxString, t_Component*>::iterator it = _mapComponents.begin();
 	while (it!=_mapComponents.end()){
 		try{
 			std::wcout<<"Initializing:"<<it->second->name().c_str()<<std::endl;
-			it->second->initialize(configfile);
+			it->second->initialize(config_path);
 			it++;
 		}catch(const t_EComponent& e){
 			#ifdef _DEBUG
