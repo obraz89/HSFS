@@ -98,8 +98,8 @@ protected:
 	bool _is_inside(const t_Vec3& point, t_GridIndex diag1, t_GridIndex diag2) const;
 	// of 8 vertexes of the box defined by diag1-diag2
 	// choose the closest to the point
-	t_GridIndex _get_nearest_node(const t_Vec3& point, t_GridIndex diag1, t_GridIndex diag2) const;
-	t_GridIndex _get_nearest_index_loc(t_GridIndex start_from, const t_Vec3& point) const;
+	t_GridIndex _get_nearest_node(const t_GeomPoint& point, t_GridIndex diag1, t_GridIndex diag2) const;
+	t_GridIndex _get_nearest_index_loc(t_GridIndex start_from, const t_GeomPoint& point) const;
 	t_GridIndex _get_base_ind(t_GridIndex diag1, t_GridIndex diag2) const;
 	bool _check_ind(const t_GridIndex& ind) const;
 	void _calc_gridline_dirs(t_Vec3 &i_dir, t_Vec3& j_dir, t_Vec3& k_dir, t_GridIndex ind) const;
@@ -183,8 +183,8 @@ public:
 	t_MFHSFLOW3D();
 	t_MFHSFLOW3D(const wxString& configfile);
 	void initialize( const wxString& configfile );
-	//virtual void load_settings(const wxString& file) throw(t_EComponent);
-	//virtual void save_settings(const wxString& file) throw(t_EComponent);
+	//virtual void load_settings(const wxString& file) throw(t_GenException);
+	//virtual void save_settings(const wxString& file) throw(t_GenException);
 	const t_MFParams& base_params() const;
 };
 
