@@ -13,10 +13,10 @@
 #include "wx/fileconf.h"
 
 #define ssuTHROW(...)  \
-	throw t_EComponent( wxString::Format(__VA_ARGS__), __TFILE__, __LINE__ )
+	throw t_GenException( wxString::Format(__VA_ARGS__), __TFILE__, __LINE__ )
 //------
 
-class t_EComponent
+class t_GenException
 {
 protected:
 	wxString    _what;
@@ -24,7 +24,7 @@ protected:
 	int         _line;
 
 public:
-	t_EComponent(const wxString& what, const wxChar* szFile,  const int line)
+	t_GenException(const wxString& what, const wxChar* szFile,  const int line)
 		: _what(what), _file(szFile), _line(line) {   }
 
 	wxString what() const  {  return _what;  }
@@ -34,6 +34,13 @@ public:
 	{
 		return _what + _(". In file: ")+_file + _(", line: ")+wxString::Format(_T("%d"), _line);
 	}
+	friend std::ostream& operator<<(std::ostream& ostr, const t_GenException& x){
+		#ifdef _DEBUG
+			return ostr<<"Exception"<<x.what_detailed();
+		#else
+			return ostr<<"Exception"<<x.what();
+		#endif
+	};
 };
 
 
@@ -248,7 +255,7 @@ private:
 	wxString m_description;
 	std::map<wxString, t_ComponentParam> mapParams;
 
-	const t_ComponentParam& get_raw_param(const wxString& parName) const throw(t_EComponent);
+	const t_ComponentParam& get_raw_param(const wxString& parName) const throw(t_GenException);
 
 public:
 	t_ComponentParamsGroup(){ };
@@ -284,9 +291,9 @@ public:
 		mapParams.insert( std::make_pair(parName, t_ComponentParam(value, aDescr)) );
 	}
 
-	double get_real_param(const char* pszName) const throw(t_EComponent);
-	int get_int_param(const char* pszName) const throw(t_EComponent);
-	const wxString& get_string_param(const char* pszName, wxString* pRefName = NULL) const throw(t_EComponent);
+	double get_real_param(const char* pszName) const throw(t_GenException);
+	int get_int_param(const char* pszName) const throw(t_GenException);
+	const wxString& get_string_param(const char* pszName, wxString* pRefName = NULL) const throw(t_GenException);
 };
 
 */
@@ -304,7 +311,7 @@ public:
 	const wxString& spec() const{return _spec;};
 
 
-	t_Component(wxString settingsFN, wxString name,wxString spec=wxEmptyString) throw(t_EComponent)
+	t_Component(wxString settingsFN, wxString name,wxString spec=wxEmptyString) throw(t_GenException)
 	{
 		_paramsFileName=settingsFN;
 		_name = name;
@@ -317,14 +324,14 @@ public:
 		return _mapParamsGrps;
 	}*/
 	/*
-	t_ComponentParamsGroup& get_settings_grp(const char* pszGrpName) throw(t_EComponent);
+	t_ComponentParamsGroup& get_settings_grp(const char* pszGrpName) throw(t_GenException);
 
 	virtual wxString get_name() const = 0;
 	virtual wxString get_description() const = 0;
 	*/
 	virtual void initialize(const wxString& file)=0;
-	virtual void load_settings(const wxString& file) throw(t_EComponent);
-	virtual void save_settings(const wxString& file) throw(t_EComponent);
+	virtual void load_settings(const wxString& file) throw(t_GenException);
+	virtual void save_settings(const wxString& file) throw(t_GenException);
 };
 
 #endif // __MY_COMPONENT

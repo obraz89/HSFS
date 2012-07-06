@@ -39,7 +39,7 @@ void t_Component::save_settings(const wxString& file){
 	// do smth
 };
 /*
-t_ComponentParamsGroup& t_Component::get_settings_grp(const char* pszGrpName) throw(t_EComponent)
+t_ComponentParamsGroup& t_Component::get_settings_grp(const char* pszGrpName) throw(t_GenException)
 {
 	wxString grpName = wxString::FromAscii(pszGrpName);
 	std::map<wxString, t_ComponentParamsGroup>::iterator it = _mapParamsGrps.find(grpName);
@@ -53,7 +53,7 @@ t_ComponentParamsGroup& t_Component::get_settings_grp(const char* pszGrpName) th
 
 /*
 
-void t_Component::load_settings(const wxString& fn) throw(t_EComponent)
+void t_Component::load_settings(const wxString& fn) throw(t_GenException)
 {
 	if( fn.IsEmpty() )  return;
 
@@ -105,7 +105,7 @@ void t_Component::load_settings(const wxString& fn) throw(t_EComponent)
 */
 
 /*
-void t_Component::save_settings(const wxString& file) throw(t_EComponent)
+void t_Component::save_settings(const wxString& file) throw(t_GenException)
 {
 	const wxString& fn = (file.IsEmpty()) ?_paramsFileName :file;
 	if( fn.IsEmpty() )
@@ -202,7 +202,7 @@ void t_ComponentParamsGroup::load_via_params(wxString configfile){
 
 /*
 const t_ComponentParam&
-t_ComponentParamsGroup::get_raw_param(const wxString& parName) const throw(t_EComponent)
+t_ComponentParamsGroup::get_raw_param(const wxString& parName) const throw(t_GenException)
 {
 	std::map<wxString, t_ComponentParam>::const_iterator it = mapParams.find(parName);
 	if( it == mapParams.end() )
@@ -216,7 +216,7 @@ t_ComponentParamsGroup::get_raw_param(const wxString& parName) const throw(t_ECo
 */
 //-----------------------------------------------------------------------------
 /*
-double t_ComponentParamsGroup::get_real_param(const char* pszName) const throw(t_EComponent)
+double t_ComponentParamsGroup::get_real_param(const char* pszName) const throw(t_GenException)
 {
  	wxString parName = wxString::FromAscii(pszName);
 	const t_ComponentParam& param = get_raw_param(parName);
@@ -234,7 +234,7 @@ double t_ComponentParamsGroup::get_real_param(const char* pszName) const throw(t
 */
 
 /*
-int t_ComponentParamsGroup::get_int_param(const char* pszName) const throw(t_EComponent)
+int t_ComponentParamsGroup::get_int_param(const char* pszName) const throw(t_GenException)
 {
 	wxString parName = wxString::FromAscii(pszName);
 	const t_ComponentParam& param = get_raw_param(parName);
@@ -256,7 +256,7 @@ int t_ComponentParamsGroup::get_int_param(const char* pszName) const throw(t_ECo
  *  @param pRefName  try to dereference parameter and assign pRefName if succeeded
  */
 /*
-const wxString& t_ComponentParamsGroup::get_string_param(const char* pszName, wxString* pRefName) const throw(t_EComponent)
+const wxString& t_ComponentParamsGroup::get_string_param(const char* pszName, wxString* pRefName) const throw(t_GenException)
 {
 	wxString parName = wxString::FromAscii(pszName);
 	const t_ComponentParam& par = get_raw_param(parName);
@@ -273,7 +273,7 @@ const wxString& t_ComponentParamsGroup::get_string_param(const char* pszName, wx
 				const t_ComponentParam& par2 = get_raw_param(*pRefName);
 				if( ! par2.get_value(val) )  goto err;
 			}
-			catch(const t_EComponent& e)
+			catch(const t_GenException& e)
 			{
 				*pRefName = wxEmptyString;
 			}
