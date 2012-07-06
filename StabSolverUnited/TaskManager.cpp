@@ -102,7 +102,7 @@ void t_TaskManager::load_settings(){
 			std::wcout<<"Initializing:"<<it->second->name().c_str()<<std::endl;
 			it->second->initialize(config_path);
 			it++;
-		}catch(const t_EComponent& e){
+		}catch(const t_GenException& e){
 			#ifdef _DEBUG
 				wxLogError(e.what_detailed());
 			#else
