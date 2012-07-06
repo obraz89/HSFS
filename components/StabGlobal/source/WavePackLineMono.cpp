@@ -26,6 +26,8 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 	// march until neutral point
 	// or field boundary is reached
 	bool proceed_cond;
+	// SUPER DEBUG VAL
+	int DEBUG_IND = 0;
 	do{
 		t_WPLineRec& last_rec = pLine->back();
 		double dt = 0.01*time_direction;
@@ -47,7 +49,6 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 		_stab_solver.getEigenWFixed(wr, new_wave_chars, t_StabSolver::A_MODE);
 		_stab_solver.calcGroupVelocity(new_wave_chars);
 		new_wave_chars.set_scales(_stab_solver.scales());
-		//debug msg
 		t_Log log;
 		log<<"nearest node:"<<new_rec_nrst_ind<<"\n";
 		log<<"wchars loc  :"<<new_wave_chars<<"\n";
@@ -60,8 +61,22 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 
 void t_WPLineMono::retrace_fixed_beta(t_Index a_start_from, t_WCharsLoc a_init_wave){
 	_line.clear();
-	_retrace(a_start_from, a_init_wave, DOWNSTREAM);
-	_retrace(a_start_from, a_init_wave, UPSTREAM);
+	t_Log log;
+	try{
+		_retrace(a_start_from, a_init_wave, DOWNSTREAM);
+	}catch(const t_GenException& x){
+		log<<x;
+	}catch(const t_StabSolver::t_UnPhysWave& x){
+		log<<"Unphys wave during downstream retrace, truncated!\n";
+	};
+	try{
+		_retrace(a_start_from, a_init_wave, UPSTREAM);
+	}catch(const t_GenException& x){
+		log<<x;
+	}catch(const t_StabSolver::t_UnPhysWave& x){
+		log<<"Unphys wave during upstream retrace, truncated!\n";
+	};
+
 	std::vector<t_WPLineRec>::const_iterator it;
 	for (it=_line_up.end(); it>_line_up.begin(); --it){
 		_line.push_back(*it);
