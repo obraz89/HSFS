@@ -1,3 +1,6 @@
+#ifndef __STRING_CONV
+#define __STRING_CONV
+
 #include <iostream>
 #include <stdlib.h>
 #include <string>
@@ -21,4 +24,4 @@ inline std::string wx_to_stdstr(const wxString& wx_str){
 	return ret;
 };
 
-
+#endif // __STRING_CONV
