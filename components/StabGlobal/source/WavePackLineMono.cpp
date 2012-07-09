@@ -77,10 +77,11 @@ void t_WPLineMono::retrace_fixed_beta(t_Index a_start_from, t_WCharsLoc a_init_w
 		log<<"Unphys wave during upstream retrace, truncated!\n";
 	};
 
-	std::vector<t_WPLineRec>::const_iterator it;
-	for (it=_line_up.end(); it>_line_up.begin(); --it){
-		_line.push_back(*it);
+	std::vector<t_WPLineRec>::const_reverse_iterator rit;
+	for (rit=_line_up.rbegin(); rit<_line_up.rend(); rit++){
+		_line.push_back(*rit);
 	};
+	std::vector<t_WPLineRec>::const_iterator it;
 	for (it=_line_down.begin(); it<_line_down.end(); it++){
 		_line.push_back(*it);
 	};
@@ -88,4 +89,20 @@ void t_WPLineMono::retrace_fixed_beta(t_Index a_start_from, t_WCharsLoc a_init_w
 
 void t_WPLineMono::retrace_free_beta(t_MeanFlow::t_GridIndex start_from, t_WCharsLoc init_wave){
 
-}
+};
+
+void t_WPLineMono::write_sigmas(const std::string& fname) const{
+	std::ofstream fstr(&fname[0]);
+	fstr<<"s\tx\ty\tz\tsigma\n";
+	std::vector<t_WPLineRec>::const_iterator it;
+	for (it=_line.begin(); it<_line.end(); it++){
+		const t_WPLineRec& rec = *it;
+		// hmm
+		double s = _rFldMF.calc_distance(rec.nearest_node, t_Index(0,0,0));
+		const t_WCharsGlobDim& wave = rec.wave_chars.to_dim();
+		// Gaster transform
+		// TODO: think how to implement Gaster nicely
+		double sigma = wave.w.imag()/(wave.vga.real());
+		fstr<<s<<"\t"<<rec.mean_flow.x<<"\t"<<rec.mean_flow.y<<"\t"<<rec.mean_flow.z<<"\t"<<sigma<<"\n";	
+	};
+};
