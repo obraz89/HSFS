@@ -52,6 +52,7 @@ public:
 // monochromatic wave packet trajectory
 class  t_WPLineMono: public t_WavePackLine{
 	void _retrace(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction);
+	// TODO: this is ugly
 	bool _proceed_retrace(t_Index cur_ind, t_WCharsLoc wave){
 		return ((cur_ind.i>10)
 			&&(cur_ind.i<_rFldMF.base_params().Nx-10)
@@ -61,7 +62,7 @@ public:
 	t_WPLineMono(const t_MeanFlow&, t_StabSolver& a_stab_solver, t_EigenGS& a_gs_solver);
 	void retrace_fixed_beta(t_Index start_from, t_WCharsLoc init_wave);
 	void retrace_free_beta(t_Index start_from, t_WCharsLoc init_wave);
-	void write_sigmas(const std::string& fname) const;
+	void print_to_file(const std::string& fname) const;
 };
 // max increment wave packet trajectory
 class  t_WPLineMax: public t_WavePackLine{

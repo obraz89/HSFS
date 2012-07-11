@@ -91,18 +91,32 @@ void t_WPLineMono::retrace_free_beta(t_MeanFlow::t_GridIndex start_from, t_WChar
 
 };
 
-void t_WPLineMono::write_sigmas(const std::string& fname) const{
+void t_WPLineMono::print_to_file(const std::string& fname) const{
+	const t_MFParams& Params = _rFldMF.base_params();
 	std::ofstream fstr(&fname[0]);
-	fstr<<"s\tx\ty\tz\tsigma\n";
+	fstr<<"s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tc[]\tNju[Hz]\n";
 	std::vector<t_WPLineRec>::const_iterator it;
+	double n_factor=0.0;
+	double s_prev=0.0, s=0.0;
+	const t_Index& first_ind = _line.begin()->nearest_node;
 	for (it=_line.begin(); it<_line.end(); it++){
 		const t_WPLineRec& rec = *it;
-		// hmm
-		double s = _rFldMF.calc_distance(rec.nearest_node, t_Index(0,0,0));
-		const t_WCharsGlobDim& wave = rec.wave_chars.to_dim();
+		s_prev = s;
+		// TODO: fix this for 3D configurations
+		// calc_distance_along_surf !!!
+		s = Params.L_ref*
+			_rFldMF.calc_distance(rec.nearest_node, t_Index(0,0,0));
+		const t_WCharsGlobDim& dim_wave = rec.wave_chars.to_dim();
 		// Gaster transform
 		// TODO: think how to implement Gaster nicely
-		double sigma = wave.w.imag()/(wave.vga.real());
-		fstr<<s<<"\t"<<rec.mean_flow.x<<"\t"<<rec.mean_flow.y<<"\t"<<rec.mean_flow.z<<"\t"<<sigma<<"\n";	
+		double sigma = dim_wave.w.imag()/(dim_wave.vga.real());
+		// TODO: second order integration
+		n_factor+=sigma*(s - s_prev);
+		fstr<<s<<"\t"<<Params.L_ref*rec.mean_flow.x
+			<<"\t"<<Params.L_ref*rec.mean_flow.y
+			<<"\t"<<Params.L_ref*rec.mean_flow.z
+			<<"\t"<<sigma<<"\t"<<n_factor
+			<<"\t"<<rec.wave_chars.vga.real()	// TODO:|v| or real(v) ???
+			<<"\t"<<dim_wave.w.real()/(2000.0*3.141592653)<<"\n";	
 	};
 };
