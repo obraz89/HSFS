@@ -39,7 +39,7 @@ public:
 	inline double get_y(int j) const{return _y[j];};
 	void set_rec(t_Rec val, int j_node);
 	inline int size() const {return _nnodes;};
-	virtual void initialize(int a_i, int a_k)=0;
+	virtual void initialize(int a_i, int a_k, double a_thickCoef)=0;
 
 	virtual ~t_Profile();
 };

@@ -3,23 +3,28 @@
 t_ProfileNS::t_ProfileNS(const t_MeanFlow& a_rFld):t_Profile(a_rFld, 0){};
 t_ProfileNS::~t_ProfileNS(){};
 
-void t_ProfileNS::initialize(int a_i , int a_k){
+void t_ProfileNS::initialize(int a_i , int a_k, double a_thick_coef){
+
 	_i = a_i;
 	_k = a_k;
 	_bl_bound_ind = _rFld.get_bound_index(a_i, a_k);
-	// empiric  - 3 thickn of BL to be used in stab comps
-	// !!!
-	double bl_thick = _rFld.calc_distance(t_Index(a_i, _bl_bound_ind, a_k), 
-										  t_Index(a_i, 0, a_k));
-	double prof_thick = 3.0*bl_thick;
+
+	double bl_thick = 
+		_rFld.calc_distance(t_Index(a_i, _bl_bound_ind, a_k), 
+						    t_Index(a_i, 0, a_k));
+
 	double cur_y = bl_thick;
 	int cur_y_ind = _bl_bound_ind;
+	double prof_thick = a_thick_coef*bl_thick;
+
 	const t_MFParams& Params = _rFld.base_params();
+
 	while((cur_y<prof_thick)&&(cur_y_ind<Params.Ny)){
 		cur_y_ind++;
 		cur_y = _rFld.calc_distance(t_Index(a_i, cur_y_ind, a_k), 
 									t_Index(a_i, 0, a_k));
 	};
+
 	this->_resize(cur_y_ind);
 	const t_MeanFlow::t_Rec& bound_rec = _rFld.get_rec(a_i, cur_y_ind, a_k);
 	const t_MeanFlow::t_Rec& surface_rec = _rFld.get_rec(a_i, 0, a_k);

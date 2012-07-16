@@ -11,7 +11,7 @@ class  t_ProfileNS : public t_Profile{
 	int _i, _k, _bl_bound_ind;
 public:
 	//int iMF, kMF;
-	void initialize(int a_i, int a_k);
+	void initialize(int a_i, int a_k, double a_thick_coef);
 	t_Rec get_bl_bound_rec();
 	double xDist;
 	t_ProfileNS(const t_MeanFlow& rFld);

@@ -11,7 +11,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	if (nnodes>0){
 		_resize(nnodes);
 	}else{
-		_resize(a_rProfNS._nnodes);
+		_resize(a_rProfNS._nnodes);	// TODO: fix : should be stab_params nnodes default
 	};
 	// interpolate to uniform grid and
 	// non-dimensionalize y and all derivs
@@ -99,13 +99,13 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	}
 };
 
-void t_ProfileStab::initialize(int a_i, int a_k, int nnodes){
+void t_ProfileStab::initialize(int a_i, int a_k, double a_thick_coef,int nnodes){
 	t_ProfileNS ns_prof(_rFld);
-	ns_prof.initialize(a_i, a_k);
+	ns_prof.initialize(a_i, a_k, a_thick_coef);
 	this->initialize(ns_prof, nnodes);
 };
 
-void t_ProfileStab::initialize(int a_i, int a_k){
-	initialize(a_i, a_k, 0);
+void t_ProfileStab::initialize(int a_i, int a_k, double a_thick_coef){
+	initialize(a_i, a_k, a_thick_coef, 0);
 }
 

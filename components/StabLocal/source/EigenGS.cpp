@@ -110,7 +110,7 @@ void t_EigenGS::setContext(const int a_i, const int a_k,
 	_alpha = a_alpha;
 	_beta = a_beta;
 	t_ProfileNS profNS(_rFldNS);
-	profNS.initialize(a_i, a_k);
+	profNS.initialize(a_i, a_k, _params.ThickCoef);
 	_grid.resize(_params.NNodes);
 	_profStab.initialize(profNS, _params.NNodes);
 	

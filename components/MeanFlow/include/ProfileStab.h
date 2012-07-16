@@ -20,8 +20,8 @@ public:
 	inline const t_StabScales& scales() const{return _scales;};
 	t_ProfileStab(const t_MeanFlow& a_rFld);
 	void initialize(t_ProfileNS& a_rProfNS, int nnodes=0);
-	void initialize(int a_i, int a_k, int nnodes);
-	void initialize(int a_i, int a_k);
+	void initialize(int a_i, int a_k, double a_thick_coef, int nnodes);
+	void initialize(int a_i, int a_k, double a_thick_coef);
 	inline t_SqMat3 getJac() const{return _jacToLocalRF;};
 	~t_ProfileStab();
 };

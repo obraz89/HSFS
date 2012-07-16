@@ -573,7 +573,7 @@ void t_StabSolver::set3DContext
 	_math_solver.resizeGrid(a_nnodesStab);
 
 	t_ProfileNS profNS(_rFldNS);
-	profNS.initialize(i_ind, k_ind);
+	profNS.initialize(i_ind, k_ind, _params.ThickCoef);
 	_profStab.initialize(profNS, a_nnodesStab);
 
 	if (_stab_matrix.nCols!=STAB_MATRIX_DIM){
