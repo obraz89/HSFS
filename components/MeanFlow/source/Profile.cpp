@@ -1,4 +1,5 @@
 #include "Profile.h"
+#include "log.h"
 t_Profile::t_Profile(const t_MeanFlow& a_rFld,const int a_nnodes):
 _rFld(a_rFld),_nnodes(a_nnodes){
 
@@ -36,10 +37,28 @@ void t_Profile::_resize(int new_nnodes){
 };
 
 t_Profile::t_Rec t_Profile::get_rec(int j) const{
+	t_Log log;
+	if (j<0) {
+		log<<"ERROR: getting record in profile under surface!\n";
+		return _extract(0);
+	};
+	if (j>=size()){
+		log<<"ERROR: getting record in profile above boundary!\n";
+		return _extract(size()-1);
+	}; 
 	return _extract(j);
 };
 
 t_Profile::t_Rec t_Profile::get_rec(double y) const{
+	t_Log log;
+	if (y<0.0) {
+		log<<"ERROR: getting record in profile under surface!\n";
+		return _extract(0.0);
+	};
+	if (y>_y.back()){
+		log<<"ERROR: getting record in profile above boundary!\n";
+		return _extract(size()-1);
+	}; 
 	return _extract(y);
 };
 
