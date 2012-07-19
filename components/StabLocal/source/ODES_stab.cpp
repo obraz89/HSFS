@@ -10,7 +10,7 @@ bool t_StabSolver::t_StabODES::needOrtho(const t_Matrix& a_cur_sol){
 	//debug
 	double max_norm = 0.0;
 	double min_norm = 1.0e+12;
-	for (int i=0; i<a_cur_sol.nCols; i++){
+	for (int i=0; i<a_cur_sol.nCols(); i++){
 		double cur_norm = a_cur_sol[i].norm();
 		if (cur_norm<min_norm){
 			min_norm = cur_norm;
@@ -68,7 +68,7 @@ t_Complex t_StabSolver::t_StabODES::getResidual3D(){
             mat[i][2] = wall_func[i][2];
             mat[i][3] = wall_func[i][6];
 	}
-	resid_coefs = mat.inverse().mul(rhs);
+	resid_coefs = mat.inverse()*rhs;
 	t_Complex resid(0.0);
 	for (int i=0; i<4; i++){
 		resid+=resid_coefs[0][i]*wall_func[i][4];

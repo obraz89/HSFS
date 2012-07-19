@@ -292,7 +292,7 @@ double t_MeanFlow::calc_distance(const t_GridIndex& a, const t_GridIndex& b) con
 
 void t_MeanFlow::_calc_dir_vec(t_Vec3& vec, t_Index ind, ALONG_LINE along_line) const{
 	if (!_check_ind(ind)){
-		ssuTHROW(_("MF Index Out of Range"));
+		ssuGENTHROW(_("MF Index Out of Range"));
 	};
 	t_Rec dd;
 	const t_MFParams& Params = this->base_params();
@@ -451,7 +451,7 @@ t_Index t_MeanFlow::_get_base_ind(t_Index diag1, t_Index diag2) const{
 t_Index t_MeanFlow::_get_nearest_index_loc
 (t_Index start_from, const t_GeomPoint& point) const{
 	if (!_check_ind(start_from)){
-		ssuTHROW(_("MF:Bad start index in _get_nearest_index_loc"));
+		ssuGENTHROW(_("MF:Bad start index in _get_nearest_index_loc"));
 	};
 	const t_Vec3 p_vec = point.vec();
 	t_Index cur_ind = start_from;

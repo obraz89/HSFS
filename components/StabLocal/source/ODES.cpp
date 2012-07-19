@@ -39,7 +39,7 @@ void t_ODES::solve(){
 		if (this->needOrtho(solution[i])){
 			this->ortho(i);
 			// ortho solution
-			this->solution[i] = this->solution[i].mul(this->_orthStack.back().orthMatrix);
+			this->solution[i] = this->solution[i]*(this->_orthStack.back().orthMatrix);
 		};
 		// get solution
 		for (int j=0; j<this->_dim;j++){
@@ -51,13 +51,13 @@ void t_ODES::solve(){
 
 t_Complex t_ODES::detGS(const t_Matrix& sol, const int& rank) const{
 	// exceptions 
-	if (rank>sol.nCols) std::cerr<<"GS determinant error: Rank exceeds task dimension\n";
+	if (rank>sol.nCols()) std::cerr<<"GS determinant error: Rank exceeds task dimension\n";
 	if (rank<0) std::cerr<<"GS determinant error: Rank < 0 \n";
 	if (rank==0) return 1.0;
 	t_SqMatrix mat(rank);
 	for (int i=0; i<rank; i++){
 		for (int j=0; j<=i; j++){
-			t_Complex val = sol[i].scalProd(sol[j]);
+			t_Complex val = t_Vec::dot(sol[i], sol[j]);
 			// Ermith Matrix
 			mat[i][j]= val;
 			mat[j][i]= std::conj(val);	
@@ -74,12 +74,12 @@ t_Complex t_ODES::minorGS(const t_Matrix& vectors, const int& dim, const int& nE
 	t_SqMatrix ret(dim);
 	for (int i=0; i<nExcludeCol; i++){
 		for(int j=0; j<dim; j++){
-			ret[i][j] = vectors[i].scalProd(vectors[j]);
+			ret[i][j] = t_Vec::dot(vectors[i], vectors[j]);
 		}
 	}
 	for (int i=nExcludeCol+1; i<=dim; i++){
 		for(int j=0; j<dim; j++){
-			ret[i-1][j] = vectors[i].scalProd(vectors[j]);
+			ret[i-1][j] = t_Vec::dot(vectors[i], vectors[j]);
 		}
 	}
 	return ret.det();
@@ -119,14 +119,14 @@ std::vector<t_Matrix> t_ODES::reconstruct(){
 	trans.setToUnity();
 	for (int i=0; i<_nnodes-1; i++){
 		if (i==this->_orthStack[orthStackInd].ind){
-			direct = direct.mul(_orthStack[i].orthMatrix);
+			direct = direct*(_orthStack[i].orthMatrix);
 			trans = direct.inverse();		
 			orthStackInd++;
 		}
-			ret[i] = solution[i].mul(trans);
+			ret[i] = solution[i]*(trans);
 	}
 
 	// reconstruct last record (for which we don't do ortho)
-	ret[_nnodes-1] = solution[_nnodes-1].mul(trans);
+	ret[_nnodes-1] = solution[_nnodes-1]*(trans);
 	return ret;
 }

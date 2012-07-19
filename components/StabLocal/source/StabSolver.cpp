@@ -477,7 +477,7 @@ t_Vec t_StabSolver::_formRHS3D(const double& a_y, const t_Vec& a_vars){
 	// vars used in stability matrix 
 	
 	// after multiplication we have a rhs vector - matrix 1x8
-	t_Matrix output = _stab_matrix.mul(input); 
+	t_Matrix output = _stab_matrix*input; 
 	return output[0];
 };
 
@@ -576,7 +576,7 @@ void t_StabSolver::set3DContext
 	profNS.initialize(i_ind, k_ind, _params.ThickCoef);
 	_profStab.initialize(profNS, a_nnodesStab);
 
-	if (_stab_matrix.nCols!=STAB_MATRIX_DIM){
+	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){
 		_stab_matrix.resize(STAB_MATRIX_DIM);
 	}
 

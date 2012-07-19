@@ -493,6 +493,10 @@
 					RelativePath="..\components\SmallMat\include\math_operands.h"
 					>
 				</File>
+				<File
+					RelativePath="..\components\SmallMat\include\math_operands_old.h"
+					>
+				</File>
 			</Filter>
 			<Filter
 				Name="MeanFlow"
@@ -583,6 +587,10 @@
 				</File>
 				<File
 					RelativePath="..\shared\include\EnvInit.h"
+					>
+				</File>
+				<File
+					RelativePath="..\shared\include\gen_exception.h"
 					>
 				</File>
 				<File
