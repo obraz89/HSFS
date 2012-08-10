@@ -466,25 +466,25 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 	return;
 };*/
 
-t_Vec t_StabSolver::_formRHS3D(const double& a_y, const t_Vec& a_vars){
+t_VecCmplx t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars){
 	// TODO: check input vector dimension and
 	// if it is not of 8 elems throw mega-exception)
 	_setStabMatrix3D(a_y);
-	t_Matrix input(1, 8);
+	t_MatCmplx input(1, 8);
 	for (int i=0; i<8; i++){
 		input[0][i] = a_vars[i];
 	};
 	// vars used in stability matrix 
 	
 	// after multiplication we have a rhs vector - matrix 1x8
-	t_Matrix output = _stab_matrix*input; 
+	t_MatCmplx output = _stab_matrix*input; 
 	return output[0];
 };
 
-t_Matrix t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
-	t_Matrix initial_vectors(4,8);
-	t_SqMatrix b_coef(4);
-	t_Vec lambda(4,0.0);
+t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
+	t_MatCmplx initial_vectors(4,8);
+	t_SqMatCmplx b_coef(4);
+	t_VecCmplx lambda(4,0.0);
 	const double& y_e = _profStab.get_thick();
 	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
 	_setStabMatrix3D(y_e);	

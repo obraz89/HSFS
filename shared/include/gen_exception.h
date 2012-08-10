@@ -1,5 +1,7 @@
 #ifndef __EXCEPTIONS_BASE__
 #define __EXCEPTIONS_BASE__
+#include "wx/string.h"
+#include <wx/wxprec.h>
 #define ssuGENTHROW(...)  \
 	throw t_GenException( wxString::Format(__VA_ARGS__), __TFILE__, __LINE__ )
 
@@ -26,11 +28,17 @@ public:
 		return _what + _(". In file: ")+_file + _(", line: ")+wxString::Format(_T("%d"), _line);
 	}
 	virtual ~t_GenException(){};
-	friend std::ostream& operator<<(std::ostream& ostr, const t_GenException& x){
+
+#ifdef _UNICODE
+	typedef std::wostream std_ostr;
+#else
+	typedef std::ostream std_ostr;
+#endif //UNICODE
+	friend std_ostr& operator<<(std_ostr& ostr, const t_GenException& x){
 		#ifdef _DEBUG
-			return ostr<<"Exception"<<x.what_detailed();
+			return ostr<<"Exception"<<x.what_detailed().c_str();
 		#else
-			return ostr<<"Exception"<<x.what();
+			return ostr<<"Exception"<<x.what().c_str();
 		#endif
 	};
 };

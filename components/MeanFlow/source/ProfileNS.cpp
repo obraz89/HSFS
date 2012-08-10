@@ -33,46 +33,51 @@ void t_ProfileNS::initialize(int a_i , int a_k, double a_thick_coef){
 	// construct normal to a surface - e2':
 	// for now we need gridline j=const to be normal to surface
 	// TODO: make interpolation of field to a normal for arbitrary grid
-	dense_vector<double, _param_fixed_vec3> e1,e2,e3, u_e;
+	t_Vec3Dbl e1,e2,e3, u_e;
+	/*
 	e2[0] = bound_rec.x - surface_rec.x;
 	e2[1] = bound_rec.y - surface_rec.y;
 	e2[2] = bound_rec.z - surface_rec.z;
-	double norm = two_norm(e2);
-	for (int i=0; i<mtl::vector::size(e2); i++){
-		e2[i] = e2[i]/norm;
-	};
+	*/
+	e2 = bound_rec.get_xyz() - surface_rec.get_xyz();
+	//double norm = two_norm(e2);
+	e2.normalize();
 	// construct e1': along inviscid streamline
 	// be sure e1'*e2'=0:
 	// e1' = norm(Ue - (e2'*Ue));
 
-	// I hate this syntax
-	u_e = bound_rec.u, bound_rec.v, bound_rec.w;
+	u_e = bound_rec.get_uvw();
 	e1 = u_e - vector::dot(e2, u_e)*e2;
-	norm = two_norm(e1);
-	for (int i=0; i<mtl::vector::size(e1); i++){
-		e1[i] = e1[i]/norm;
-	};
+	e1.normalize();
 	// e3' = [e1' x e2']
 	e3 = vector::cross(e1, e2);
 	// ordinary orthogonal 
 	// transformation matrix S
 	// e' = eS
+	/*
 	_jacToLocalRF = e1[0], e2[0], e3[0],
 					e1[1], e2[1], e3[1],
 					e1[2], e2[2], e3[2];
+	*/
+	_jacToLocalRF[0] = e1;
+	_jacToLocalRF[1] = e2;
+	_jacToLocalRF[2] = e3;
 	//
 // transform vector fields and coordinates
 // to a new reference frame
-	dense_vector<double, _param_fixed_vec3> u_xyz, u_ked, r_xyz, dr_xyz, r_ked, r_xyz_base;
-	t_SqMat3 inv_jac;
-	inv_jac = mtl::matrix::inv(_jacToLocalRF);
-	r_xyz_base = surface_rec.x, surface_rec.y, surface_rec.z;
+	t_Vec3Dbl u_xyz, u_ked;
+	t_GeomPoint r_xyz_base, r_xyz, dr_xyz, r_ked;
+	t_SqMat3Dbl inv_jac;
+	inv_jac = _jacToLocalRF.inverse();
+	r_xyz_base = surface_rec.get_xyz();
 	for (int j=0; j<this->size(); j++){
 		const t_MeanFlow::t_Rec& mf_rec = _rFld.get_rec(a_i, j, a_k);
-		r_xyz = mf_rec.x, mf_rec.y, mf_rec.z;
-		dr_xyz = r_xyz - r_xyz_base;
-		r_ked = inv_jac*dr_xyz;
-		u_xyz = mf_rec.u, mf_rec.v, mf_rec.w;
+		r_xyz = mf_rec.get_xyz();
+		// TODO: What The Fuck??? I want 
+		// dr_xyz = r_xyz - r_xyz_base
+		(t_Vec3Dbl&)dr_xyz = r_xyz - r_xyz_base;
+		(t_Vec3Dbl&)r_ked = inv_jac*dr_xyz;
+		u_xyz = mf_rec.get_uvw();
 		u_ked = inv_jac*u_xyz;
 		
 		// convention : to make y = O(1)

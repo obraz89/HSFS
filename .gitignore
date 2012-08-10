@@ -2,6 +2,7 @@
 StabSolverUnited/output/*
 StabSolverUnited/__tests__/*
 StabSolverUnited/results/*
+StabSolverUnited/input/*
 _UpgradeReport_Files/*
 x64/*
 # compiler generated (hope will not name source like this)

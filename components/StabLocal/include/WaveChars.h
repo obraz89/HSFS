@@ -19,8 +19,9 @@ class  t_WaveChars{
 protected:
 	t_StabScales _scales;
 	void _to_dim(t_WaveChars& dim) const;
-	t_WaveChars& _set_vals(const t_CompVec3& k, 
-		const t_CompVec3& vg, 
+	t_WaveChars& _set_vals(
+		const t_Vec3Cmplx& k, 
+		const t_Vec3Cmplx& vg, 
 		t_CompVal a_w, 
 		const t_ProfileStab& prof_stab);
 public:
@@ -30,19 +31,19 @@ public:
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
 	friend inline std::ostream& operator<<(std::ostream& str, t_WaveChars ww){
-		str<<"ReStab:"<<std_manip::format_fixed_dbl(ww.scales().ReStab);
-		str<<"FreqScale:"<<std_manip::format_fixed_dbl(ww.scales().FreqScale());
+		str<<"ReStab:"<<std_manip::std_format_fixed<double>(ww.scales().ReStab);
+		str<<"FreqScale:"<<std_manip::std_format_fixed<double>(ww.scales().FreqScale());
 		str<<std::endl;
 		str.width(4);
-		str<<"a:"<<std_manip::format_fixed_cmplx(ww.a)<<std::endl;
+		str<<"a:"<<std_manip::std_format_fixed<t_Complex>(ww.a)<<std::endl;
 		str.width(4);
-		str<<"b:"<<std_manip::format_fixed_cmplx(ww.b)<<std::endl;
+		str<<"b:"<<std_manip::std_format_fixed<t_Complex>(ww.b)<<std::endl;
 		str.width(4);
-		str<<"w:"<<std_manip::format_fixed_cmplx(ww.w)<<std::endl;
+		str<<"w:"<<std_manip::std_format_fixed<t_Complex>(ww.w)<<std::endl;
 		str.width(4);
-		str<<"vga:"<<std_manip::format_fixed_cmplx(ww.vga)<<std::endl;
+		str<<"vga:"<<std_manip::std_format_fixed<t_Complex>(ww.vga)<<std::endl;
 		str.width(4);
-		str<<"vgb:"<<std_manip::format_fixed_cmplx(ww.vgb)<<std::endl;
+		str<<"vgb:"<<std_manip::std_format_fixed<t_Complex>(ww.vgb)<<std::endl;
 		return str;
 	};
 	void print(){

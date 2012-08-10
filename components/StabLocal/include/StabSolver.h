@@ -31,17 +31,18 @@ class  t_StabSolver: public t_Component{
 		t_StabSolver* _pStab_solver;
 		t_StabODES(); 
 		~t_StabODES();	
-		t_Vec formRHS3D(const double& a_y, const t_Vec& a_var) const;
+		t_VecCmplx formRHS3D(const double& a_y, const t_VecCmplx& a_var) const;
 		virtual t_Complex getResidual3D();
-		void setInitials(t_Matrix a_init_vectors);
-		bool needOrtho(const t_Matrix& a_cur_sol);
+		// TODO:fix param passing by val???
+		void setInitials(t_MatCmplx a_init_vectors);
+		bool needOrtho(const t_MatCmplx& a_cur_sol);
 		void solve();
 	};
 	// algebraic solver
 	t_StabODES _math_solver;
 	t_StabSolverParams _params;
 	// keep current stability_matrix
-	t_SqMatrix _stab_matrix;
+	t_SqMatCmplx _stab_matrix;
 	const t_MeanFlow& _rFldNS; // to get global field params
 	t_ProfileStab _profStab; // current profile
 
@@ -54,15 +55,15 @@ class  t_StabSolver: public t_Component{
 	//const t_SqMatrix& _getStabMatrix3D(const double& a_y) const;
 	void _setStabMatrix3D(const double& a_y);
 	
-	t_Vec _formRHS2D(const double& a_y, const t_Vec& a_var);
+	t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
 	// rhs function by stab matrix
 	// input for ODES
-	t_Vec _formRHS3D(const double& a_y, const t_Vec& a_var);
+	t_VecCmplx _formRHS3D(const double& a_y, const t_VecCmplx& a_var);
 	// forms initial vectors for integration from outside down to wall
 	// 2D
-	t_Matrix _getAsymptotics2D(const t_WCharsLoc& a_waveChars);
+	t_MatCmplx _getAsymptotics2D(const t_WCharsLoc& a_waveChars);
 	// 3D
-	t_Matrix _getAsymptotics3D(const t_WCharsLoc& a_waveChars);
+	t_MatCmplx _getAsymptotics3D(const t_WCharsLoc& a_waveChars);
 
 // Max instab search realization
 	// group velocity computations

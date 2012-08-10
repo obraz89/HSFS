@@ -31,13 +31,13 @@ void t_WPLineMono::_retrace(t_Index start_from, t_WCharsLoc init_wave, t_Directi
 	do{
 		t_WPLineRec& last_rec = pLine->back();
 		double dt = 0.01*time_direction;
-		t_Vec3 vg, dr;
-		vg = last_rec.wave_chars.vga.real(), 
-			 last_rec.wave_chars.vgn.real(), 
-			 last_rec.wave_chars.vgb.real();
-		dr = vg*dt;
+		t_Vec3Dbl vg(
+			last_rec.wave_chars.vga.real(), 
+			last_rec.wave_chars.vgn.real(), 
+			last_rec.wave_chars.vgb.real());
+		t_Vec3Dbl dr = vg*dt;
 		// TODO: IMPORTANT! BE ALWAYS ON SURFACE
-		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+t_GeomPoint(dr); 
+		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
 		t_FldRec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
 		t_Index new_rec_nrst_ind = 
 			_rFldMF.get_nearest_index_loc(last_rec.nearest_node, new_rec_mf);
@@ -65,14 +65,15 @@ void t_WPLineMono::retrace_fixed_beta(t_Index a_start_from, t_WCharsLoc a_init_w
 	try{
 		_retrace(a_start_from, a_init_wave, DOWNSTREAM);
 	}catch(const t_GenException& x){
-		log<<x;
+		// IMPORTANT TODO: deal with unicode at least!!!
+		log<<wx_to_stdstr(x.what());
 	}catch(const t_StabSolver::t_UnPhysWave& x){
 		log<<"Unphys wave during downstream retrace, truncated!\n";
 	};
 	try{
 		_retrace(a_start_from, a_init_wave, UPSTREAM);
 	}catch(const t_GenException& x){
-		log<<x;
+		log<<wx_to_stdstr(x.what());
 	}catch(const t_StabSolver::t_UnPhysWave& x){
 		log<<"Unphys wave during upstream retrace, truncated!\n";
 	};

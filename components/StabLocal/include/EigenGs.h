@@ -37,16 +37,16 @@ class  t_EigenGS: public t_Component{
 	std::vector<t_Complex> _spectrum;
 	std::vector<t_WCharsLoc> _eigens;
 	// realization
-	t_SqMatrix _A, _B, _C, _CW;
+	t_SqMatCmplx _A, _B, _C, _CW;
 	std::vector<t_Complex> _insert_vals;
 	std::vector<int> _insert_inds;
 	void _init_params_grps();
 	int getInternalIndex(const int a_j, const int a_k) const;
 	void getMetricCoefs(const int nnode, double& f1, double& f2, double& f3, const bool a_semi_flag) const;
 	void setMatrices(const int a_nnode, const bool a_semi_flag);
-	void fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
+	void fill_SO_template(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 						  const int a_nnode, const int a_eq_id);
-	void fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
+	void fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 						  const int a_nnode, const int a_eq_id);
 	// 
 	void select();

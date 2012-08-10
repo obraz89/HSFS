@@ -268,7 +268,7 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 
 };
 // a_eq_id={0,1,3,4} <--> {1,2,4,5} - SO
-void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
+void t_EigenGS::fill_SO_template(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 								 const int a_nnode, const int a_eq_id){
 	if (a_nnode==0){
 		std::cerr<<"GS: SO template on bottom boundary!\n";
@@ -363,7 +363,7 @@ void t_EigenGS::fill_SO_template(const t_SqMatrix& a_LMat, const t_SqMatrix& a_M
 // we have only one first order continuity equation 
 // a_eq_id = 2 
 // this template is in staggered point a_nnode - 1/2
-void t_EigenGS::fill_FO_template(const t_SqMatrix& a_MMat, const t_SqMatrix& a_RMat, 
+void t_EigenGS::fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 								 const int a_nnode, const int a_eq_id){
 	bool first_block=false;
 	if (a_nnode==1){
@@ -496,8 +496,8 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	    };
 	  // fill B~ by rows, order must be the same as in A
 
-		t_SqMatrix zero_A(5);
-		t_SqMatrix zero_B(5);
+		t_SqMatCmplx zero_A(5);
+		t_SqMatCmplx zero_B(5);
 	  for (int i=1; i<_params.NNodes; i++){
 		  for (int j=0; j<_params.NVars; j++){
 			  if (j==2){

@@ -13,45 +13,47 @@
 #include "MFParams.h"
 #include "io_helpers.h"
 
+
+/************************************************************************/
+/* Cartesian geometry point (vector)                                    */
+/************************************************************************/
+struct t_GeomPoint : public t_Vec3Dbl{
+public:
+	t_GeomPoint(double x=0.0, double y=0.0, double z=0.0):t_Vec3Dbl(x,y,z){};
+	t_GeomPoint(const t_Vec3Dbl& v):t_Vec3Dbl(v){};
+	// accessors
+	double x() const{return this->operator[](0);};
+	double& x(){return this->operator[](0);};
+	double y() const{return this->operator[](1);};
+	double& y(){return this->operator[](1);};
+	double z() const{return this->operator[](2);};
+	double& z(){return this->operator[](2);}; 
+};
+
 class t_MeanFlow{
 private:
 	int Nx, Ny, Nz;
 public:
-	struct t_GeomPoint{
-		double x, y, z;
-		t_GeomPoint(double a_x, double a_y, double a_z)
-			: x(a_x), y(a_y), z(a_z){};
-		t_GeomPoint(const t_Vec3& raw_p):x(raw_p[0]), y(raw_p[1]), z(raw_p[2]){};
-		t_GeomPoint operator+(const t_GeomPoint& rval)const{
-			t_GeomPoint ret(*this);
-			ret.x+=rval.x;
-			ret.y+=rval.y;
-			ret.z+=rval.z;
-			return ret;
-		};
-		t_Vec3 vec() const{t_Vec3 vec; vec=x,y,z; return vec;};
-	};
 	struct t_Rec{
 	public:
 		double x,y,z,u,v,w,p,t,r;
-		t_Vec3 r_vec() const{t_Vec3 ret; ret = x,y,z;return ret;};
-		t_Vec3 u_vec() const{t_Vec3 ret; ret = u,v,w;return ret;};
 		void set_xyz(t_GeomPoint point){
-			x = point.x;
-			y = point.y;
-			z = point.z;
+			x = point.x();
+			y = point.y();
+			z = point.z();
 		};
 		t_GeomPoint get_xyz() const{return t_GeomPoint(x,y,z);};
+		t_Vec3Dbl get_uvw() const{return t_Vec3Dbl(u,v,w);};
 		friend std::ostream& operator<<(std::ostream& os, t_Rec rec){
-			os<<"x:"<<std_manip::format_fixed_dbl(rec.x)<<
-				"y:"<<std_manip::format_fixed_dbl(rec.y)<<
-				"z:"<<std_manip::format_fixed_dbl(rec.z)<<std::endl
-			  <<"u:"<<std_manip::format_fixed_dbl(rec.u)<<
-			    "v:"<<std_manip::format_fixed_dbl(rec.v)<<
-				"w:"<<std_manip::format_fixed_dbl(rec.w)<<std::endl
-			  <<"p:"<<std_manip::format_fixed_dbl(rec.p)<<
-			    "t:"<<std_manip::format_fixed_dbl(rec.t)<<
-				"r:"<<std_manip::format_fixed_dbl(rec.r)<<std::endl;
+			os<<"x:"<<std_manip::std_format_fixed<double>(rec.x)<<
+				"y:"<<std_manip::std_format_fixed<double>(rec.y)<<
+				"z:"<<std_manip::std_format_fixed<double>(rec.z)<<std::endl
+			  <<"u:"<<std_manip::std_format_fixed<double>(rec.u)<<
+			    "v:"<<std_manip::std_format_fixed<double>(rec.v)<<
+				"w:"<<std_manip::std_format_fixed<double>(rec.w)<<std::endl
+			  <<"p:"<<std_manip::std_format_fixed<double>(rec.p)<<
+			    "t:"<<std_manip::std_format_fixed<double>(rec.t)<<
+				"r:"<<std_manip::std_format_fixed<double>(rec.r)<<std::endl;
 			return os;
 		};
 	};
@@ -92,17 +94,18 @@ protected:
 	bool _allocated;
 	virtual void _allocate(int nx, int ny, int nz);
 	virtual void _init( const wxString& configfile )=0;
-	void _calc_dir_vec(t_Vec3& vec, t_GridIndex ind, ALONG_LINE along_line) const;
+	void _calc_dir_vec(t_VecDbl& vec, t_GridIndex ind, ALONG_LINE along_line) const;
 	// is point inside box defined by its large diag 
 	// diag1-diag2
-	bool _is_inside(const t_Vec3& point, t_GridIndex diag1, t_GridIndex diag2) const;
+	bool _is_inside(const t_Vec3Dbl& point, t_GridIndex diag1, t_GridIndex diag2) const;
 	// of 8 vertexes of the box defined by diag1-diag2
 	// choose the closest to the point
 	t_GridIndex _get_nearest_node(const t_GeomPoint& point, t_GridIndex diag1, t_GridIndex diag2) const;
 	t_GridIndex _get_nearest_index_loc(t_GridIndex start_from, const t_GeomPoint& point) const;
 	t_GridIndex _get_base_ind(t_GridIndex diag1, t_GridIndex diag2) const;
 	bool _check_ind(const t_GridIndex& ind) const;
-	void _calc_gridline_dirs(t_Vec3 &i_dir, t_Vec3& j_dir, t_Vec3& k_dir, t_GridIndex ind) const;
+	void _calc_gridline_dirs(t_VecDbl &i_dir, t_VecDbl& j_dir, 
+							 t_VecDbl& k_dir, t_GridIndex ind) const;
 	t_Rec*** _fld;
 public:
 	t_MeanFlow();
@@ -217,6 +220,5 @@ extern bool operator==(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_Gri
 extern bool operator!=(const t_MeanFlow::t_GridIndex &a, const t_MeanFlow::t_GridIndex &b);
 typedef t_MeanFlow::t_Rec t_FldRec;
 typedef t_MeanFlow::t_GridIndex t_Index;
-typedef t_MeanFlow::t_GeomPoint t_GeomPoint;
 
 #endif //__t_MeanFlow

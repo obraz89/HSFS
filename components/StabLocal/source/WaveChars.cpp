@@ -3,7 +3,7 @@
 
 // ----------------------------------------------- t_WaveChars
 
-t_WaveChars& t_WaveChars::_set_vals(const t_CompVec3& k, const t_CompVec3& vg, t_CompVal a_w, const t_ProfileStab& rProfStab){
+t_WaveChars& t_WaveChars::_set_vals(const t_Vec3Cmplx& k, const t_Vec3Cmplx& vg, t_CompVal a_w, const t_ProfileStab& rProfStab){
 	a=k[0];
 	kn=k[1];
 	b=k[2];
@@ -78,10 +78,10 @@ t_WCharsLoc t_WCharsLocDim::to_nondim(const t_ProfileStab& rProf) const{
 // ----------------------------------------------- t_WCharsGlob
 
 t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars, const t_ProfileStab& profStab){
-	t_CompVec3 k_ked, vg_ked, k_glob, vg_glob;
+	t_Vec3Cmplx k_ked, vg_ked, k_glob, vg_glob;
 	k_ked = waveChars.a, 0, waveChars.b;
 	vg_ked = waveChars.vga, 0, waveChars.vgb;
-	t_SqMat3 jac = profStab.getJac();
+	t_SqMat3Dbl jac = profStab.getJac();
 	k_glob = jac*k_ked;
 	vg_glob = jac*vg_ked;
 	_set_vals(k_glob, vg_glob, waveChars.w, profStab);

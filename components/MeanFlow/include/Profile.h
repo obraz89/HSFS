@@ -16,7 +16,7 @@ protected:
 	std::vector<t_DblVec*> _profiles;
 	int _nnodes;
 	const t_MeanFlow& _rFld;
-	t_SqMat3 _jacToLocalRF;
+	t_SqMat3Dbl _jacToLocalRF;
 	double _interpolate(const double& y, const t_DblVec& arg, const t_DblVec& fun, const int& a_size) const;
 	int _getNearestInd(const double& a_y, const t_DblVec& a_vec) const;
 	void _resize(int new_nnodes);

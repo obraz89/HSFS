@@ -21,7 +21,8 @@ namespace std_manip{
 			:_val(val), _formatter(formatter){};
 		friend std::ostream& operator<<(std::ostream& os, t_Omanip<T> m){return m._formatter(os, m._val);};
 	};
-	t_Omanip<double> inline format_fixed_dbl(double val){return t_Omanip<double>(val,_format_fixed<double>);};
-	t_Omanip<t_Complex> inline format_fixed_cmplx(t_Complex val){return t_Omanip<t_Complex>(val,_format_fixed<t_Complex>);};
+	// TODO:think how to introduce options
+	// and make this all useful)))
+	template<typename T>inline t_Omanip<T> std_format_fixed(T val){return t_Omanip<T>(val,_format_fixed<T>);}; 
 };
 #endif // __IO_HELPERS
