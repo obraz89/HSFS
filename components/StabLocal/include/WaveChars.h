@@ -30,24 +30,26 @@ public:
 	t_CompVal a, kn, b;
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
-	friend inline std::ostream& operator<<(std::ostream& str, t_WaveChars ww){
-		str<<"ReStab:"<<std_manip::std_format_fixed<double>(ww.scales().ReStab);
-		str<<"FreqScale:"<<std_manip::std_format_fixed<double>(ww.scales().FreqScale());
+	friend inline std::wostream& operator<<(std::wostream& str, t_WaveChars ww){
+		str<<_T("ReStab:")<<std_manip::std_format_fixed<double>(ww.scales().ReStab);
+		str<<_T("FreqScale:")<<std_manip::std_format_fixed<double>(ww.scales().FreqScale());
 		str<<std::endl;
 		str.width(4);
-		str<<"a:"<<std_manip::std_format_fixed<t_Complex>(ww.a)<<std::endl;
+		str<<_T("a:")<<std_manip::std_format_fixed<t_Complex>(ww.a)<<std::endl;
 		str.width(4);
-		str<<"b:"<<std_manip::std_format_fixed<t_Complex>(ww.b)<<std::endl;
+		str<<_T("b:")<<std_manip::std_format_fixed<t_Complex>(ww.b)<<std::endl;
 		str.width(4);
-		str<<"w:"<<std_manip::std_format_fixed<t_Complex>(ww.w)<<std::endl;
+		str<<_T("w:")<<std_manip::std_format_fixed<t_Complex>(ww.w)<<std::endl;
 		str.width(4);
-		str<<"vga:"<<std_manip::std_format_fixed<t_Complex>(ww.vga)<<std::endl;
+		str<<_T("vga:")<<std_manip::std_format_fixed<t_Complex>(ww.vga)<<std::endl;
 		str.width(4);
-		str<<"vgb:"<<std_manip::std_format_fixed<t_Complex>(ww.vgb)<<std::endl;
+		str<<_T("vgb:")<<std_manip::std_format_fixed<t_Complex>(ww.vgb)<<std::endl;
 		return str;
 	};
 	void print(){
-		std::cout<<"a:"<<this->a<<std::endl<<"b:"<<this->b<<std::endl<<"w:"<<this->w<<std::endl;
+		std::cout<<_T("a:")<<this->a<<std::endl
+			     <<_T("b:")<<this->b<<std::endl
+				 <<_T("w:")<<this->w<<std::endl;
 	}
 };
 

@@ -74,6 +74,6 @@ public:
 	// max - choose wave with max wi
 	std::vector<t_WCharsLoc> searchInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes=0);
 	t_WCharsLoc searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes=0);
-	void writeSpectrum(const std::string& a_filename);
+	void writeSpectrum(const std::wstring& a_filename);
 };
 #endif // __EigenGs__

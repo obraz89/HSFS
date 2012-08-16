@@ -12,6 +12,7 @@
 #include "component.h"
 #include "MFParams.h"
 #include "io_helpers.h"
+#include "math_operands.h"
 
 
 /************************************************************************/
@@ -44,16 +45,16 @@ public:
 		};
 		t_GeomPoint get_xyz() const{return t_GeomPoint(x,y,z);};
 		t_Vec3Dbl get_uvw() const{return t_Vec3Dbl(u,v,w);};
-		friend std::ostream& operator<<(std::ostream& os, t_Rec rec){
-			os<<"x:"<<std_manip::std_format_fixed<double>(rec.x)<<
-				"y:"<<std_manip::std_format_fixed<double>(rec.y)<<
-				"z:"<<std_manip::std_format_fixed<double>(rec.z)<<std::endl
-			  <<"u:"<<std_manip::std_format_fixed<double>(rec.u)<<
-			    "v:"<<std_manip::std_format_fixed<double>(rec.v)<<
-				"w:"<<std_manip::std_format_fixed<double>(rec.w)<<std::endl
-			  <<"p:"<<std_manip::std_format_fixed<double>(rec.p)<<
-			    "t:"<<std_manip::std_format_fixed<double>(rec.t)<<
-				"r:"<<std_manip::std_format_fixed<double>(rec.r)<<std::endl;
+		friend std::wostream& operator<<(std::wostream& os, t_Rec rec){
+			os<<_T("x:")<<std_manip::std_format_fixed<double>(rec.x)<<
+				_T("y:")<<std_manip::std_format_fixed<double>(rec.y)<<
+				_T("z:")<<std_manip::std_format_fixed<double>(rec.z)<<std::endl
+			  <<_T("u:")<<std_manip::std_format_fixed<double>(rec.u)<<
+			    _T("v:")<<std_manip::std_format_fixed<double>(rec.v)<<
+				_T("w:")<<std_manip::std_format_fixed<double>(rec.w)<<std::endl
+			  <<_T("p:")<<std_manip::std_format_fixed<double>(rec.p)<<
+			    _T("t:")<<std_manip::std_format_fixed<double>(rec.t)<<
+				_T("r:")<<std_manip::std_format_fixed<double>(rec.r)<<std::endl;
 			return os;
 		};
 	};
@@ -62,12 +63,11 @@ public:
 		t_GridIndex();
 		t_GridIndex(int, int, int);
 		t_GridIndex(const t_GridIndex&, int i=0, int j=0, int k=0);
-		friend std::ostream& operator<<(std::ostream& str, const t_GridIndex& ind){
-			return str<<"["
-				<<ind.i<<";"
-				<<ind.j<<";"
-				<<ind.k
-				<<"]";
+		friend std::wostream& operator<<(std::wostream& str, const t_GridIndex& ind){
+			return str<<_T("[")
+				<<ind.i<<_T(";")
+				<<ind.j<<_T(";")
+				<<ind.k<<_T("]");
 		};
 	};
 	/*

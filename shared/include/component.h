@@ -13,6 +13,8 @@
 #include "wx/fileconf.h"
 #include "gen_exception.h"
 
+#include <map>
+
 class t_BaseParam{
 public:
 	enum t_Type{Int, Dbl, Str};

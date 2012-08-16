@@ -1,5 +1,6 @@
 #include "StabSolver.h"
 #include "common_data.h"
+#include "log.h"
 
 using namespace common::cmpnts;
 
@@ -653,8 +654,11 @@ t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime
 			adjustLocal(cur_wave, W_MODE);		
 		}	
 	} while(def_wave.w.imag()<cur_wave.w.imag());
-	std::cout<<"STAT:A="<<def_wave.a.real()<<"; B="<<def_wave.b.real()<<"\n----:W="
-		<<def_wave.w<<std::endl;
+
+	std::wcout<<_T("STAT:A=")<<def_wave.a.real()
+		      <<_T("; B=")<<def_wave.b.real()
+			  <<_T("\n----:W=")<<def_wave.w<<std::endl;
+
 	return def_wave;
 };
 
@@ -720,9 +724,9 @@ void t_StabSolver::adjustLocal
 		solve(a_wave_chars);
 		arg_base = arg;
 		res_base = a_wave_chars.resid;
-		std::cout<<"Cur SI"<<res_base<<std::endl;
+		std::wcout<<_T("Cur SI")<<res_base<<std::endl;
 	};
-	std::cerr<<"Local Search Error: no convergence"<<std::endl;
+	Log<<_T("Local Search Error: no convergence\n");
 	a_wave_chars = backup;
 };
 
@@ -781,7 +785,7 @@ void t_StabSolver::getEigenWFixed
 		adjustLocal(wave_chars, W_MODE);
 		resid = abs((dwr)/wr_fixed);
 		if (n_iter++>_params.AdjustMaxIter){
-			wxLogError(_("In GetEigenWFixed: no convergence"));
+			Log<<_T("In GetEigenWFixed: no convergence");
 			return;
 		};
 	} while (resid>=_params.AdjustTol);

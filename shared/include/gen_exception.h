@@ -29,16 +29,11 @@ public:
 	}
 	virtual ~t_GenException(){};
 
-#ifdef _UNICODE
-	typedef std::wostream std_ostr;
-#else
-	typedef std::ostream std_ostr;
-#endif //UNICODE
-	friend std_ostr& operator<<(std_ostr& ostr, const t_GenException& x){
+	friend std::wostream& operator<<(std::wostream& ostr, const t_GenException& x){
 		#ifdef _DEBUG
-			return ostr<<"Exception"<<x.what_detailed().c_str();
+			return ostr<<_T("Exception")<<x.what_detailed().c_str();
 		#else
-			return ostr<<"Exception"<<x.what().c_str();
+			return ostr<<_T("Exception")<<x.what().c_str();
 		#endif
 	};
 };

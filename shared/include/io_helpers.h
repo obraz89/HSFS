@@ -1,11 +1,14 @@
 #ifndef __IO_HELPERS
 #define __IO_HELPERS
 #include <iostream>
-#include "math_operands.h"
+
+class wxString;
+std::string wx_to_stdstr(const wxString& wx_str);
+
 namespace std_manip{
 	extern const int FIELD_WIDTH_DEFAULT;
 	extern const int PRECISION_DEFAULT;
-	template<typename T> inline std::ostream& _format_fixed(std::ostream& os, T val){
+	template<typename T> inline std::wostream& _format_fixed(std::wostream& os, T val){
 		os.width(FIELD_WIDTH_DEFAULT);
 		os.precision(PRECISION_DEFAULT);
 		int old_flags = os.flags(std::ios::left|std::ios::fixed);
@@ -15,11 +18,11 @@ namespace std_manip{
 	};
 	template<typename T>class t_Omanip{
 		T _val;
-		std::ostream& (*_formatter)(std::ostream &os, T val);
+		std::wostream& (*_formatter)(std::wostream &os, T val);
 	public:
-		t_Omanip(T val, std::ostream& (*formatter)(std::ostream&, T))
+		t_Omanip(T val, std::wostream& (*formatter)(std::wostream&, T))
 			:_val(val), _formatter(formatter){};
-		friend std::ostream& operator<<(std::ostream& os, t_Omanip<T> m){return m._formatter(os, m._val);};
+		friend std::wostream& operator<<(std::wostream& os, t_Omanip<T> m){return m._formatter(os, m._val);};
 	};
 	// TODO:think how to introduce options
 	// and make this all useful)))

@@ -271,7 +271,8 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 void t_EigenGS::fill_SO_template(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 								 const int a_nnode, const int a_eq_id){
 	if (a_nnode==0){
-		std::cerr<<"GS: SO template on bottom boundary!\n";
+		// TODO: to log
+		std::wcerr<<_T("GS: SO template on bottom boundary!\n");
 	};
 	bool first_block=false;
 	if (a_nnode==1){
@@ -425,6 +426,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx&
 int t_EigenGS::getSpectrum(const int a_i, const int a_k, 
 	     			  const double a_alpha, const double a_beta,
 					  const int a_nnodes/*=0*/){
+  // TODO: unicode and petsc????
   static char help[]="Global Search\n";
   // conext
   setContext(a_i, a_k, a_alpha, a_beta, a_nnodes);
@@ -591,10 +593,10 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 
 };
 
-void t_EigenGS::writeSpectrum(const std::string &a_filename){
-	std::ofstream to_f(&a_filename[0]);
+void t_EigenGS::writeSpectrum(const std::wstring &a_filename){
+	std::wofstream to_f(&a_filename[0]);
 	for (int i=0; i<_spectrum.size(); i++){
-		to_f<<_spectrum[i].real()<<"\t"<<_spectrum[i].imag()<<std::endl;
+		to_f<<_spectrum[i].real()<<_T("\t")<<_spectrum[i].imag()<<std::endl;
 	};
 }
 
@@ -619,7 +621,8 @@ std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_
 
 
 
-t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const int a_nnodes/*=0*/){
+t_WCharsLoc t_EigenGS::searchMaxInstabGlob
+(const int a_i, const int a_k, const int a_nnodes/*=0*/){
 	// This is the most interesting question : ask AVF
 	double a_min = 0.01;
 	double a_max = 1.5;
@@ -639,7 +642,8 @@ t_WCharsLoc t_EigenGS::searchMaxInstabGlob(const int a_i, const int a_k, const i
 	return t_WCharsLoc::find_max_instab(all_initials);
 };
 
-std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/* =0 */){
+std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed
+(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/* =0 */){
 	double a,b;
 	double *pArg;
 	std::vector<t_WCharsLoc> all_initials;
@@ -662,7 +666,8 @@ std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(const int a_i, const int a
 	return all_initials;
 };
 
-t_WCharsLoc t_EigenGS::searchMaxInstabFixed(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/*=0*/){
+t_WCharsLoc t_EigenGS::searchMaxInstabFixed
+(const int a_i, const int a_k, t_Mode mode, double fixed_val, const int a_nnodes/*=0*/){
 	const std::vector<t_WCharsLoc>& all_initials = 
 		searchInstabFixed(a_i, a_k, mode, fixed_val, a_nnodes);
 	return t_WCharsLoc::find_max_instab(all_initials);

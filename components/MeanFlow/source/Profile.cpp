@@ -39,11 +39,11 @@ void t_Profile::_resize(int new_nnodes){
 t_Profile::t_Rec t_Profile::get_rec(int j) const{
 	t_Log log;
 	if (j<0) {
-		log<<"ERROR: getting record in profile under surface!\n";
+		log<<_T("ERROR: getting record in profile under surface!\n");
 		return _extract(0);
 	};
 	if (j>=size()){
-		log<<"ERROR: getting record in profile above boundary!\n";
+		log<<_T("ERROR: getting record in profile above boundary!\n");
 		return _extract(size()-1);
 	}; 
 	return _extract(j);
@@ -52,11 +52,11 @@ t_Profile::t_Rec t_Profile::get_rec(int j) const{
 t_Profile::t_Rec t_Profile::get_rec(double y) const{
 	t_Log log;
 	if (y<0.0) {
-		log<<"ERROR: getting record in profile under surface!\n";
+		log<<_T("ERROR: getting record in profile under surface!\n");
 		return _extract(0.0);
 	};
 	if (y>_y.back()){
-		log<<"ERROR: getting record in profile above boundary!\n";
+		log<<_T("ERROR: getting record in profile above boundary!\n");
 		return _extract(size()-1);
 	}; 
 	return _extract(y);
@@ -68,7 +68,8 @@ double t_Profile::_interpolate(const double& a_y, const t_DblVec& arg, const t_D
 	  arg - argument array 
 	  fun - function array 
 */	
-	if (a_size<=3){std::cerr<<"3 points or less; can't interpolate";return 0.0;}
+	// TODO: cerr??? are you kidding?
+	if (a_size<=3){std::wcerr<<_T("3 points or less; can't interpolate");return 0.0;}
 	int k = _getNearestInd(a_y, arg);
 	int lft_ind, mid_ind, rgt_ind;
 	if (k==0){

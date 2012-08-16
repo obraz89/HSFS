@@ -28,18 +28,18 @@ bool t_WavePackLine::_near_leading_edge() const{
 	return false;
 }
 
-std::ostream& t_WavePackLine::_print_line(std::ostream& str) const
+std::wostream& t_WavePackLine::_print_line(std::wostream& str) const
 {
 	std::vector<t_WPLineRec>::const_iterator beg = _line.begin();
 	while(beg!=_line.end()) 
 	{
-		str<<'('
-			<<beg->mean_flow.x<<";"
-			<<beg->mean_flow.y<<";"
-			<<beg->mean_flow.z<<");["
-			<<beg->nearest_node.i<<";"
-			<<beg->nearest_node.j<<";"
-			<<beg->nearest_node.k<<"]"<<"\n";
+		str<<_T('(')
+			<<beg->mean_flow.x<<_T(";")
+			<<beg->mean_flow.y<<_T(";")
+			<<beg->mean_flow.z<<_T(");[")
+			<<beg->nearest_node.i<<_T(";")
+			<<beg->nearest_node.j<<_T(";")
+			<<beg->nearest_node.k<<_T("]")<<_T("\n");
 		str<<beg->wave_chars;
 		beg++;
 	};

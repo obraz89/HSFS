@@ -1,4 +1,5 @@
 #include "ODES.h"
+#include "log.h"
 #include <iostream>
 // default 3D context
 t_ODES::t_ODES():
@@ -50,9 +51,9 @@ void t_ODES::solve(){
 }
 
 t_Complex t_ODES::detGS(const t_MatCmplx& sol, const int& rank) const{
-	// exceptions 
-	if (rank>sol.nCols()) std::cerr<<"GS determinant error: Rank exceeds task dimension\n";
-	if (rank<0) std::cerr<<"GS determinant error: Rank < 0 \n";
+
+	if (rank>sol.nCols()) Log<<_T("GS determinant error: Rank exceeds task dimension\n");
+	if (rank<0) Log<<_T("GS determinant error: Rank < 0 \n");
 	if (rank==0) return 1.0;
 	t_SqMatCmplx mat(rank);
 	for (int i=0; i<rank; i++){
@@ -65,8 +66,10 @@ t_Complex t_ODES::detGS(const t_MatCmplx& sol, const int& rank) const{
 		}
 	}
 	t_Complex det = mat.det();
-	if (abs(det.imag()/det.real())>1.0e-6) std::cerr<<"GS determinant error: determinant is complex; imag:"
-										 <<abs(det.imag())<<std::endl;
+	if (abs(det.imag()/det.real())>1.0e-6){
+		Log<<_T("GS determinant error: determinant is complex; imag:")
+			<<abs(det.imag())<<_T("\n");
+	}
 	return mat.det();
 }
 

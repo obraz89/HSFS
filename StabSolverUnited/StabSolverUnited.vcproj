@@ -605,10 +605,6 @@
 					RelativePath="..\shared\include\stdafx.h"
 					>
 				</File>
-				<File
-					RelativePath="..\shared\include\string_conv.h"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter

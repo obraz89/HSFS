@@ -16,9 +16,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
-#include <map>
 
-#include <math.h>
 
 #ifdef _UNICODE
 #define _tostream wostream
