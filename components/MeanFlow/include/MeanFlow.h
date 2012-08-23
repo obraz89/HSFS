@@ -154,9 +154,12 @@ public:
 	double calc_gridline_distance(ALONG_LINE along_line, t_GridIndex from, t_GridIndex to) const;
 
 	int get_bound_index(const int i, const int k) const;
+	int get_bound_ind_enth(const int i, const int k) const;
+	int get_bound_ind_velo(const int i, const int k) const;
+
 	double calc_delta(const int i, const int k) const;
 	// this is old mess
-	// TODO: keep usefull stuff
+	// TODO: keep useful stuff
 /*
 	void get_cf_profile(std::vector<ProfileRec>&, const int i, const int k) const;
 	double get_cf_wave_dir(const int i, const int k) const;

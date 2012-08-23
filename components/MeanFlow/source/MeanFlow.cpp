@@ -1,6 +1,8 @@
 #include "MeanFlow.h"
 #include "math_operands.h"
 
+static const double BL_BOUND_VELO_TOL = 0.01;
+
 void t_MeanFlow::_allocate(int nx, int ny, int nz){
 	if (!_allocated){
 		Nx = nx;
@@ -217,12 +219,16 @@ double t_MeanFlow::calc_mach(const int i, const int j, const int k) const{
 
 int t_MeanFlow::get_bound_index(const int i_ind, const int k_ind) const
 {
-	/* for spec. xz_plane_ind. = {i,0,k} computes {i,j,k},
+	return get_bound_ind_velo(i_ind, k_ind);
+};
+
+int t_MeanFlow::get_bound_ind_enth(const int i_ind, const int k_ind) const{
+		/* for spec. xz_plane_ind. = {i,0,k} computes {i,j,k},
 	   j is boundary layer border index;
 	   enthalpy criterion is used	*/
 int j=0;
-// TODO : fix this !!!
-double h_inf = calc_enthalpy(0,50,0);
+
+double h_inf = calc_enthalpy(0,base_params().Ny/2,0);
 bool brd_rchd = false;
 while(!brd_rchd)
 {
@@ -239,9 +245,33 @@ while(!brd_rchd)
 	}
 };
 return (j);
-};
+}
 
-double t_MeanFlow::calc_gridline_distance(ALONG_LINE along_line, t_GridIndex from, t_GridIndex to) const{
+int t_MeanFlow::get_bound_ind_velo(const int i_ind, const int k_ind) const{
+	t_Index cur_ind(i_ind, 0, k_ind);
+	t_Index nxt_ind(cur_ind, 0,1,0);
+	double dy, du_dy_wall, du_dy_cur;
+	t_Vec3Dbl u, du;
+
+	u = get_rec(nxt_ind).get_uvw();
+	dy = calc_distance(cur_ind, nxt_ind);
+	du_dy_wall = u.norm()/dy;
+
+	for (int j=1; j++; j<base_params().Ny-1){
+		cur_ind.j=j;
+		nxt_ind.j=j+1;
+		du = (get_rec(nxt_ind) - get_rec(cur_ind)).get_uvw();
+		dy = calc_distance(nxt_ind, cur_ind);
+		du_dy_cur = du.norm()/dy;
+		if (du_dy_cur<BL_BOUND_VELO_TOL*du_dy_wall){
+			return j;
+		}
+	}
+	return -1;
+}
+
+double t_MeanFlow::calc_gridline_distance
+(ALONG_LINE along_line, t_GridIndex from, t_GridIndex to) const{
 	int* pChgInd=NULL;
 	int n = 0;
 	t_GridIndex cur_ind = from, tmp, prev_ind;
