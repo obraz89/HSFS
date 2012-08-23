@@ -11,7 +11,7 @@ bool t_StabSolver::t_StabODES::needOrtho(const t_MatCmplx& a_cur_sol){
 	double max_norm = 0.0;
 	double min_norm = 1.0e+12;
 	for (int i=0; i<a_cur_sol.nCols(); i++){
-		double cur_norm = std::norm(t_VecCmplx(a_cur_sol[i]).norm());
+		double cur_norm = complex::norm(t_VecCmplx(a_cur_sol[i]).norm());
 		if (cur_norm<min_norm){
 			min_norm = cur_norm;
 		}
@@ -20,14 +20,7 @@ bool t_StabSolver::t_StabODES::needOrtho(const t_MatCmplx& a_cur_sol){
 		}
 	}
 
-	// TODO: tolerance should be param
-	// for alg. solver
-	if ((max_norm>1000.0)){
-		return true;
-	}
-	else{
-		return false;
-	}
+	return max_norm>1000.0;
 };
 
 void t_StabSolver::t_StabODES::setInitials(t_MatCmplx a_init_vectors){

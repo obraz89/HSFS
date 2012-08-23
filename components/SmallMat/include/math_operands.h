@@ -39,6 +39,15 @@ typedef t_SqMat3<double> t_SqMat3Dbl;
 ** from 0.0
 */
 /************************************************************************/
+
+// there is a big fucking bug in std std::norm(10)=100 hahaha
+namespace complex{
+	inline double norm(t_Complex val){
+		return sqrt(std::norm(val));
+	}
+}
+
+
 namespace matrix{
 	inline double herm_prod(double l, double r){ return l*r;};
 	inline t_Complex herm_prod(t_Complex l, t_Complex r){return l*std::conj(r);};
