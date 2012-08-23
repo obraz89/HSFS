@@ -23,7 +23,20 @@ public:
 	virtual void save(wxString configfile);
 };
 
-// this is a basic 3D stability solver
+/************************************************************************/
+/* Local 3d linear stability solver
+** 
+** 3d Compressible BL stability equations 
+** parallel flow assumption (*)
+** Originally Developed by Fedrorov A.V., 12.11.1985
+** Do not distribute without Fedorov permission
+
+** the function solves system(*) with the input parameters
+** and returns the determinant of residual
+** the package order for math solver is ordinary:
+** u, u', v, p, t, r, w, w'
+*/
+/************************************************************************/
 class  t_StabSolver: public t_Component{
 	class t_StabODES : public t_ODES{
 	public:
@@ -64,6 +77,7 @@ class  t_StabSolver: public t_Component{
 	t_MatCmplx _getAsymptotics2D(const t_WCharsLoc& a_waveChars);
 	// 3D
 	t_MatCmplx _getAsymptotics3D(const t_WCharsLoc& a_waveChars);
+	bool _verifyAsymptotics3D(const t_MatCmplx& init_vecs) const;
 
 // Max instab search realization
 	// group velocity computations
@@ -78,6 +92,7 @@ public:
 	t_StabSolver(const t_MeanFlow& a_rFld, const wxString& configfile);
 	~t_StabSolver(){};
 	inline int getTaskDim(){return _math_solver.getTaskDim();};
+	inline int getNNodes(){return _math_solver.getNNodes();}; 
 	void _init(const wxString& configfile);
 	void initialize(const wxString& configfile);
 	inline const t_StabScales& scales()const{return _profStab.scales();};
@@ -103,10 +118,14 @@ public:
 	// wave_chars.w should be close enough to w_fixed
 	void getEigenWFixed(double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode);
 	void calcGroupVelocity(t_WCharsLoc& a_wave_chars);
+
 	// core function
 	// returns the value of residual 
 	// for a given wave
 	t_Complex solve(t_WCharsLoc& a_wave_chars);
+
+	void dumpEigenFuctions(const std::wstring& fname);
+
 	std::vector<t_WCharsLoc> filterInitWaves(const std::vector<t_WCharsLoc>& all_initials);
 	t_WCharsLoc getMaxWave(const int& i_ind, const int& k_ind,
 							const std::vector<t_WCharsLoc>& a_inits, const int& a_nnodesStab=0);

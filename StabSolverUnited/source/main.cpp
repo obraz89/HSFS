@@ -33,8 +33,16 @@ using namespace std;
 namespace test{
 	void king_al_2_new();
 	void transhyb_base_08();
+	void itam_hz();
 };
 //--------------------------------------------------~tests
+
+// for odes test
+t_SqMatCmplx my_rhs(const double y){
+	t_SqMatCmplx mat(8);
+	mat.setToUnity();
+	return mat;
+}
 
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 					HINSTANCE	hPrevInstance,		// Previous Instance
@@ -46,9 +54,9 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	// PAUSE IN FORTRAN LIBS WON'T WORK
 	// 
 	RedirectIOToConsole();
-	FILE* file = fopen("output/transitions.dat", "a+");
 	//test::king_al_2_new();
-	test::transhyb_base_08();
+	//test::transhyb_base_08();
+	test::itam_hz();
 	return 0;
 }
 
@@ -68,9 +76,9 @@ void test::king_al_2_new(){
 
 	stab_solver.set3DContext(70,50, 150);
 	t_Complex base_resid = stab_solver.solve(w_init);
-	std::cout<<"\nBase Resid:"<<base_resid<<std::endl;
+	std::wcout<<_T("\nBase Resid:")<<base_resid<<std::endl;
 	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
-	std::cout<<w_init;
+	std::wcout<<w_init;
 	std::vector<t_WCharsLoc> inits;
 	inits.push_back(w_init);
 //	std::cout<<stab_solver.getMaxWave(70, 50, inits, 150);
@@ -81,7 +89,7 @@ void test::king_al_2_new(){
 	//t_WaveChars max_instab = gs_solver.searchMaxInstabGlob(i_test,k_test,gs_nnodes);
 	//std::vector<t_WCharsLoc> inits = gs_solver.getDiscreteModes(70, 50, 0.102, 0.2577, gs_nnodes);
 	gs_solver.getSpectrum(i_test, k_test, w_init.a.real(), w_init.b.real());
-	gs_solver.writeSpectrum("king_al_2_test_spectrum.dat");
+	gs_solver.writeSpectrum(_T("king_al_2_test_spectrum.dat"));
 	//std::cout<<"GS max instab result:\n"<<t_WCharsLoc::find_max_instab(inits);
 	
 	
@@ -97,8 +105,9 @@ void test::transhyb_base_08(){
 	t_MeanFlow& mf = App.get_mf();
 	const int Nx = mf.base_params().Nx;
 	const int Nz = mf.base_params().Nz;
-	int i_test = Nx/2;
-	int k_test = Nz/2;
+
+	t_StabSolver& stab_solver = App.get_stab_solver();
+	t_EigenGS& gs_solver = App.get_eigen_gs();
 // test mean flow
 	// te=1.22 pe=0.0395, ue=0.977, ve=0.119, roe=1.632, me=5.364, ree1=2.3e+07
 	/*
@@ -110,13 +119,6 @@ void test::transhyb_base_08(){
 					 mf.get_bound_index(Nx-1, 0),
 					0)<<std::endl;
 	*/
-	t_StabSolver& stab_solver = App.get_stab_solver();
-	t_EigenGS& gs_solver = App.get_eigen_gs();
-	t_WCharsLoc w_init;
-	
-	w_init.w = t_Complex(0.24, 5.92e-3);
-	w_init.a =	0.261;
-	w_init.b =	0.0;
 	
 	/*
 	w_init.w = t_Complex(0.274, 3.4e-3);
@@ -149,7 +151,38 @@ void test::transhyb_base_08(){
 	wpline.retrace_fixed_beta(t_Index(i_test, 50, k_test), w_init);
 	wpline_fstr<<wpline;
 	*/
+	// test eigen function reconstruction
+	
+	int i_test = Nx-20;
+	int k_test = Nz/2;
+	/*
+	t_WCharsLoc w_init = 
+		gs_solver.searchMaxInstabFixed(Nx-20,Nz/2, t_EigenGS::t_Mode::A_MODE, 0.0);
+		*/
+	t_WCharsLoc w_init;
+	w_init.a=0.27;
+	w_init.b=0.0;
+	w_init.w=t_Complex(0.247, 0.00643);
+	stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
+	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
+	std::wostringstream fname;
+	fname<<_T("test_eigen_reconstruct[")
+		<<i_test<<_T(",")<<k_test<<_T("].dat");
+	stab_solver.dumpEigenFuctions(TEST_CASE_DIR.c_str()+fname.str());
+	return;
+	
+	//test odes
+	t_ODESTest s_odes(my_rhs);
+	t_MatCmplx ddd(4,8);
+	ddd[0][0] = 1;
+	ddd[1][1] = 2;
+	ddd[2][2] = 3;
+	ddd[3][3] = 4;
+	s_odes.init(0.0, 10.0, 11, ddd);
+	s_odes.solve();
+	std::vector<t_MatCmplx> aaa= s_odes.reconstruct();
 
+	return;
 	// test everything 
 	const int N_CASES = 4;
 	
@@ -164,10 +197,35 @@ void test::transhyb_base_08(){
 		stab_solver.calcGroupVelocity(w_init);
 		w_init.set_scales(stab_solver.scales());
 		t_WPLineMono wpline(mf, stab_solver, gs_solver);
-		std::ostringstream fname;
-		fname<<"test_wpline_mono["<<i_test<<","<<k_test<<"].dat";
+		std::wostringstream fname;
+		fname<<_T("test_wpline_mono[")
+			 <<i_test<<_T(",")<<k_test<<_T("].dat");
 		wpline.retrace_fixed_beta(t_Index(i_test, 50, k_test), w_init);
-		wpline.print_to_file(wx_to_stdstr(TEST_CASE_DIR)+fname.str());
-		log<<"================================================wpLine Created";
+		wpline.print_to_file(TEST_CASE_DIR.c_str()+fname.str());
+		log<<_T("==============================================wpLine Created");
 	};
+};
+
+void test::itam_hz(){
+	const wxString TEST_CASE_DIR = 
+		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/itam_hz/");
+
+	t_TaskManager App(TEST_CASE_DIR);
+	App.load_settings();
+	t_MeanFlow& mf = App.get_mf();
+	const int Nx = mf.base_params().Nx;
+	const int Nz = mf.base_params().Nz;
+
+	t_StabSolver& stab_solver = App.get_stab_solver();
+	t_EigenGS& gs_solver = App.get_eigen_gs();
+
+	int i_test = Nx-10;
+	int k_test = Nz/2;
+
+	t_WCharsLoc w_init;
+	w_init.a=0.1;
+	w_init.b=0.0;
+	w_init.w=t_Complex(0.1, 0.005);
+	stab_solver.set3DContext(i_test,k_test, 251);
+	stab_solver.solve(w_init);
 };

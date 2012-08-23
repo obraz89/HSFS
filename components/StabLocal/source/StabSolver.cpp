@@ -15,6 +15,7 @@ static const double THICK_COEF_DEFAULT = 3.0;
 // adjust procedure parameters
 static const double ADJUST_STEP_DEFAULT = 1.0e-5;
 static const double ADJUST_TOL_DEFAULT  = 1.0e-4;
+static const double ASYM_TOL_DEFAULT = 1.0e-6;
 static const int ADJUST_MAX_ITER_DEFAULT= 50;
 // small increment to compute smth like
 // dw/da : (w(a+DELTA) - w(a))/DELTA
@@ -97,7 +98,7 @@ _params(), t_Component(wxEmptyString, STABSOLVER3D_NAME){
 t_StabSolver::t_StabSolver(const t_MeanFlow& a_rFldNS, const wxString& configfile):
 _rFldNS(a_rFldNS), _profStab(a_rFldNS), 
 _math_solver(), _stab_matrix(STAB_MATRIX_DIM),
-_params(configfile), t_Component(configfile, EIGEN3D_NAME){
+_params(configfile), t_Component(configfile, STABSOLVER3D_NAME){
 	_math_solver._pStab_solver = this;
 	_init(configfile);
 };
@@ -468,41 +469,40 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 };*/
 
 t_VecCmplx t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars){
-	// TODO: check input vector dimension and
-	// if it is not of 8 elems throw mega-exception)
 	_setStabMatrix3D(a_y);
-	t_MatCmplx input(1, 8);
-	for (int i=0; i<8; i++){
-		input[0][i] = a_vars[i];
-	};
-	// vars used in stability matrix 
-	
-	// after multiplication we have a rhs vector - matrix 1x8
-	t_MatCmplx output = _stab_matrix*input; 
-	return output[0];
+	return _stab_matrix*a_vars; 
 };
 
 t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
-	t_MatCmplx initial_vectors(4,8);
-	t_SqMatCmplx b_coef(4);
-	t_VecCmplx lambda(4,0.0);
+	int dim = getTaskDim();
+	t_MatCmplx initial_vectors(dim,2*dim);
+	t_SqMatCmplx b_coef(dim);
+	t_VecCmplx lambda(dim,0.0);
 	const double& y_e = _profStab.get_thick();
 	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
 	_setStabMatrix3D(y_e);	
+
+	// to shorten 
+	t_SqMatCmplx& _sm = _stab_matrix;
 
 	// TODO: what is all this about?
 
 	b_coef[0][0]=_stab_matrix[0][1];
 	b_coef[1][0]=_stab_matrix[3][1];
 	b_coef[2][0]=_stab_matrix[4][1];
-	for (int i=1; i<3; i++){
-		b_coef[i][1] =  _stab_matrix[i+2][1]*_stab_matrix[1][3]+
-						_stab_matrix[i+2][2]*_stab_matrix[2][3]+
-						_stab_matrix[i+2][5]*_stab_matrix[5][3]+
-						_stab_matrix[i+2][7]*_stab_matrix[7][3];
-		b_coef[i][2] = _stab_matrix[i+2][5];
-		b_coef[i][3] = _stab_matrix[i+2][7];
-	};
+	
+	b_coef[1][1]=_sm[3][1]*_sm[1][3]+_sm[3][2]*_sm[2][3]+
+				 _sm[3][5]*_sm[5][3]+_sm[3][7]*_sm[7][3];
+
+	b_coef[2][1]=_sm[4][1]*_sm[1][3]+_sm[4][2]*_sm[2][3]+
+				 _sm[5][3]*_sm[4][5]+_sm[7][3]*_sm[4][7];
+	
+	b_coef[1][2]=_sm[3][5];
+	b_coef[2][2]=_sm[4][5];
+
+	b_coef[1][3]=_sm[3][7];
+	b_coef[2][3]=_sm[4][7];
+
 	b_coef[3][3] = _stab_matrix[0][1];
 	//
 
@@ -521,18 +521,18 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
 	b_coef[2][0] = 0.0;
 	b_coef[3][0] = 0.0;
 	for (int i=1; i<3; i++){
-		t_CompVal l2 = std::pow(lambda[i],2);
-		t_CompVal denom = _stab_matrix[0][1] - l2;
+		t_CompVal L2 = std::pow(lambda[i],2);
+		t_CompVal denom = _stab_matrix[0][1] - L2;
 		b_coef[0][i] = (
-							(l2 - _stab_matrix[4][5])*_stab_matrix[3][1]+
+							(L2 - _stab_matrix[4][5])*_stab_matrix[3][1]+
 							_stab_matrix[4][1]*_stab_matrix[3][5]
 					   )/denom;
 
-		b_coef[1][i] = _stab_matrix[4][5] - l2;
+		b_coef[1][i] = _stab_matrix[4][5] - L2;
 		b_coef[2][i] = -_stab_matrix[3][5];
 		b_coef[3][i] = (
 							_stab_matrix[3][5]*_stab_matrix[4][7]+
-							(l2 - _stab_matrix[4][5])*_stab_matrix[3][7]
+							(L2 - _stab_matrix[4][5])*_stab_matrix[3][7]
 						)/denom;
 	};
 
@@ -561,8 +561,25 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
 									_stab_matrix[6][7]*b_coef[3][i]
 								)/lambda[i];
 	}
+	//verification
+	t_MatCmplx asym_resid(dim, 2*dim, 0.0);
+	t_SqMatCmplx lambda_mat(dim);
+	for (int i=0; i<dim; i++){
+		lambda_mat[i][i]=lambda[i];
+	}
+	asym_resid = _stab_matrix*initial_vectors - initial_vectors*lambda_mat;
+	double resid=0.0;
+	for (int i=0; i<asym_resid.nCols(); i++){
+		for (int j=0; j<asym_resid.nRows(); j++){
+			double cur_resid = complex::norm(asym_resid[i][j]);
+			if (cur_resid>resid) resid = cur_resid;
+		}
+	}
+	//if (resid>ASYM_TOL_DEFAULT)
+	//	ssuGENTHROW(_T("StabSolver Error: Verification of Asymptotics failed"));
 	return initial_vectors;
 }
+
 
 t_WCharsGlob t_StabSolver::popGlobalWaveChars(){
 	return t_WCharsGlob(_waveChars,_profStab);
@@ -570,8 +587,7 @@ t_WCharsGlob t_StabSolver::popGlobalWaveChars(){
 
 void t_StabSolver::set3DContext
 (const int& i_ind, const int& k_ind, const int& a_nnodesStab){
-	_math_solver.set3DContext();
-	_math_solver.resizeGrid(a_nnodesStab);
+	_math_solver.setContext(a_nnodesStab);
 
 	t_ProfileNS profNS(_rFldNS);
 	profNS.initialize(i_ind, k_ind, _params.ThickCoef);
@@ -713,7 +729,7 @@ void t_StabSolver::adjustLocal
 	t_Complex deriv;
 	for (int i=0; i<max_iters; i++){
 		// check if we are converged
-		if (std::norm(a_wave_chars.resid)<tol){
+		if (complex::norm(a_wave_chars.resid)<tol){
 			return;
 		};
 		// newton iteration

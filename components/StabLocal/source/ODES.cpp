@@ -2,18 +2,19 @@
 #include "log.h"
 #include <iostream>
 // default 3D context
-t_ODES::t_ODES():
-_dim(4), _nnodes(), varRange(), 
-solution(0, t_MatCmplx(_dim, _dim)){};
 
-void t_ODES::set3DContext(){
-		_dim = 4;
-		solution.clear();
-		varRange.clear();
+const int t_ODES::_dim = 4;
+
+t_ODES::t_ODES():
+_nnodes(), varRange(), 
+solution(0, t_MatCmplx(_dim, 2*_dim)){};
+
+void t_ODES::clean(){
 		_orthStack.clear();
 };
 
-void t_ODES::resizeGrid(const int& a_newNnodes){
+void t_ODES::setContext(const int& a_newNnodes){
+	clean();
 	_nnodes = a_newNnodes;
 	varRange.resize(a_newNnodes);
 	solution.resize(a_newNnodes, t_MatCmplx(_dim, 2*_dim));
@@ -43,7 +44,7 @@ void t_ODES::solve(){
 			this->solution[i] = this->solution[i]*(this->_orthStack.back().orthMatrix);
 		};
 		// get solution
-		for (int j=0; j<this->_dim;j++){
+		for (int j=0; j<_dim;j++){
 			solution[i+1][j] = stepRK3D(i, solution[i][j]);
 		}
 
@@ -123,16 +124,20 @@ std::vector<t_MatCmplx> t_ODES::reconstruct(){
 	int orthStackInd = 0;
 	direct.setToUnity();
 	trans.setToUnity();
-	for (int i=0; i<_nnodes-1; i++){
-		if (i==this->_orthStack[orthStackInd].ind){
-			direct = direct*(_orthStack[i].orthMatrix);
-			trans = direct.inverse();		
-			orthStackInd++;
+	int orthStackSize = _orthStack.size();
+	for (int i=0; i<_nnodes; i++){
+		if (orthStackInd<orthStackSize){
+			if (i==this->_orthStack[orthStackInd].ind){
+				direct = direct*(_orthStack[orthStackInd].orthMatrix);
+				trans = direct.inverse();		
+				orthStackInd++;
+			}
 		}
-			ret[i] = solution[i]*(trans);
+		ret[i] = solution[i]*(trans);
 	}
 
 	// reconstruct last record (for which we don't do ortho)
-	ret[_nnodes-1] = solution[_nnodes-1]*(trans);
+	// ?
+	//ret[_nnodes-1] = solution[_nnodes-1]*(trans);
 	return ret;
 }
