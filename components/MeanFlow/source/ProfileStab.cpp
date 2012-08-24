@@ -79,9 +79,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 		_w[i]=_w[i]/u_e;
 		_w1[i]=_w1[i]*y_scale/u_e;
 	    _w2[i]=_w2[i]*pow(y_scale,2)/u_e;
-// instead of derivs for viscosity special coefs mu1 mu2 are stored:
-// dmy/dy = mu1*(dt/dy);
-// d2my/dy2 = mu2*(dt/dy)^2.0 + mu1*(d2t/dy2)
+// for viscosity we store dmu/dt and d2mu/dt2
 		_mu[i]=_mu[i]/mu_e;
 		if (Params.ViscType==t_MFParams::t_ViscType::ViscPower){
 			const double& visc_power = Params.Mju_pow;
@@ -89,12 +87,11 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 			_mu2[i]=visc_power*(visc_power-1.0)*pow(_t[i],visc_power-2.0);
 		}
 		else{
-// TODO: check Stagnation ?
 		    const double& lt=_t[i];
-			const double& t_coef=Params.T_mju*(1.0+t_e);
-			_mu1[i]=1.5*_mu[i]/lt-_mu[i]/(lt+t_coef);
-			_mu2[i]=1.5*(_mu1[i]-_mu[i]/lt)/lt-
-				   (_mu1[i]-_mu[i]/(lt+t_coef))/(lt+t_coef);
+			const double& t_suth=Params.T_mju/Params.T_inf;
+			const double d = 1.5/lt-1.0/(lt+t_suth);
+			_mu1[i] = _mu[i]*d;
+			_mu2[i] = _mu1[i]*d-_mu[i]/lt*(d+t_suth/pow(lt+t_suth,2));
 		}
 	}
 };

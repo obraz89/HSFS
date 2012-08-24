@@ -162,15 +162,11 @@ double t_MeanFlow::calc_viscosity(const int i, const int j, const int k) const{
 	const t_Rec& rRec = _fld[i][j][k];
 	const t_MFParams& Params = this->base_params();
 	if (Params.ViscType==t_MFParams::t_ViscType::ViscPower){
-		// power
 		return pow(rRec.t, Params.Mju_pow);
 	}
 	else {
-		// Suther
-		double loc_t_factor=1.0+0.5*(Params.Gamma-1.0)*pow(calc_mach(i,j,k),2.0);
-		double stag_t_factor=1.0+0.5*(Params.Gamma-1.0)*pow(Params.Mach,2.0);
-		double t_coef = Params.T_mju*loc_t_factor/stag_t_factor;
-		return pow(rRec.t, 1.5)*(1.0+t_coef)/(rRec.t+t_coef);
+		double t_suth = Params.T_mju/Params.T_inf;
+		return pow(rRec.t, 1.5)*(1.0+t_suth)/(rRec.t+t_suth);
 	}
 };
 
