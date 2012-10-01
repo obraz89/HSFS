@@ -146,9 +146,7 @@ void t_StabSolver::setParameters(t_ProfileStab& a_profStab){
 
 // private, to be used in 3D context
 
-void t_StabSolver::_setStabMatrix3D(const double& a_y){
-
-	//t_SqMatrix stab_matrix(8);
+void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	t_CompVal imagUnity(0.0, 1.0);
 
 	const double& stabRe = _profStab.scales().ReStab;
@@ -157,24 +155,7 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 	const double gMaMa = Params.Gamma*Me*Me;
 	const double g_1MaMa = (Params.Gamma-1.0)*Me*Me;
 	const double Pr = Params.Pr;
-	t_ProfRec& rec = _profStab.get_rec(a_y);
-	/*
-	const double u = _profStab.getValue(a_y, _profStab.u);
-	const double u1 = _profStab.getValue(a_y, _profStab.u1);
-	const double u2 = _profStab.getValue(a_y, _profStab.u2);
 
-	const double w = _profStab.getValue(a_y, _profStab.w);
-	const double w1 = _profStab.getValue(a_y, _profStab.w1);
-	const double w2 = _profStab.getValue(a_y, _profStab.w2);
-
-	const double t = _profStab.getValue(a_y, _profStab.t);
-	const double t1 = _profStab.getValue(a_y, _profStab.t1);
-	const double t2 = _profStab.getValue(a_y, _profStab.t2);
-
-	const double mu = _profStab.getValue(a_y, _profStab.mu);
-	const double mu1 = _profStab.getValue(a_y, _profStab.mu1);
-	const double mu2 = _profStab.getValue(a_y, _profStab.mu2);
-	*/
 	const double inv_t = 1.0/rec.t;
 	const double inv_mu = 1.0/rec.mu;
 
@@ -284,6 +265,12 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 		alpha*alpha + beta*beta;
 
 	_stab_matrix[7][7] = -inv_mu*rec.mu1*rec.t1;
+}
+
+void t_StabSolver::_setStabMatrix3D(const double& a_y){
+
+	t_ProfRec& rec = _profStab.get_rec(a_y);
+	_setStabMatrix3D(rec);
 };
 
 /*const t_SqMatrix& t_StabSolver::_getStabMatrix3D() const{
@@ -473,19 +460,31 @@ t_VecCmplx t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars)
 	return _stab_matrix*a_vars; 
 };
 
-t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
-	int dim = getTaskDim();
+t_MatCmplx t_StabSolver::_getAsymptotics3D
+(const t_WCharsLoc& a_waveChars, t_ASYM_MODE mode){
+	const int dim = getTaskDim();
 	t_MatCmplx initial_vectors(dim,2*dim);
 	t_SqMatCmplx b_coef(dim);
 	t_VecCmplx lambda(dim,0.0);
 	const double& y_e = _profStab.get_thick();
 	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
-	_setStabMatrix3D(y_e);	
-
+	t_ProfRec out_rec = _profStab.get_rec(y_e);
+	if (mode==ASYM_FORCE_SELF_SIM){
+		// modify ... a little
+		// this is how AVF did it
+		out_rec.t1=0.0;
+		out_rec.t2=0.0;
+		out_rec.u1=0.0;
+		out_rec.u2=0.0;
+		out_rec.w1=0.0;
+		out_rec.w2=0.0;
+	}
+	_setStabMatrix3D(out_rec);
 	// to shorten 
 	t_SqMatCmplx& _sm = _stab_matrix;
 
-	// TODO: what is all this about?
+	// det(H - lambda*E)=0 <=> lambda1, lambda2...
+	// eigen vectors h1, h2, h3, h4 are used as initials
 
 	b_coef[0][0]=_stab_matrix[0][1];
 	b_coef[1][0]=_stab_matrix[3][1];
@@ -561,13 +560,19 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
 									_stab_matrix[6][7]*b_coef[3][i]
 								)/lambda[i];
 	}
-	//verification
+	_verifyAsymptotics3D(initial_vectors, lambda);
+	return initial_vectors;
+}
+
+void t_StabSolver::_verifyAsymptotics3D
+(const t_MatCmplx& init_vecs, const t_VecCmplx& lambda) const{
+	const int dim = getTaskDim();
 	t_MatCmplx asym_resid(dim, 2*dim, 0.0);
 	t_SqMatCmplx lambda_mat(dim);
 	for (int i=0; i<dim; i++){
 		lambda_mat[i][i]=lambda[i];
 	}
-	asym_resid = _stab_matrix*initial_vectors - initial_vectors*lambda_mat;
+	asym_resid = _stab_matrix*init_vecs - init_vecs*lambda_mat;
 	double resid=0.0;
 	for (int i=0; i<asym_resid.nCols(); i++){
 		for (int j=0; j<asym_resid.nRows(); j++){
@@ -575,9 +580,9 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D(const t_WCharsLoc& a_waveChars){
 			if (cur_resid>resid) resid = cur_resid;
 		}
 	}
+	std::wcout<<_T("asym resid:")<<resid<<_T("\n");
 	//if (resid>ASYM_TOL_DEFAULT)
 	//	ssuGENTHROW(_T("StabSolver Error: Verification of Asymptotics failed"));
-	return initial_vectors;
 }
 
 

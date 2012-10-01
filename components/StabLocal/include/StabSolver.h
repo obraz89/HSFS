@@ -67,6 +67,9 @@ class  t_StabSolver: public t_Component{
 	void _init_params_grps();
 	//const t_SqMatrix& _getStabMatrix3D(const double& a_y) const;
 	void _setStabMatrix3D(const double& a_y);
+
+	// we are in trouble with asymptotics now
+	void _setStabMatrix3D(const t_ProfRec& rec);
 	
 	t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
 	// rhs function by stab matrix
@@ -74,10 +77,15 @@ class  t_StabSolver: public t_Component{
 	t_VecCmplx _formRHS3D(const double& a_y, const t_VecCmplx& a_var);
 	// forms initial vectors for integration from outside down to wall
 	// 2D
+	enum t_ASYM_MODE {ASYM_DIRECT=0, ASYM_FORCE_SELF_SIM};
 	t_MatCmplx _getAsymptotics2D(const t_WCharsLoc& a_waveChars);
 	// 3D
-	t_MatCmplx _getAsymptotics3D(const t_WCharsLoc& a_waveChars);
-	bool _verifyAsymptotics3D(const t_MatCmplx& init_vecs) const;
+	// i hate myself, but for now i'll do it FORCE_SELF_SYM...
+	t_MatCmplx _getAsymptotics3D(
+		const t_WCharsLoc& a_waveChars, t_ASYM_MODE mode=ASYM_FORCE_SELF_SIM);
+
+	void _verifyAsymptotics3D(
+		const t_MatCmplx& init_vecs, const t_VecCmplx& lambda) const;
 
 // Max instab search realization
 	// group velocity computations
@@ -91,8 +99,8 @@ public:
 	t_StabSolver(const t_MeanFlow& a_rFld);
 	t_StabSolver(const t_MeanFlow& a_rFld, const wxString& configfile);
 	~t_StabSolver(){};
-	inline int getTaskDim(){return _math_solver.getTaskDim();};
-	inline int getNNodes(){return _math_solver.getNNodes();}; 
+	inline int getTaskDim() const{return _math_solver.getTaskDim();};
+	inline int getNNodes() const{return _math_solver.getNNodes();}; 
 	void _init(const wxString& configfile);
 	void initialize(const wxString& configfile);
 	inline const t_StabScales& scales()const{return _profStab.scales();};
