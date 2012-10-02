@@ -155,14 +155,15 @@ void test::transhyb_base_08(){
 	
 	int i_test = Nx-20;
 	int k_test = Nz/2;
-	/*
+	
 	t_WCharsLoc w_init = 
 		gs_solver.searchMaxInstabFixed(Nx-20,Nz/2, t_EigenGS::t_Mode::A_MODE, 0.0);
-		*/
-	t_WCharsLoc w_init;
+		
+	/*t_WCharsLoc w_init;
 	w_init.a=0.27;
 	w_init.b=0.0;
 	w_init.w=t_Complex(0.247, 0.00643);
+	*/
 	stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
 	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
 	std::wostringstream fname;
@@ -222,10 +223,18 @@ void test::itam_hz(){
 	int i_test = Nx-10;
 	int k_test = Nz/2;
 
+	/*t_WCharsLoc w_init = 
+		gs_solver.searchMaxInstabFixed(i_test,k_test, t_EigenGS::t_Mode::A_MODE, 0.0);
+	*/
 	t_WCharsLoc w_init;
-	w_init.a=0.1;
-	w_init.b=0.0;
-	w_init.w=t_Complex(0.1, 0.005);
+	w_init.a = 0.277;
+	w_init.b = 0.0;
+	w_init.w = t_Complex(0.254, 0.01);
 	stab_solver.set3DContext(i_test,k_test, 251);
-	stab_solver.solve(w_init);
+	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
+
+	const std::wstring f_recon = 
+		(TEST_CASE_DIR+_T("test_reconstruct.dat")).c_str();
+
+	stab_solver.dumpEigenFuctions(f_recon);
 };

@@ -14,7 +14,7 @@ t_Complex t_StabSolver::solve(t_WCharsLoc& stab_point){
 
 void t_StabSolver::dumpEigenFuctions(const std::wstring& fname){
 	std::wofstream fstr(&fname[0]);
-	fstr<<_T("u_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tr_re\tr_im\tw_re\tw_im\tw'_re\tw'_im\n");
+	fstr<<_T("u_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tr_re\tr_im\tw_re\tw_im\tw'_re\tw'_im\tY\n");
 
 	std::vector<t_MatCmplx> solutions = _math_solver.reconstruct();
 	int nvecs = getTaskDim();
@@ -37,9 +37,11 @@ void t_StabSolver::dumpEigenFuctions(const std::wstring& fname){
 			for (int k=0; k<2*nvecs; k++){
 				val = solutions[j][i][k];
 				fstr<<std_manip::std_format_sci<double>(val.real())
+					<<_T("\t")
 					<<std_manip::std_format_sci<double>(val.imag())
 					<<_T("\t");
 			}
+			fstr<<_math_solver.varRange[j];
 			fstr<<_T("\n");
 		}
 		// separate solutions to simplify origin export

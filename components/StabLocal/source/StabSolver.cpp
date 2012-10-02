@@ -580,7 +580,6 @@ void t_StabSolver::_verifyAsymptotics3D
 			if (cur_resid>resid) resid = cur_resid;
 		}
 	}
-	std::wcout<<_T("asym resid:")<<resid<<_T("\n");
 	//if (resid>ASYM_TOL_DEFAULT)
 	//	ssuGENTHROW(_T("StabSolver Error: Verification of Asymptotics failed"));
 }

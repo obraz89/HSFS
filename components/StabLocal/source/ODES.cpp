@@ -31,8 +31,8 @@ t_VecCmplx t_ODES::stepRK3D(const int& ind, const t_VecCmplx& h){
 	t_VecCmplx k2 = this->formRHS3D(x + 0.5*step, h+0.5*step*k1);
 	t_VecCmplx k3 = this->formRHS3D(x + 0.5*step, h+0.5*step*k2);
 	t_VecCmplx k4 = this->formRHS3D(x + step, h+step*k3);
-	// at x+dx
-	return (h+1.0/6.0*step*(k1+2.0*k2+2.0*k3+k4));
+
+	return h+1.0/6.0*step*(k1+2.0*k2+2.0*k3+k4);
 };
 
 void t_ODES::solve(){
@@ -118,6 +118,9 @@ void t_ODES::ortho(const int& nnode){
 };
 
 std::vector<t_MatCmplx> t_ODES::reconstruct(){
+	// ugly reconstruction from upper boundary down to wall
+	// this doesn't work for sure
+	/*
 	std::vector<t_MatCmplx> ret(this->solution);
 	t_SqMatCmplx trans(_dim);
 	t_SqMatCmplx direct(_dim);
@@ -135,9 +138,25 @@ std::vector<t_MatCmplx> t_ODES::reconstruct(){
 		}
 		ret[i] = solution[i]*(trans);
 	}
+	return ret;
+	*/
 
-	// reconstruct last record (for which we don't do ortho)
-	// ?
-	//ret[_nnodes-1] = solution[_nnodes-1]*(trans);
+	// reconstruct from wall to outer region
+	std::vector<t_MatCmplx> ret(_nnodes, t_MatCmplx(_dim, 2*_dim));
+	int orthStackInd = _orthStack.size()-1;
+
+	t_SqMatCmplx direct(_dim);
+	direct.setToUnity();
+
+	for (int i=_nnodes-1; i>=0; i--){
+		ret[i] = solution[i]*direct;
+		if (orthStackInd>=0){
+			if (i==_orthStack[orthStackInd].ind){
+				// TODO: WTF??? What's the right order?
+				direct = (_orthStack[orthStackInd].orthMatrix)*direct;
+				orthStackInd--;
+			}
+		}
+	}
 	return ret;
 }
