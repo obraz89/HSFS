@@ -33,6 +33,7 @@ using namespace std;
 namespace test{
 	void king_al_2_new();
 	void transhyb_base_08();
+	void profile_compar();
 	void itam_hz();
 };
 //--------------------------------------------------~tests
@@ -56,7 +57,8 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	RedirectIOToConsole();
 	//test::king_al_2_new();
 	//test::transhyb_base_08();
-	test::itam_hz();
+	//test::itam_hz();
+	test::profile_compar();
 	return 0;
 }
 
@@ -97,7 +99,11 @@ void test::king_al_2_new(){
 
 void test::transhyb_base_08(){
 	const wxString TEST_CASE_DIR = 
-		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/transhyb_2D_base/401x251_ortho/");
+		//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/transhyb_2D_base/401x251_ortho/");
+		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/transhyb_2D_base/401x501_incl/");
+		//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/Transhyb_2D_heat/L10_401x501_incl/");
+		//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/Transhyb_2D_cool/L20_401x501_incl/");
+
 	// test tranhyberian, base_re08
 
 	t_TaskManager App(TEST_CASE_DIR);
@@ -164,15 +170,17 @@ void test::transhyb_base_08(){
 	w_init.b=0.0;
 	w_init.w=t_Complex(0.247, 0.00643);
 	*/
+
+
 	stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
 	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
 	std::wostringstream fname;
 	fname<<_T("test_eigen_reconstruct[")
 		<<i_test<<_T(",")<<k_test<<_T("].dat");
 	stab_solver.dumpEigenFuctions(TEST_CASE_DIR.c_str()+fname.str());
-	return;
 	
 	//test odes
+	/*
 	t_ODESTest s_odes(my_rhs);
 	t_MatCmplx ddd(4,8);
 	ddd[0][0] = 1;
@@ -182,30 +190,75 @@ void test::transhyb_base_08(){
 	s_odes.init(0.0, 10.0, 11, ddd);
 	s_odes.solve();
 	std::vector<t_MatCmplx> aaa= s_odes.reconstruct();
-
 	return;
+	*/
+
 	// test everything 
-	const int N_CASES = 4;
+	const int N_CASES = 30;
 	
 	for (int i=1; i<N_CASES+1; i++){
-		t_Log log;
 		int k_test = Nz/2;
 		int i_test = double(Nx)/double(N_CASES+1)*i;
+
 		t_WCharsLoc w_init = 
 			gs_solver.searchMaxInstabFixed(i_test,k_test, t_EigenGS::t_Mode::A_MODE, 0.0);
+
 		stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
 		stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
 		stab_solver.calcGroupVelocity(w_init);
+
 		w_init.set_scales(stab_solver.scales());
 		t_WPLineMono wpline(mf, stab_solver, gs_solver);
+
 		std::wostringstream fname;
-		fname<<_T("test_wpline_mono[")
-			 <<i_test<<_T(",")<<k_test<<_T("].dat");
+		//fname<<_T("test_wpline_mono[")
+		//	 <<i_test<<_T(",")<<k_test<<_T("]_incl.dat");
+
+		fname<<_T("wplines.dat");
+
 		wpline.retrace_fixed_beta(t_Index(i_test, 50, k_test), w_init);
-		wpline.print_to_file(TEST_CASE_DIR.c_str()+fname.str());
-		log<<_T("==============================================wpLine Created");
+		wpline.print_to_file(TEST_CASE_DIR.c_str()+fname.str(), std::ios::app);
 	};
 };
+
+void test::profile_compar(){
+
+	const wxString TEST_CASE_DIR = 
+		//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/transhyb_2D_base/401x251_ortho/");
+	_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/transhyb_2D_base/401x501_incl/");
+	//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/Transhyb_2D_heat/L10_401x501_incl/");
+	//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/Transhyb_2D_cool/L20_401x501_incl/");
+
+	// test tranhyberian, base_re08
+
+	t_TaskManager App(TEST_CASE_DIR);
+	App.load_settings();
+	t_MeanFlow& mf = App.get_mf();
+	const int Nx = mf.base_params().Nx;
+	const int Nz = mf.base_params().Nz;
+
+	int i_test = int(0.1*Nx);
+	int k_test = Nz/2;
+
+	t_ProfileNS ns_prof(mf);
+	ns_prof.initialize(i_test, k_test, 3.0);
+
+	std::wostringstream ns_fname;
+	ns_fname<<_T("prof_ns_dump[")
+		<<i_test<<_T(",")<<k_test<<_T("].dat");
+	ns_prof.dump(TEST_CASE_DIR.c_str()+ns_fname.str());
+
+
+	t_ProfileStab stab_prof(mf);
+	stab_prof.initialize(ns_prof, 251);
+
+	std::wostringstream stab_fname;
+	stab_fname<<_T("prof_stab_dump[")
+		<<i_test<<_T(",")<<k_test<<_T("].dat");
+	stab_prof.dump(TEST_CASE_DIR.c_str()+stab_fname.str());
+
+	return;
+}
 
 void test::itam_hz(){
 	const wxString TEST_CASE_DIR = 

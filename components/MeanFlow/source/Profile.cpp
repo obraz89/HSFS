@@ -1,5 +1,18 @@
 #include "Profile.h"
 #include "log.h"
+
+std::wostream& t_Profile::t_Rec::raw_cout(std::wostream& os){
+// for now simple form to campare with AVF
+	os<<y<<_T("\t")<<
+		u<<_T("\t")<<u1<<_T("\t")<<u2<<_T("\t")<<
+		//w<<_T("\t")<<w1<<_T("\t")<<w2<<_T("\t")<<
+		t<<_T("\t")<<t1<<_T("\t")<<t2<<_T("\t")<<
+		//mu<<_T("\t")<<mu1<<_T("\t")<<mu2<<_T("\t")<<
+		/*p<<_T("\t")<<*/r<<_T("\n");
+	return os;
+	
+} 
+
 t_Profile::t_Profile(const t_MeanFlow& a_rFld,const int a_nnodes):
 _rFld(a_rFld),_nnodes(a_nnodes){
 
@@ -171,3 +184,16 @@ void t_Profile::set_rec(t_Rec val, int j_node){
 	}	
 }
 t_Profile::~t_Profile(){};
+
+
+// temp?
+
+void t_Profile::dump(const std::wstring& fname) const{
+	std::wofstream fstr(&fname[0], std::ios::out);
+	t_Rec cur_rec;
+	for (int i=0; i<_nnodes; i++){
+		cur_rec = get_rec(i);
+		cur_rec.raw_cout(fstr);
+	}
+};
+

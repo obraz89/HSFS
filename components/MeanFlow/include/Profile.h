@@ -10,6 +10,7 @@ class  t_Profile{
 public:
 	struct t_Rec{
 		double y,u, u1, u2, w, w1, w2, t, t1, t2, mu, mu1, mu2, p, r;	
+		std::wostream& raw_cout(std::wostream& os);
 	};
 protected:
 	t_DblVec _y, _u, _u1, _u2, _w, _w1, _w2, _t, _t1, _t2, _mu, _mu1, _mu2, _p, _r;
@@ -40,8 +41,10 @@ public:
 	void set_rec(t_Rec val, int j_node);
 	inline int size() const {return _nnodes;};
 	virtual void initialize(int a_i, int a_k, double a_thickCoef)=0;
-
 	virtual ~t_Profile();
+
+	// for debug and comparisons
+	void dump(const std::wstring& fname) const;
 };
 
 typedef t_Profile::t_Rec t_ProfRec;
