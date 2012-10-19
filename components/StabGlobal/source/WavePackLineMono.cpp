@@ -99,9 +99,9 @@ void t_WPLineMono::retrace_free_beta(t_MeanFlow::t_GridIndex start_from, t_WChar
 
 };
 
-void t_WPLineMono::print_to_file(const std::wstring& fname) const{
+void t_WPLineMono::print_to_file(const std::wstring& fname, int write_mode) const{
 	const t_MFParams& Params = _rFldMF.base_params();
-	std::wofstream fstr(&fname[0]);
+	std::wofstream fstr(&fname[0], write_mode);
 	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tc[]\tNju[Hz]\n");
 
 	std::vector<t_WPLineRec>::const_iterator it;
@@ -129,4 +129,6 @@ void t_WPLineMono::print_to_file(const std::wstring& fname) const{
 			<<_T("\t")<<rec.wave_chars.vga.real()	// TODO:|v| or real(v) ???
 			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)<<_T("\n");	
 	};
+
+	fstr<<_T("\n\n\n\n");
 };
