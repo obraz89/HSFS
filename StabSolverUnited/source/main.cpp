@@ -216,7 +216,7 @@ void test::transhyb_base_08(){
 
 		fname<<_T("wplines.dat");
 
-		wpline.retrace_fixed_beta(t_Index(i_test, 50, k_test), w_init);
+		wpline.retrace_fixed_beta_time(t_Index(i_test, 50, k_test), w_init);
 		wpline.print_to_file(TEST_CASE_DIR.c_str()+fname.str(), std::ios::app);
 	};
 };

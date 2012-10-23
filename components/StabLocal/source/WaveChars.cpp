@@ -3,6 +3,50 @@
 
 // ----------------------------------------------- t_WaveChars
 
+// in this procedure we neglect change in Re(a), Re(b)
+// as it is supposed to be small and transformation is not closed
+// so transform only Im(w) into Im(a) and Im(b)
+// see Nayfeh[1980] "Stab of 3D BL"
+
+t_WaveChars& t_WaveChars::to_spat(){
+
+	if (_task_treat==stab::t_TaskTreat::TIME){
+
+		double coef = 1.0/(pow(vga.real(),2) + pow(vgb.real(),2));
+
+		a.imag(-w.imag()*vga.real()*coef);
+		b.imag(-w.imag()*vgb.real()*coef);
+		w.imag(0.0);
+
+		_task_treat==stab::t_TaskTreat::SPAT;
+
+	}
+
+	return *this;
+};
+
+// spat->time is closed and straightforward
+// so Re(w) is adjusted too
+
+t_WaveChars& t_WaveChars::to_time(){
+
+	if (_task_treat==stab::t_TaskTreat::SPAT){
+		
+		t_CompVal im(0, 1);
+
+		t_CompVal dw = -im*(vga*a.imag() + vgb*b.imag());
+
+		w+=dw;
+		a.imag(0);
+		b.imag(0);
+
+		_task_treat==stab::t_TaskTreat::TIME;
+
+	}
+
+	return *this;
+}
+
 t_WaveChars& t_WaveChars::_set_vals(const t_Vec3Cmplx& k, const t_Vec3Cmplx& vg, t_CompVal a_w, const t_ProfileStab& rProfStab){
 	a=k[0];
 	kn=k[1];

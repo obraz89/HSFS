@@ -6,18 +6,32 @@
 #include <iostream>
 #include "io_helpers.h"
 
+/************************************************************************/
+/* namespace for general lst stability defines and functions
+// this is the first entry to stab,
+// separate (maybe) later 
+/************************************************************************/
 
+namespace stab{
+	enum t_TaskTreat{TIME=0, SPAT};
+}
 
-// basic wave characteristics
+/************************************************************************/
+/* basic wave characteristics
 // a, kn, b - components of wave number k
 // kn=0 in local rf, but non-zero in global rf
 // w - frequency
 // vga, vgn, vgb - components of group velocity
-// vgn=0 in local rf, but non-zero in global rf
+// vgn=0 in local rf, but non-zero in global rf*/
+
+// to_spat and to_time = Gaster~Nayfe transform
+// using group velocity
+/************************************************************************/
 
 class  t_WaveChars{
 protected:
 	t_StabScales _scales;
+	stab::t_TaskTreat _task_treat;
 	void _to_dim(t_WaveChars& dim) const;
 	t_WaveChars& _set_vals(
 		const t_Vec3Cmplx& k, 
@@ -25,11 +39,13 @@ protected:
 		t_CompVal a_w, 
 		const t_ProfileStab& prof_stab);
 public:
-	const t_StabScales& scales() const{return _scales;};
-	void set_scales(const t_StabScales&scales){_scales = scales;};
 	t_CompVal a, kn, b;
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
+	t_WaveChars& to_spat();
+	t_WaveChars& to_time();
+	const t_StabScales& scales() const{return _scales;};
+	void set_scales(const t_StabScales&scales){_scales = scales;};
 	friend inline std::wostream& operator<<(std::wostream& str, t_WaveChars ww){
 		str<<_T("ReStab:")<<std_manip::std_format_fixed<double>(ww.scales().ReStab);
 		str<<_T("FreqScale:")<<std_manip::std_format_fixed<double>(ww.scales().FreqScale());
@@ -81,7 +97,7 @@ public:
 // to be used with wave pack line
 // store some context from stab comps
 // to restore dimensional wave chars
-class t_WCharsGlobDim;
+class t_WCharsGlobDim; 
 class  t_WCharsGlob: public t_WaveChars{
 	t_WCharsGlob();
 public:

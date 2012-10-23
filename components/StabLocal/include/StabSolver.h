@@ -125,7 +125,7 @@ public:
 	// B_MODE - keep alpha fixed (?)
 	// wave_chars.w should be close enough to w_fixed
 	void getEigenWFixed(double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode);
-	void calcGroupVelocity(t_WCharsLoc& a_wave_chars);
+	void calcGroupVelocity(t_WCharsLoc& a_wave_chars); 
 
 	// core function
 	// returns the value of residual 

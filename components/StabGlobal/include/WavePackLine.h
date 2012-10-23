@@ -54,7 +54,8 @@ public:
 };
 // monochromatic wave packet trajectory
 class  t_WPLineMono: public t_WavePackLine{
-	void _retrace(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction);
+	void _retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction);
+	void _retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction);
 	// IMPORTANT TODO: FIX!!!
 	bool _proceed_retrace(t_Index cur_ind, t_WCharsLoc wave){
 		return ((cur_ind.i>10)
@@ -63,7 +64,8 @@ class  t_WPLineMono: public t_WavePackLine{
 	};
 public:
 	t_WPLineMono(const t_MeanFlow&, t_StabSolver& a_stab_solver, t_EigenGS& a_gs_solver);
-	void retrace_fixed_beta(t_Index start_from, t_WCharsLoc init_wave);
+	void retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init_wave);
+	void retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init_wave);
 	void retrace_free_beta(t_Index start_from, t_WCharsLoc init_wave);
 	void print_to_file(const std::wstring& fname, int write_mode=std::ios::out) const;
 };

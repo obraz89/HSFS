@@ -794,6 +794,8 @@ void t_StabSolver::getEigenWFixed
 	double resid=1.0;
 	double dwr, darg;
 	t_Complex vg;
+	// IMPORTANT TODO: do we think Vg change is small??
+	// or is it a mistake - Vg is not recalculated!!!
 	adjustLocal(wave_chars, W_MODE);
 	int n_iter=0;
 	do{
