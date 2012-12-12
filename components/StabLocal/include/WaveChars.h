@@ -42,8 +42,16 @@ public:
 	t_CompVal a, kn, b;
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
+
+	t_WaveChars(stab::t_TaskTreat treat=stab::TIME):_task_treat(treat){};
+
+	stab::t_TaskTreat get_treat() const;
+	void set_treat(stab::t_TaskTreat treat);
+	bool check_treat(stab::t_TaskTreat treat) const;
+
 	t_WaveChars& to_spat();
 	t_WaveChars& to_time();
+
 	const t_StabScales& scales() const{return _scales;};
 	void set_scales(const t_StabScales&scales){_scales = scales;};
 	friend inline std::wostream& operator<<(std::wostream& str, t_WaveChars ww){
@@ -67,6 +75,13 @@ public:
 			     <<_T("b:")<<this->b<<std::endl
 				 <<_T("w:")<<this->w<<std::endl;
 	}
+
+	// exceptions
+	class t_BadTreat: public t_GenException{
+	public:
+		t_BadTreat(const wxString& what, const wxChar* szFile,  const int line):
+		  t_GenException(what, szFile, line){};
+	};
 };
 
 // instability wave characteristics 
@@ -78,7 +93,11 @@ class t_WCharsLocDim;
 class t_WCharsLoc: public t_WaveChars{
 	friend class t_WCharsLocDim;
 public:
+
 	t_CompVal resid;
+// TODO: ?
+	t_WCharsLoc():t_WaveChars(){}
+	t_WCharsLoc(const t_WaveChars& ww):t_WaveChars(ww){}
 	t_WCharsLocDim to_dim() const;
 	static t_WCharsLoc find_max_instab(const std::vector<t_WCharsLoc>& vec);
 };

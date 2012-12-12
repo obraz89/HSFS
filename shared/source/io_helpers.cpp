@@ -13,7 +13,18 @@
 const int std_manip::FIELD_WIDTH_DEFAULT=12;
 const int std_manip::PRECISION_DEFAULT=6;
 
-inline std::string wx_to_stdstr(const wxString& wx_str){
+std::istream& io_hlp::eat_white(std::istream& istr){
+	char ch;
+	while (istr.get(ch)){
+		if (isspace(ch)==0){
+			istr.putback(ch);
+			break;
+		};
+	};
+	return istr;
+}
+
+std::string wx_to_stdstr(const wxString& wx_str){
 		// unicode
 		const wxChar* orig = wx_str.c_str();
 		size_t origsize = wcslen(orig) + 1;

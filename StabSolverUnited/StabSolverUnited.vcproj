@@ -440,7 +440,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\components\StabLocal\source\global_search.cpp"
+					RelativePath="..\components\StabLocal\source\EigenGS_params.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\EigenGS_planeWaves.cpp"
 					>
 				</File>
 				<File
@@ -453,6 +457,10 @@
 				</File>
 				<File
 					RelativePath="..\components\StabLocal\source\StabSolver.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\components\StabLocal\source\StabSolver_params.cpp"
 					>
 				</File>
 				<File

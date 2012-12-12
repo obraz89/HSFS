@@ -52,7 +52,10 @@ public:
 	}
 	virtual ~t_WavePackLine();
 };
+/************************************************************************/
 // monochromatic wave packet trajectory
+// convention: store spatial-treat wave characteristics
+/************************************************************************/
 class  t_WPLineMono: public t_WavePackLine{
 	void _retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction);
 	void _retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init_wave, t_Direction direction);

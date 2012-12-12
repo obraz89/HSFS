@@ -2,92 +2,9 @@
 #include "common_data.h"
 #include "log.h"
 
-using namespace common::cmpnts;
-
 static const int STAB_MATRIX_DIM = 8;
 
-// ---------------------------------------
-// t_StabSolverParams
-static const int N_VARS_DEFAULT = 5;
-static const int N_NODES_DEFAULT = 51;
-static const double THICK_COEF_DEFAULT = 3.0;
-
-// adjust procedure parameters
-static const double ADJUST_STEP_DEFAULT = 1.0e-5;
-static const double ADJUST_TOL_DEFAULT  = 1.0e-4;
-static const double ASYM_TOL_DEFAULT = 1.0e-6;
-static const int ADJUST_MAX_ITER_DEFAULT= 50;
-// small increment to compute smth like
-// dw/da : (w(a+DELTA) - w(a))/DELTA
-static const double DELTA_SMALL = 1.0e-6;
-
-t_StabSolverParams::t_StabSolverParams():t_ComponentParamsGroup(STABSOLVER_CONF_DOMAIN){
-	_init_params_map();
-};
-
-t_StabSolverParams::t_StabSolverParams(wxString configfile):t_ComponentParamsGroup(STABSOLVER_CONF_DOMAIN){
-	_init_params_map();
-	load_via_params(configfile);
-};
-
-void t_StabSolverParams::_init_params_map(){
-	t_CompParamInt* pNVars = 
-		new t_CompParamInt(NVars, _T("NVars"), _T("Number of variables: internal param"));
-	pNVars->set_default(N_VARS_DEFAULT);
-	_add_param(pNVars);
-
-	t_CompParamInt* pNNnodes = 
-		new t_CompParamInt(NNodes, _T("NNodes"), _T("Number of nodes to be used in stability computations"));
-	pNNnodes->set_default(N_NODES_DEFAULT);
-	_add_param(pNNnodes);
-
-	t_CompParamDbl* pThickCoef = 
-		new t_CompParamDbl(ThickCoef, _T("ThickCoef"), _T("Thickness coef : Y = BL thick * coef"));
-	pThickCoef->set_default(THICK_COEF_DEFAULT);
-	_add_param(pThickCoef);
-
-	t_CompParamDbl* pAdjustStep = 
-		new t_CompParamDbl(AdjustStep, _T("AdjustStep"), _T("Adjust : Newton iteration argument step"));
-	pAdjustStep->set_default(ADJUST_STEP_DEFAULT);
-	_add_param(pAdjustStep);
-
-	t_CompParamDbl* pAdjustTol = 
-		new t_CompParamDbl(AdjustTol, _T("AdjustTol"), _T("Adjust : Converged criterion"));
-	pAdjustTol->set_default(ADJUST_TOL_DEFAULT);
-	_add_param(pAdjustTol);
-
-	t_CompParamInt* pAdjustMaxIter = 
-		new t_CompParamInt(AdjustMaxIter, _T("AdjustMaxIter"), _T("Adjust : Iterations number limit"));
-	pAdjustMaxIter->set_default(ADJUST_MAX_ITER_DEFAULT);
-	_add_param(pAdjustMaxIter);
-};
-
-void t_StabSolverParams::_load_direct(wxFileConfig& conf){
-	conf.SetRecordDefaults(); //write defaults to config file
-	conf.SetPath(ConfigDomain);
-	// do smth
-	conf.SetPath(_T("/"));
-}
-
-void t_StabSolverParams::load_direct(wxString configfile){
-	_load_direct(_get_config_handle(configfile));
-};
-
-void t_StabSolverParams::_load_via_params(wxFileConfig& handle){
-	t_ComponentParamsGroup::_load_via_params(handle);
-};
-
-void t_StabSolverParams::load_via_params(wxString configfile){
-	_load_via_params(_get_config_handle(configfile));
-};
-
-void t_StabSolverParams::save(wxString configfile){
-	// for future
-};
-
-
-// ~t_StabSolverParams
-// ---------------------------------------
+using namespace common::cmpnts;
 
 t_StabSolver::t_StabSolver(const t_MeanFlow& a_rFldNS):
 _rFldNS(a_rFldNS), _profStab(a_rFldNS), 
@@ -585,9 +502,68 @@ void t_StabSolver::_verifyAsymptotics3D
 }
 
 
-t_WCharsGlob t_StabSolver::popGlobalWaveChars(){
-	return t_WCharsGlob(_waveChars,_profStab);
+/************************************************************************/   
+// Restore wave chars in global reference frame
+// Use time approach
+/************************************************************************/
+
+t_WCharsGlob t_StabSolver::popGlobalWCharsTime(){
+
+	t_WCharsLoc restore_wave = _waveChars;
+	t_WCharsLoc adjust_wave = _waveChars;
+
+	if (_waveChars.get_treat()==stab::t_TaskTreat::SPAT){
+
+		calcGroupVelocity(adjust_wave);
+
+		adjust_wave.to_time();
+
+		adjustLocal(adjust_wave, t_StabSolver::t_MODE::W_MODE);
+
+	}
+
+	t_WCharsGlob glob_wave(adjust_wave,_profStab);
+
+	_waveChars = restore_wave;
+
+	return glob_wave;
+
 };
+
+
+/************************************************************************/   
+// Restore wave chars in global reference frame
+// Use spat approach
+/************************************************************************/
+
+t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(){
+
+	t_WCharsLoc restore_wave = _waveChars;
+	t_WCharsLoc adjust_wave = _waveChars;
+
+	if (_waveChars.get_treat()==stab::t_TaskTreat::TIME){
+
+		calcGroupVelocity(adjust_wave);
+
+		adjust_wave.to_spat();
+
+		// TODO: here is another uncertainty:
+		// A_MODE or B_MODE or mixed - how to choose
+		adjustLocal(adjust_wave, t_StabSolver::t_MODE::A_MODE);
+
+	}
+
+	t_WCharsGlob glob_wave(adjust_wave,_profStab);
+
+	_waveChars = restore_wave;
+
+	return glob_wave;
+};
+
+/************************************************************************/   
+// Set up the required context for a given point
+// 
+/************************************************************************/
 
 void t_StabSolver::set3DContext
 (const int& i_ind, const int& k_ind, const int& a_nnodesStab){
@@ -608,6 +584,11 @@ void t_StabSolver::set3DContext
 	return;
 }
 
+/************************************************************************/   
+// set3DContext alias
+// 
+/************************************************************************/
+
 void t_StabSolver::set3DContext
 (const t_Index& ind, const int a_nnodesStab/*=0*/){
 	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.base_params().Ny : a_nnodesStab;
@@ -615,7 +596,36 @@ void t_StabSolver::set3DContext
 	return;
 }
 
-/*   COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) */        
+/************************************************************************/   
+// Set up context using AVF profiles
+// 
+/************************************************************************/
+
+void t_StabSolver::set3DContext(const std::wstring fname_profiles){
+
+	_profStab.initialize(fname_profiles);
+
+	int nnodes = _profStab.size();
+
+	_math_solver.setContext(nnodes);
+
+	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){
+		_stab_matrix.resize(STAB_MATRIX_DIM);
+	}
+
+	for (int j=0; j<nnodes; j++){
+		_math_solver.varRange[j] = _profStab.get_y(nnodes-1-j);
+	}
+
+	return;
+	
+}
+
+/************************************************************************/   
+//COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) 
+//
+/************************************************************************/
+
 void t_StabSolver::calcGroupVelocity
 (t_WCharsLoc &a_wave_chars){
 	// empiric constant - tolerance
@@ -645,6 +655,11 @@ void t_StabSolver::calcGroupVelocity
 	adjustLocal(rght_chars, W_MODE);
 	a_wave_chars.vgb = 0.5*(rght_chars.w - left_chars.w)/dd;
 }
+
+/************************************************************************/   
+// Search maximum instability with keeping Re(w)=const
+// Use time approach
+/************************************************************************/
 
 t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime
 (const t_WCharsLoc& initial_guess){
@@ -776,6 +791,11 @@ std::vector<t_WCharsLoc> t_StabSolver::filterInitWaves
 	return good_initials;
 };
 
+
+/************************************************************************/   
+//Search for nearest eigen solution
+// with keeping Re(w)=const
+/************************************************************************/
 void t_StabSolver::getEigenWFixed
 (double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode){
 	t_WCharsLoc backup = wave_chars;

@@ -6,73 +6,6 @@
 
 using namespace common::cmpnts;
 
-// ---------------------------------------
-// t_EigenParams
-static const int N_VARS_DEFAULT = 5;
-static const int N_NODES_DEFAULT = 51;
-static const double THICK_COEF_DEFAULT = 3.0;
-static const double W_THRESHOLD_DEFAULT = 1.0e-5;
-
-t_EigenParams::t_EigenParams():t_ComponentParamsGroup(EIGEN_CONF_DOMAIN){
-	_init_params_map();
-};
-
-t_EigenParams::t_EigenParams(wxString configfile):t_ComponentParamsGroup(EIGEN_CONF_DOMAIN){
-	_init_params_map();
-	load_via_params(configfile);
-};
-
-void t_EigenParams::_init_params_map(){
-	t_CompParamInt* pNVars = 
-		new t_CompParamInt(NVars, _T("NVars"), _T("Number of variables: internal param"));
-	pNVars->set_default(N_VARS_DEFAULT);
-	_add_param(pNVars);
-
-	t_CompParamInt* pNNnodes = 
-		new t_CompParamInt(NNodes, _T("NNodes"), _T("Number of nodes to be used in eigen search"));
-	pNNnodes->set_default(N_NODES_DEFAULT);
-	_add_param(pNNnodes);
-
-	t_CompParamDbl* pThickCoef = 
-		new t_CompParamDbl(ThickCoef, _T("ThickCoef"), _T("Thickness coef : Y = BL thick * coef"));
-	pThickCoef->set_default(THICK_COEF_DEFAULT);
-	_add_param(pThickCoef);
-
-	t_CompParamDbl* pWThreshold = 
-		new t_CompParamDbl(W_Threshold, _T("FreqThreshold"), _T("freq>=threshold means that wave is really candidate to instability mode"));
-	pWThreshold->set_default(W_THRESHOLD_DEFAULT);
-	_add_param(pWThreshold);
-};
-
-void t_EigenParams::_load_direct(wxFileConfig& conf){
-	conf.SetRecordDefaults(); //write defaults to config file
-	conf.SetPath(ConfigDomain);
-	// do smth
-	conf.SetPath(_T("/"));
-}
-
-void t_EigenParams::load_direct(wxString configfile){
-	_load_direct(_get_config_handle(configfile));
-};
-
-void t_EigenParams::_load_via_params(wxFileConfig& handle){
-	t_ComponentParamsGroup::_load_via_params(handle);
-};
-
-void t_EigenParams::load_via_params(wxString configfile){
-	_load_via_params(_get_config_handle(configfile));
-};
-
-void t_EigenParams::save(wxString configfile){
-	// for future
-};
-
-
-// ~t_EigenParams
-// ---------------------------------------
-
-
-
 t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld, const wxString& configfile):
 _rFldNS(a_rFld), _profStab(a_rFld), _params(configfile), t_Component(configfile, EIGEN3D_NAME){
 	_init(configfile);
@@ -96,11 +29,6 @@ void t_EigenGS::initialize(const wxString& configfile){
 	_init(configfile);
 };
 
-void t_EigenGS::_init_params_grps(){
-	_mapParamsGrps.clear();
-	_add_params_group(_T("default"), _params);
-};
-
 void t_EigenGS::setContext(const int a_i, const int a_k, 
 					  const double a_alpha, const double a_beta,
 					  const int a_nnodes/*=0*/){
@@ -122,6 +50,7 @@ void t_EigenGS::setContext(const int a_i, const int a_k,
 		_grid[i] = (double)(i)*del;
 	};
 };
+
 // semi-flag is true if it is k-1/2 point
 void t_EigenGS::getMetricCoefs(const int a_nnode, double& f1, double& f2, double& f3, const bool semi_flag) const{
 	double cur_eta = _grid[a_nnode];
@@ -423,103 +352,100 @@ void t_EigenGS::fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx&
 	// filled FO template
 };
 
-int t_EigenGS::getSpectrum(const int a_i, const int a_k, 
-	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes/*=0*/){
-  // TODO: unicode and petsc????
-  static char help[]="Global Search\n";
-  // conext
-  setContext(a_i, a_k, a_alpha, a_beta, a_nnodes);
-  // slepc locals
-  Mat         	 A,B;		  
-  EPS         	 eps;		  
-  const EPSType  type;
-  PetscReal   	 error, tol, re, im;
-  PetscScalar 	 kr, ki;
-  PetscErrorCode ierr;
-  PetscInt    	 nev, maxit, Istart, Iend, col[3], its, lits, nconv;
-  PetscBool     FirstBlock=PETSC_FALSE, LastBlock=PETSC_FALSE;
-  PetscViewer 	 viewer;
-  PetscBool  	 flg;
-  // to fill matrices
-  int mpi_rank, comm_size;
 
-  ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_params.NNodes);CHKERRQ(ierr);
+int t_EigenGS::_solve(){
 
-  MPI_Comm_size(PETSC_COMM_WORLD, &comm_size);
-  MPI_Comm_rank(PETSC_COMM_WORLD, &mpi_rank);
+	static char help[]="Global Search\n";
 
-  if (comm_size!=1){
-	  std::cerr<<"This is first step: uniprocessor usage only!\n";
-	  return -1;
-  };
+	Mat         	 A,B;		  
+	EPS         	 eps;		  
+	const EPSType  type;
+	PetscReal   	 error, tol, re, im;
+	PetscScalar 	 kr, ki;
+	PetscErrorCode ierr;
+	PetscInt    	 nev, maxit, Istart, Iend, col[3], its, lits, nconv;
+	PetscBool     FirstBlock=PETSC_FALSE, LastBlock=PETSC_FALSE;
+	PetscViewer 	 viewer;
+	PetscBool  	 flg;
+	// to fill matrices
+	int mpi_rank, comm_size;
 
-  int large_matrix_size = (_params.NNodes-1)*(_params.NVars);
+	ierr = PetscPrintf(PETSC_COMM_WORLD,"\nGlobal Eigensearch started: N=%d\n\n",_params.NNodes);CHKERRQ(ierr);
 
-  ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
-  ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,large_matrix_size, large_matrix_size);CHKERRQ(ierr);
-  ierr = MatSetFromOptions(A);CHKERRQ(ierr);
+	MPI_Comm_size(PETSC_COMM_WORLD, &comm_size);
+	MPI_Comm_rank(PETSC_COMM_WORLD, &mpi_rank);
 
-  ierr = MatCreate(PETSC_COMM_WORLD,&B);CHKERRQ(ierr);
-  ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,large_matrix_size, large_matrix_size);CHKERRQ(ierr);
-  ierr = MatSetFromOptions(B);CHKERRQ(ierr);
+	if (comm_size!=1){
+		std::cerr<<"This is first step: uniprocessor usage only!\n";
+		return -1;
+	};
 
-  // main work goes here
-  // these arrays are used to push non-zero elems in
-  // matrix rows
+	int large_matrix_size = (_params.NNodes-1)*(_params.NVars);
 
-  ierr = MatGetOwnershipRange(A,&Istart,&Iend);CHKERRQ(ierr);
+	ierr = MatCreate(PETSC_COMM_WORLD,&A);CHKERRQ(ierr);
+	ierr = MatSetSizes(A,PETSC_DECIDE,PETSC_DECIDE,large_matrix_size, large_matrix_size);CHKERRQ(ierr);
+	ierr = MatSetFromOptions(A);CHKERRQ(ierr);
 
-  //if (Istart<=1) FirstBlock=PETSC_TRUE;
-  //if (Iend>=large_matrix_size-n_stab_vars+1) LastBlock=PETSC_TRUE;
+	ierr = MatCreate(PETSC_COMM_WORLD,&B);CHKERRQ(ierr);
+	ierr = MatSetSizes(B,PETSC_DECIDE,PETSC_DECIDE,large_matrix_size, large_matrix_size);CHKERRQ(ierr);
+	ierr = MatSetFromOptions(B);CHKERRQ(ierr);
 
-  // TODO: decide how to distribute rows to processors
-  // for now just fill matrices
-    if ((Istart!=0)||(Iend!=large_matrix_size)){
-	  std::cerr<<"Wrong ownership range-one process; aborting\n";
-	  return -1;
-    }else{
-	  // fill A~ by rows
-	    for (int i=1; i<_params.NNodes; i++){
-		  for (int j=0; j<_params.NVars; j++){
-			  if (j==2){
-				  setMatrices(i, true);
-				fill_FO_template(_B, _C, i,j);
-			  }else{
-				  // optimize setMatrices
-				  setMatrices(i, false);
-				fill_SO_template(_A, _B, _C, i,j);
-			  };
-			int n_inserts = _insert_inds.size();
-			int row_num = _params.NVars*(i-1)+j;
-			ierr = MatSetValues(A,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
-		}
-		
-	    };
-	  // fill B~ by rows, order must be the same as in A
+	// main work goes here
+	// these arrays are used to push non-zero elems in
+	// matrix rows
+
+	ierr = MatGetOwnershipRange(A,&Istart,&Iend);CHKERRQ(ierr);
+
+	//if (Istart<=1) FirstBlock=PETSC_TRUE;
+	//if (Iend>=large_matrix_size-n_stab_vars+1) LastBlock=PETSC_TRUE;
+
+	// TODO: decide how to distribute rows to processors
+	// for now just fill matrices
+	if ((Istart!=0)||(Iend!=large_matrix_size)){
+		std::cerr<<"Wrong ownership range-one process; aborting\n";
+		return -1;
+	}else{
+		// fill A~ by rows
+		for (int i=1; i<_params.NNodes; i++){
+			for (int j=0; j<_params.NVars; j++){
+				if (j==2){
+					setMatrices(i, true);
+					fill_FO_template(_B, _C, i,j);
+				}else{
+					// optimize setMatrices
+					setMatrices(i, false);
+					fill_SO_template(_A, _B, _C, i,j);
+				};
+				int n_inserts = _insert_inds.size();
+				int row_num = _params.NVars*(i-1)+j;
+				ierr = MatSetValues(A,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
+			}
+
+		};
+		// fill B~ by rows, order must be the same as in A
 
 		t_SqMatCmplx zero_A(5);
 		t_SqMatCmplx zero_B(5);
-	  for (int i=1; i<_params.NNodes; i++){
-		  for (int j=0; j<_params.NVars; j++){
-			  if (j==2){
-				  setMatrices(i, true);
-				fill_FO_template(zero_B, _CW, i,j);
-			  }else{
-				  // optimize setMatrices
-				  setMatrices(i, false);
-				fill_SO_template(zero_A, zero_B, _CW, i,j);
-			  };
-			int n_inserts = _insert_inds.size();
-			int row_num = _params.NVars*(i-1)+j;
-			ierr = MatSetValues(B,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
+		for (int i=1; i<_params.NNodes; i++){
+			for (int j=0; j<_params.NVars; j++){
+				if (j==2){
+					setMatrices(i, true);
+					fill_FO_template(zero_B, _CW, i,j);
+				}else{
+					// optimize setMatrices
+					setMatrices(i, false);
+					fill_SO_template(zero_A, zero_B, _CW, i,j);
+				};
+				int n_inserts = _insert_inds.size();
+				int row_num = _params.NVars*(i-1)+j;
+				ierr = MatSetValues(B,1,&row_num,n_inserts,&_insert_inds[0],&_insert_vals[0],INSERT_VALUES);CHKERRQ(ierr);
+			}
 		}
-	  }
-    }
+	}
 	// matrices A,B filled, assemble then
 	ierr = MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 	ierr = MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
-	  	
+
 	ierr = MatAssemblyBegin(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 	ierr = MatAssemblyEnd(B,MAT_FINAL_ASSEMBLY);CHKERRQ(ierr);
 
@@ -543,8 +469,8 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	PetscPrintf(PETSC_COMM_WORLD, "matrices assembly: OK");
 	//   Set solver parameters at runtime
 	//ierr = EPSSetFromOptions(eps);CHKERRQ(ierr);
-	
-	
+
+
 	ierr = EPSSolve(eps);CHKERRQ(ierr);
 
 	ierr = EPSGetIterationNumber(eps, &its);CHKERRQ(ierr);
@@ -558,38 +484,48 @@ int t_EigenGS::getSpectrum(const int a_i, const int a_k,
 	ierr = EPSGetTolerances(eps,&tol,&maxit);CHKERRQ(ierr);
 	ierr = PetscPrintf(PETSC_COMM_WORLD," Stopping condition: tol=%.4g, maxit=%d\n",tol,maxit);CHKERRQ(ierr);
 
-  
+
 	ierr = EPSGetConverged(eps,&nconv);CHKERRQ(ierr);
 	ierr = PetscPrintf(PETSC_COMM_WORLD," Number of converged approximate eigenpairs: %d\n\n",nconv);CHKERRQ(ierr);
 	_spectrum.resize(nconv, 0.0);
 	if (nconv>0) {
 		//ierr = PetscPrintf(PETSC_COMM_WORLD,
-        // "           k             ||Ax-kBx||/||kx||\n"
-        // "  --------------------- ------------------\n" );CHKERRQ(ierr);
+		// "           k             ||Ax-kBx||/||kx||\n"
+		// "  --------------------- ------------------\n" );CHKERRQ(ierr);
 
 		for(PetscInt i=0; i<nconv; i++ ) {
 			ierr = EPSGetEigenpair(eps,i,&kr,&ki,PETSC_NULL,PETSC_NULL);CHKERRQ(ierr);
 			ierr = EPSComputeRelativeError(eps,i,&error);CHKERRQ(ierr);
 
-			#if defined(PETSC_USE_COMPLEX)
-				re = PetscRealPart(kr);
-				im = PetscImaginaryPart(kr);
-				_spectrum[i] = std::complex<double>(re, im);
-			#else
-				re = kr;
-				im = ki;
-			#endif
+#if defined(PETSC_USE_COMPLEX)
+			re = PetscRealPart(kr);
+			im = PetscImaginaryPart(kr);
+			_spectrum[i] = std::complex<double>(re, im);
+#else
+			re = kr;
+			im = ki;
+#endif
 			//ierr = PetscPrintf(PETSC_COMM_WORLD," % 12g\n",error);CHKERRQ(ierr);
 
 		}
 		ierr = PetscPrintf(PETSC_COMM_WORLD,"\n" );CHKERRQ(ierr);
 	}
-	
-  
-  ierr = EPSDestroy(&eps);CHKERRQ(ierr);
-  ierr = MatDestroy(&A);CHKERRQ(ierr);
-  ierr = MatDestroy(&B);CHKERRQ(ierr);
-  return 0;
+
+
+	ierr = EPSDestroy(&eps);CHKERRQ(ierr);
+	ierr = MatDestroy(&A);CHKERRQ(ierr);
+	ierr = MatDestroy(&B);CHKERRQ(ierr);
+	return 0;
+}
+
+int t_EigenGS::getSpectrum(const int a_i, const int a_k, 
+	     			  const double a_alpha, const double a_beta,
+					  const int a_nnodes/*=0*/){
+  // conext
+  setContext(a_i, a_k, a_alpha, a_beta, a_nnodes);
+
+  int err_code = _solve();
+  return err_code;
 
 };
 
@@ -654,8 +590,8 @@ std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed
 		a = fixed_val;
 		pArg = &b;
 	};
-	double arg_min = 0.1;
-	double arg_max = 0.95;
+	double arg_min = 0.01;
+	double arg_max = 1.01;
 	int n = 100;
 	for (int i=0; i<n; i++){
 		std::cout<<"GS fixed: "<<i<<"% done\n";

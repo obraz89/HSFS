@@ -35,6 +35,8 @@ namespace test{
 	void transhyb_base_08();
 	void profile_compar();
 	void itam_hz();
+	void selfsim_M45_local_search();
+	void selfsim_M45_spectrum();
 };
 //--------------------------------------------------~tests
 
@@ -55,10 +57,17 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 	// PAUSE IN FORTRAN LIBS WON'T WORK
 	// 
 	RedirectIOToConsole();
+
 	//test::king_al_2_new();
+
 	//test::transhyb_base_08();
+
 	//test::itam_hz();
-	test::profile_compar();
+
+	//test::profile_compar();
+
+	test::local_search_selfsim();
+
 	return 0;
 }
 
@@ -114,6 +123,7 @@ void test::transhyb_base_08(){
 
 	t_StabSolver& stab_solver = App.get_stab_solver();
 	t_EigenGS& gs_solver = App.get_eigen_gs();
+
 // test mean flow
 	// te=1.22 pe=0.0395, ue=0.977, ve=0.119, roe=1.632, me=5.364, ree1=2.3e+07
 	/*
@@ -126,11 +136,6 @@ void test::transhyb_base_08(){
 					0)<<std::endl;
 	*/
 	
-	/*
-	w_init.w = t_Complex(0.274, 3.4e-3);
-	w_init.a =	0.301;
-	w_init.b =	0.0;
-	*/
 // test stab local
 	/*	
 	stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
@@ -151,33 +156,39 @@ void test::transhyb_base_08(){
 //	std::cout<<gs_solver.searchMaxInstabFixed(i_test,k_test, t_EigenGS::t_Mode::A_MODE, 0.0);
 
 // test wave pack lines
+
 	/*
-	t_WPLineMono wpline(mf, stab_solver, gs_solver);
-	std::ofstream wpline_fstr("test_wpline_mono.dat");
-	wpline.retrace_fixed_beta(t_Index(i_test, 50, k_test), w_init);
-	wpline_fstr<<wpline;
-	*/
-	// test eigen function reconstruction
-	
 	int i_test = Nx-20;
 	int k_test = Nz/2;
 	
+	t_WPLineMono wpline(mf, stab_solver, gs_solver);
+	std::ofstream wpline_fstr("test_wpline_mono.dat");
+	wpline.retrace_fixed_beta_time(t_Index(i_test, 50, k_test), w_init);
+	wpline_fstr<<wpline;
+	*/
+	
+	/*
 	t_WCharsLoc w_init = 
 		gs_solver.searchMaxInstabFixed(Nx-20,Nz/2, t_EigenGS::t_Mode::A_MODE, 0.0);
-		
-	/*t_WCharsLoc w_init;
+	*/
+
+	/*
+	t_WCharsLoc w_init;
 	w_init.a=0.27;
 	w_init.b=0.0;
 	w_init.w=t_Complex(0.247, 0.00643);
 	*/
+	
 
-
+	// test eigen reconstruct
+	/*
 	stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
 	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
 	std::wostringstream fname;
 	fname<<_T("test_eigen_reconstruct[")
 		<<i_test<<_T(",")<<k_test<<_T("].dat");
 	stab_solver.dumpEigenFuctions(TEST_CASE_DIR.c_str()+fname.str());
+	*/
 	
 	//test odes
 	/*
@@ -194,14 +205,24 @@ void test::transhyb_base_08(){
 	*/
 
 	// test everything 
-	const int N_CASES = 30;
+	const int N_CASES = 10;
 	
 	for (int i=1; i<N_CASES+1; i++){
 		int k_test = Nz/2;
 		int i_test = double(Nx)/double(N_CASES+1)*i;
 
+		
 		t_WCharsLoc w_init = 
 			gs_solver.searchMaxInstabFixed(i_test,k_test, t_EigenGS::t_Mode::A_MODE, 0.0);
+		
+		
+		/*
+		t_WCharsLoc w_init;
+		w_init.a=0.27;
+		w_init.b=0.0;
+		w_init.w=t_Complex(0.247, 0.00643);
+		*/	
+
 
 		stab_solver.set3DContext(i_test,k_test, mf.base_params().Ny);
 		stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
@@ -214,7 +235,7 @@ void test::transhyb_base_08(){
 		//fname<<_T("test_wpline_mono[")
 		//	 <<i_test<<_T(",")<<k_test<<_T("]_incl.dat");
 
-		fname<<_T("wplines.dat");
+		fname<<_T("wplines_exact_gaster.dat");
 
 		wpline.retrace_fixed_beta_time(t_Index(i_test, 50, k_test), w_init);
 		wpline.print_to_file(TEST_CASE_DIR.c_str()+fname.str(), std::ios::app);
@@ -291,3 +312,111 @@ void test::itam_hz(){
 
 	stab_solver.dumpEigenFuctions(f_recon);
 };
+
+
+void test::local_search_selfsim_M45(){
+
+	const wxString TEST_CASE_DIR = 
+		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/local_search_selfsim_M=4.5/");
+
+	t_TaskManager App(TEST_CASE_DIR);
+	App.load_settings();
+
+	t_StabSolver& stab_solver = App.get_stab_solver();
+	t_EigenGS& gs_solver = App.get_eigen_gs();
+
+	std::wstring profiles_path = (TEST_CASE_DIR+_("profiles.dat")).c_str();
+
+	int n_re = 21;
+	double R_max = 2500.0;
+	double R_min = 1700.0;
+	double dR = (R_max - R_min)/double(n_re-1);
+
+	int n_al = 51;
+	double al_min = 0.2;
+	double al_max = 0.4;
+	double da = (al_max - al_min)/double(n_al-1);
+
+	double beta = 0.0;
+	double F = 1.265e-04;
+
+	std::wstring out_path = (TEST_CASE_DIR+_("out_instab_wchars.dat")).c_str();
+
+	std::wofstream ofstr(&out_path[0]);
+
+	// just to be sure
+	Log<<_T("2D test started, profiles from AVF code...")<<_T("\n");
+
+	for (int i=0; i<n_re; i++){
+
+		double R = R_min + dR*i;
+
+		Log<<_T("Start R=")<<R<<_T("\t//")<<(100*n_re)/(i+1)<<_T("perc\n");
+
+		std::vector<t_WCharsLoc> waves_spat;
+		for (int j=0; j<n_al; j++){
+			double al = al_min + da*j;
+
+			t_WCharsLoc wave = 
+				gs_solver.searchMaxInstabPlane(profiles_path, al, beta);	
+
+			if (wave.w.imag()>0.0){
+
+				stab_solver.set3DContext(profiles_path);
+
+				stab_solver.adjustLocal(wave, t_StabSolver::t_MODE::W_MODE);
+
+				stab_solver.calcGroupVelocity(wave);
+
+				t_WCharsLoc spat_wave = wave.to_spat();
+
+				waves_spat.push_back(spat_wave);
+
+			}
+
+		}
+		std::vector<t_WCharsLoc>::iterator it_wave;
+
+		double w_resid = 1.0;
+		double w_exact = F*R;
+		t_WCharsLoc nearest_wave;
+		
+		// search wave that matches fixed w the best
+		for (it_wave=waves_spat.begin(); it_wave<waves_spat.end(); it_wave++){
+			t_Complex cur_w = it_wave->w;
+			double cur_resid = abs(cur_w.real() - w_exact);
+			if 	(cur_resid<w_resid){
+				w_resid = cur_resid;
+				nearest_wave = *it_wave;
+			}
+		}
+		
+		t_WCharsLoc& nw = nearest_wave;
+		if (nw.a.real()>0.0){
+
+			double ar = nw.a.real();
+			double ai = nw.a.imag();
+			double br = nw.b.real();
+			double bi = nw.b.imag();
+			double wr  = nw.w.real();
+
+			ofstr<<R<<"\t"<<ar<<"\t"<<ai<<"\t"<<wr/ar<<"\t"<<br<<"\t"<<bi<<"\t"<<wr<<wr/R<<"\n";
+			ofstr.flush();
+
+		}else{
+			Log<<_T("Failed to retrieve nearest wave: R=")<<R<<_T("\n");
+
+		}
+	}
+
+}
+
+void test::selfsim_M45_spectrum(){
+		/*
+	double a_test = 0.257;
+	double b_test = 0.0;
+	gs_solver.getSpectrum(profiles_path, a_test, b_test);
+	gs_solver.writeSpectrum((TEST_CASE_DIR+_T("test_spectrum_n251.dat")).c_str());
+	*/
+
+}

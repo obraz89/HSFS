@@ -25,7 +25,7 @@ void t_WPLineMono::_retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init
 	_stab_solver.getEigenWFixed(init_wave.w.real(), init_wave, t_StabSolver::A_MODE);
 	_stab_solver.calcGroupVelocity(init_wave);
 
-	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWaveChars(), start_from);
+	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWCharsTime(), start_from);
 	// march until neutral point
 	// or field boundary is reached
 	bool proceed_cond;
@@ -54,12 +54,14 @@ void t_WPLineMono::_retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init
 		_stab_solver.calcGroupVelocity(new_wave_chars);
 		new_wave_chars.set_scales(_stab_solver.scales());
 
+		// "exact" gaster
+
 		Log<<_T("nearest node:")<<new_rec_nrst_ind<<_T("\n");
 		Log<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
 
 		_add_node(
 			*pLine, new_rec_mf, 
-			_stab_solver.popGlobalWaveChars(), new_rec_nrst_ind);
+			_stab_solver.popGlobalWCharsSpat(), new_rec_nrst_ind);
 
 		last_wchars_loc = new_wave_chars;
 		proceed_cond = _proceed_retrace(new_rec_nrst_ind, new_wave_chars);
@@ -90,7 +92,7 @@ void t_WPLineMono::_retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init
 	_stab_solver.getEigenWFixed(init_wave.w.real(), init_wave, t_StabSolver::A_MODE);
 	_stab_solver.calcGroupVelocity(init_wave);
 
-	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWaveChars(), start_from);
+	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWCharsTime(), start_from);
 	// march until neutral point
 	// or field boundary is reached
 	bool proceed_cond;
@@ -124,7 +126,7 @@ void t_WPLineMono::_retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init
 
 		_add_node(
 			*pLine, new_rec_mf, 
-			_stab_solver.popGlobalWaveChars(), new_rec_nrst_ind);
+			_stab_solver.popGlobalWCharsTime(), new_rec_nrst_ind);
 
 		last_wchars_loc = new_wave_chars;
 		proceed_cond = _proceed_retrace(new_rec_nrst_ind, new_wave_chars);
@@ -182,17 +184,24 @@ void t_WPLineMono::print_to_file(const std::wstring& fname, int write_mode) cons
 		// calc_distance_along_surf !!!
 		s = Params.L_ref*
 			_rFldMF.calc_distance(rec.nearest_node, t_Index(0,0,0));
+
 		const t_WCharsGlobDim& dim_wave = rec.wave_chars.to_dim();
-		// Gaster transform
-		// TODO: think how to implement Gaster nicely
-		double sigma = dim_wave.w.imag()/(dim_wave.vga.real());
+
+		//double sigma = dim_wave.w.imag()/(dim_wave.vga.real());
+		double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
+
+		double c = dim_wave.w.real()/
+					sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.b.real(),2));
+
 		// TODO: second order integration
+
 		n_factor+=sigma*(s - s_prev);
+
 		fstr<<s<<_T("\t")<<Params.L_ref*rec.mean_flow.x
 			<<_T("\t")<<Params.L_ref*rec.mean_flow.y
 			<<_T("\t")<<Params.L_ref*rec.mean_flow.z
 			<<_T("\t")<<sigma<<_T("\t")<<n_factor
-			<<_T("\t")<<rec.wave_chars.vga.real()	// TODO:|v| or real(v) ???
+			<<_T("\t")<<c
 			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)<<_T("\n");	
 	};
 

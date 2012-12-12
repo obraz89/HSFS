@@ -1,7 +1,11 @@
 #include "MeanFlow.h"
 #include "ProfileNS.h"
 #include "ProfileStab.h"
+
 #include <cmath>
+#include "io_helpers.h"
+
+#include "log.h"
 
 
 t_ProfileStab::t_ProfileStab(const t_MeanFlow& a_rFld):t_Profile(a_rFld, 0){};
@@ -104,5 +108,68 @@ void t_ProfileStab::initialize(int a_i, int a_k, double a_thick_coef,int nnodes)
 
 void t_ProfileStab::initialize(int a_i, int a_k, double a_thick_coef){
 	initialize(a_i, a_k, a_thick_coef, 0);
+}
+
+void t_ProfileStab::initialize(const std::wstring wfname){
+	std::string fname = wx_to_stdstr(wxString(&wfname[0]));
+	std::ifstream ifstr(&fname[0]);
+	std::stringstream istr;
+
+	int n_line=0;
+	int nnodes=0;
+	const int max_lsize = 1000;
+	char line[max_lsize];
+	char ch;
+
+	// read R
+	ifstr.get(line, max_lsize, '\n');
+	ifstr.get(ch);
+	istr.clear();
+	istr<<line;
+	istr>>_scales.ReStab;
+
+	// read Me
+	ifstr.get(line, max_lsize, '\n');
+	ifstr.get(ch);
+	istr.clear();
+	istr<<line;
+	istr>>_scales.Me;
+
+	// read-process profiles size
+	ifstr.get(line, max_lsize, '\n');
+	ifstr.get(ch);
+	istr.clear();
+	istr<<line;
+	istr>>nnodes;
+	_resize(nnodes);
+
+	// read profiles
+	while(ifstr.get(line, max_lsize, '\n')){
+		if (ifstr.get(ch) && ch!='\n'){
+			wxString msg = _("failed to initialize stability profile from file: line exceeded");
+			Log<<msg;
+			ssuGENTHROW(msg);
+		}
+		istr.clear();
+		istr<<line;
+		
+		io_hlp::write_to_val<double>(istr, _y[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _u[n_line]);
+		io_hlp::write_to_val<double>(istr, _u1[n_line]);
+		io_hlp::write_to_val<double>(istr, _u2[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _t[n_line]);
+		io_hlp::write_to_val<double>(istr, _t1[n_line]);
+		io_hlp::write_to_val<double>(istr, _t2[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _mu[n_line]);
+		io_hlp::write_to_val<double>(istr, _mu1[n_line]);
+		io_hlp::write_to_val<double>(istr, _mu2[n_line]);
+
+		_w[n_line] = _w1[n_line] = _w2[n_line] = 0.0;
+
+		n_line++;
+	}
 }
 

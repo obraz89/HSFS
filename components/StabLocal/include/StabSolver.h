@@ -104,7 +104,9 @@ public:
 	void _init(const wxString& configfile);
 	void initialize(const wxString& configfile);
 	inline const t_StabScales& scales()const{return _profStab.scales();};
-	t_WCharsGlob popGlobalWaveChars();
+
+	t_WCharsGlob popGlobalWCharsTime();
+	t_WCharsGlob popGlobalWCharsSpat();
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors
 	// and binds solver to a stability profile
@@ -112,7 +114,12 @@ public:
 	// TODO: all methods below must be private, this is only for debug
 	void set2DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
+
+	// to initialize by AVF profiles
+	void set3DContext(const std::wstring fname_profiles);
+
 	void set3DContext(const t_Index& ind, const int a_nnodesStab=0);
+
 	// load initial approaches
 	// from EigenSearch solver
 	void setInitWaves(const std::vector<t_WCharsLoc>&);

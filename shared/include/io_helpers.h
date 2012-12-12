@@ -5,6 +5,16 @@
 class wxString;
 std::string wx_to_stdstr(const wxString& wx_str);
 
+namespace io_hlp{
+	std::istream& eat_white(std::istream& istr);
+	template<typename T> 
+		inline std::istream& write_to_val(std::istream& istr, T& val){
+			io_hlp::eat_white(istr);
+			istr>>val;
+			return istr;
+		};
+}
+
 namespace std_manip{
 	extern const int FIELD_WIDTH_DEFAULT;
 	extern const int PRECISION_DEFAULT;

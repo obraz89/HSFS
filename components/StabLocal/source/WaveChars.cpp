@@ -3,6 +3,39 @@
 
 // ----------------------------------------------- t_WaveChars
 
+bool t_WaveChars::check_treat(stab::t_TaskTreat treat) const{
+	
+	bool ok = _task_treat!=treat;
+
+	switch (_task_treat)
+	{
+	case stab::t_TaskTreat::SPAT:
+
+		ok =  (w.imag()==0.0);
+		break;
+
+	case stab::t_TaskTreat::TIME:
+
+		ok = (a.imag()==0.0)&&(b.imag()==0.0);
+		break;
+
+	default:
+
+		ok = false;
+		break;
+	}
+	
+	return ok;
+}
+
+stab::t_TaskTreat t_WaveChars::get_treat() const{
+	return _task_treat;
+};
+
+void t_WaveChars::set_treat(stab::t_TaskTreat treat){
+	_task_treat = treat;
+}
+
 // in this procedure we neglect change in Re(a), Re(b)
 // as it is supposed to be small and transformation is not closed
 // so transform only Im(w) into Im(a) and Im(b)
@@ -10,17 +43,15 @@
 
 t_WaveChars& t_WaveChars::to_spat(){
 
-	if (_task_treat==stab::t_TaskTreat::TIME){
+	check_treat(stab::t_TaskTreat::TIME);
 
-		double coef = 1.0/(pow(vga.real(),2) + pow(vgb.real(),2));
+	double coef = 1.0/(pow(vga.real(),2) + pow(vgb.real(),2));
 
-		a.imag(-w.imag()*vga.real()*coef);
-		b.imag(-w.imag()*vgb.real()*coef);
-		w.imag(0.0);
+	a.imag(-w.imag()*vga.real()*coef);
+	b.imag(-w.imag()*vgb.real()*coef);
+	w.imag(0.0);
 
-		_task_treat==stab::t_TaskTreat::SPAT;
-
-	}
+	_task_treat==stab::t_TaskTreat::SPAT;
 
 	return *this;
 };
@@ -30,19 +61,17 @@ t_WaveChars& t_WaveChars::to_spat(){
 
 t_WaveChars& t_WaveChars::to_time(){
 
-	if (_task_treat==stab::t_TaskTreat::SPAT){
+	check_treat(stab::t_TaskTreat::SPAT);
 		
-		t_CompVal im(0, 1);
+	t_CompVal im(0, 1);
 
-		t_CompVal dw = -im*(vga*a.imag() + vgb*b.imag());
+	t_CompVal dw = -im*(vga*a.imag() + vgb*b.imag());
 
-		w+=dw;
-		a.imag(0);
-		b.imag(0);
+	w+=dw;
+	a.imag(0);
+	b.imag(0);
 
-		_task_treat==stab::t_TaskTreat::TIME;
-
-	}
+	_task_treat==stab::t_TaskTreat::TIME;
 
 	return *this;
 }
@@ -66,9 +95,9 @@ t_WaveChars& t_WaveChars::_set_vals(const t_Vec3Cmplx& k, const t_Vec3Cmplx& vg,
 void t_WaveChars::_to_dim(t_WaveChars& dim) const{
 	dim.set_scales(_scales);
 	// calculate dimension values
-	dim.a = a*_scales.Dels;
-	dim.kn= kn*_scales.Dels;
-	dim.b = b*_scales.Dels;
+	dim.a = a/_scales.Dels;
+	dim.kn= kn/_scales.Dels;
+	dim.b = b/_scales.Dels;
 	dim.w = w*_scales.UeDim/_scales.Dels;
 	dim.vga = vga*_scales.UeDim;
 	dim.vgn = vgn*_scales.UeDim;
