@@ -150,11 +150,17 @@ t_WCharsLoc t_WCharsLocDim::to_nondim(const t_ProfileStab& rProf) const{
 
 // ----------------------------------------------- t_WCharsGlob
 
-t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars, const t_ProfileStab& profStab){
+t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars, 
+						   const t_ProfileNS& profNS,
+						   const t_ProfileStab& profStab){
+
 	t_Vec3Cmplx k_ked, vg_ked, k_glob, vg_glob;
+
 	k_ked = waveChars.a, 0, waveChars.b;
+
 	vg_ked = waveChars.vga, 0, waveChars.vgb;
-	t_SqMat3Dbl jac = profStab.getJac();
+
+	t_SqMat3Dbl jac = profNS.getJac();
 	k_glob = jac*k_ked;
 	vg_glob = jac*vg_ked;
 	_set_vals(k_glob, vg_glob, waveChars.w, profStab);

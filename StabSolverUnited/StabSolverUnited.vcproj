@@ -444,7 +444,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\components\StabLocal\source\EigenGS_planeWaves.cpp"
+					RelativePath="..\components\StabLocal\source\EigenGS_selfsim.cpp"
 					>
 				</File>
 				<File

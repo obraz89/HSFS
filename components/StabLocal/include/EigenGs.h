@@ -56,15 +56,6 @@ class  t_EigenGS: public t_Component{
 
 	void fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 						  const int a_nnode, const int a_eq_id);
-	// 
-	void select();
-
-	void setContext(const int a_i, const int a_k, 
-	     			  const double a_alpha, const double a_beta,
-					  const int a_nnodes=0);
-
-	void setContext(const std::wstring fname,
-		const double a_alpha, const double a_beta);
 
 	void _init(const wxString& configfile);
 
@@ -75,20 +66,30 @@ public:
 	t_EigenGS(const t_MeanFlow& a_rFld, const wxString& configfile);
 	void initialize(const wxString& configfile);
 
-// AVF profiles section
-	int getSpectrum(const std::wstring fname,
-		const double a_alpha, const double a_beta);
+// HSFLOW interface (TODO: separate class)
+	void setContext(const int a_i, const int a_k, 
+		const double a_alpha, const double a_beta,
+		const int a_nnodes=0);
+
+// AVF profiles interface (TODO: separate class)
+
+	void setContext(const std::wstring fname, const t_StabScales& a_scales);
+
+
+	int getSpectrum(const double a_alpha, const double a_beta);
 	
 	// select unstable discrete modes
-	std::vector<t_WCharsLoc> getDiscreteModes(const std::wstring fname,
+	std::vector<t_WCharsLoc> getDiscreteModes(
 		const double a_alpha, const double a_beta);
 
 	// Plane waves <-> beta=0
-	t_WCharsLoc searchMaxInstabPlane(const std::wstring fname_profiles,
+	t_WCharsLoc searchMaxInstabPlane(
 		const double a_alpha, const double a_beta);
 
+	t_WCharsLoc searchMaxInstabGlob();
+
 	// tricky
-	void getSpectrumFixedW(std::string fname_profiles, double w);
+	void getSpectrumFixedW(double w);
 
 // ~AVF profiles section
 

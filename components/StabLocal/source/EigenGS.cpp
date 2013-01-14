@@ -7,12 +7,12 @@
 using namespace common::cmpnts;
 
 t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld, const wxString& configfile):
-_rFldNS(a_rFld), _profStab(a_rFld), _params(configfile), t_Component(configfile, EIGEN3D_NAME){
+_rFldNS(a_rFld), _profStab(), _params(configfile), t_Component(configfile, EIGEN3D_NAME){
 	_init(configfile);
 };
 
 t_EigenGS::t_EigenGS(const t_MeanFlow& a_rFld):
-_rFldNS(a_rFld), _profStab(a_rFld), _params(), t_Component(wxEmptyString, EIGEN3D_NAME){};
+_rFldNS(a_rFld), _profStab(), _params(), t_Component(wxEmptyString, EIGEN3D_NAME){};
 
 
 void t_EigenGS::_init(const wxString& configfile){
@@ -559,7 +559,7 @@ std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const int a_i, const int a_
 
 t_WCharsLoc t_EigenGS::searchMaxInstabGlob
 (const int a_i, const int a_k, const int a_nnodes/*=0*/){
-	// This is the most interesting question : ask AVF
+	//Important TODO: This is the most interesting question : ask AVF
 	double a_min = 0.01;
 	double a_max = 1.5;
 	double b_min = 0.01;

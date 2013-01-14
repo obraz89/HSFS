@@ -25,7 +25,11 @@ void t_WPLineMono::_retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init
 	_stab_solver.getEigenWFixed(init_wave.w.real(), init_wave, t_StabSolver::A_MODE);
 	_stab_solver.calcGroupVelocity(init_wave);
 
-	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWCharsTime(), start_from);
+	t_ProfileNS prof_NS(_rFldMF);
+	prof_NS.initialize(start_from.i, start_from.k, 1.0);
+
+	_add_node(*pLine, _rFldMF.get_rec(start_from), 
+				_stab_solver.popGlobalWCharsTime(prof_NS), start_from);
 	// march until neutral point
 	// or field boundary is reached
 	bool proceed_cond;
@@ -45,7 +49,12 @@ void t_WPLineMono::_retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init
 			_rFldMF.get_nearest_index_loc(last_rec.nearest_node, new_rec_mf);
 		
 		t_WCharsLoc new_wave_chars(last_wchars_loc);
+
 		_stab_solver.set3DContext(new_rec_nrst_ind);
+
+		// TODO: need only Jac from ns profile
+		t_ProfileNS prof_NS(_rFldMF);
+		prof_NS.initialize(new_rec_nrst_ind.i, new_rec_nrst_ind.k, 1.0);
 
 		double freq_scale = _stab_solver.scales().FreqScale();
 		double wr = wr_dim/freq_scale;
@@ -61,7 +70,7 @@ void t_WPLineMono::_retrace_fixed_beta_time(t_Index start_from, t_WCharsLoc init
 
 		_add_node(
 			*pLine, new_rec_mf, 
-			_stab_solver.popGlobalWCharsSpat(), new_rec_nrst_ind);
+			_stab_solver.popGlobalWCharsSpat(prof_NS), new_rec_nrst_ind);
 
 		last_wchars_loc = new_wave_chars;
 		proceed_cond = _proceed_retrace(new_rec_nrst_ind, new_wave_chars);
@@ -92,7 +101,12 @@ void t_WPLineMono::_retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init
 	_stab_solver.getEigenWFixed(init_wave.w.real(), init_wave, t_StabSolver::A_MODE);
 	_stab_solver.calcGroupVelocity(init_wave);
 
-	_add_node(*pLine, _rFldMF.get_rec(start_from), _stab_solver.popGlobalWCharsTime(), start_from);
+	t_ProfileNS prof_NS(_rFldMF);
+	prof_NS.initialize(start_from.i, start_from.k, 1.0);
+
+	_add_node(*pLine, _rFldMF.get_rec(start_from), 
+				_stab_solver.popGlobalWCharsTime(prof_NS), start_from);
+
 	// march until neutral point
 	// or field boundary is reached
 	bool proceed_cond;
@@ -112,7 +126,11 @@ void t_WPLineMono::_retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init
 			_rFldMF.get_nearest_index_loc(last_rec.nearest_node, new_rec_mf);
 
 		t_WCharsLoc new_wave_chars(last_wchars_loc);
+
 		_stab_solver.set3DContext(new_rec_nrst_ind);
+
+		t_ProfileNS prof_NS(_rFldMF);
+		prof_NS.initialize(new_rec_nrst_ind.i, new_rec_nrst_ind.k, 1.0);
 
 		double freq_scale = _stab_solver.scales().FreqScale();
 		double wr = wr_dim/freq_scale;
@@ -126,7 +144,7 @@ void t_WPLineMono::_retrace_fixed_beta_spat(t_Index start_from, t_WCharsLoc init
 
 		_add_node(
 			*pLine, new_rec_mf, 
-			_stab_solver.popGlobalWCharsTime(), new_rec_nrst_ind);
+			_stab_solver.popGlobalWCharsTime(prof_NS), new_rec_nrst_ind);
 
 		last_wchars_loc = new_wave_chars;
 		proceed_cond = _proceed_retrace(new_rec_nrst_ind, new_wave_chars);

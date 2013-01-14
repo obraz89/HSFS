@@ -1,20 +1,8 @@
 #include "Profile.h"
 #include "log.h"
 
-std::wostream& t_Profile::t_Rec::raw_cout(std::wostream& os){
-// for now simple form to campare with AVF
-	os<<y<<_T("\t")<<
-		u<<_T("\t")<<u1<<_T("\t")<<u2<<_T("\t")<<
-		//w<<_T("\t")<<w1<<_T("\t")<<w2<<_T("\t")<<
-		t<<_T("\t")<<t1<<_T("\t")<<t2<<_T("\t")<<
-		//mu<<_T("\t")<<mu1<<_T("\t")<<mu2<<_T("\t")<<
-		/*p<<_T("\t")<<*/r<<_T("\n");
-	return os;
-	
-} 
-
-t_Profile::t_Profile(const t_MeanFlow& a_rFld,const int a_nnodes):
-_rFld(a_rFld),_nnodes(a_nnodes){
+t_Profile::t_Profile(const int a_nnodes):
+_nnodes(a_nnodes){
 
 	_profiles.push_back(&_y);
 	_profiles.push_back(&_u);
@@ -41,46 +29,61 @@ _rFld(a_rFld),_nnodes(a_nnodes){
 };
 
 void t_Profile::_resize(int new_nnodes){
+
 	if (new_nnodes!=_nnodes){
+
 		for (int i=0; i<_profiles.size(); i++){
+
 			_profiles[i]->resize(new_nnodes);
+
 		}
+
 		_nnodes = new_nnodes;
+
 	}
 };
 
 t_Profile::t_Rec t_Profile::get_rec(int j) const{
-	t_Log log;
+
 	if (j<0) {
-		log<<_T("ERROR: getting record in profile under surface!\n");
+
+		Log<<_T("ERROR: getting record in profile under surface!\n");
 		return _extract(0);
+
 	};
+
 	if (j>=size()){
-		log<<_T("ERROR: getting record in profile above boundary!\n");
+
+		Log<<_T("ERROR: getting record in profile above boundary!\n");
 		return _extract(size()-1);
+
 	}; 
+
 	return _extract(j);
 };
 
 t_Profile::t_Rec t_Profile::get_rec(double y) const{
-	t_Log log;
+
 	if (y<0.0) {
-		log<<_T("ERROR: getting record in profile under surface!\n");
+		Log<<_T("ERROR: getting record in profile under surface!\n");
 		return _extract(0.0);
 	};
 	if (y>_y.back()){
-		log<<_T("ERROR: getting record in profile above boundary!\n");
+		Log<<_T("ERROR: getting record in profile above boundary!\n");
 		return _extract(size()-1);
 	}; 
 	return _extract(y);
 };
 
+/************************************************************************/
+//	  use parabolic interpolation
+//	  y-point of interpolation
+//	  arg - argument array 
+//	  fun - function array 
+//	
+/************************************************************************/
 double t_Profile::_interpolate(const double& a_y, const t_DblVec& arg, const t_DblVec& fun,  const int& a_size) const{
-/*	  use parabolic interpolation
-	  y-point of interpolation
-	  arg - argument array 
-	  fun - function array 
-*/	
+
 	// TODO: cerr??? are you kidding?
 	if (a_size<=3){std::wcerr<<_T("3 points or less; can't interpolate");return 0.0;}
 	int k = _getNearestInd(a_y, arg);
@@ -196,4 +199,16 @@ void t_Profile::dump(const std::wstring& fname) const{
 		cur_rec.raw_cout(fstr);
 	}
 };
+
+std::wostream& t_Profile::t_Rec::raw_cout(std::wostream& os){
+	// for now simple form to compare with AVF
+	os<<y<<_T("\t")<<
+		u<<_T("\t")<<u1<<_T("\t")<<u2<<_T("\t")<<
+		//w<<_T("\t")<<w1<<_T("\t")<<w2<<_T("\t")<<
+		t<<_T("\t")<<t1<<_T("\t")<<t2<<_T("\t")<<
+		//mu<<_T("\t")<<mu1<<_T("\t")<<mu2<<_T("\t")<<
+		/*p<<_T("\t")<<*/r<<_T("\n");
+	return os;
+
+} 
 

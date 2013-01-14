@@ -2,13 +2,10 @@
 
 // to initialize by profiles from AVF code
 
-void t_EigenGS::setContext(const std::wstring fname_profile,
-   const double a_alpha, const double a_beta){
-	   _alpha = a_alpha;
-	   _beta = a_beta;
+void t_EigenGS::setContext(const std::wstring fname_profile, const t_StabScales& a_scales){
 
 	   _grid.resize(_params.NNodes);
-	   _profStab.initialize(fname_profile);
+	   _profStab.initialize(fname_profile, a_scales);
 
 	   double y_max = _profStab.get_thick() - _profStab.get_y(0);
 	   _a_coef = 1.0*y_max; // play with coef
@@ -19,21 +16,21 @@ void t_EigenGS::setContext(const std::wstring fname_profile,
 	   };
 }
 
-int t_EigenGS::getSpectrum(const std::wstring fname, 
-						   const double a_alpha, const double a_beta){
+int t_EigenGS::getSpectrum(const double a_alpha, const double a_beta){
 
-							   setContext(fname, a_alpha, a_beta);
+	_alpha = a_alpha;
+	_beta = a_beta;
 
-							   int err_code = _solve();
-							   return err_code;
+	int err_code = _solve();
+	return err_code;
 
 }
 
-std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const std::wstring fname,
+std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(
 	const double a_alpha, const double a_beta){
 		 std::vector<t_WCharsLoc> inits;
 		 std::vector<t_Complex>::const_iterator it;
-		 getSpectrum(fname, a_alpha, a_beta);
+		 getSpectrum(a_alpha, a_beta);
 		 // TODO: empirics!!!
 		 for (it=_spectrum.begin(); it<_spectrum.end(); it++){
 			 if (it->imag()>_params.W_Threshold){
@@ -47,13 +44,13 @@ std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(const std::wstring fname,
 		 return inits;
 };
 
-t_WCharsLoc t_EigenGS::searchMaxInstabPlane(const std::wstring fname_profiles,
+t_WCharsLoc t_EigenGS::searchMaxInstabPlane(
 	const double a_alpha, const double a_beta){
 		const std::vector<t_WCharsLoc>& all_initials = 
-			getDiscreteModes(fname_profiles, a_alpha, a_beta);
+			getDiscreteModes(a_alpha, a_beta);
 		return t_WCharsLoc::find_max_instab(all_initials);
 };
 
-void t_EigenGS::getSpectrumFixedW(std::string fname_profiles, double w){
+void t_EigenGS::getSpectrumFixedW(double w){
 	// later =)
 }

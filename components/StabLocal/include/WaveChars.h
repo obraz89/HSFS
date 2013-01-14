@@ -84,10 +84,12 @@ public:
 	};
 };
 
+/************************************************************************/
 // instability wave characteristics 
 // non-dimensional
 // to be used with stab solver and global searcher
 // local RF
+/************************************************************************/
 class t_WCharsLocDim;
 
 class t_WCharsLoc: public t_WaveChars{
@@ -102,7 +104,10 @@ public:
 	static t_WCharsLoc find_max_instab(const std::vector<t_WCharsLoc>& vec);
 };
 
+/************************************************************************/
+//
 // local dimensional
+/************************************************************************/
 class t_WCharsLocDim : public t_WaveChars{
 	t_WCharsLocDim();
 public:
@@ -110,20 +115,27 @@ public:
 	t_WCharsLoc to_nondim(const t_ProfileStab& rProf) const;
 
 };
+
+/************************************************************************/
 // instability wave chars
 // non-dimensional
 // global RF
 // to be used with wave pack line
 // store some context from stab comps
 // to restore dimensional wave chars
+/************************************************************************/
 class t_WCharsGlobDim; 
 class  t_WCharsGlob: public t_WaveChars{
 	t_WCharsGlob();
 public:
-	t_WCharsGlob(const t_WCharsLoc&, const t_ProfileStab&);
+	t_WCharsGlob(const t_WCharsLoc&, const t_ProfileNS& , const t_ProfileStab&);
 	t_WCharsGlobDim to_dim() const;
 };
 
+/************************************************************************/
+//
+// global dimensional
+/************************************************************************/
 class t_WCharsGlobDim: public t_WaveChars{
 public:
 	t_WCharsGlob to_nondim() const;

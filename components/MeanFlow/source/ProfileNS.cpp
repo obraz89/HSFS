@@ -1,12 +1,13 @@
 #include "ProfileNS.h"
 
-t_ProfileNS::t_ProfileNS(const t_MeanFlow& a_rFld):t_Profile(a_rFld, 0){};
-t_ProfileNS::~t_ProfileNS(){};
+t_ProfileNS::t_ProfileNS(const t_MeanFlow& a_rFld):t_Profile(0), _rFld(a_rFld){};
 
 void t_ProfileNS::initialize(int a_i , int a_k, double a_thick_coef){
 
-	_i = a_i;
-	_k = a_k;
+	_mf_ind.i = a_i;
+	_mf_ind.j = 0;
+	_mf_ind.k = a_k;
+
 	_bl_bound_ind = _rFld.get_bound_index(a_i, a_k);
 
 	double bl_thick = 
@@ -25,7 +26,10 @@ void t_ProfileNS::initialize(int a_i , int a_k, double a_thick_coef){
 									t_Index(a_i, 0, a_k));
 	};
 
+	// TODO: check for ind>Ny overflow, throw something
+
 	this->_resize(cur_y_ind);
+
 	const t_MeanFlow::t_Rec& bound_rec = _rFld.get_rec(a_i, cur_y_ind, a_k);
 	const t_MeanFlow::t_Rec& surface_rec = _rFld.get_rec(a_i, 0, a_k);
 
@@ -99,7 +103,7 @@ void t_ProfileNS::initialize(int a_i , int a_k, double a_thick_coef){
 
 	// distance along grid line !!!
 	t_MeanFlow::t_GridIndex from(0, 0, a_k), to(a_i, 0, a_k);
-	xDist = _rFld.calc_gridline_distance(t_MeanFlow::ALONG_LINE::I, from, to);
+	_xDist = _rFld.calc_gridline_distance(t_MeanFlow::ALONG_LINE::I, from, to);
 
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION

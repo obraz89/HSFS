@@ -105,8 +105,8 @@ public:
 	void initialize(const wxString& configfile);
 	inline const t_StabScales& scales()const{return _profStab.scales();};
 
-	t_WCharsGlob popGlobalWCharsTime();
-	t_WCharsGlob popGlobalWCharsSpat();
+	t_WCharsGlob popGlobalWCharsTime(const t_ProfileNS& a_rProfNS);
+	t_WCharsGlob popGlobalWCharsSpat(const t_ProfileNS& a_rProfNS);
 	// formulate stability task in  
 	// ODES context: RHS - stability matrix and initial vectors
 	// and binds solver to a stability profile
@@ -116,7 +116,7 @@ public:
 	void set3DContext(const int& i_ind, const int& k_ind, const int& a_nnodesStab);
 
 	// to initialize by AVF profiles
-	void set3DContext(const std::wstring fname_profiles);
+	void set3DContext(const std::wstring fname_profiles, const t_StabScales& a_scales);
 
 	void set3DContext(const t_Index& ind, const int a_nnodesStab=0);
 

@@ -7,13 +7,13 @@ static const int STAB_MATRIX_DIM = 8;
 using namespace common::cmpnts;
 
 t_StabSolver::t_StabSolver(const t_MeanFlow& a_rFldNS):
-_rFldNS(a_rFldNS), _profStab(a_rFldNS), 
+_rFldNS(a_rFldNS), _profStab(), 
 _math_solver(), _stab_matrix(STAB_MATRIX_DIM),
 _params(), t_Component(wxEmptyString, STABSOLVER3D_NAME){
 	_math_solver._pStab_solver = this;
 };
 t_StabSolver::t_StabSolver(const t_MeanFlow& a_rFldNS, const wxString& configfile):
-_rFldNS(a_rFldNS), _profStab(a_rFldNS), 
+_rFldNS(a_rFldNS), _profStab(), 
 _math_solver(), _stab_matrix(STAB_MATRIX_DIM),
 _params(configfile), t_Component(configfile, STABSOLVER3D_NAME){
 	_math_solver._pStab_solver = this;
@@ -507,7 +507,7 @@ void t_StabSolver::_verifyAsymptotics3D
 // Use time approach
 /************************************************************************/
 
-t_WCharsGlob t_StabSolver::popGlobalWCharsTime(){
+t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const t_ProfileNS& a_rProfNS){
 
 	t_WCharsLoc restore_wave = _waveChars;
 	t_WCharsLoc adjust_wave = _waveChars;
@@ -522,7 +522,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsTime(){
 
 	}
 
-	t_WCharsGlob glob_wave(adjust_wave,_profStab);
+	t_WCharsGlob glob_wave(adjust_wave, a_rProfNS,_profStab);
 
 	_waveChars = restore_wave;
 
@@ -536,7 +536,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsTime(){
 // Use spat approach
 /************************************************************************/
 
-t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(){
+t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const t_ProfileNS& a_rProfNS){
 
 	t_WCharsLoc restore_wave = _waveChars;
 	t_WCharsLoc adjust_wave = _waveChars;
@@ -553,7 +553,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(){
 
 	}
 
-	t_WCharsGlob glob_wave(adjust_wave,_profStab);
+	t_WCharsGlob glob_wave(adjust_wave, a_rProfNS, _profStab);
 
 	_waveChars = restore_wave;
 
@@ -601,9 +601,11 @@ void t_StabSolver::set3DContext
 // 
 /************************************************************************/
 
-void t_StabSolver::set3DContext(const std::wstring fname_profiles){
+void t_StabSolver::set3DContext(const std::wstring fname_profiles, 
+								const t_StabScales& a_scales)
+{
 
-	_profStab.initialize(fname_profiles);
+	_profStab.initialize(fname_profiles, a_scales);
 
 	int nnodes = _profStab.size();
 
