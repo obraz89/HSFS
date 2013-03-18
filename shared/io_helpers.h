@@ -1,12 +1,15 @@
 #ifndef __IO_HELPERS
 #define __IO_HELPERS
+
+#include "dll_impexp_shared.h"
+
 #include <iostream>
 
 class wxString;
-std::string wx_to_stdstr(const wxString& wx_str);
+IMPEXP_SHARED std::string wx_to_stdstr(const wxString& wx_str);
 
 namespace io_hlp{
-	std::istream& eat_white(std::istream& istr);
+	IMPEXP_SHARED std::istream& eat_white(std::istream& istr);
 	template<typename T> 
 		inline std::istream& write_to_val(std::istream& istr, T& val){
 			io_hlp::eat_white(istr);
@@ -16,8 +19,8 @@ namespace io_hlp{
 }
 
 namespace std_manip{
-	extern const int FIELD_WIDTH_DEFAULT;
-	extern const int PRECISION_DEFAULT;
+	IMPEXP_SHARED extern const int FIELD_WIDTH_DEFAULT;
+	IMPEXP_SHARED extern const int PRECISION_DEFAULT;
 	template<typename T> inline std::wostream& _format_fixed(std::wostream& os, T val){
 		os.width(FIELD_WIDTH_DEFAULT);
 		os.precision(PRECISION_DEFAULT);

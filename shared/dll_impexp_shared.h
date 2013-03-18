@@ -1,17 +1,16 @@
 ///////////////////////////////////////////////////////////////////////////////
 // Name:        dll_import_export.h
-// Purpose:     Preprocessor defines for import/export data from EXE
-// Author:      Andrey V. Novikov
-// Modified by:
+// Purpose:     Preprocessor defines for import/export data from dll
+// Author:      A.Obraz
 ///////////////////////////////////////////////////////////////////////////////
+
+#include <wx/wxprec.h>
 
 #pragma once
 
-// SHARED_EXPORT should be defined only in HSFlow.exe
-
 #if defined(SHARED_EXPORT)
-#	define DLLIMPEXP WXEXPORT
+#	define IMPEXP_SHARED WXEXPORT
 #else
-#	define DLLIMPEXP WXIMPORT
+#	define IMPEXP_SHARED WXIMPORT
 #endif
 //-----------------------------------------------------------------------------

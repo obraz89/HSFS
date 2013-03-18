@@ -12,11 +12,12 @@
 
 #include <wx/filename.h>
 
+#include "wx/fileconf.h"
+
 #include <iostream>
 #include <string>
+#include <vector>
 #include <map>
-
-#include <math.h>
 
 #ifdef _UNICODE
 #define _tostream wostream

@@ -5,10 +5,8 @@
 // Modified by: Obraz
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <wx/dynlib.h>  //dynamic library support
-#include <wx/utils.h>   //wxGetEnv
-#include <wx/fileconf.h>
-
+//#include <wx/utils.h>   //wxGetEnv
+#include "stdafx.h"
 #include "component.h"
 
 //

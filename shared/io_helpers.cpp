@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "io_helpers.h"
 
 #include <stdlib.h>

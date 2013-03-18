@@ -2,20 +2,20 @@
 // Name:        component.h (original : PluginBase.)
 // Purpose:     Base classes for plugins/components
 // Author:      Andrey V. Novikov
-// Modified by: Obraz
+// Modified by: A. Obraz
 // Note: syntax modified
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __MY_COMPONENT
 #define __MY_COMPONENT
-#include "stdafx.h"
-#include <boost/algorithm/string.hpp>
-#include <boost/lexical_cast.hpp>
-#include "wx/fileconf.h"
+
 #include "gen_exception.h"
+#include "dll_impexp_shared.h"
 
-#include <map>
+#include "wx/fileconf.h"
 
-class t_BaseParam{
+#include "common_struct.h"
+
+ class IMPEXP_SHARED t_BaseParam{
 public:
 	enum t_Type{Int, Dbl, Str};
 protected:
@@ -60,25 +60,8 @@ public:
 	//exceptions
 };
 */
-class t_Enum{
-	friend class t_CompParamInt;
-protected:
-	std::map<int, wxString> _mapVals;
-	virtual void _init_map_vals()=0;
-	int _curVal;
-	int* _get_val_addr(){return &_curVal;};
-public:
-	virtual void set_value(int val){
-		// enum)))
-		if(_mapVals.find(val)==_mapVals.end()) return;
-		_curVal=val;
-	};
-	virtual int get_value(){return _curVal;};
-	virtual bool operator==(int val) const{return _curVal==val;};
-	virtual void operator=(const int& val){set_value(val);};
-};
 
-class t_CompParamInt : public t_BaseParam{
+class IMPEXP_SHARED t_CompParamInt : public t_BaseParam{
 private:
 	int* _pVal;
 	int _defaultVal;
@@ -95,7 +78,7 @@ public:
 			t_BaseParam(name, desc), _pVal(enum_val._get_val_addr()){};
 };
 
-class t_CompParamDbl : public t_BaseParam{
+class IMPEXP_SHARED t_CompParamDbl : public t_BaseParam{
 private:
 	double* _pVal;
 	double _defaultVal;
@@ -109,7 +92,7 @@ public:
 	t_BaseParam(name, desc), _pVal(&val){};
 };
 
-class t_CompParamStr : public t_BaseParam{
+class IMPEXP_SHARED t_CompParamStr : public t_BaseParam{
 private:
 	wxString* _pVal;
 	wxString _defaultVal;
@@ -198,7 +181,7 @@ public:
 //-----------------------------------------------------------------------------
 */
 
-class t_ComponentParamsGroup{
+class IMPEXP_SHARED t_ComponentParamsGroup{
 protected:
 	const wxString ConfigDomain;
 	std::map<wxString, t_BaseParam*> _mapParams;
@@ -268,7 +251,7 @@ public:
 };
 
 */
-class t_Component{
+class IMPEXP_SHARED t_Component{
 protected:
 	std::map<wxString, t_ComponentParamsGroup*> _mapParamsGrps;
 	wxString _paramsFileName;

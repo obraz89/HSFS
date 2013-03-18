@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="shared"
+	ProjectGUID="{00F4ABA0-6479-4758-A6CE-123DB4C306D2}"
+	VCNestedProjectGUID="{F35AAA02-ACBE-426F-9A1F-D9C121675288}"
+	VCNestedProjectFileName="shared.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>
