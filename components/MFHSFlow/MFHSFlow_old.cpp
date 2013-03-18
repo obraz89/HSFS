@@ -1,5 +1,9 @@
-#include "MeanFlow.h"
-#include "math_operands.h"
+#include "stdafx.h"
+
+#include "MFHSFlow.h"
+
+using namespace hsflow;
+using namespace mf;
 
 static const double BL_BOUND_VELO_TOL = 0.01;
 

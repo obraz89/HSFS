@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="MFHSFlow2D"
+	ProjectGUID="{A3F9A102-81E7-4B73-9E25-C172EE3B69FD}"
+	VCNestedProjectGUID="{EA9BE6F9-353C-4FA5-BC4F-8E5C69A651C8}"
+	VCNestedProjectFileName="MFHSFlow2D.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>

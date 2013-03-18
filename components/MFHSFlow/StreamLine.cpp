@@ -1,3 +1,5 @@
+#include "stdafx.h"
+
 #include "StreamLine.h"
 #include <iostream>
 #include <cmath>
