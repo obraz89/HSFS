@@ -1,16 +1,17 @@
 # output
-StabSolverUnited/output/*
-StabSolverUnited/__tests__/*
-StabSolverUnited/results/*
-StabSolverUnited/input/*
+__tests/*
+StabSolverUnited/*
 _UpgradeReport_Files/*
 x64/*
-# compiler generated (hope will not name source like this)
+bin_*/
+# compiler generated & precomp
 *_mod.f90
+*.pchi
 # intermed
 *.mod
 *.ncb
 *.obj
+*.pchi
 # msvs
 *.suo
 *.res

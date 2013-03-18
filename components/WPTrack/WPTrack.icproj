@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="WPTrack"
+	ProjectGUID="{131090F1-8B94-47C6-8448-0E4C695C8F9D}"
+	VCNestedProjectGUID="{CE3C79BA-34D4-4D78-B523-B9060AE2A276}"
+	VCNestedProjectFileName="WPTrack.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>

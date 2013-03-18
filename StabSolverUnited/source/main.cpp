@@ -6,8 +6,6 @@
 
 #include "WavePackLine.h"
 
-#include "TaskManager.h"
-
 #include "log.h"
 
 // for console io operations
@@ -35,8 +33,10 @@ namespace test{
 	void transhyb_base_08();
 	void profile_compar();
 	void itam_hz();
-	void selfsim_M45_local_search();
+	void selfsim_M45_second_mode();
 	void selfsim_M45_spectrum();
+	void selfsim_M3_first_mode();
+	//void selfsim_M3_spectrum(); 
 };
 //--------------------------------------------------~tests
 
@@ -60,13 +60,13 @@ int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 
 	//test::king_al_2_new();
 
-	//test::transhyb_base_08();
+	test::transhyb_base_08();
 
 	//test::itam_hz();
 
 	//test::profile_compar();
 
-	test::local_search_selfsim();
+	//test::selfsim_M45_spectrum();
 
 	return 0;
 }
@@ -270,7 +270,7 @@ void test::profile_compar(){
 	ns_prof.dump(TEST_CASE_DIR.c_str()+ns_fname.str());
 
 
-	t_ProfileStab stab_prof(mf);
+	t_ProfileStab stab_prof;
 	stab_prof.initialize(ns_prof, 251);
 
 	std::wostringstream stab_fname;
@@ -314,10 +314,10 @@ void test::itam_hz(){
 };
 
 
-void test::local_search_selfsim_M45(){
+void test::selfsim_M45_second_mode(){
 
 	const wxString TEST_CASE_DIR = 
-		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/local_search_selfsim_M=4.5/");
+		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/selfsim_M=4.5_second_mode/");
 
 	t_TaskManager App(TEST_CASE_DIR);
 	App.load_settings();
@@ -353,16 +353,26 @@ void test::local_search_selfsim_M45(){
 
 		Log<<_T("Start R=")<<R<<_T("\t//")<<(100*n_re)/(i+1)<<_T("perc\n");
 
+		t_StabScales stab_scales;
+
+		stab_scales.ReStab = R;
+		stab_scales.Me = 4.5;
+		//TODO: others not needed in stab_scales?
+
+		t_ProfileStab prof_stab;
+		prof_stab.initialize(profiles_path, stab_scales);
+		gs_solver.setContext(prof_stab);
+
 		std::vector<t_WCharsLoc> waves_spat;
 		for (int j=0; j<n_al; j++){
 			double al = al_min + da*j;
 
 			t_WCharsLoc wave = 
-				gs_solver.searchMaxInstabPlane(profiles_path, al, beta);	
+				gs_solver.searchMaxInstabPlane(al, beta);	
 
 			if (wave.w.imag()>0.0){
 
-				stab_solver.set3DContext(profiles_path);
+				stab_solver.setContext(prof_stab);
 
 				stab_solver.adjustLocal(wave, t_StabSolver::t_MODE::W_MODE);
 
@@ -412,11 +422,56 @@ void test::local_search_selfsim_M45(){
 }
 
 void test::selfsim_M45_spectrum(){
-		/*
-	double a_test = 0.257;
-	double b_test = 0.0;
-	gs_solver.getSpectrum(profiles_path, a_test, b_test);
-	gs_solver.writeSpectrum((TEST_CASE_DIR+_T("test_spectrum_n251.dat")).c_str());
-	*/
+
+	const wxString TEST_CASE_DIR = 
+		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/selfsim_M=4.5_second_mode/");
+
+	t_TaskManager App(TEST_CASE_DIR);
+	App.load_settings();
+
+	t_StabSolver& stab_solver = App.get_stab_solver();
+	t_EigenGS& gs_solver = App.get_eigen_gs();
+
+	std::wstring profiles_path = (TEST_CASE_DIR+_("profiles.dat")).c_str();
+
+	double alpha = 0.365;
+	double beta = 0.0;
+	double R = 2600;
+
+	std::wostringstream ifn_str;
+
+	ifn_str<<"out_spectrum_R="<<R<<"_al="<<alpha<<"[SLOW].dat";
+	std::wstring out_path = TEST_CASE_DIR.c_str()+ifn_str.str();
+
+	std::wofstream ofstr(&out_path[0]);
+
+	// just to be sure
+	Log<<_T("2D test started, profiles from AVF code...")<<_T("\n");
+
+	t_StabScales stab_scales;
+
+	stab_scales.ReStab = R;
+	stab_scales.Me = 4.5;
+	//TODO: others not needed in stab_scales?
+
+	gs_solver.setContext(profiles_path, stab_scales);
+	
+	gs_solver.getSpectrum(alpha, beta);
+	gs_solver.writeSpectrum(out_path);
+
+}
+
+void test::selfsim_M3_first_mode(){
+
+	const wxString TEST_CASE_DIR = 
+		_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/selfsim_M=3.0_first_mode/");
+
+	t_TaskManager App(TEST_CASE_DIR);
+	App.load_settings();
+
+	t_StabSolver& stab_solver = App.get_stab_solver();
+	t_EigenGS& gs_solver = App.get_eigen_gs();
+
+	std::wstring profiles_path = (TEST_CASE_DIR+_("profiles.dat")).c_str();
 
 }
