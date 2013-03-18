@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="PF.GlobSearch"
+	ProjectGUID="{D6C74E61-6200-48C1-BC26-DF9F3F02C886}"
+	VCNestedProjectGUID="{21F9BCE5-9478-4329-ADDC-BB97414D30EF}"
+	VCNestedProjectFileName="PF.GlobSearch.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>
