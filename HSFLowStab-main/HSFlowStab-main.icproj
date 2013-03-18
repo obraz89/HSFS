@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="HSFlowStab-main"
+	ProjectGUID="{94FB0371-BD67-4027-849B-B8E2AF4F651A}"
+	VCNestedProjectGUID="{D0D37BF9-2256-44EC-B290-F21C253238CF}"
+	VCNestedProjectFileName="HSFlowStab-main.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>
