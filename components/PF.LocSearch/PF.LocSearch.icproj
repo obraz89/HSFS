@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="PF.LocSearch"
+	ProjectGUID="{D222B6F8-8D76-4FC7-9367-421845C2DC1E}"
+	VCNestedProjectGUID="{474FA5CC-7886-4857-B484-B6FB484BDEAE}"
+	VCNestedProjectFileName="PF.LocSearch.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>
