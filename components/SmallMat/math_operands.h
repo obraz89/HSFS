@@ -1,11 +1,29 @@
+///////////////////////////////////////////////////////////////////////////////
+// Project:	SmallMat
+// Purpose:	Small matrix linear algebra
+///////////////////////////////////////////////////////////////////////////////
+// File:        math_operands.h
+// Purpose:     Interface of the linear algebra classes:
+//					vectors, matrices, ... 
+//					supports int, double and Complex values
+// Author:      A.Obraz
+///////////////////////////////////////////////////////////////////////////////
+
 #ifndef __MATH_OPERANDS
 #define __MATH_OPERANDS
+
 #include <complex>
-#include <vector>
 #include <cmath>
-#include "stdafx.h"
+#include <vector>
+
 #include "gen_exception.h"
 #include "io_helpers.h"
+
+#if defined(SMALLMAT_EXPORT) 
+#	define IMPEXP_SMALLMAT WXEXPORT
+#else
+#	define IMPEXP_SMALLMAT WXIMPORT
+#endif
 
 
 typedef std::complex<double> t_Complex;
@@ -13,19 +31,19 @@ typedef std::complex<double> t_CompVal;
 // TODO: rename and finally replace!!!
 typedef std::vector<double> t_DblVec;
 
-template<typename T> class  t_Matrix;
+template<typename T> class t_Matrix;
 typedef t_Matrix<t_Complex> t_MatCmplx;
 typedef t_Matrix<double> t_MatDbl;
 
-template<typename T> class  t_Vec;
+template<typename T> class t_Vec;
 typedef t_Vec<t_Complex> t_VecCmplx;
 typedef t_Vec<double> t_VecDbl;
 
-template<typename T> class  t_Vec3;
+template<typename T> class t_Vec3;
 typedef t_Vec3<t_Complex> t_Vec3Cmplx;
 typedef t_Vec3<double> t_Vec3Dbl;
 
-template<typename T> class  t_SqMatrix;
+template<typename T> class t_SqMatrix;
 typedef t_SqMatrix<t_Complex> t_SqMatCmplx;
 typedef t_SqMatrix<double> t_SqMatDbl;
 
@@ -40,11 +58,10 @@ typedef t_SqMat3<double> t_SqMat3Dbl;
 */
 /************************************************************************/
 
-// there is a big fucking bug in std std::norm(10)=100 hahaha
-namespace complex{
-	inline double norm(t_Complex val){
-		return sqrt(std::norm(val));
-	}
+// sad but true, but in std std::norm(10)=100
+// TODO: wrap everything with smat
+namespace smat{
+	IMPEXP_SMALLMAT double norm(t_Complex val);
 }
 
 
@@ -90,19 +107,28 @@ template<typename T> t_Matrix<T> operator*
 template<typename T> class t_Vec;
 
 template<typename T> class  t_Matrix{
-protected:
+public:
 	struct t_Col{
 		std::vector<T> _cont;
 
 		t_Col(int dim, T val=0.0):_cont(dim, val){};
 		std::vector<T>& std(){return _cont;};
-		const std::vector<T>& std()const{return _cont};
+		const std::vector<T>& std()const{return _cont;};
 		//operators
 		T& operator[](int n){ return _cont[n];};
 		const T& operator[](int n) const{ return _cont[n];};
-		t_Col& operator=(const t_Vec<T>&);
+		t_Col& operator=(const t_Vec<T>& r){
+			if (this->size()!=r.size())
+				ssuTHROW(matrix::t_SizeMismatch, 
+				_T("Col assign error: col vec size mismatch"));
+			for (int i=0; i<this->size(); i++){
+				_cont[i] = r[i];
+			};
+			return *this;	
+		}; ;
 		int size()const{return _cont.size();};
 	};
+protected:
 	std::vector<t_Col> _cont;
 	void _chk_col_ind(const int n) const;
 	void _chk_row_ind(const int n) const; 
@@ -352,7 +378,7 @@ public:
 	t_Vec(const t_Matrix<T>::t_Col& col):t_Matrix(1, col){};
 
 	int size() const{
-		t_Matrix<T>::t_Col& col = _cont[0];
+		const t_Matrix<T>::t_Col& col = _cont[0];
 		return col.size();
 	};
 	// TODO: maybe some check that imag is small ?
@@ -370,7 +396,7 @@ template<typename T>T& t_Vec<T>::operator[](const int ind){
 	ssuTHROW(matrix::t_BadIndex, _T("t_Vec error: Index out of range"));
 };
 template<typename T>const T& t_Vec<T>::operator[](const int ind) const{
-	t_Matrix<T>::t_Col& col = _cont[0];
+	const t_Matrix<T>::t_Col& col = _cont[0];
 	if ((ind>=0)&&(ind<size())) return col[ind];
 	ssuTHROW(matrix::t_BadIndex, _T("t_Vec error: Index out of range"));
 };
@@ -449,22 +475,6 @@ t_Vec<matrix::TypeDeduce<t1,t2>::type > operator*
  	t_Vec<type> ret(matrix::base::mat_mul<t1,t2>(l,r)[0]);
 	return ret;
 }
-
-/************************************************************************/
-/* mixed                                                                */
-/************************************************************************/
-
-// to write A[j] = vec;
-template<typename T> t_Matrix<T>::t_Col& t_Matrix<T>::t_Col::operator=
-(const t_Vec<T>& r){
-	if (this->size()!=r.size())
-		ssuTHROW(matrix::t_SizeMismatch, 
-			_T("Col assign error: col vec size mismatch"));
-	for (int i=0; i<this->size(); i++){
-		_cont[i] = r[i];
-	};
-	return *this;	
-}; 
 
 /************************************************************************/
 /* 3D vector                                                            */
@@ -736,7 +746,7 @@ public:
 	
 	t_SqMat3 inverse() const{
 		t_SqMat3 ret;
-		t_SqMatrix& rM = *this;
+		const t_SqMatrix& rM = *this;
 		(t_SqMatrix&)ret = rM.inverse();
 		return ret;
 	};

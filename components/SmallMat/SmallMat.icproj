@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="SmallMat"
+	ProjectGUID="{AD6AF5FD-63BF-4BED-B087-99C5EB4D4281}"
+	VCNestedProjectGUID="{ED9BA700-FBB9-41CF-BA12-6E1411CA7D5F}"
+	VCNestedProjectFileName="SmallMat.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>
