@@ -88,13 +88,13 @@ void test::selfsim_M45_second_mode(){
 			double al = al_min + da*j;
 
 			t_WCharsLoc wave = 
-				gs_solver->searchMaxInstabPlane(al, beta);	
+				gs_solver->searchMaxInstab(al, beta);	
 
 			if (wave.w.imag()>0.0){
 
 				stab_solver->setContext(&prof_stab);
 
-				stab::t_LSCond ls_cond(stab::t_LSCond::A_FIXED, wave);
+				stab::t_LSCond ls_cond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED, wave);
 				//stab_solver->adjustLocal(wave, t_StabSolver::t_MODE::W_MODE);
 				stab_solver->searchWave(wave, ls_cond, stab::t_TaskTreat::TIME);
 
@@ -144,3 +144,5 @@ void test::selfsim_M45_second_mode(){
 	}
 
 }
+
+//------------------------------------------------------------------------------

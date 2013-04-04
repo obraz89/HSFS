@@ -133,7 +133,7 @@ t_WCharsLoc::t_WCharsLoc():t_WaveChars(){};
 
 t_WCharsLoc::t_WCharsLoc(const t_WaveChars& ww):t_WaveChars(ww){};
 
-t_WCharsLoc t_WCharsLoc::find_max_instab(const std::vector<t_WCharsLoc>& vec){
+t_WCharsLoc t_WCharsLoc::find_max_instab_time(const std::vector<t_WCharsLoc>& vec){
 	if(vec.size()>0){
 		const t_WCharsLoc* pmax = &vec[0];
 		for (int k=0; k<vec.size(); k++){
@@ -146,6 +146,21 @@ t_WCharsLoc t_WCharsLoc::find_max_instab(const std::vector<t_WCharsLoc>& vec){
 		return t_WCharsLoc();
 	}
 };
+
+t_WCharsLoc t_WCharsLoc::find_max_instab_spat(const std::vector<t_WCharsLoc>& vec){
+
+	if(vec.size()>0){
+		const t_WCharsLoc* pmax = &vec[0];
+		for (int k=0; k<vec.size(); k++){
+			if (vec[k].a.imag()<pmax->a.imag()){
+				pmax = &vec[k];
+			}
+		}
+		return *pmax;
+	}else{
+		return t_WCharsLoc();
+	}
+}
 
 t_WCharsLocDim t_WCharsLoc::to_dim() const{
 	t_WCharsLocDim ret(*this);

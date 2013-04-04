@@ -327,11 +327,19 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\AdjustLocal_Grad.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\ODES.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\ODES_stab.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\SearchMaxInstab_Grad.cpp"
 				>
 			</File>
 			<File

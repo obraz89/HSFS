@@ -1,0 +1,5 @@
+#if defined(SMALLMAT_EXPORT) 
+#	define IMPEXP_SMALLMAT WXEXPORT
+#else
+#	define IMPEXP_SMALLMAT WXIMPORT
+#endif

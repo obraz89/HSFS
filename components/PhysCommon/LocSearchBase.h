@@ -23,6 +23,8 @@ namespace stab{
 
 		enum t_Mode{
 
+			FREE    = 00,
+
 			W_FIXED = 01,
 
 			A_FIXED = 02,
@@ -33,7 +35,10 @@ namespace stab{
 
 		t_WaveChars wchars_dim;	// !!
 		t_WaveChars wchars;
+
+		t_LSCond(int cnd);
 		t_LSCond(int cnd, t_WaveChars a_wchars);
+		int get_mode() const;
 	};
 
 
@@ -44,7 +49,11 @@ namespace stab{
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
 
-		virtual void searchWave(t_WCharsLoc&, t_LSCond cond, t_TaskTreat task_mode)=0;
+		virtual t_Complex solve(t_WCharsLoc& a_wave_chars)=0;
+
+		virtual bool searchWave(t_WCharsLoc&, t_LSCond cond, t_TaskTreat task_mode)=0;
+
+		virtual void searchMaxWave(t_WCharsLoc&, t_LSCond cond, t_TaskTreat task_mode)=0;
 
 		virtual void calcGroupVelocity(t_WCharsLoc& wchars)=0;
 
@@ -61,7 +70,15 @@ namespace stab{
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
 
-		virtual t_WCharsLoc searchMaxInstabPlane(double al, double beta)=0;
+		virtual int getSpectrum(const double a_alpha, const double a_beta)=0;
+
+		virtual void writeSpectrum(const std::wstring& a_filename)=0;
+
+		// select unstable discrete modes
+		virtual std::vector<t_WCharsLoc> getDiscreteModes(
+			const double a_alpha, const double a_beta)=0;
+
+		virtual t_WCharsLoc searchMaxInstab(double al, double beta)=0;
 
 	};
 };

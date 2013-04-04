@@ -628,38 +628,46 @@ void t_StabSolver::calcGroupVelocity
 
 t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime
 (const t_WCharsLoc& initial_guess){
-	t_WCharsLoc cur_wave = initial_guess;
-	t_WCharsLoc def_wave = initial_guess;
+	t_WCharsLoc nxt_wave = initial_guess;
+	t_WCharsLoc prv_wave;
 	t_Complex gv;
-	double da, db;     
+	double da, db; 
+
+	int ndebug=0;
 
 	do{
-		adjustLocal(def_wave, W_MODE);   
-		calcGroupVelocity(def_wave);
-		db = 0.01*def_wave.a.real();
-		double coef = def_wave.vgb.real()/def_wave.vga.real();
+		prv_wave = nxt_wave;
+		adjustLocal(prv_wave, W_MODE);   
+		calcGroupVelocity(prv_wave);
+		// IMPORTANT TODO: empirics 1% old val
+		db = 0.01*prv_wave.a.real();
+		double coef = prv_wave.vgb.real()/prv_wave.vga.real();
 		da = -coef*db;
 
-		cur_wave.a = def_wave.a + da;
-		cur_wave.b = def_wave.b + db;
-		cur_wave.w = def_wave.w;
-		adjustLocal(cur_wave, W_MODE);
+		nxt_wave.a = prv_wave.a + da;
+		nxt_wave.b = prv_wave.b + db;
+		nxt_wave.w = prv_wave.w;
+		adjustLocal(nxt_wave, W_MODE);
 
-		if (cur_wave.w.imag()<def_wave.w.imag()){
+		if (nxt_wave.w.imag()<prv_wave.w.imag()){
 			db = -db;
 			da = -coef*db;
-			cur_wave.a = def_wave.a + da;
-			cur_wave.b = def_wave.b + db;
-			cur_wave.w = def_wave.w;
-			adjustLocal(cur_wave, W_MODE);		
+			nxt_wave.a = prv_wave.a + da;
+			nxt_wave.b = prv_wave.b + db;
+			nxt_wave.w = prv_wave.w;
+			adjustLocal(nxt_wave, W_MODE);	
 		}	
-	} while(def_wave.w.imag()<cur_wave.w.imag());
+		//dbg
+		if (ndebug++==100){
+			ndebug=0;
+			std::wcout<<_T("getStatMaxInstabTime 100 iters done, cur wave:\n")<<nxt_wave<<_T("\n");
+		}
+	} while(prv_wave.w.imag()<nxt_wave.w.imag());
 
-	std::wcout<<_T("STAT:A=")<<def_wave.a.real()
-		      <<_T("; B=")<<def_wave.b.real()
-			  <<_T("\n----:W=")<<def_wave.w<<std::endl;
+	double wr_error = abs(1.0-initial_guess.w.real()/prv_wave.w.real());
+	std::wcout<<_T("getMaxWave Fixed Wr:err~")<<wr_error<<_T("\n")<<prv_wave;
 
-	return def_wave;
+	return prv_wave;
 };
 
 /************************************************************************/   
@@ -667,8 +675,7 @@ t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime
 // Use time approach
 /************************************************************************/
 
-
-t_WCharsLoc t_StabSolver::_getMaxInstabTime
+t_WCharsLoc t_StabSolver::_getMaxInstabTime_Stat
 (const t_WCharsLoc &init_guess){
 	// empiric half percent per iteration
 	double dar = 0.005*init_guess.a.real();
@@ -693,13 +700,14 @@ t_WCharsLoc t_StabSolver::_getMaxInstabTime
 	return base_wave;
 };
 
+
 /************************************************************************/   
 // Search for exact eigen solution given initial approach a_wave_chars
 // input: mode defines the value to be adjusted
 // Use time approach
 /************************************************************************/
 
-void t_StabSolver::adjustLocal
+bool t_StabSolver::adjustLocal
 (t_WCharsLoc &a_wave_chars, t_StabSolver::t_MODE a_mode){
 	// parameters
 	const t_Complex d_arg = _params.AdjustStep;
@@ -725,7 +733,8 @@ void t_StabSolver::adjustLocal
 	for (int i=0; i<max_iters; i++){
 		// check if we are converged
 		if (smat::norm(a_wave_chars.resid)<tol){
-			return;
+			//std::wcout<<_T("Adjust Converged")<<res_base<<std::endl;
+			return true;
 		};
 		// newton iteration
 		arg+=d_arg;
@@ -735,10 +744,10 @@ void t_StabSolver::adjustLocal
 		solve(a_wave_chars);
 		arg_base = arg;
 		res_base = a_wave_chars.resid;
-		std::wcout<<_T("Cur SI")<<res_base<<std::endl;
 	};
 	wxLogMessage(_T("Local Search Error: no convergence\n"));
 	a_wave_chars = backup;
+	return false;
 };
 
 void t_StabSolver::setInitWaves(const std::vector<t_WCharsLoc>& a_inits){
@@ -817,33 +826,64 @@ void t_StabSolver::getEigenWFixed
 /************************************************************************/
 
 // IMPORTANT TODO: task_mode switch, for now only time!
-void t_StabSolver::searchWave
+bool t_StabSolver::searchWave
 (t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode)
 {
 	if (task_mode==stab::t_TaskTreat::SPAT){
 		throw t_WrongMode();
 	}
 
-	if (cond.W_FIXED){
-
+	switch (cond.get_mode())
+	{
+	case stab::t_LSCond::W_FIXED:
 		// TODO: maybe in some cases B_MODE, how to switch ?
 		getEigenWFixed(wchars.w.real(), wchars, t_StabSolver::A_MODE);
-		return;
-	};
+		return true;
 
-	if (cond.A_FIXED){
-		adjustLocal(wchars, W_MODE);
-		return;
-	};
+	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED):
+		//return adjustLocal(wchars, W_MODE);
+		return adjustLocal_Grad(wchars, cond);
 
-	if (cond.B_FIXED){
-		adjustLocal(wchars, W_MODE);
-		return;
-	};
+	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::W_FIXED):
+		//return adjustLocal(wchars, B_MODE);
+		return adjustLocal_Grad(wchars, cond);
 
-	throw t_NotImplemented();
+	case (stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED):
+		//return adjustLocal(wchars, A_MODE);
+		return adjustLocal_Grad(wchars, cond);
+
+	default:
+		throw t_NotImplemented();
+	}
 
 };
+
+void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode){
+
+	if (task_mode==stab::t_TaskTreat::SPAT){
+		throw t_WrongMode();
+	}
+	switch (cond.get_mode())
+	{
+
+	case stab::t_LSCond::FREE:
+		wchars = _getMaxInstabTime_Grad(wchars);
+		return;
+
+	case stab::t_LSCond::W_FIXED:
+		wchars = _getStationaryMaxInstabTime(wchars);
+		return;
+
+	case stab::t_LSCond::A_FIXED:
+		throw t_NotImplemented();
+
+	case stab::t_LSCond::B_FIXED:
+		throw t_NotImplemented();
+
+	default:
+		throw t_NotImplemented();
+	}
+}
 
 
 t_WCharsLoc t_StabSolver::getMaxWave(const mf::t_BlkInd a_ind, 
@@ -857,7 +897,7 @@ t_WCharsLoc t_StabSolver::getMaxWave(const mf::t_BlkInd a_ind,
 	res_wave.w = 0.0;
 	t_WCharsLoc cur_wave;
 	for (int i=0; i<_initWaves.size(); i++){
-		cur_wave = _getMaxInstabTime(_initWaves[i]);
+		cur_wave = _getMaxInstabTime_Grad(_initWaves[i]);
 		if (cur_wave.w.imag()>res_wave.w.imag()){
 			res_wave = cur_wave;
 		}

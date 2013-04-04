@@ -37,11 +37,11 @@ void t_EigenGS::setContext(const t_ProfileStab* a_prof_stab){
 
 }
 
-t_WCharsLoc t_EigenGS::searchMaxInstabPlane(
+t_WCharsLoc t_EigenGS::searchMaxInstab(
 	const double a_alpha, const double a_beta){
 		const std::vector<t_WCharsLoc>& all_initials = 
 			getDiscreteModes(a_alpha, a_beta);
-		return t_WCharsLoc::find_max_instab(all_initials);
+		return t_WCharsLoc::find_max_instab_time(all_initials);
 };
 
 void t_EigenGS::getSpectrumFixedW(double w){

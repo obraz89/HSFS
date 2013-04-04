@@ -95,7 +95,8 @@ public:
 	t_WCharsLoc(const t_WaveChars& ww);
 
 	t_WCharsLocDim to_dim() const;
-	static t_WCharsLoc find_max_instab(const std::vector<t_WCharsLoc>& vec);
+	static t_WCharsLoc find_max_instab_time(const std::vector<t_WCharsLoc>& vec);
+	static t_WCharsLoc find_max_instab_spat(const std::vector<t_WCharsLoc>& vec);
 
 };
 

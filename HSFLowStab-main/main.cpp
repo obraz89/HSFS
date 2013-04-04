@@ -38,7 +38,11 @@ int main(int argc, char* argv[]){
 
 	load_Settings_n_Plugins();
 
-	test::selfsim_M45_second_mode();
+	//test::selfsim_M45_second_mode();
+
+	test::selfsim_M3_first_mode();
+
+	//test::test_conj_grad_min2D();
 }
 /*
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance

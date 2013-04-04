@@ -74,12 +74,13 @@ namespace pf{
 
 		int getSpectrum(const double a_alpha, const double a_beta);
 
+		void writeSpectrum(const std::wstring& a_filename);
+
 		// select unstable discrete modes
 		std::vector<t_WCharsLoc> getDiscreteModes(
 			const double a_alpha, const double a_beta);
 
-		// Plane waves <-> beta=0
-		t_WCharsLoc searchMaxInstabPlane(
+		t_WCharsLoc searchMaxInstab(
 			const double a_alpha, const double a_beta);
 
 		// tricky
@@ -98,7 +99,6 @@ namespace pf{
 
 		t_WCharsLoc searchMaxInstabFixed(t_Mode mode, double fixed_val);
 
-		void writeSpectrum(const std::wstring& a_filename);
 	};
 
 };		// ~namespace pf

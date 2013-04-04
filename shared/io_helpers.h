@@ -16,7 +16,13 @@ namespace io_hlp{
 			istr>>val;
 			return istr;
 		};
+
 }
+
+inline std::wostream& operator<<(std::wostream& ostr, const std::string& str){
+	return ostr<<&(str[0]);
+};
+
 
 namespace std_manip{
 	IMPEXP_SHARED extern const int FIELD_WIDTH_DEFAULT;

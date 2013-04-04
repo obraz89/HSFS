@@ -9,4 +9,6 @@ namespace test{
 	void selfsim_M3_first_mode();
 	//void selfsim_M3_spectrum(); 
 
+	void test_conj_grad_min2D();
+
 };

@@ -9,21 +9,17 @@
 // Author:      A.Obraz
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef __MATH_OPERANDS
-#define __MATH_OPERANDS
+#ifndef __SMALL_MAT_OPERANDS
+#define __SMALL_MAT_OPERANDS
 
 #include <complex>
 #include <cmath>
 #include <vector>
 
+#include "math_impexp.h"
+
 #include "gen_exception.h"
 #include "io_helpers.h"
-
-#if defined(SMALLMAT_EXPORT) 
-#	define IMPEXP_SMALLMAT WXEXPORT
-#else
-#	define IMPEXP_SMALLMAT WXIMPORT
-#endif
 
 
 typedef std::complex<double> t_Complex;
@@ -811,4 +807,4 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator-
 	return ret;
 }
 
-#endif // __MATH_OPERANDS
+#endif // __SMALL_MAT_OPERANDS

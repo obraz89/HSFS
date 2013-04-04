@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib wxzlibd.lib wxregexud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib"
+				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib wxzlibd.lib wxregexud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
 				GenerateDebugInformation="true"
@@ -272,7 +272,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="1"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -287,7 +287,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28u_core.lib wxbase28u.lib wxzlib.lib wxregexu.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib"
+				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28u_core.lib wxbase28u.lib wxzlib.lib wxregexu.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib SmallMat.lib Profile.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
 				GenerateDebugInformation="false"
@@ -339,10 +339,22 @@
 				RelativePath=".\settings.cpp"
 				>
 			</File>
-			<File
-				RelativePath=".\tests.cpp"
+			<Filter
+				Name="tests"
 				>
-			</File>
+				<File
+					RelativePath=".\test_conj_grad.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\test_fmode_selfsim.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\tests.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"

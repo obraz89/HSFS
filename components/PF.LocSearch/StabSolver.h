@@ -79,12 +79,16 @@ class  t_StabSolver: public stab::t_LSBase{
 		const t_MatCmplx& init_vecs, const t_VecCmplx& lambda) const;
 
 	// Max instab search realization
-	// group velocity computations
 	// maximize wi with wr fixed
 	t_WCharsLoc _getStationaryMaxInstabTime(const t_WCharsLoc& a_waveChars);
 	// search most unstable wave from the initial guess
 	// all params wr, alpha, beta are varied
-	t_WCharsLoc _getMaxInstabTime(const t_WCharsLoc& init_guess);
+	// this variant is weird and uses _getStationaryMaxInstabTime
+	t_WCharsLoc _getMaxInstabTime_Stat(const t_WCharsLoc& init_guess);
+
+	// search most unstable wave from the initial guess
+	// use gradient methods
+	t_WCharsLoc _getMaxInstabTime_Grad(const t_WCharsLoc& init_guess);
 public:
 	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
 
@@ -94,11 +98,15 @@ public:
 	inline int getTaskDim() const{return _math_solver.getTaskDim();};
 	inline int getNNodes() const{return _math_solver.getNNodes();}; 
 
+	inline const t_StabSolverParams& getParams() const{return _params;};
+
 	t_WCharsGlob popGlobalWCharsTime(const t_ProfileNS& a_rProfNS);
 	t_WCharsGlob popGlobalWCharsSpat(const t_ProfileNS& a_rProfNS);
 
 	//========================
-	void searchWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
+	bool searchWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
+
+	void searchMaxWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
 
 	void setContext(const mf::t_BlkInd a_ind);
 
@@ -114,7 +122,12 @@ public:
 	void setInitWaves(const std::vector<t_WCharsLoc>&);
 	// search for nearest eigenmode
 	// this is analogue to POISK in FORTRAN code
-	void adjustLocal(t_WCharsLoc& a_wave_chars, t_MODE a_mode);
+	// false if no convergence (bad initial)
+	// true if nice
+	// use Newton method[fast convergence, but needs to be close enough]
+	bool adjustLocal(t_WCharsLoc& a_wave_chars, t_MODE a_mode);
+	// the same as above but use conjugate grad search[slow, but robust]
+	bool adjustLocal_Grad(t_WCharsLoc& a_wave_chars, stab::t_LSCond a_cond);
 	// search for an eigenmode with a given wr (wr_fixed)
 	// from initial guess wave_chars
 	// A_MODE - keep beta fixed (for ex b=0)

@@ -597,10 +597,10 @@ t_WCharsLoc t_EigenGS::searchMaxInstabGlob(){
 			double a = a_min + (a_max-a_min)/double(n_a)*i;
 			double b = b_min + (b_max-b_min)/double(n_b)*j;
 			std::vector<t_WCharsLoc> inits = getDiscreteModes(a, b);
-			all_initials.push_back(t_WCharsLoc::find_max_instab(inits));
+			all_initials.push_back(t_WCharsLoc::find_max_instab_time(inits));
 		}
 	}
-	return t_WCharsLoc::find_max_instab(all_initials);
+	return t_WCharsLoc::find_max_instab_time(all_initials);
 };
 
 std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(t_Mode mode, double fixed_val){
@@ -622,7 +622,7 @@ std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(t_Mode mode, double fixed_
 		std::cout<<"GS fixed: "<<i<<"% done\n";
 		*pArg = arg_min + (arg_max-arg_min)/double(n)*i;
 		std::vector<t_WCharsLoc> inits = getDiscreteModes(a, b);
-		all_initials.push_back(t_WCharsLoc::find_max_instab(inits));
+		all_initials.push_back(t_WCharsLoc::find_max_instab_time(inits));
 	};
 	return all_initials;
 };
@@ -632,7 +632,7 @@ t_WCharsLoc t_EigenGS::searchMaxInstabFixed(t_Mode mode, double fixed_val){
 	const std::vector<t_WCharsLoc>& all_initials = 
 		searchInstabFixed(mode, fixed_val);
 
-	return t_WCharsLoc::find_max_instab(all_initials);
+	return t_WCharsLoc::find_max_instab_time(all_initials);
 
 };
 
