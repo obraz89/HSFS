@@ -334,6 +334,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fun_zero_1D.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\operands.cpp"
 				>
 			</File>
@@ -345,6 +349,10 @@
 			>
 			<File
 				RelativePath=".\conj_minmax.h"
+				>
+			</File>
+			<File
+				RelativePath=".\fun_zero_1D.h"
 				>
 			</File>
 			<File

@@ -73,6 +73,8 @@ public:
 
 	double get_y(int j) const;
 
+	double get_y_by_velo(double velo) const;
+
 	void set_rec(t_Rec val, int j_node);
 
 	virtual ~t_Profile();

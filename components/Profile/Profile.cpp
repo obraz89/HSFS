@@ -1,6 +1,8 @@
 #include "Profile.h"
 #include "log.h"
 
+#include "fun_zero_1D.h"
+
 t_Profile::t_Extractor::t_Extractor
 	(double t_Rec::* write_to, t_DblVec t_Profile::* extract_from)
 	:pWriteTo(write_to), pExtractFrom(extract_from){};
@@ -52,6 +54,27 @@ int t_Profile::get_nnodes() const{ return _nnodes;};
 double t_Profile::get_thick() const{return _y.back();};
 
 double t_Profile::get_y(int j) const{return _y[j];};
+
+//search for nearest y with specified velocity
+
+class t_RootProfVelo: public smat::t_RootDicho{
+	const t_Profile& _rProf;
+	const double _val;
+	inline double _calc_fun(double y){return _rProf.get_rec(y).u - _val;}
+public:
+	t_RootProfVelo(const t_Profile& a_rProf, double a_velo_val)
+		:smat::t_RootDicho(),_rProf(a_rProf), _val(a_velo_val){
+			// 2-nodes tolerance as default to speed up, big precision not required
+			set_tol(2.0*_rProf.get_thick()/_rProf.get_nnodes());
+	};
+};
+
+double t_Profile::get_y_by_velo(double velo_value) const{
+
+	t_RootProfVelo root_srchr(*this, velo_value);
+	return root_srchr.search_root(0.0, get_thick());
+
+};
 
 
 t_Profile::t_Rec t_Profile::get_rec(int j) const{
