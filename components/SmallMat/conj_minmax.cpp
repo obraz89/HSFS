@@ -33,7 +33,7 @@ int smat::t_ConjGradSrch::_search_min_desc(t_VecDbl& init_guess){
 	do
 	{
 		_lin_start = _arg_cur;
-		if (_lin_bracket/*_brent*/(_lin_start, _lin_end, _h_cur)!=0){
+		if (_lin_bracket_brent(_lin_start, _lin_end, _h_cur)!=0){
 			wxLogMessage(_T("ConjGrad: linmin bracketing error"));
 		}
 		double lam = _lin_min(_lin_start, _lin_end);

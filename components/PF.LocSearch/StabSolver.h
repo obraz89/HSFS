@@ -35,6 +35,7 @@ class  t_StabSolver: public stab::t_LSBase{
 		t_StabODES(); 
 		~t_StabODES();	
 		t_VecCmplx formRHS3D(const double& a_y, const t_VecCmplx& a_var) const;
+		t_VecCmplx calcWallCoefs();
 		virtual t_Complex getResidual3D();
 		// TODO:fix param passing by val???
 		void setInitials(t_MatCmplx a_init_vectors);

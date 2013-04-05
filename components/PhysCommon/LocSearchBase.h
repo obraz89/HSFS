@@ -59,6 +59,8 @@ namespace stab{
 
 		virtual const t_StabScales& get_stab_scales() const =0;
 
+		virtual void dumpEigenFuctions(const std::wstring& fname)=0;
+
 		virtual ~t_LSBase();
 
 	};

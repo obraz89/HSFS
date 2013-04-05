@@ -52,4 +52,21 @@ void t_StabSolver::dumpEigenFuctions(const std::wstring& fname){
 		fstr<<_T("\n\n\n\n\n\n");
 	}
 
+	// finally write down eigen solution
+	t_VecCmplx wall_coefs = _math_solver.calcWallCoefs();
+	for (int j=0; j<getNNodes(); j++){
+		const t_VecCmplx* pVecs[4];
+
+		t_VecCmplx cur_sol = solutions[j]*wall_coefs;;
+
+		for (int k=0; k<2*nvecs; k++){
+			fstr<<std_manip::std_format_sci<double>(cur_sol[k].real())
+				<<_T("\t")
+				<<std_manip::std_format_sci<double>(cur_sol[k].imag())
+				<<_T("\t");
+		}
+		fstr<<_math_solver.varRange[j];
+		fstr<<_T("\n");
+	}
+
 }

@@ -61,6 +61,24 @@ void test::selfsim_M3_first_mode(){
 	std::ifstream ifstr(&avf_data_path[0]);
 	t_RFPair RF_pair;
 
+	// tmp - add lines to AVF profiles
+	/*
+	std::wofstream ofstr_tmp(_T("profiles_add_lines.dat"), std::ios_base::app);
+	for (int i=0; i<201; i++){
+		double y = 0.09942*(201+i);
+		ofstr_tmp<<std_manip::std_format_sci(y)<<"\t"<<
+			std_manip::std_format_sci(1.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(1.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(1.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(7.69006E-01)<<"\t"<<
+			std_manip::std_format_sci(-3.74278E-01)<<"\n";
+	}
+	return;
+	*/
 	{
 		// read and forget legend
 		char ch;
@@ -125,19 +143,20 @@ void test::selfsim_M3_first_mode(){
 		std::wcout<<_T("GS initial:\n")<<test_wave;
 		//test_wave.a=t_Complex(0.0214, 0.0);
 		//test_wave.b=0.06;
-		//test_wave.w = t_Complex(0.0114, 0.00084);
-		//test_wave.w=t_Complex(0.0116, 0.0);
+		//test_wave.w = t_Complex(0.01158, 0.001097);
+		//test_wave.w = t_Complex(0.0116, 0.0);
 		//test_wave.vga = 0.6;
 		//test_wave.vgb = 0.0;
-		ostr.clear();
-		ostr<<_T("GS Fine Grid:")<<test_wave;
-		ofstr<<ostr.str();
-		return;
+		//ostr.clear();
+		//ostr<<_T("GS Fine Grid:")<<test_wave;
+		//ofstr<<ostr.str();
 
 		stab_solver->searchWave(test_wave,
 			stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED),
 			stab::t_TaskTreat::TIME);
 		std::wcout<<test_wave;
+
+		stab_solver->dumpEigenFuctions(_T("eigen_functs.dat"));
 
 		getchar();
 		return;

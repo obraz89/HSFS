@@ -37,8 +37,8 @@ void t_StabSolver::t_StabODES::solve(){
 	t_ODES::solve();
 };
 
-t_Complex t_StabSolver::t_StabODES::getResidual3D(){
-	const t_MatCmplx& wall_func = solution.back();
+t_VecCmplx t_StabSolver::t_StabODES::calcWallCoefs(){
+		const t_MatCmplx& wall_func = solution.back();
 /*
 // direct method: calculate the determinant
 // of wall funcs
@@ -56,10 +56,10 @@ t_Complex t_StabSolver::t_StabODES::getResidual3D(){
 // of solutions at wall
 // solve with rhs (0,1,0,0)
 // and construct resid
-	t_MatCmplx rhs(1,4);
-	t_MatCmplx resid_coefs(1,4);
+	t_VecCmplx rhs(4);
+	t_VecCmplx resid_coefs(4);
 	t_SqMatCmplx mat(4);
-	rhs[0][1]=1.0;
+	rhs[1]=1.0;
 	for (int i=0; i<4; i++){
             mat[i][0] = wall_func[i][0];
             mat[i][1] = wall_func[i][1];
@@ -67,9 +67,17 @@ t_Complex t_StabSolver::t_StabODES::getResidual3D(){
             mat[i][3] = wall_func[i][6];
 	}
 	resid_coefs = mat.inverse()*rhs;
+	return resid_coefs;
+}
+
+t_Complex t_StabSolver::t_StabODES::getResidual3D(){
+
+	const t_MatCmplx& wall_func = solution.back();
+	t_VecCmplx resid_coefs = calcWallCoefs();
+
 	t_Complex resid(0.0);
 	for (int i=0; i<4; i++){
-		resid+=resid_coefs[0][i]*wall_func[i][4];
+		resid+=resid_coefs[i]*wall_func[i][4];
 	}
 	return resid;
 };

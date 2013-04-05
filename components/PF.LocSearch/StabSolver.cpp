@@ -841,16 +841,16 @@ bool t_StabSolver::searchWave
 		return true;
 
 	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED):
-		//return adjustLocal(wchars, W_MODE);
-		return adjustLocal_Grad(wchars, cond);
+		return adjustLocal(wchars, W_MODE);
+		//return adjustLocal_Grad(wchars, cond);
 
 	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::W_FIXED):
-		//return adjustLocal(wchars, B_MODE);
-		return adjustLocal_Grad(wchars, cond);
+		return adjustLocal(wchars, B_MODE);
+		//return adjustLocal_Grad(wchars, cond);
 
 	case (stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED):
-		//return adjustLocal(wchars, A_MODE);
-		return adjustLocal_Grad(wchars, cond);
+		return adjustLocal(wchars, A_MODE);
+		//return adjustLocal_Grad(wchars, cond);
 
 	default:
 		throw t_NotImplemented();
