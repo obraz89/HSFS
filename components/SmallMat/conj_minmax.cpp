@@ -1,21 +1,67 @@
 #include "stdafx.h"
 #include "conj_minmax.h"
 
-using namespace smat;
+#include "log.h"
 
 static double ARG_TOL=1.0e-6;
 static double GRAD_TOL=1.0e-7;
 static double DARG_MIN=ARG_TOL;
-static int MAX_ITER=50;
 
+//steep params
+static int MAX_ITER_SD = 1000;
+
+// conj params
 static double GOLD = 1.618034;
 // TODO: this should be important in stability part
 static double GLIMIT = 10.0;
 static double TINY = 1.0e-8;
+static int MAX_ITER_CONJ=50;
 
+using namespace smat;
 
+//----------------------------------------------------------------t_GradSrchBase
+t_GradSrchBase::t_GradSrchBase(int ndim):_ndim(ndim){}
+//---------------------------------------------------------------t_SteepDescSrch
+t_SteepDescSrch::t_SteepDescSrch(int ndim):t_GradSrchBase(ndim),
+_arg_cur(ndim), _arg_nxt(ndim), _grad_cur(ndim){}
 
-t_ConjGradSrch::t_ConjGradSrch(int ndim):_ndim(ndim),
+int t_SteepDescSrch::_search_min_desc(t_VecDbl& a_arg){
+
+	_arg_cur = a_arg;
+
+	bool converged = false;
+	int n_iter=0;
+	double fun_cur, fun_nxt;
+
+	do 
+	{
+
+		fun_cur = _calc_fun_desc(_arg_cur);
+		_grad_cur = _calc_grad_desc(_arg_cur);
+		// IMPORTANT TODO: step?
+		double dt = 0.005*_arg_cur.norm()/_grad_cur.norm();
+
+		_arg_nxt = _arg_cur - dt*_grad_cur;
+		fun_nxt = _calc_fun_desc(_arg_nxt);
+
+		converged = fun_nxt>fun_cur;
+		// TODO: max iterations?
+		//if (n_iter++>MAX_ITER_CONJ) return 1;
+
+		_arg_cur = _arg_nxt;
+
+		// debug
+		std::wstringstream wsstr;
+		wsstr<<"Minimizing{SD} fun="<<std_manip::std_format_sci(fun_nxt);
+		log_my::wxLogMessageStd(wsstr.str());
+
+	} while (!converged);
+
+	a_arg = _arg_cur;
+	return 0;
+}
+//----------------------------------------------------------------t_ConjGradSrch
+t_ConjGradSrch::t_ConjGradSrch(int ndim):t_GradSrchBase(ndim),
 _arg_cur(ndim), _arg_nxt(ndim),
 _h_cur(ndim), _h_nxt(ndim),
 _g_cur(ndim), _g_nxt(ndim),
@@ -33,7 +79,7 @@ int smat::t_ConjGradSrch::_search_min_desc(t_VecDbl& init_guess){
 	do
 	{
 		_lin_start = _arg_cur;
-		if (_lin_bracket_brent(_lin_start, _lin_end, _h_cur)!=0){
+		if (_lin_bracket(_lin_start, _lin_end, _h_cur)!=0){
 			wxLogMessage(_T("ConjGrad: linmin bracketing error"));
 		}
 		double lam = _lin_min(_lin_start, _lin_end);
@@ -57,7 +103,12 @@ int smat::t_ConjGradSrch::_search_min_desc(t_VecDbl& init_guess){
 		_g_cur = _g_nxt;
 
 		//  if no convergence
-		if (n_iter++>MAX_ITER) return 1;
+		if (n_iter++>MAX_ITER_CONJ) return 1;
+
+		// debug
+		std::wstringstream wsstr;
+		wsstr<<"Minimizing{CG} fun="<<std_manip::std_format_sci(_calc_fun_desc(_arg_cur));
+		log_my::wxLogMessageStd(wsstr.str());
 	} while (!converged);
 
 	std::wstringstream sstr;
@@ -86,18 +137,21 @@ int t_ConjGradSrch::_lin_bracket(t_VecDbl& pnt_start, t_VecDbl& pnt_end, const t
 	pnt_end = pnt_start;
 	f_end = f_start;
 
+	t_VecDbl dir_n = dir;
+	dir_n.normalize();
+
 	do 
 	{
 		pnt_start = pnt_end;
 		f_start = f_end;
 
-		pnt_end = pnt_start + lam*dir;
+		pnt_end = pnt_start + lam*dir_n;
 		f_end = _calc_fun_desc(pnt_end);
 		lam*=2.0;
 
 		// can't bracket the min
-		if (n_iter++>MAX_ITER) return 1;
-	} while (f_start>f_end);
+		if (n_iter++>MAX_ITER_CONJ) return 1;
+	} while (f_start>=f_end);
 
 	return 0;
 
@@ -137,7 +191,7 @@ int t_ConjGradSrch::_lin_bracket_brent(t_VecDbl& a_vec, t_VecDbl& c_vec, const t
 	fc=_calc_fun_desc(ref_point + cx*dir);
 
 	int n_iter=0;
-	while ((fb > fc)&&(n_iter++<MAX_ITER)) {
+	while ((fb > fc)&&(n_iter++<MAX_ITER_CONJ)) {
 		//Compute u by parabolic extrapolation
 		r=(bx-ax)*(fb - fc);
 		q=(bx-cx)*(fb - fa);
@@ -179,7 +233,7 @@ int t_ConjGradSrch::_lin_bracket_brent(t_VecDbl& a_vec, t_VecDbl& c_vec, const t
 	}	// main loop ends
 #undef SHFT
 #undef SIGN
-	if (n_iter<MAX_ITER){
+	if (n_iter<MAX_ITER_CONJ){
 		a_vec = ref_point + ax*dir;
 		c_vec = ref_point + cx*dir;
 		return 0;

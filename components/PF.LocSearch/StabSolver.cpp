@@ -860,18 +860,24 @@ bool t_StabSolver::searchWave
 
 void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode){
 
-	if (task_mode==stab::t_TaskTreat::SPAT){
-		throw t_WrongMode();
-	}
+
 	switch (cond.get_mode())
 	{
 
 	case stab::t_LSCond::FREE:
-		wchars = _getMaxInstabTime_Grad(wchars);
+		if (task_mode==stab::t_TaskTreat::TIME){
+			wchars = _getMaxInstabTime_Grad(wchars);
+		}else{
+			wchars = _getMaxInstabSpat_Grad(wchars);
+		}
 		return;
 
 	case stab::t_LSCond::W_FIXED:
-		wchars = _getStationaryMaxInstabTime(wchars);
+		if (task_mode==stab::t_TaskTreat::TIME){
+			wchars = _getStationaryMaxInstabTime(wchars);
+		}else{
+			throw t_NotImplemented();
+		}
 		return;
 
 	case stab::t_LSCond::A_FIXED:

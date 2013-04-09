@@ -90,6 +90,7 @@ class  t_StabSolver: public stab::t_LSBase{
 	// search most unstable wave from the initial guess
 	// use gradient methods
 	t_WCharsLoc _getMaxInstabTime_Grad(const t_WCharsLoc& init_guess);
+	t_WCharsLoc _getMaxInstabSpat_Grad(const t_WCharsLoc& init_guess);
 public:
 	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
 

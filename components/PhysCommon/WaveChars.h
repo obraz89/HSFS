@@ -59,7 +59,7 @@ public:
 
 	stab::t_TaskTreat get_treat() const;
 	void set_treat(stab::t_TaskTreat treat);
-	bool check_treat(stab::t_TaskTreat treat) const;
+	void check_treat(stab::t_TaskTreat treat) const;
 
 	t_WaveChars& to_spat();
 	t_WaveChars& to_time();

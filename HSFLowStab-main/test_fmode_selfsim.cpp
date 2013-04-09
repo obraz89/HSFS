@@ -113,6 +113,22 @@ void test::selfsim_M3_first_mode(){
 
 		stab_solver->setContext(&prof_stab);
 
+		// simple test
+		/*
+		t_WCharsLoc wchars_test;
+
+		wchars_test.a = t_Complex(0.02145, -0.00186);
+		wchars_test.b = 0.062;
+		wchars_test.w = 0.011675;
+
+		stab_solver->searchWave(wchars_test, 
+			stab::t_LSCond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED), 
+			stab::t_TaskTreat::TIME);
+
+		stab_solver->calcGroupVelocity(wchars_test);
+		std::wcout<<wchars_test.to_time();
+		return;
+		*/
 		//make surface
 /*		
 		t_WCharsLoc wchars_surf;
@@ -139,44 +155,22 @@ void test::selfsim_M3_first_mode(){
 		return;
 */		
 
-		t_WCharsLoc test_wave = gs_solver->searchMaxInstab(0.02141, 0.06);
-		std::wcout<<_T("GS initial:\n")<<test_wave;
-		//test_wave.a=t_Complex(0.0214, 0.0);
-		//test_wave.b=0.06;
-		//test_wave.w = t_Complex(0.01158, 0.001097);
-		//test_wave.w = t_Complex(0.0116, 0.0);
-		//test_wave.vga = 0.6;
-		//test_wave.vgb = 0.0;
-		//ostr.clear();
-		//ostr<<_T("GS Fine Grid:")<<test_wave;
-		//ofstr<<ostr.str();
-
-		stab_solver->searchWave(test_wave,
-			stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED),
-			stab::t_TaskTreat::TIME);
-		std::wcout<<test_wave;
-
-		stab_solver->dumpEigenFuctions(_T("eigen_functs.dat"));
-
-		getchar();
-		return;
+		//stab_solver->dumpEigenFuctions(_T("eigen_functs.dat"));
 
 		//TODO: others not needed in stab_scales?
 
-		gs_solver->setContext(&prof_stab);
 
 		std::vector<t_WCharsLoc> waves_spat;
-		for (int j=0; j<n_al; j++){
+		/*for (int j=0; j<n_al; j++)*/{
 
 			std::wstringstream wsstr;
-			wsstr<<_T("inspect: started j=")<<j<<_T("\n");
-			wxLogMessage(&(wsstr.str()[0]));
+			//wsstr<<_T("inspect: started j=")<<j<<_T("\n");
+			log_my::wxLogMessageStd(wsstr.str());
 
-			double al = al_min + da*j;
-			double beta = 1.0*al;
+			double al = 0.015;//al_min + da*j;
+			double beta = 0.045;//1.0*al;
 
-			t_WCharsLoc wave = 
-				gs_solver->searchMaxInstab(al, beta);	
+			t_WCharsLoc wave = gs_solver->searchMaxInstab(al, beta);	
 
 			if (wave.w.imag()>0.0){
 
@@ -186,7 +180,7 @@ void test::selfsim_M3_first_mode(){
 					stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED),
 					stab::t_TaskTreat::TIME);
 
-				good_init = good_init & wave.w.imag()>0.0 & abs(wave.w.imag())<0.05;
+				good_init = good_init & wave.w.imag()>0.0 & abs(wave.w.imag())<0.1;
 
 				if (good_init){
 
@@ -194,11 +188,15 @@ void test::selfsim_M3_first_mode(){
 
 					// TODO: what condition? w_fixed or free? or adjust?
 					stab::t_LSCond ls_cond(stab::t_LSCond::FREE, wave);
-					stab_solver->searchMaxWave(wave, ls_cond, stab::t_TaskTreat::TIME);
+					stab_solver->searchMaxWave(wave, ls_cond, stab::t_TaskTreat::SPAT);
 
 					stab_solver->calcGroupVelocity(wave);
 
-					t_WCharsLoc spat_wave = wave.to_spat();
+					std::wcout<<wave;
+
+					t_WCharsLoc spat_wave = (wave.get_treat()==stab::t_TaskTreat::TIME) ? wave.to_spat() : wave;
+
+					std::wcout<<_T("after:\n")<<wave;
 
 					waves_spat.push_back(spat_wave);
 
@@ -206,7 +204,7 @@ void test::selfsim_M3_first_mode(){
 
 			}
 
-		}
+		}	// ~loop over alphas
 		std::vector<t_WCharsLoc>::iterator it_wave;
 
 		t_WCharsLoc max_instab = t_WCharsLoc::find_max_instab_spat(waves_spat);

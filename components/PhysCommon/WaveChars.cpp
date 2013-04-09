@@ -16,9 +16,13 @@ t_WaveChars::t_WaveChars(stab::t_TaskTreat treat):_task_treat(treat){};
 const t_StabScales& t_WaveChars::scales() const{return _scales;};
 void t_WaveChars::set_scales(const t_StabScales&scales){_scales = scales;};
 
-bool t_WaveChars::check_treat(stab::t_TaskTreat treat) const{
+void t_WaveChars::check_treat(stab::t_TaskTreat treat) const{
 	
-	bool ok = _task_treat!=treat;
+	if(_task_treat!=treat){
+		ssuGENTHROW(_T("Wrong type of task treat[Time, Spat]!"));
+	};
+
+	/*
 
 	switch (_task_treat)
 	{
@@ -37,8 +41,8 @@ bool t_WaveChars::check_treat(stab::t_TaskTreat treat) const{
 		ok = false;
 		break;
 	}
-	
-	return ok;
+	*/
+	return;
 }
 
 stab::t_TaskTreat t_WaveChars::get_treat() const{
@@ -64,7 +68,7 @@ t_WaveChars& t_WaveChars::to_spat(){
 	b.imag(-w.imag()*vgb.real()*coef);
 	w.imag(0.0);
 
-	_task_treat==stab::t_TaskTreat::SPAT;
+	_task_treat=stab::t_TaskTreat::SPAT;
 
 	return *this;
 };
@@ -84,7 +88,7 @@ t_WaveChars& t_WaveChars::to_time(){
 	a.imag(0);
 	b.imag(0);
 
-	_task_treat==stab::t_TaskTreat::TIME;
+	_task_treat=stab::t_TaskTreat::TIME;
 
 	return *this;
 }
