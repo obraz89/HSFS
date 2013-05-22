@@ -20,7 +20,10 @@ public:
 	void initialize(t_ProfileNS& a_rProfNS, int nnodes=0);
 
 	// for testing with AVF code
-	void initialize(const std::wstring fname, const t_StabScales& a_scales);
+	// w=0
+	void initialize_2D(const std::wstring fname, const t_StabScales& a_scales);
+	// w!=0
+	void initialize_3D(const std::wstring fname, const t_StabScales& a_scales);
 
 	~t_ProfileStab();
 };

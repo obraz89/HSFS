@@ -14,13 +14,7 @@
 
 using namespace hsstab;
 
-namespace test{
-	struct t_RFPair{double R, F; 	};
-
-	bool read_rw(std::ifstream& f, t_RFPair& pair);
-}
-
-void test::selfsim_M3_first_mode(){
+void test::selfsim_M2_CF(){
 
 	TCapsMF& caps_mf = G_Plugins.get_caps_mf();
 	TCapsLS& caps_ls = G_Plugins.get_caps_ls();
@@ -57,15 +51,14 @@ void test::selfsim_M3_first_mode(){
 
 	std::wofstream ofstr(&out_path[0]);
 
-	std::string avf_data_path = wx_to_stdstr(wxFileName::GetCwd()+_T("\\TSMAXM3TWTAD_spatial.DAT"));
+	std::string avf_data_path = wx_to_stdstr(wxFileName::GetCwd()+_T("\\TEST_obraz.DAT"));
 	std::ifstream ifstr(&avf_data_path[0]);
-	t_RFPair RF_pair;
 
 	// tmp - add lines to AVF profiles
 	/*
 	std::wofstream ofstr_tmp(_T("profiles_add_lines.dat"), std::ios_base::app);
 	for (int i=0; i<201; i++){
-		double y = 0.09942*(201+i);
+		double y = 0.0150009*(201+i);
 		ofstr_tmp<<std_manip::std_format_sci(y)<<"\t"<<
 			std_manip::std_format_sci(1.00000E+00)<<"\t"<<
 			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
@@ -73,12 +66,18 @@ void test::selfsim_M3_first_mode(){
 			std_manip::std_format_sci(1.00000E+00)<<"\t"<<
 			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
 			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+//w
+			std_manip::std_format_sci(8.39100E-01)<<"\t"<<
+			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+			std_manip::std_format_sci(0.00000E+00)<<"\t"<<
+//vmu
 			std_manip::std_format_sci(1.00000E+00)<<"\t"<<
-			std_manip::std_format_sci(7.69006E-01)<<"\t"<<
-			std_manip::std_format_sci(-3.74278E-01)<<"\n";
+			std_manip::std_format_sci(7.49858E-01)<<"\t"<<
+			std_manip::std_format_sci(-1.87323E-01)<<"\n";
 	}
 	return;
 	*/
+	
 	{
 		// read and forget legend
 		char ch;
@@ -91,7 +90,7 @@ void test::selfsim_M3_first_mode(){
 
 	{
 
-		double R = 2500.0;
+		double R = 4253.0;
 		double F = 4.66e-06;
 
 		wxLogMessage(wxString::Format(_T("test R=%f, F=%f\n"), R, F));
@@ -101,10 +100,10 @@ void test::selfsim_M3_first_mode(){
 		t_StabScales stab_scales;
 
 		stab_scales.ReStab = R;
-		stab_scales.Me = 3.0;
+		stab_scales.Me = 2.0;
 
 		t_ProfileStab prof_stab;
-		prof_stab.initialize_2D(profiles_path, stab_scales);
+		prof_stab.initialize_3D(profiles_path, stab_scales);
 
 		// simple test
 		
@@ -112,23 +111,28 @@ void test::selfsim_M3_first_mode(){
 		gs_solver->setContext(&prof_stab);
 
 		stab_solver->setContext(&prof_stab);
-
-		// simple test
-		/*
+		
 		t_WCharsLoc wchars_test;
 
-		wchars_test.a = t_Complex(0.02145, -0.00186);
-		wchars_test.b = 0.062;
-		wchars_test.w = 0.011675;
+		wchars_test.a = t_Complex(-0.512, -0.0175);
+		wchars_test.b = 0.652;
+		wchars_test.w = 0.0;
 
-		stab_solver->searchWave(wchars_test, 
+		t_WCharsLoc wave = gs_solver->searchMaxInstab(-0.512, 0.652);
+
+		std::wcout<<wave;
+
+		stab_solver->searchWave(wave, 
 			stab::t_LSCond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED), 
 			stab::t_TaskTreat::TIME);
 
-		stab_solver->calcGroupVelocity(wchars_test);
-		std::wcout<<wchars_test.to_time();
+		//stab_solver->calcGroupVelocity(wchars_test);
+
+		//stab_solver->dumpEigenFuctions(_T("eigen_functs.dat"));
+		std::wcout<<wchars_test.to_spat();
+		getchar();
 		return;
-		*/
+		
 		//make surface
 /*		
 		t_WCharsLoc wchars_surf;
@@ -237,35 +241,4 @@ void test::selfsim_M3_first_mode(){
 	delete stab_solver, gs_solver, pBlk;
 
 }
-
-
-bool test::read_rw(std::ifstream& ifstr, t_RFPair& pair){
-
-	std::stringstream istr;
-
-	const int max_lsize=1000;
-	char line[max_lsize];
-	char ch;
-	if(ifstr.get(line, max_lsize, '\n')){
-
-		if (ifstr.get(ch) && ch!='\n'){
-			wxString msg = _("parsing file error : line exceeded");
-			wxLogMessage(msg);
-			return false;
-		}
-
-		istr.clear();
-		istr<<line;
-
-		io_hlp::write_to_val<double>(istr, pair.R);
-
-		io_hlp::write_to_val<double>(istr, pair.F);
-		return true;
-
-	}else{
-
-		return false;
-	};
-}
-
 

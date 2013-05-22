@@ -77,7 +77,7 @@ void test::selfsim_M45_second_mode(){
 		stab_scales.Me = 4.5;
 
 		t_ProfileStab prof_stab;
-		prof_stab.initialize(profiles_path, stab_scales);
+		prof_stab.initialize_2D(profiles_path, stab_scales);
 
 		//TODO: others not needed in stab_scales?
 

@@ -343,6 +343,10 @@
 				Name="tests"
 				>
 				<File
+					RelativePath=".\test_cf_selfsim.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\test_conj_grad.cpp"
 					>
 				</File>

@@ -40,7 +40,9 @@ int main(int argc, char* argv[]){
 
 	//test::selfsim_M45_second_mode();
 
-	test::selfsim_M3_first_mode();
+	//test::selfsim_M3_first_mode();
+
+	test::selfsim_M2_CF();
 
 	//test::test_conj_grad_min2D();
 }

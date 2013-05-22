@@ -111,7 +111,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	}
 };
 
-void t_ProfileStab::initialize(const std::wstring wfname, 
+void t_ProfileStab::initialize_2D(const std::wstring wfname, 
 							   const t_StabScales& a_scales)
 {
 
@@ -160,6 +160,62 @@ void t_ProfileStab::initialize(const std::wstring wfname,
 		io_hlp::write_to_val<double>(istr, _mu2[n_line]);
 
 		_w[n_line] = _w1[n_line] = _w2[n_line] = 0.0;
+
+		n_line++;
+	}
+}
+
+void t_ProfileStab::initialize_3D(const std::wstring wfname, 
+							   const t_StabScales& a_scales)
+{
+
+	std::string fname = wx_to_stdstr(wxString(&wfname[0]));
+	std::ifstream ifstr(&fname[0]);
+	std::stringstream istr;
+
+	int n_line=0;
+	int nnodes=0;
+	const int max_lsize = 1000;
+	char line[max_lsize];
+	char ch;
+
+	_scales = a_scales;
+
+	// read-process profiles size
+	ifstr.get(line, max_lsize, '\n');
+	ifstr.get(ch);
+	istr.clear();
+	istr<<line;
+	istr>>nnodes;
+	_resize(nnodes);
+
+	// read profiles
+	while(ifstr.get(line, max_lsize, '\n')){
+		if (ifstr.get(ch) && ch!='\n'){
+			wxString msg = _("failed to initialize stability profile from file: line exceeded");
+			wxLogMessage(msg);
+			ssuGENTHROW(msg);
+		}
+		istr.clear();
+		istr<<line;
+
+		io_hlp::write_to_val<double>(istr, _y[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _u[n_line]);
+		io_hlp::write_to_val<double>(istr, _u1[n_line]);
+		io_hlp::write_to_val<double>(istr, _u2[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _t[n_line]);
+		io_hlp::write_to_val<double>(istr, _t1[n_line]);
+		io_hlp::write_to_val<double>(istr, _t2[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _w[n_line]);
+		io_hlp::write_to_val<double>(istr, _w1[n_line]);
+		io_hlp::write_to_val<double>(istr, _w2[n_line]);
+
+		io_hlp::write_to_val<double>(istr, _mu[n_line]);
+		io_hlp::write_to_val<double>(istr, _mu1[n_line]);
+		io_hlp::write_to_val<double>(istr, _mu2[n_line]);
 
 		n_line++;
 	}
