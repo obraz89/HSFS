@@ -69,12 +69,13 @@ t_Complex t_ODES::detGS(const t_MatCmplx& sol, const int& rank) const{
 		}
 	}
 	t_Complex det = mat.det();
-	if (abs(det.imag()/det.real())>1.0e-6){
+	// IMPORTANT TODO: EXPLORE WHY!
+	/*if (abs(det.imag()/det.real())>1.0e-6){
 		std::wostringstream ostr;
 		ostr<<_T("GS determinant error: determinant is complex; imag:")
 			<<abs(det.imag())<<_T("\n");
-		log_my::wxLogMessageStd(ostr.str());
-	}
+		log_my::CoutMessage(ostr.str());
+	}*/
 	return mat.det();
 }
 

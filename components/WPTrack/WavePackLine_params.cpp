@@ -23,7 +23,7 @@ void pf::_init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginP
 
 	params.TimeStep = g.get_real_param("TimeStep");
 
-	int rmode = g.get_int_param("NNodes");
+	int rmode = g.get_int_param("RetraceMode");
 
 	switch (rmode)
 	{

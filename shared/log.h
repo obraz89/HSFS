@@ -14,6 +14,11 @@ namespace log_my{
 		const wxChar* pStr = &(str[0]);
 		wxLogMessage(pStr);
 	};
+	
+	inline std::wostream& CoutMessage(const std::wstring& wstr){
+		return std::wcout<<wstr;
+	};
+
 }
 
 

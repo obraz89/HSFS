@@ -68,7 +68,7 @@ t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 
 	// march until neutral point
 	// or field boundary is reached
-	bool proceed_cond;
+	bool proceed_cond=true;
 
 	do{
 
@@ -100,8 +100,15 @@ t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 		wave_cond.w = wr;
 		stab::t_LSCond srch_cond(stab::t_LSCond::W_FIXED, wave_cond);
 
-		
-		loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
+		try
+		{
+			loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
+		}
+		catch (...)
+		{
+			break;
+		}
+
 		loc_solver.calcGroupVelocity(new_wave_chars);
 		new_wave_chars.set_scales(loc_solver.get_stab_scales());
 
@@ -111,7 +118,7 @@ t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 		_add_node(*pLine, new_rec_mf, wchars_glob, new_rec_nrst_ind);
 
 		last_wchars_loc = new_wave_chars;
-		proceed_cond = _proceed_retrace(new_rec_nrst_ind, new_wave_chars);
+		proceed_cond = proceed_cond && _proceed_retrace(new_rec_nrst_ind, new_wave_chars);
 
 		std::wostringstream ostr;
 		ostr<<_T("nearest node:")<<new_rec_nrst_ind<<_T("\n");

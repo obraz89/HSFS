@@ -19,6 +19,8 @@ namespace stab{
 		virtual void retrace(mf::t_BlkInd start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver)=0;
 
+		virtual void print_to_file(const std::wstring& fname, int write_mode) const=0;
+
 		virtual ~t_WPTrackBase();
 	};
 

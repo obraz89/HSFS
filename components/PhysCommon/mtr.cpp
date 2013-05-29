@@ -7,6 +7,10 @@ using namespace mf;
 // for future
 t_Mtr t_Block::get_mtr(const t_BlkInd ind) const{
 
-	return t_Mtr();
+	// HAck, works only for a flat plate
+	t_Mtr mtr;
 
+	mtr.jac.setToUnity();
+
+	return mtr;
 };

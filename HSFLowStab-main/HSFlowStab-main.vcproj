@@ -355,6 +355,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\test_smode_flat_hsflow.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\tests.cpp"
 					>
 				</File>

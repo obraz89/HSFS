@@ -54,7 +54,11 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 		s = Params.L_ref*
 			_rFldMF.calc_distance(rec.nearest_node, mf::t_BlkInd(0,0,0));
 
-		const t_WCharsGlobDim& dim_wave = rec.wave_chars.to_dim();
+		t_WCharsGlob spat_wave = rec.wave_chars;
+
+		spat_wave.to_spat();
+
+		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
 
 		//double sigma = dim_wave.w.imag()/(dim_wave.vga.real());
 		double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
@@ -63,7 +67,8 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 			sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.b.real(),2));
 
 		// TODO: second order integration
-
+		// TODO: tmp fix, make good integration
+		if (it==_line.begin()) sigma=0.0;
 		n_factor+=sigma*(s - s_prev);
 
 		fstr<<s<<_T("\t")<<Params.L_ref*rec.mean_flow.x

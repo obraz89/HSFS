@@ -42,7 +42,9 @@ int main(int argc, char* argv[]){
 
 	//test::selfsim_M3_first_mode();
 
-	test::selfsim_M2_CF();
+	//test::selfsim_M2_CF();
+
+	test::transhyb_base_wartman();
 
 	//test::test_conj_grad_min2D();
 }

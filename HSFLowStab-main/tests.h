@@ -2,6 +2,7 @@ namespace test{
 
 	void king_al_2_new();
 	void transhyb_base_08();
+	void transhyb_base_wartman();
 	void profile_compar();
 	void itam_hz();
 	void selfsim_M45_second_mode();

@@ -135,7 +135,7 @@ public:
 	// A_MODE - keep beta fixed (for ex b=0)
 	// B_MODE - keep alpha fixed (?)
 	// wave_chars.w should be close enough to w_fixed
-	void getEigenWFixed(double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode);
+	bool getEigenWFixed(double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode);
 
 	// core function
 	// returns the value of residual 

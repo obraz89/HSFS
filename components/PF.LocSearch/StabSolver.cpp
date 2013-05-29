@@ -746,6 +746,8 @@ bool t_StabSolver::adjustLocal
 		res_base = a_wave_chars.resid;
 	};
 	wxLogMessage(_T("Local Search Error: no convergence\n"));
+	// TODO: debug!
+	ssuGENTHROW(_T("Test"));
 	a_wave_chars = backup;
 	return false;
 };
@@ -781,8 +783,11 @@ std::vector<t_WCharsLoc> t_StabSolver::filterInitWaves
 //Search for nearest eigen solution
 // with keeping Re(w)=const
 /************************************************************************/
-void t_StabSolver::getEigenWFixed
+bool t_StabSolver::getEigenWFixed
 (double wr_fixed, t_WCharsLoc& wave_chars, t_MODE mode){
+
+	bool ok=true;
+
 	t_WCharsLoc backup = wave_chars;
 	t_Complex *pVg, *pArg;
 	if (mode==A_MODE){
@@ -801,7 +806,7 @@ void t_StabSolver::getEigenWFixed
 	t_Complex vg;
 	// IMPORTANT TODO: do we think Vg change is small??
 	// or is it a mistake - Vg is not recalculated!!!
-	adjustLocal(wave_chars, W_MODE);
+	ok = ok && adjustLocal(wave_chars, W_MODE);
 	calcGroupVelocity(wave_chars);
 	int n_iter=0;
 	do{
@@ -810,13 +815,15 @@ void t_StabSolver::getEigenWFixed
 		darg = (dwr/vg).real();
 		*pArg+= darg;
 		wave_chars.w+= dwr;
-		adjustLocal(wave_chars, W_MODE);
+		ok = ok && adjustLocal(wave_chars, W_MODE);
 		resid = abs((dwr)/wr_fixed);
 		if (n_iter++>_params.AdjustMaxIter){
 			wxLogMessage(_T("In GetEigenWFixed: no convergence"));
-			return;
+			return false;
 		};
 	} while (resid>=_params.AdjustTol);
+
+	return ok;
 };
 
 /************************************************************************/   
@@ -837,8 +844,7 @@ bool t_StabSolver::searchWave
 	{
 	case stab::t_LSCond::W_FIXED:
 		// TODO: maybe in some cases B_MODE, how to switch ?
-		getEigenWFixed(wchars.w.real(), wchars, t_StabSolver::A_MODE);
-		return true;
+		return getEigenWFixed(cond.wchars.w.real(), wchars, t_StabSolver::A_MODE);
 
 	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED):
 		return adjustLocal(wchars, W_MODE);
