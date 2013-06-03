@@ -211,11 +211,11 @@ t_WCharsLoc pf::t_StabSolver::_getMaxInstabTime_Grad(const t_WCharsLoc& init_gue
 
 	//raw search
 	t_WCharsLoc wchars = init_guess;
-	//t_SteepDescWiSrch wi_max_srchr(*this, init_guess); 
-	//wi_max_srchr.search_max_wave(wchars);
+	t_SteepDescWiSrch wi_max_srchr(*this, init_guess); 
+	wi_max_srchr.search_max_wave(wchars);
 	// adjust with conj grads
-	t_Conj2DStabWi wi_max_srchr_conj(*this, wchars); 
-	wi_max_srchr_conj.search_max_wave(wchars);
+	//t_Conj2DStabWi wi_max_srchr_conj(*this, wchars); 
+	//wi_max_srchr_conj.search_max_wave(wchars);
 	return wchars;
 }
 

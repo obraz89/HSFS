@@ -243,10 +243,9 @@ std::wostream& t_Profile::t_Rec::raw_cout(std::wostream& os){
 	// for now simple form to compare with AVF
 	os<<y<<_T("\t")<<
 		u<<_T("\t")<<u1<<_T("\t")<<u2<<_T("\t")<<
-		//w<<_T("\t")<<w1<<_T("\t")<<w2<<_T("\t")<<
-		t<<_T("\t")<<t1<<_T("\t")<<t2<<_T("\t")<<
-		//mu<<_T("\t")<<mu1<<_T("\t")<<mu2<<_T("\t")<<
-		/*p<<_T("\t")<<*/r<<_T("\n");
+		t<<_T("\t")<<t1<<_T("\t")<<t2<<_T("\t")<<r<<_T("\t")<<
+		mu<<_T("\t")<<mu1<<_T("\t")<<mu2<<_T("\t")<<
+		w<<_T("\t")<<w1<<_T("\t")<<w2<<_T("\t")<<_T("\n");
 	return os;
 
 } 
