@@ -53,6 +53,51 @@ void t_Block::print_entry(const t_BlkInd ind) const
 		<<"\nP:"<<p.p<<"  T:"<<p.t<<" Ro:"<<p.r<<"\n";
 };
 
+t_SqMat3Dbl mf::t_Block::calc_jac_to_loc_rf(const t_BlkInd ind) const{
+
+	t_SqMat3Dbl jac;
+
+	const t_Rec& bound_rec = get_rec(t_BlkInd(ind.i, get_bound_index(ind), ind.k));
+	const t_Rec& surface_rec = get_rec(t_BlkInd(ind.i, 0, ind.k));
+
+	// construct transformation matrix
+	// construct normal to a surface - e2':
+	// for now we need gridline j=const to be normal to surface
+	// TODO: make interpolation of field to a normal for arbitrary grid
+	t_Vec3Dbl e1,e2,e3, u_e;
+	/*
+	e2[0] = bound_rec.x - surface_rec.x;
+	e2[1] = bound_rec.y - surface_rec.y;
+	e2[2] = bound_rec.z - surface_rec.z;
+	*/
+	e2 = bound_rec.get_xyz() - surface_rec.get_xyz();
+	//double norm = two_norm(e2);
+	e2.normalize();
+	// construct e1': along inviscid streamline
+	// be sure e1'*e2'=0:
+	// e1' = norm(Ue - (e2'*Ue));
+
+	u_e = bound_rec.get_uvw();
+	e1 = u_e - vector::dot(e2, u_e)*e2;
+	e1.normalize();
+	// e3' = [e1' x e2']
+	e3 = vector::cross(e1, e2);
+	// ordinary orthogonal 
+	// transformation matrix S
+	// e' = eS
+	/*
+	_jacToLocalRF = e1[0], e2[0], e3[0],
+					e1[1], e2[1], e3[1],
+					e1[2], e2[2], e3[2];
+	*/
+	jac[0] = e1;
+	jac[1] = e2;
+	jac[2] = e3;
+	
+	return jac;
+
+}
+
 double t_Block::calc_enthalpy(const t_BlkInd ind) const
 {
 
@@ -471,14 +516,9 @@ t_BlkInd t_Block::get_nearest_index_loc(t_BlkInd start_from, t_GeomPoint geom_po
 };
 //old (bad) version
 t_BlkInd t_Block::get_nearest_index_raw(t_GeomPoint geom_point) const{
-	// lazy to rewrite)
-	double x = geom_point.x();
-	double y = geom_point.y();
-	double z = geom_point.z();
 
-	t_BlkInd ind_nrst;
-	double x_cmp = 0.;
-
+	// old crappy mess 
+	/*
 	int pos_lft = 0;
 	int pos_rgt = Nx-1;
 	while(pos_rgt-pos_lft>1) {
@@ -527,6 +567,37 @@ t_BlkInd t_Block::get_nearest_index_raw(t_GeomPoint geom_point) const{
 			pos_rgt = ind_nrst.j;
 	};
 	ind_nrst.j = pos_lft;
+	*/
+
+	t_BlkInd ind_nrst;
+
+	double cur_dst, min_dst = get_mf_params().L_ref;
+
+
+	t_BlkInd cur_ind;
+	t_GeomPoint surf_node_xyz;
+
+
+	// TODO: is this too slow?
+
+	for (int i=0; i<get_Nx(); i++){
+		for (int k=0; k<get_Nz(); k++)
+		{
+
+			cur_ind.i = i;
+			cur_ind.j = 0;
+			cur_ind.k = k;
+
+			surf_node_xyz = get_rec(cur_ind).get_xyz();
+			cur_dst = (geom_point - surf_node_xyz).norm();
+
+			if (cur_dst<=min_dst)
+			{
+				ind_nrst = cur_ind;
+				min_dst = cur_dst;
+			}
+		}
+	}
 
 	return ind_nrst;
 }
@@ -539,7 +610,7 @@ t_Rec t_Block::interpolate_to_point(t_GeomPoint point) const{
 	// TODO: good interpolation !!!!!!!!!!!!!!!!!!!!!!!!!
 	// for now the worst variant:
 	t_BlkInd nrst_raw = get_nearest_index_raw(point);
-	t_BlkInd nrst_ind = get_nearest_index_loc(nrst_raw, point);
+	t_BlkInd nrst_ind = nrst_raw;//get_nearest_index_loc(nrst_raw, point);
 	t_Rec ret = get_rec(nrst_ind);
 	ret.set_xyz(point);
 	return ret;

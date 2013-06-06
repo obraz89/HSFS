@@ -15,10 +15,8 @@ class IMPEXP_PROFILE t_ProfileNS : public t_Profile{
 
 	mf::t_BlkInd _mf_ind;
 
-	int _bl_bound_ind;
-
-	// to speed up: avoid multiple calls _rBlk.mtr(_mf_ind)
-	mf::t_Mtr _mtr;
+	// TODO:for now this is not used, may be used later?
+	int __bl_bound_ind;
 
 	// TODO: remove?
 	const mf::t_Block& _rBlk;
@@ -38,12 +36,9 @@ public:
 
 	double get_xDist() const;
 
-	int get_bl_bound_ind() const;
+	int get_bound_ind() const;
 
-	t_Rec get_bl_bound_rec();
+	t_Rec get_bound_rec();
 
-	const mf::t_Mtr& get_mtr() const;
-
-	t_SqMat3Dbl getJac() const;
 };
 #endif // __PROF_NS

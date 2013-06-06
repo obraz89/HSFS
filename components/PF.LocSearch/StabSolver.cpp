@@ -481,7 +481,7 @@ void t_StabSolver::_verifyAsymptotics3D
 // Use time approach
 /************************************************************************/
 
-t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const t_ProfileNS& a_rProfNS){
+t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const mf::t_BlkInd a_ind){
 
 	t_WCharsLoc restore_wave = _waveChars;
 	t_WCharsLoc adjust_wave = _waveChars;
@@ -496,7 +496,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const t_ProfileNS& a_rProfNS){
 
 	}
 
-	t_WCharsGlob glob_wave(adjust_wave, a_rProfNS.get_mtr(), _profStab.scales());
+	t_WCharsGlob glob_wave(adjust_wave, _rFldNS.calc_jac_to_loc_rf(a_ind), _profStab.scales());
 
 	_waveChars = restore_wave;
 
@@ -510,7 +510,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const t_ProfileNS& a_rProfNS){
 // Use spat approach
 /************************************************************************/
 
-t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const t_ProfileNS& a_rProfNS){
+t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_BlkInd a_ind){
 
 	t_WCharsLoc restore_wave = _waveChars;
 	t_WCharsLoc adjust_wave = _waveChars;
@@ -527,7 +527,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const t_ProfileNS& a_rProfNS){
 
 	}
 
-	t_WCharsGlob glob_wave(adjust_wave, a_rProfNS.get_mtr(), _profStab.scales());
+	t_WCharsGlob glob_wave(adjust_wave, _rFldNS.calc_jac_to_loc_rf(a_ind), _profStab.scales());
 
 	_waveChars = restore_wave;
 
@@ -836,9 +836,9 @@ bool t_StabSolver::getEigenWFixed
 bool t_StabSolver::searchWave
 (t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode)
 {
-	if (task_mode==stab::t_TaskTreat::SPAT){
+	/*if (task_mode==stab::t_TaskTreat::SPAT){
 		throw t_WrongMode();
-	}
+	}*/
 
 	switch (cond.get_mode())
 	{

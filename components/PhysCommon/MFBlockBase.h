@@ -79,8 +79,6 @@ public:
 
 	const t_Rec& get_rec(const t_BlkInd ind) const;
 
-	t_Mtr get_mtr(const t_BlkInd ind) const;
-
 	t_BlkInd get_nearest_index_raw(t_GeomPoint point) const;
 	t_BlkInd get_nearest_index_raw(t_Rec rec) const;
 	t_BlkInd get_nearest_index_loc(t_BlkInd start_from, t_GeomPoint point) const;
@@ -94,6 +92,10 @@ public:
 	void create_i_slice(int i_num);
 
 	void print_entry(const t_BlkInd ind) const;
+
+// jac - transform matrix to local rf S: e'=eS
+// thus columns of jac are new base vectors in base rf
+	t_SqMat3Dbl calc_jac_to_loc_rf(const t_BlkInd ind) const;
 
 	double calc_enthalpy(const t_BlkInd ind) const;
 	double calc_enthalpy_freestream() const;

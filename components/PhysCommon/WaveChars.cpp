@@ -70,6 +70,9 @@ t_WaveChars& t_WaveChars::to_spat(){
 
 	_task_treat=stab::t_TaskTreat::SPAT;
 
+	// Resid must not be retained!
+	resid = 1.0;
+
 	return *this;
 };
 
@@ -89,6 +92,9 @@ t_WaveChars& t_WaveChars::to_time(){
 	b.imag(0);
 
 	_task_treat=stab::t_TaskTreat::TIME;
+
+	// Resid must not be retained!
+	resid = 1.0;
 
 	return *this;
 }
@@ -166,7 +172,7 @@ t_WCharsLoc t_WCharsLoc::find_max_instab_spat(const std::vector<t_WCharsLoc>& ve
 	}
 }
 
-t_WCharsLocDim t_WCharsLoc::to_dim() const{
+t_WCharsLocDim t_WCharsLoc::make_dim() const{
 	t_WCharsLocDim ret(*this);
 	_to_dim(ret);
 	return ret;
@@ -202,7 +208,7 @@ t_WCharsLocDim::t_WCharsLocDim(const t_WCharsLoc& wloc){wloc._to_dim(*this);};
 // ---------------------------------------------------------------- t_WCharsGlob
 
 t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars, 
-						   const mf::t_Mtr& a_mtr,
+						   const t_SqMat3Dbl& a_jac,
 						   const t_StabScales& a_stab_scales){
 
 	t_Vec3Cmplx k_ked, vg_ked, k_glob, vg_glob;
@@ -211,10 +217,8 @@ t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars,
 
 	vg_ked = waveChars.vga, 0, waveChars.vgb;
 
-	const t_SqMat3Dbl& jac = a_mtr.jac;
-
-	k_glob = jac*k_ked;
-	vg_glob = jac*vg_ked;
+	k_glob = a_jac*k_ked;
+	vg_glob = a_jac*vg_ked;
 
 	_set_vals(k_glob, vg_glob, waveChars.w, a_stab_scales);
 };

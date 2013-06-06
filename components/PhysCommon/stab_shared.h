@@ -9,6 +9,8 @@
 #ifndef __STAB_COMMON
 #define __STAB_COMMON
 
+#include "dll_impexp-phys_common.h"
+
 /************************************************************************/
 /* namespace for general lst stability defines and functions
 	TaskTreat - whether some task should be solved
@@ -42,6 +44,8 @@ struct t_StabScales{
 	double UeDim;
 	double Ue;
 	double FreqScale() const{return UeDim/Dels;};
+
+	friend IMPEXP_PHYSCOMMON std::wostream& operator<<(std::wostream& wstr, const t_StabScales& scales);
 };
 
 #endif	// __STAB_COMMON

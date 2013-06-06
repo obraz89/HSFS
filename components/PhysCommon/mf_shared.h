@@ -25,35 +25,6 @@ public:
 };
 
 /************************************************************************/
-/* 3D metrics class					                                    */
-// pnt - phys space geom point
-// jac - transform matrix to local rf S: e'=eS
-//		 thus columns of jac are new base vectors in base rf
-// when needed calc inverse jac using inv_jac()
-/************************************************************************/
-
-struct IMPEXP_PHYSCOMMON t_Mtr{
-
-	t_GeomPoint pnt;
-
-	t_SqMat3Dbl jac;
-
-	virtual t_SqMat3Dbl inv_jac();
-};
-
-/************************************************************************/
-/* 3D metrics class with orthogonal transformation                      */
-/************************************************************************/
-
-// TODO:Do I need this?
-
-/*
-struct t_MtrOrth:public t_Mtr{
-	t_SqMat3Dbl inv_jac(){return jac.transpose();};
-};
-*/
-
-/************************************************************************/
 /* Viscosity type                                                       */
 /************************************************************************/
 

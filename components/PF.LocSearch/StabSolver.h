@@ -102,8 +102,8 @@ public:
 
 	inline const t_StabSolverParams& getParams() const{return _params;};
 
-	t_WCharsGlob popGlobalWCharsTime(const t_ProfileNS& a_rProfNS);
-	t_WCharsGlob popGlobalWCharsSpat(const t_ProfileNS& a_rProfNS);
+	t_WCharsGlob popGlobalWCharsTime(const mf::t_BlkInd a_ind);
+	t_WCharsGlob popGlobalWCharsSpat(const mf::t_BlkInd a_ind);
 
 	//========================
 	bool searchWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);

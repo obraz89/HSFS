@@ -37,7 +37,7 @@ void t_WavePackLine::_retrace_dir(t_BlkInd start_from, t_WCharsLoc init_wave,
 						stab::t_LSBase& loc_solver,t_Direction direction){
 
 	//======================
-t_WCharsLocDim init_wave_dim = init_wave.to_dim();
+t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 	double wr_dim = init_wave_dim.w.real();
 	double time_direction;
 	std::vector<t_WPLineRec>* pLine;
@@ -61,7 +61,7 @@ t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 	loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::TIME);
 	loc_solver.calcGroupVelocity(init_wave);
 
-	t_WCharsGlob wchars_glob(init_wave, _rFldMF.get_mtr(start_from), 
+	t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
 							 loc_solver.get_stab_scales());
 
 	_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob, start_from);
@@ -87,7 +87,8 @@ t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 		mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
 
 		t_BlkInd new_rec_nrst_ind = 
-			_rFldMF.get_nearest_index_loc(last_rec.nearest_node, new_rec_mf);
+			//_rFldMF.get_nearest_index_loc(last_rec.nearest_node, new_rec_mf);
+			_rFldMF.get_nearest_index_raw(new_rec_mf.get_xyz());
 		
 		t_WCharsLoc new_wave_chars(last_wchars_loc);
 
@@ -113,7 +114,7 @@ t_WCharsLocDim init_wave_dim = init_wave.to_dim();
 		new_wave_chars.set_scales(loc_solver.get_stab_scales());
 
 		t_WCharsGlob wchars_glob(new_wave_chars, 
-		_rFldMF.get_mtr(new_rec_nrst_ind), loc_solver.get_stab_scales());
+		_rFldMF.calc_jac_to_loc_rf(new_rec_nrst_ind), loc_solver.get_stab_scales());
 
 		_add_node(*pLine, new_rec_mf, wchars_glob, new_rec_nrst_ind);
 

@@ -1,7 +1,8 @@
+#include "io_helpers.h"
+
 #include "ProfileStab.h"
 
 #include <cmath>
-#include "io_helpers.h"
 
 #include "log.h"
 
@@ -27,17 +28,17 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 		_resize(a_rProfNS.get_nnodes());	
 	};
 
-	const t_Profile::t_Rec& bl_outer_rec = a_rProfNS.get_bl_bound_rec();
+	const t_Profile::t_Rec& ns_outer_rec = a_rProfNS.get_bound_rec();
 
-	double mu_e = bl_outer_rec.mu;
+	double mu_e = ns_outer_rec.mu;
 
 	double x = a_rProfNS.get_xDist();
 
-	double u_e = bl_outer_rec.u;
+	double u_e = ns_outer_rec.u;
 
-	double rho_e = bl_outer_rec.r;
+	double rho_e = ns_outer_rec.r;
 
-	double t_e = bl_outer_rec.t;
+	double t_e = ns_outer_rec.t;
 
 	double y_scale = sqrt(mu_e*x/(u_e*rho_e));
 
@@ -52,14 +53,14 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 	_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
 
 	t_BlkInd mf_ind = a_rProfNS.getMFInd();
-	mf_ind.j = a_rProfNS.get_bl_bound_ind();
+	mf_ind.j = a_rProfNS.get_bound_ind();
 
 	_scales.UeDim = rMF.calc_c_dim(mf_ind)*_scales.Me;
 
 	_scales.Ue = u_e;
 
 	// TODO: simply _nnodes
-	double dy = a_rProfNS.get_thick()/((double)this->get_nnodes());
+	double dy = a_rProfNS.get_thick()/((double)this->get_nnodes()-1);
 
 	// order important - first interpolate then nondim
 	for (int i=0; i<get_nnodes(); i++){
@@ -99,9 +100,9 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 		}
 		else{
 
-		    const double& lt=_t[i];
+		    const double lt=_t[i];
 
-			const double& t_suth=Params.T_mju/Params.T_inf;
+			const double t_suth=Params.T_mju/(Params.T_inf*t_e);
 			const double d = 1.5/lt-1.0/(lt+t_suth);
 
 			_mu1[i] = _mu[i]*d;

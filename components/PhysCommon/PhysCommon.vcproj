@@ -341,16 +341,16 @@
 					RelativePath=".\MFElems.cpp"
 					>
 				</File>
-				<File
-					RelativePath=".\mtr.cpp"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="stab"
 				>
 				<File
 					RelativePath=".\LocSearch.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\stab_shared.cpp"
 					>
 				</File>
 				<File

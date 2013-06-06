@@ -11,17 +11,17 @@ void t_ProfileNS::initialize(const t_BlkInd a_ind, double a_thick_coef){
 	_mf_ind = a_ind;
 	_mf_ind.j = 0;
 
-	_bl_bound_ind = _rBlk.get_bound_index(a_ind);
+	__bl_bound_ind = _rBlk.get_bound_index(a_ind);
 
 	const int a_i = a_ind.i;
 	const int a_k = a_ind.k;
 
 	double bl_thick = 
-		_rBlk.calc_distance(t_BlkInd(a_i, _bl_bound_ind, a_k), 
+		_rBlk.calc_distance(t_BlkInd(a_i, __bl_bound_ind, a_k), 
 						    t_BlkInd(a_i, 0            , a_k));
 
 	double cur_y = bl_thick;
-	int cur_y_ind = _bl_bound_ind;
+	int cur_y_ind = __bl_bound_ind;
 	double prof_thick = a_thick_coef*bl_thick;
 
 	const int Nx = _rBlk.get_Nx();
@@ -36,53 +36,17 @@ void t_ProfileNS::initialize(const t_BlkInd a_ind, double a_thick_coef){
 
 	// TODO: check for ind>Ny overflow, throw something
 
-	this->_resize(cur_y_ind);
+	this->_resize(cur_y_ind+1);
 
-	const mf::t_Rec& bound_rec = _rBlk.get_rec(t_BlkInd(a_i, cur_y_ind, a_k));
 	const mf::t_Rec& surface_rec = _rBlk.get_rec(t_BlkInd(a_i, 0, a_k));
 
-// construct transformation matrix
-	// construct normal to a surface - e2':
-	// for now we need gridline j=const to be normal to surface
-	// TODO: make interpolation of field to a normal for arbitrary grid
-	t_Vec3Dbl e1,e2,e3, u_e;
-	/*
-	e2[0] = bound_rec.x - surface_rec.x;
-	e2[1] = bound_rec.y - surface_rec.y;
-	e2[2] = bound_rec.z - surface_rec.z;
-	*/
-	e2 = bound_rec.get_xyz() - surface_rec.get_xyz();
-	//double norm = two_norm(e2);
-	e2.normalize();
-	// construct e1': along inviscid streamline
-	// be sure e1'*e2'=0:
-	// e1' = norm(Ue - (e2'*Ue));
-
-	u_e = bound_rec.get_uvw();
-	e1 = u_e - vector::dot(e2, u_e)*e2;
-	e1.normalize();
-	// e3' = [e1' x e2']
-	e3 = vector::cross(e1, e2);
-	// ordinary orthogonal 
-	// transformation matrix S
-	// e' = eS
-	/*
-	_jacToLocalRF = e1[0], e2[0], e3[0],
-					e1[1], e2[1], e3[1],
-					e1[2], e2[2], e3[2];
-	*/
-	t_SqMat3Dbl& mtr_jac = _mtr.jac;
-	mtr_jac[0] = e1;
-	mtr_jac[1] = e2;
-	mtr_jac[2] = e3;
-	//
-// transform vector fields and coordinates
-// to a new reference frame
+	// transform vector fields and coordinates
+	// to a new reference frame
 	t_Vec3Dbl u_xyz, u_ked;
 	t_GeomPoint r_xyz_base, r_xyz, dr_xyz, r_ked;
-	t_SqMat3Dbl inv_jac;
 
-	inv_jac = _mtr.inv_jac();
+	t_SqMat3Dbl jac = _rBlk.calc_jac_to_loc_rf(a_ind);
+	t_SqMat3Dbl inv_jac = jac.inverse();
 
 	r_xyz_base = surface_rec.get_xyz();
 
@@ -138,12 +102,8 @@ mf::t_BlkInd t_ProfileNS::getMFInd() const{return _mf_ind;};
 
 double t_ProfileNS::get_xDist() const{return _xDist;};
 
-int t_ProfileNS::get_bl_bound_ind() const{return _bl_bound_ind;};
+int t_ProfileNS::get_bound_ind() const{return get_nnodes()-1;};
 
-const mf::t_Mtr& t_ProfileNS::get_mtr() const{return _mtr;};
-
-t_SqMat3Dbl t_ProfileNS::getJac() const{return _mtr.jac;};
-
-t_ProfileNS::t_Rec t_ProfileNS::get_bl_bound_rec(){
-	return get_rec(_bl_bound_ind);
+t_ProfileNS::t_Rec t_ProfileNS::get_bound_rec(){
+	return get_rec(get_bound_ind());
 }

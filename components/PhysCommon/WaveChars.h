@@ -55,6 +55,8 @@ public:
 	t_CompVal w;
 	t_CompVal vga, vgn, vgb;
 
+	t_CompVal resid;
+
 	t_WaveChars(stab::t_TaskTreat treat=stab::TIME);
 
 	stab::t_TaskTreat get_treat() const;
@@ -89,12 +91,10 @@ class IMPEXP_PHYSCOMMON t_WCharsLoc: public t_WaveChars{
 	friend class t_WCharsLocDim;
 public:
 
-	t_CompVal resid;
-
 	t_WCharsLoc();
-	t_WCharsLoc(const t_WaveChars& ww);
+	t_WCharsLoc(const t_WaveChars&);
 
-	t_WCharsLocDim to_dim() const;
+	t_WCharsLocDim make_dim() const;
 	static t_WCharsLoc find_max_instab_time(const std::vector<t_WCharsLoc>& vec);
 	static t_WCharsLoc find_max_instab_spat(const std::vector<t_WCharsLoc>& vec);
 
@@ -128,7 +128,7 @@ class IMPEXP_PHYSCOMMON t_WCharsGlob: public t_WaveChars{
 
 public:
 
-	t_WCharsGlob(const t_WCharsLoc&, const mf::t_Mtr& , const t_StabScales&);
+	t_WCharsGlob(const t_WCharsLoc&, const t_SqMat3Dbl& jac_to_loc_rf , const t_StabScales&);
 	t_WCharsGlobDim to_dim() const;
 };
 
