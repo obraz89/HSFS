@@ -52,7 +52,7 @@ void test::transhyb_base_wartman(){
 
 	//stab_solver->setContext(test_ind);
 
-	int NLines = 11;
+	int NLines = 5;
 	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
 
 	for (int i=0; i<NLines; i++){
@@ -95,6 +95,7 @@ void test::transhyb_base_wartman(){
 			wxLogMessage(_T("Error in global search!\n"));
 			continue;
 		}
+
 		
 
 		/*
@@ -171,7 +172,7 @@ t_WCharsLoc search_global_initial(int i, stab::t_LSBase* stab_solver, stab::t_GS
 
 	//loop over alphas
 
-	const int n_al=10;
+	const int n_al=5;
 
 	double al_min=0.2;
 	double al_max = 0.3;

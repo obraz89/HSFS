@@ -59,8 +59,12 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	const t_CompVal& freq = _waveChars.w;
 
 	const t_CompVal dEicon_dt = alpha*rec.u + beta*rec.w - freq;
-	const double dMu2 = rec.mu2*rec.t1*rec.u1 + rec.mu1*rec.u2;
-	const t_CompVal xi = 1.0/(stabRe*inv_mu+imagUnity*vCoefL+gMaMa*dEicon_dt);
+
+	const double dMu1 = rec.mu1*rec.t1;
+	const double dMu2 = rec.mu2*rec.t1*rec.t1 + rec.mu1*rec.t2;
+	const double dMu_U= rec.mu2*rec.t1*rec.u1 + rec.mu1*rec.u2;
+
+	const t_CompVal xi = 1.0/(stabRe*inv_mu+imagUnity*vCoefL*gMaMa*dEicon_dt);
 
 	// first
 	_stab_matrix[1][0]=1.0;
@@ -68,15 +72,15 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	_stab_matrix[0][1] = imagUnity*stabRe*inv_t*inv_mu*dEicon_dt +
 		pow(alpha,2) + pow(beta,2);
 
-	_stab_matrix[1][1] =  - inv_mu*rec.mu1*rec.t1;
+	_stab_matrix[1][1] =  - inv_mu*dMu1;
 
 	_stab_matrix[2][1] = stabRe*inv_t*inv_mu*rec.u1 - 
-		imagUnity*alpha*(inv_mu*rec.mu1*rec.t1+vCoefM*inv_t*rec.t1);
+		imagUnity*alpha*(inv_mu*dMu1+vCoefM*inv_t*rec.t1);
 
 	_stab_matrix[3][1] = alpha*(imagUnity*stabRe*inv_mu -
 		vCoefM*gMaMa*dEicon_dt);
 
-	_stab_matrix[4][1] = vCoefM*alpha*inv_t*dEicon_dt - inv_mu*dMu2;
+	_stab_matrix[4][1] = vCoefM*alpha*inv_t*dEicon_dt - inv_mu*dMu_U;
 
 	_stab_matrix[5][1] = -inv_mu*rec.mu1*rec.u1;
 	// third
@@ -90,32 +94,32 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 
 	_stab_matrix[6][2] = -imagUnity*beta;
 	// fourth
-	_stab_matrix[0][3] = -imagUnity*xi*alpha*rec.t1*
-		(2.0*inv_mu*rec.mu1 + vCoefL*inv_t);
+	_stab_matrix[0][3] = -imagUnity*xi*alpha*
+		(2.0*inv_mu*dMu1 + vCoefL*inv_t*rec.t1);
 
 	_stab_matrix[1][3] = -imagUnity*xi*alpha;
 
 	_stab_matrix[2][3] = xi*(-alpha*alpha-beta*beta+
-		vCoefL*inv_t*inv_mu*rec.mu1*rec.t1*rec.t1+
+		vCoefL*inv_t*inv_mu*dMu1*rec.t1+
 		vCoefL*inv_t*rec.t2-
 		imagUnity*stabRe*inv_t*inv_mu*dEicon_dt);
 
 	_stab_matrix[3][3] = -imagUnity*xi*vCoefL*gMaMa*
 		(
-		(inv_mu*rec.mu1*rec.t1+inv_t*rec.t1)*dEicon_dt+
+		(inv_mu*dMu1+inv_t*rec.t1)*dEicon_dt+
 		alpha*rec.u1+beta*rec.w1
 		);
 
 	_stab_matrix[4][3] = imagUnity*xi*
 		(
 		(inv_mu*rec.mu1+vCoefL*inv_t)*(alpha*rec.u1+beta*rec.w1)+
-		vCoefL*inv_t*inv_mu*rec.mu1*rec.t1*dEicon_dt
+		vCoefL*inv_t*inv_mu*dMu1*dEicon_dt
 		);
 
 	_stab_matrix[5][3] = imagUnity*xi*vCoefL*inv_t*dEicon_dt;
 
 	_stab_matrix[6][3] = -imagUnity*xi*beta*
-		(2.0*inv_mu*rec.mu1*rec.t1 + vCoefL*inv_t*rec.t1);
+		(2.0*inv_mu*dMu1 + vCoefL*inv_t*rec.t1);
 
 	_stab_matrix[7][3] = -imagUnity*xi*beta;
 	// fifth
@@ -134,14 +138,15 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	_stab_matrix[4][5] = imagUnity*stabRe*Pr*inv_t*inv_mu*dEicon_dt +
 		alpha*alpha + beta*beta - 
 		g_1MaMa*Pr*inv_mu*rec.mu1*(rec.u1*rec.u1+rec.w1*rec.w1)-
-		inv_mu*(rec.mu2*rec.t1*rec.t1+rec.mu1*rec.t2);
-	_stab_matrix[5][5] = -2.0*inv_mu*rec.mu1*rec.t1;
+		inv_mu*dMu2;
+
+	_stab_matrix[5][5] = -2.0*inv_mu*dMu1;
 
 	_stab_matrix[7][5] = -2.0*Pr*g_1MaMa*rec.w1;
 	// seventh
 	_stab_matrix[7][6]=1.0;
 	// last
-	_stab_matrix[2][7] = -imagUnity*beta*(inv_mu*rec.mu1*rec.t1+vCoefM*inv_t*rec.t1)+
+	_stab_matrix[2][7] = -imagUnity*beta*(inv_mu*dMu1+vCoefM*inv_t*rec.t1)+
 		stabRe*inv_mu*inv_t*rec.w1;
 
 	_stab_matrix[3][7] = imagUnity*stabRe*beta*inv_mu-
@@ -155,7 +160,7 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	_stab_matrix[6][7] = imagUnity*stabRe*inv_t*inv_mu*dEicon_dt +
 		alpha*alpha + beta*beta;
 
-	_stab_matrix[7][7] = -inv_mu*rec.mu1*rec.t1;
+	_stab_matrix[7][7] = -inv_mu*dMu1;
 }
 
 void t_StabSolver::_setStabMatrix3D(const double& a_y){

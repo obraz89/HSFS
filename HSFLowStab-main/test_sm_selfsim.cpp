@@ -49,14 +49,14 @@ void test::selfsim_M45_second_mode(){
 	double dR = (R_max - R_min)/double(n_re-1);
 
 	int n_al = 51;
-	double al_min = 0.2;
-	double al_max = 0.4;
+	double al_min = 0.1;
+	double al_max = 0.5;
 	double da = (al_max - al_min)/double(n_al-1);
 
 	double beta = 0.0;
 	double F = 1.265e-04;
 
-	std::wstring out_path = (hsstab::CASE_SETTINGS_DIR+_("out_instab_wchars.dat")).c_str();
+	std::wstring out_path = _T("out_instab_wchars.dat");
 
 	std::wofstream ofstr(&out_path[0]);
 
@@ -94,13 +94,18 @@ void test::selfsim_M45_second_mode(){
 
 				stab_solver->setContext(&prof_stab);
 
-				stab::t_LSCond ls_cond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED, wave);
 				//stab_solver->adjustLocal(wave, t_StabSolver::t_MODE::W_MODE);
-				stab_solver->searchWave(wave, ls_cond, stab::t_TaskTreat::TIME);
+				stab_solver->searchWave(wave, 
+					stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED, wave), 
+					stab::t_TaskTreat::TIME);
 
 				stab_solver->calcGroupVelocity(wave);
 
 				t_WCharsLoc spat_wave = wave.to_spat();
+
+				stab_solver->searchWave(wave, 
+					stab::t_LSCond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED, wave), 
+					stab::t_TaskTreat::SPAT);
 
 				waves_spat.push_back(spat_wave);
 
@@ -132,7 +137,7 @@ void test::selfsim_M45_second_mode(){
 			double bi = nw.b.imag();
 			double wr  = nw.w.real();
 
-			ofstr<<R<<"\t"<<ar<<"\t"<<ai<<"\t"<<wr/ar<<"\t"<<br<<"\t"<<bi<<"\t"<<wr<<wr/R<<"\n";
+			ofstr<<R<<"\t"<<ar<<"\t"<<ai<<"\t"<<wr/ar<<"\t"<<br<<"\t"<<bi<<"\t"<<wr<<"\t"<<wr/R<<"\n";
 			ofstr.flush();
 
 		}else{
