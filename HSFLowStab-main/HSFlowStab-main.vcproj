@@ -355,11 +355,11 @@
 					>
 				</File>
 				<File
-					RelativePath=".\test_smode_flat_hsflow.cpp"
+					RelativePath=".\test_sm_selfsim.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\tests.cpp"
+					RelativePath=".\test_smode_flat_hsflow.cpp"
 					>
 				</File>
 			</Filter>
