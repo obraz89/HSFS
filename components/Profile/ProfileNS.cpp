@@ -4,60 +4,45 @@
 
 using namespace mf;
 
-t_ProfileNS::t_ProfileNS(const t_Block& a_rBlk):t_Profile(0), _rBlk(a_rBlk){};
+t_ProfileNS::t_ProfileNS(const t_DomainBase& a_rDomain):t_Profile(0), _rDomain(a_rDomain){};
 
-void t_ProfileNS::initialize(const t_BlkInd a_ind, double a_thick_coef){
+void t_ProfileNS::initialize(const t_GeomPoint xyz, double a_thick_coef, int a_nnodes){
 
-	_mf_ind = a_ind;
-	_mf_ind.j = 0;
+	//if (a_nnodes<2){
+	//	ssuGENTHROW(_T("ProfNS initialization error: less than 2 points!"));
+	//}
 
-	__bl_bound_ind = _rBlk.get_bound_index(a_ind);
+	// so I need interpolator right now or tmp solution
+	a_nnodes==0 ? _resize(_rDomain.estim_num_bl_nodes(xyz)) : _resize(a_nnodes);
 
-	const int a_i = a_ind.i;
-	const int a_k = a_ind.k;
+	t_GeomPoint r_xyz_base;
+	t_Vec3Dbl surf_norm;
+	_rDomain.calc_surf_point(xyz, r_xyz_base, surf_norm);
 
-	double bl_thick = 
-		_rBlk.calc_distance(t_BlkInd(a_i, __bl_bound_ind, a_k), 
-						    t_BlkInd(a_i, 0            , a_k));
+	_xyz = r_xyz_base;
+	double bl_thick = _rDomain.calc_bl_thick(_xyz);
 
-	double cur_y = bl_thick;
-	int cur_y_ind = __bl_bound_ind;
+	double cur_eta = bl_thick;
+
 	double prof_thick = a_thick_coef*bl_thick;
-
-	const int Nx = _rBlk.get_Nx();
-	const int Ny = _rBlk.get_Ny();
-	const int Nz = _rBlk.get_Nz();
-
-	while((cur_y<prof_thick)&&(cur_y_ind<Ny)){
-		cur_y_ind++;
-		cur_y = _rBlk.calc_distance(t_BlkInd(a_i, cur_y_ind, a_k), 
-									t_BlkInd(a_i, 0        , a_k));
-	};
-
-	// TODO: check for ind>Ny overflow, throw something
-
-	this->_resize(cur_y_ind+1);
-
-	const mf::t_Rec& surface_rec = _rBlk.get_rec(t_BlkInd(a_i, 0, a_k));
 
 	// transform vector fields and coordinates
 	// to a new reference frame
-	t_Vec3Dbl u_xyz, u_ked;
-	t_GeomPoint r_xyz_base, r_xyz, dr_xyz, r_ked;
+	t_Vec3Dbl u_xyz, u_ked, dr_xyz, r_ked;
+	t_GeomPoint r_xyz;
 
-	t_SqMat3Dbl jac = _rBlk.calc_jac_to_loc_rf(a_ind);
+	t_SqMat3Dbl jac = _rDomain.calc_jac_to_loc_rf(r_xyz_base);
 	t_SqMat3Dbl inv_jac = jac.inverse();
 
-	r_xyz_base = surface_rec.get_xyz();
+	double deta = prof_thick/double(_nnodes-1);
 
-	for (int j=0; j<get_nnodes(); j++){
-		const mf::t_Rec& mf_rec = _rBlk.get_rec(t_BlkInd(a_i, j, a_k));
-		r_xyz = mf_rec.get_xyz();
+	for (int j=0; j<_nnodes; j++){
 
-		// TODO: What The Fuck??? I want 
-		// dr_xyz = r_xyz - r_xyz_base
-		(t_Vec3Dbl&)dr_xyz = r_xyz - r_xyz_base;
-		(t_Vec3Dbl&)r_ked = inv_jac*dr_xyz;
+		dr_xyz = j*deta*surf_norm;
+		r_xyz = r_xyz_base + dr_xyz;
+		const mf::t_Rec mf_rec = _rDomain.interpolate_to_point(r_xyz);
+		
+		r_ked = inv_jac*dr_xyz;
 
 		u_xyz = mf_rec.get_uvw();
 		u_ked = inv_jac*u_xyz;
@@ -66,7 +51,7 @@ void t_ProfileNS::initialize(const t_BlkInd a_ind, double a_thick_coef){
 		// it mul by factor sqrt(ReINF)
 		// as it is for local parallel task we store only y assuming x=z=0
 		// TODO: (good debug check is to assure that)
-		const mf::t_FldParams& Params = _rBlk.get_mf_params();
+		const mf::t_FldParams& Params = _rDomain.get_mf_params();
 		_y[j] = r_ked[1]*sqrt(Params.Re);
 		// again we postulate v==0
 		_u[j] = u_ked[0];
@@ -77,12 +62,12 @@ void t_ProfileNS::initialize(const t_BlkInd a_ind, double a_thick_coef){
 		// rho is non-dim as follows
 		double gMaMa = Params.Gamma*pow(Params.Mach, 2);
 		_r[j] = mf_rec.p/mf_rec.t*gMaMa;
-		_mu[j]=_rBlk.calc_viscosity(t_BlkInd(a_i, j, a_k));
+		_mu[j]=_rDomain.calc_viscosity(_t[j]);
 	}
 
-	// distance along grid line !!!
-	mf::t_BlkInd from(0, 0, a_k), to(a_i, 0, a_k);
-	_xDist = _rBlk.calc_gridline_distance(t_Block::ALONG_LINE::I, from, to);
+	// VERY IMPORTANT TODO: how to choose _xScale
+	// [ to keep "wavechars const" behavior in non-dim like for selfsim case]
+	_xScale = _rDomain.calc_x_scale(_xyz);
 
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
@@ -92,15 +77,12 @@ void t_ProfileNS::initialize(const t_BlkInd a_ind, double a_thick_coef){
 	SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
 	SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
 	SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
-	// status check
 }
 
 
-const mf::t_Block& t_ProfileNS::getBlk() const{return _rBlk;};
+const mf::t_DomainBase& t_ProfileNS::getMFDomain() const{return _rDomain;};
 
-mf::t_BlkInd t_ProfileNS::getMFInd() const{return _mf_ind;};
-
-double t_ProfileNS::get_xDist() const{return _xDist;};
+double t_ProfileNS::get_x_Scale() const{return _xScale;};
 
 int t_ProfileNS::get_bound_ind() const{return get_nnodes()-1;};
 

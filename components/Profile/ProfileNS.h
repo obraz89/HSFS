@@ -5,7 +5,7 @@
 #include "Profile.h"
 
 #include "mf_shared.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 
 /************************************************************************/
 //
@@ -13,28 +13,25 @@
 /************************************************************************/
 class IMPEXP_PROFILE t_ProfileNS : public t_Profile{
 
-	mf::t_BlkInd _mf_ind;
+	mf::t_GeomPoint _xyz;
 
 	// TODO:for now this is not used, may be used later?
 	int __bl_bound_ind;
 
 	// TODO: remove?
-	const mf::t_Block& _rBlk;
+	const mf::t_DomainBase& _rDomain;
 
-	// TODO: better rename to x_scale
-	double _xDist;
+	double _xScale;
 
 public:
 
-	t_ProfileNS(const mf::t_Block& rBlk);
+	t_ProfileNS(const mf::t_DomainBase& rDomain);
 
-	void initialize(const mf::t_BlkInd ind, double a_thick_coef);
+	void initialize(const mf::t_GeomPoint xyz, double a_thick_coef, int nnodes=0);
 
-	const mf::t_Block& getBlk() const;
+	const mf::t_DomainBase& getMFDomain() const;
 
-	mf::t_BlkInd getMFInd() const;
-
-	double get_xDist() const;
+	double get_x_Scale() const;
 
 	int get_bound_ind() const;
 

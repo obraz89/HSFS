@@ -32,7 +32,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 
 	double mu_e = ns_outer_rec.mu;
 
-	double x = a_rProfNS.get_xDist();
+	double x = a_rProfNS.get_x_Scale();
 
 	double u_e = ns_outer_rec.u;
 
@@ -42,7 +42,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 
 	double y_scale = sqrt(mu_e*x/(u_e*rho_e));
 
-	const t_Block& rMF = a_rProfNS.getBlk();
+	const mf::t_DomainBase& rMF = a_rProfNS.getMFDomain();
 
 	const t_FldParams& Params = rMF.get_mf_params();
 
@@ -52,10 +52,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 
 	_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
 
-	t_BlkInd mf_ind = a_rProfNS.getMFInd();
-	mf_ind.j = a_rProfNS.get_bound_ind();
-
-	_scales.UeDim = rMF.calc_c_dim(mf_ind)*_scales.Me;
+	_scales.UeDim = rMF.calc_c_dim(a_rProfNS.get_bound_rec().t)*_scales.Me;
 
 	_scales.Ue = u_e;
 
