@@ -46,6 +46,8 @@ int main(int argc, char* argv[]){
 
 	test::transhyb_base_wartman();
 
+	//test::test_smat();
+
 	//test::test_conj_grad_min2D();
 }
 /*

@@ -14,11 +14,12 @@
 
 using namespace hsstab;
 
-t_WCharsLoc search_global_initial(int i, stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, mf::t_Block* pBlk);
+t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+								  stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk);
 
-void print_sigma_vs_freq_dim(mf::t_BlkInd ind, t_WCharsLoc max_wave, 
+void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave, 
 							 stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, 
-							 mf::t_Block* pBlk);
+							 mf::t_DomainBase* pBlk);
 
 void test::transhyb_base_wartman(){
 
@@ -30,7 +31,7 @@ void test::transhyb_base_wartman(){
 	std::wstring out_path = _T("out_instab_wchars.dat");
 	std::wofstream ofstr(&out_path[0]);
 
-	mf::t_Block* pBlk = caps_mf.create_block();
+	mf::t_DomainBase* pBlk = caps_mf.create_domain();
 	try
 	{
 		pBlk->init(G_Plugins.get_plugin(hsstab::plgMF));
@@ -59,13 +60,18 @@ void test::transhyb_base_wartman(){
 
 		int i_cur = 375-30*i; 
 
-		mf::t_BlkInd test_ind(i_cur, 0, pBlk->get_Nz()/2);
+		//mf::t_BlkInd test_ind(i_cur, 0, pBlk->get_Nz()/2);
+
+		// axesym case!!!
+		double x_cur = double(i_cur)/478.;
+		double z_cur = x_cur*tan(7./57.);
+		mf::t_GeomPoint test_xyz(x_cur, 0, z_cur);
 
 		t_WCharsLoc init_wave; 
 
-		stab_solver->setContext(test_ind);
+		//stab_solver->setContext(test_xyz);
 
-		gs_solver->setContext(test_ind);
+		//gs_solver->setContext(test_xyz);
 
 
 		// profiles comparison
@@ -73,21 +79,24 @@ void test::transhyb_base_wartman(){
 /*
 		t_ProfileNS test_prof(*pBlk);
 
-		test_prof.initialize(test_ind, 3.0);
+		test_prof.initialize(test_xyz, 3.0);
+
+		test_prof.dump(std::wstring(_T("prof_ns[x~0.7].dat")));
 
 		t_ProfileStab test_prof_stab;
 
 		test_prof_stab.initialize(test_prof, 251);
 
-		test_prof_stab.dump(std::wstring(_T("prof_stab[i=250].dat")));
+		test_prof_stab.dump(std::wstring(_T("prof_stab[x~0.7].dat")));
 
 		return;
 */
+
 		
 		
 		try
 		{
-			init_wave = search_global_initial(i_cur, stab_solver, gs_solver, pBlk);
+			init_wave = search_global_initial(test_xyz, stab_solver, gs_solver, pBlk);
 		}
 		catch (t_GenException e)
 		{
@@ -148,7 +157,7 @@ void test::transhyb_base_wartman(){
 		stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*pBlk);
 		wp_line->init(G_Plugins.get_plugin(plgWPTrack));
 
-		wp_line->retrace(test_ind, init_wave, *stab_solver);
+		wp_line->retrace(test_xyz, init_wave, *stab_solver);
 		wp_line->print_to_file(fout_wplines_path, std::ios::app);
 
 		//tmp
@@ -163,12 +172,13 @@ void test::transhyb_base_wartman(){
 
 }
 
-t_WCharsLoc search_global_initial(int i, stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, mf::t_Block* pBlk){
+t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+								  stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk){
 
-	mf::t_BlkInd ind(i, 0, pBlk->get_Nz()/2);
+	//mf::t_BlkInd ind(i, 0, pBlk->get_Nz()/2);
 
-	stab_solver->setContext(ind);
-	gs_solver->setContext(ind);
+	stab_solver->setContext(xyz);
+	gs_solver->setContext(xyz);
 
 	//loop over alphas
 
@@ -240,18 +250,18 @@ t_WCharsLoc search_global_initial(int i, stab::t_LSBase* stab_solver, stab::t_GS
 
 }
 
-void print_sigma_vs_freq_dim(mf::t_BlkInd ind, t_WCharsLoc max_wave, 
+void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave, 
 							 stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, 
-							 mf::t_Block* pBlk){
+							 mf::t_DomainBase* pBlk){
 
 	std::wstringstream sstr;
-	sstr<<_T("sigma_vs_freq")<<ind<<_T(".dat");
+	sstr<<_T("sigma_vs_freq")<<xyz<<_T(".dat");
 
 	std::wstring out_path = sstr.str();
 	std::wofstream ofstr(&out_path[0]);
 
-	stab_solver->setContext(ind);
-	gs_solver->setContext(ind);
+	stab_solver->setContext(xyz);
+	gs_solver->setContext(xyz);
 
 	t_WCharsLoc test_wave;
 

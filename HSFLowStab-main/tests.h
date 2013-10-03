@@ -12,6 +12,8 @@ namespace test{
 
 	void selfsim_M2_CF();
 
+	//math testing
+	void test_smat();
 	void test_conj_grad_min2D();
 
 };

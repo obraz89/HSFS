@@ -21,7 +21,7 @@ void test::selfsim_M2_CF(){
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	mf::t_Block* pBlk = caps_mf.create_block();
+	mf::t_DomainBase* pBlk = caps_mf.create_domain();
 	try
 	{
 		pBlk->init(G_Plugins.get_plugin(hsstab::plgMF));
