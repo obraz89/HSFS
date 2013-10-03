@@ -124,7 +124,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="1"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -338,7 +338,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\operands.cpp"
+				RelativePath=".\lib.cpp"
 				>
 			</File>
 		</Filter>
@@ -352,11 +352,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\fun_zero_1D.h"
+				RelativePath=".\dll_impexp_smat.h"
 				>
 			</File>
 			<File
-				RelativePath=".\math_impexp.h"
+				RelativePath=".\fun_zero_1D.h"
 				>
 			</File>
 			<File
@@ -364,7 +364,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\small_mat.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\type_deduce.h"
 				>
 			</File>
 		</Filter>
