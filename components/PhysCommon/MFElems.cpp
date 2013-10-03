@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 
 using namespace mf;
 
@@ -25,32 +25,6 @@ std::wostream& operator<<(std::wostream& os, const t_Rec& rec){
 		_T("t:")<<std_manip::std_format_fixed<double>(rec.t)<<
 		_T("r:")<<std_manip::std_format_fixed<double>(rec.r)<<std::endl;
 	return os;
-};
-
-//----------------------------------------------------------------------t_BlkInd
-t_BlkInd::t_BlkInd():i(0),j(0),k(0){};
-t_BlkInd::t_BlkInd(int _i, int _j, int _k):i(_i), j(_j), k(_k){};
-t_BlkInd::t_BlkInd(const t_BlkInd& _ind, int di, int dj, int dk)
-{
-	i = _ind.i + di;
-	j = _ind.j + dj;
-	k = _ind.k + dk;
-};
-
-bool mf::operator==(const t_BlkInd a, const t_BlkInd b)
-{
-	return ((a.i==b.i)&&(a.j==b.j)&&(a.k==b.k));
-};
-bool mf::operator!=(const t_BlkInd a, const t_BlkInd b)
-{
-	return !(mf::operator==(a,b));
-}
-
-std::wostream& mf::operator<<(std::wostream& str, const t_BlkInd& ind){
-	return str<<_T("[")
-		<<ind.i<<_T(";")
-		<<ind.j<<_T(";")
-		<<ind.k<<_T("]");
 };
 
 //---------------------------------------------------------------------operators

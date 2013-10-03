@@ -1,7 +1,7 @@
 #ifndef __LOC_SRCH_BASE
 #define __LOC_SRCH_BASE
 
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 #include "PluginBase.h"
 
 #include "stab_shared.h"
@@ -45,7 +45,7 @@ namespace stab{
 	class IMPEXP_PHYSCOMMON t_LSBase: public hsstab::TPlugPhysPart{
 	public:
 
-		virtual void setContext(const mf::t_BlkInd a_ind)=0;
+		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
 
@@ -68,7 +68,7 @@ namespace stab{
 	class IMPEXP_PHYSCOMMON t_GSBase: public hsstab::TPlugPhysPart{
 	public:
 
-		virtual void setContext(const mf::t_BlkInd a_ind)=0;
+		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
 

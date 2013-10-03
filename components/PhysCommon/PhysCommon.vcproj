@@ -136,7 +136,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib"
+				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib smallmat.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
 				GenerateDebugInformation="true"
@@ -286,7 +286,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib shared.lib"
+				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib shared.lib smallmat.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
 				GenerateDebugInformation="false"
@@ -334,7 +334,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\MFBlockBase.cpp"
+					RelativePath=".\MFDomainBase.cpp"
 					>
 				</File>
 				<File
@@ -400,7 +400,7 @@
 					>
 				</File>
 				<File
-					RelativePath=".\MFBlockBase.h"
+					RelativePath=".\MFDomainBase.h"
 					>
 				</File>
 			</Filter>

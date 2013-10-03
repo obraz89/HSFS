@@ -8,7 +8,7 @@
 #pragma once
 
 #include "PluginBase.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 #include "LocSearchBase.h"
 #include "WPTrackBase.h"
 //-----------------------------------------------------------------------------
@@ -26,7 +26,7 @@ namespace hsstab
 		void dummy(){ ; }
 
 	public:
-		virtual mf::t_Block* create_block()=0;
+		virtual mf::t_DomainBase* create_domain()=0;
 	};
 	//---
 
@@ -38,7 +38,7 @@ namespace hsstab
 
 	public:
 
-		virtual stab::t_LSBase* create_ls_solver(const mf::t_Block& blk)=0;
+		virtual stab::t_LSBase* create_ls_solver(const mf::t_DomainBase& blk)=0;
 
 	};
 
@@ -49,7 +49,7 @@ namespace hsstab
 
 	public:
 
-		virtual stab::t_GSBase* create_gs_solver(const mf::t_Block& blk)=0;
+		virtual stab::t_GSBase* create_gs_solver(const mf::t_DomainBase& blk)=0;
 
 	};
 
@@ -61,7 +61,7 @@ namespace hsstab
 
 	public:
 
-		virtual stab::t_WPTrackBase* create_wp_track(const mf::t_Block& blk)=0;
+		virtual stab::t_WPTrackBase* create_wp_track(const mf::t_DomainBase& blk)=0;
 
 	};
 }

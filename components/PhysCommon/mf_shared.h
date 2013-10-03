@@ -6,10 +6,30 @@
 
 #include "dll_impexp-phys_common.h"
 
+namespace mf{
+
+struct t_GeomPoint;
+
+/************************************************************************/
+/* Basic Mean Flow Entry                                                */
+/************************************************************************/
+
+struct IMPEXP_PHYSCOMMON t_Rec{
+
+	double x,y,z,u,v,w,p,t,r;
+
+	void set_xyz(t_GeomPoint point);
+
+	t_GeomPoint get_xyz() const;
+	t_Vec3Dbl get_uvw() const;
+
+	IMPEXP_PHYSCOMMON friend std::wostream& operator<<(std::wostream& os, t_Rec rec);
+
+};
+
 /************************************************************************/
 /* Cartesian geometry point (vector)                                    */
 /************************************************************************/
-namespace mf{
 
 struct IMPEXP_PHYSCOMMON t_GeomPoint : public t_Vec3Dbl{
 public:
@@ -22,6 +42,8 @@ public:
 	double& y();
 	double z() const;
 	double& z(); 
+
+	t_GeomPoint& set(const t_Rec& rec);
 };
 
 /************************************************************************/
@@ -55,6 +77,8 @@ public:
 		T_mju, Mju_pow, Gamma, Pr,
 		Mol_weight, R_Gas;
 };
+
+IMPEXP_PHYSCOMMON t_Rec operator-(const mf::t_Rec& rec1, const mf::t_Rec& rec2);
 
 };			// ~namespace mf
 #endif		// __MF_SHARED

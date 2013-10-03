@@ -2,7 +2,7 @@
 #define __WPTRACK_BASE
 
 #include "PluginBase.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 #include "LocSearchBase.h"
 
 #include "WaveChars.h"
@@ -16,7 +16,7 @@ namespace stab{
 
 		t_WPTrackBase();
 
-		virtual void retrace(mf::t_BlkInd start_from, t_WCharsLoc init_wave, 
+		virtual void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver)=0;
 
 		virtual void print_to_file(const std::wstring& fname, int write_mode) const=0;

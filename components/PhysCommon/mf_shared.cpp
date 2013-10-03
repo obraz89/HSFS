@@ -17,6 +17,11 @@ double& t_GeomPoint::y(){return this->operator[](1);};
 double t_GeomPoint::z() const{return this->operator[](2);};
 double& t_GeomPoint::z(){return this->operator[](2);}; 
 
+t_GeomPoint& t_GeomPoint::set(const t_Rec& rec){
+	t_Vec3Dbl::set(rec.x, rec.y, rec.z);
+	return *this;
+};
+
 //------------------------------------------------------------- Field parameters
 
 const int t_ViscType::ViscPower=0;
