@@ -37,7 +37,7 @@ TPluginCaps* TPluginEigenGS::get_caps(){
 	return &_caps;
 };
 
-stab::t_GSBase* TCapsEigenGS::create_gs_solver(const mf::t_Block& blk){
+stab::t_GSBase* TCapsEigenGS::create_gs_solver(const mf::t_DomainBase& blk){
 	return new pf::t_EigenGS(blk);
 };
 

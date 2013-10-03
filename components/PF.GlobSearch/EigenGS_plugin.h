@@ -7,7 +7,7 @@
 namespace hsstab{
 
 	class TCapsEigenGS: public TCapsGS{	
-		stab::t_GSBase* create_gs_solver(const mf::t_Block& blk);	};
+		stab::t_GSBase* create_gs_solver(const mf::t_DomainBase& blk);	};
 
 	class TPluginEigenGS : public TPlugin{
 		TCapsEigenGS _caps;

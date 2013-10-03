@@ -4,7 +4,7 @@
 #include "PluginBase.h"
 
 #include "mf_shared.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 
 #include "math_operands.h"
 #include "ProfileStab.h"
@@ -17,16 +17,18 @@
 
 namespace pf{
 
+	static const int GS_NVARS_TIME = 5;
+
 	class  t_EigenGS: public stab::t_GSBase{
 
-		const mf::t_Block& _rBlk;
+		const mf::t_DomainBase& _rBlk;
 		t_EigenGSParams _params;
 
 		// temporal
 		double _alpha, _beta;
 		t_ProfileStab _profStab;
 		double _a_coef, _b_coef;
-		t_DblVec _grid;
+		std::vector<double> _grid;
 
 		std::vector<t_Complex> _spectrum;
 		std::vector<t_WCharsLoc> _eigens;
@@ -55,7 +57,7 @@ namespace pf{
 	public:
 		enum t_Mode{A_MODE=0, B_MODE};
 
-		t_EigenGS(const mf::t_Block& a_blk);
+		t_EigenGS(const mf::t_DomainBase& a_blk);
 		void init(const hsstab::TPlugin& g_plug);
 
 		const pf::t_EigenGSParams& get_params() const;
@@ -66,7 +68,7 @@ namespace pf{
 			const int a_nnodes=0);
 		*/
 
-		void setContext(const mf::t_BlkInd a_ind);
+		void setContext(const mf::t_GeomPoint a_xyz);
 
 		void setContext(const t_ProfileStab* a_prof_stab);
 

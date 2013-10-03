@@ -11,7 +11,11 @@
 using namespace hsstab;
 using namespace pf;
 
-t_EigenGS::t_EigenGS(const mf::t_Block& a_blk):_rBlk(a_blk){};
+t_EigenGS::t_EigenGS(const mf::t_DomainBase& a_blk):_rBlk(a_blk),
+_A(GS_NVARS_TIME),
+_B(GS_NVARS_TIME),
+_C(GS_NVARS_TIME),
+_CW(GS_NVARS_TIME){};
 
 void t_EigenGS::init(const hsstab::TPlugin& g_plug){
 
@@ -25,10 +29,10 @@ void t_EigenGS::init(const hsstab::TPlugin& g_plug){
 
 void t_EigenGS::_init(){
 
-	_A.resize(_params.NVars);
-	_B.resize(_params.NVars);
-	_C.resize(_params.NVars);
-	_CW.resize(_params.NVars);
+	//_A.resize(_params.NVars);
+	//_B.resize(_params.NVars);
+	//_C.resize(_params.NVars);
+	//_CW.resize(_params.NVars);
 
 	SlepcInitialize((int*)0,(char***)0,(char*)0,"EigenGS slepc context");
 
@@ -58,11 +62,12 @@ void t_EigenGS::setContext(const mf::t_BlkInd a_ind,
 };
 */
 
-void t_EigenGS::setContext(const mf::t_BlkInd a_ind){
+void t_EigenGS::setContext(const mf::t_GeomPoint a_xyz){
 
 	t_ProfileNS profNS(_rBlk);
 
-	profNS.initialize(a_ind, _params.ThickCoef);
+	// TODO: control number of points in NS profile
+	profNS.initialize(a_xyz, _params.ThickCoef);
 	_grid.resize(_params.NNodes);
 	_profStab.initialize(profNS, _params.NNodes);
 
