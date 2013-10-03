@@ -24,10 +24,10 @@ std::wostream& t_WavePackLine::_print_line(std::wostream& str) const
 		str<<_T('(')
 			<<beg->mean_flow.x<<_T(";")
 			<<beg->mean_flow.y<<_T(";")
-			<<beg->mean_flow.z<<_T(");[")
-			<<beg->nearest_node.i<<_T(";")
-			<<beg->nearest_node.j<<_T(";")
-			<<beg->nearest_node.k<<_T("]")<<_T("\n");
+			<<beg->mean_flow.z<<_T(");[");
+//			<<beg->nearest_node.i<<_T(";")
+//			<<beg->nearest_node.j<<_T(";")
+//			<<beg->nearest_node.k<<_T("]")<<_T("\n");
 		str<<beg->wave_chars;
 		beg++;
 	};
@@ -44,15 +44,14 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 	std::vector<t_WPLineRec>::const_iterator it;
 	double n_factor=0.0;
 	double s_prev=0.0, s=0.0;
-	const mf::t_BlkInd& first_ind = _line.begin()->nearest_node;
 
 	for (it=_line.begin(); it<_line.end(); it++){
 		const t_WPLineRec& rec = *it;
 		s_prev = s;
-		// TODO: fix this for 3D configurations
+		// IMPORTANT TODO: fix this for 3D configurations
 		// calc_distance_along_surf !!!
 		s = Params.L_ref*
-			_rFldMF.calc_distance(rec.nearest_node, mf::t_BlkInd(0,0,0));
+			_rFldMF.calc_x_scale(rec.mean_flow.get_xyz());
 
 		t_WCharsGlob spat_wave = rec.wave_chars;
 

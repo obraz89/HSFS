@@ -8,7 +8,7 @@ namespace hsstab{
 
 	class TCapsWPLine: public TCapsWPTrack{	
 	public:
-		stab::t_WPTrackBase* create_wp_track(const mf::t_Block& blk);	
+		stab::t_WPTrackBase* create_wp_track(const mf::t_DomainBase& blk);	
 	};
 
 		class TPluginWPLine : public TPlugin{

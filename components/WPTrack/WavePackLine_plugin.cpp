@@ -37,17 +37,17 @@ TPluginCaps* TPluginWPLine::get_caps(){
 	return &_caps;
 };
 
-stab::t_WPTrackBase* hsstab::TCapsWPLine::create_wp_track(const mf::t_Block& blk){
-	return new pf::t_WavePackLine(blk);
+stab::t_WPTrackBase* hsstab::TCapsWPLine::create_wp_track(const mf::t_DomainBase& dom){
+	return new pf::t_WavePackLine(dom);
 };
 
 wxString TPluginWPLine::get_name() const
 {
-	return _T("PF.StabSolver");
+	return _T("WPTrack");
 }
 wxString TPluginWPLine::get_description() const
 {
-	return _("Local search GS-Ortho Stab Solver");
+	return _("Wave pack line tracker");
 }
 
 //-----------------------------------------------------------------------------
