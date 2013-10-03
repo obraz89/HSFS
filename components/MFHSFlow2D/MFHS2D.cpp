@@ -5,15 +5,19 @@
 
 using namespace hsstab;
 using namespace mf;
-//
+using namespace mfhs;
 
-void t_MFHSFLOW2D::init(const TPlugin& g_plug){
+//---------------------------------------------------------------------t_Block2D
+
+mfhs::t_Block2D::t_Block2D(const t_Domain& domain):t_Block(domain){}
+
+//--------------------------------------------------------------------t_Domain2D
+
+mfhs::t_Domain2D::t_Domain2D():_blk(*this){}
+
+void mfhs::t_Domain2D::init(const TPlugin& g_plug){
 
 	const TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
-
-	Nx = g.get_int_param("Nx");
-	Ny = g.get_int_param("Ny");
-	Nz = g.get_int_param("Nz");
 
 	_mf_bin_path = g.get_string_param("MFBinPath");
 
@@ -23,17 +27,25 @@ void t_MFHSFLOW2D::init(const TPlugin& g_plug){
 
 	_base_params.ZSpan = g.get_real_param("ZSpan");
 
-	_init();	// init Block
+
+	int nx = g.get_int_param("Nx");
+	int ny = g.get_int_param("Ny");
+	int nz = g.get_int_param("Nz");
+
+	_blk.init(nx, ny, nz, _mf_bin_path, _base_params);
 
 }
 
-void t_MFHSFLOW2D::_init(){
+const t_Block& t_Domain2D::get_blk() const{return _blk;};
 
-	_allocate();
+void mfhs::t_Block2D::init(int nx, int ny, int nz, wxString mf_bin_path, 
+						   const t_HSFlowParams2D& params){
 
-	const t_HSFlowParams2D& params = get_params();
 
-	FILE* fld_file = fopen(_mf_bin_path.ToAscii(),"rb");
+	if (_allocated) ssuGENTHROW(_T("Block already initialized!\n"));
+	_allocate(nx, ny, nz);
+
+	FILE* fld_file = fopen(mf_bin_path.ToAscii(),"rb");
 	double gmama = params.Gamma*params.Mach*params.Mach;
 	// in 2D fields the packing is by column
 	for (int j=0; j<Ny; j++){

@@ -3,30 +3,43 @@
 #include "MFHS3D.h"
 #include "common_data.h"
 
+using namespace hsstab;
 using namespace mf;
+using namespace mfhs;
 
-void t_MFHSFLOW3D::init(const hsstab::TPlugin& g_plug){
+//---------------------------------------------------------------------t_Block2D
+
+mfhs::t_Block3D::t_Block3D(const t_Domain& domain):t_Block(domain){}
+
+//--------------------------------------------------------------------t_Domain2D
+
+mfhs::t_Domain3D::t_Domain3D():_blk(*this){}
+
+void mfhs::t_Domain3D::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
-
-	Nx = g.get_int_param("Nx");
-	Ny = g.get_int_param("Ny");
-	Nz = g.get_int_param("Nz");
 
 	_mf_bin_path = g.get_string_param("MFBinPath");
 
 	hsf3d::_init_fld_base_params(_base_params, g);
 
-	_init();	// init Block
+	int nx = g.get_int_param("Nx");
+	int ny = g.get_int_param("Ny");
+	int nz = g.get_int_param("Nz");
+
+	_blk.init(nx, ny, nz, _mf_bin_path);	// init Block
+
 };
 
-void t_MFHSFLOW3D::_init(){
+const t_Block& t_Domain3D::get_blk() const{return _blk;};
 
-	_allocate();
+void mfhs::t_Block3D::init(int nx, int ny, int nz, wxString mf_bin_path){
 
-	const t_FldParams& params = get_mf_params();
+	_allocate(nx, ny, nz);
 
-	FILE* fld_file = fopen(_mf_bin_path.ToAscii(),"rb");
+	const t_FldParams& params = get_domain().get_mf_params();
+
+	FILE* fld_file = fopen(mf_bin_path.ToAscii(),"rb");
 	if (fld_file==NULL) ssuGENTHROW(_T("failed to open binary hsflow3d dat file. Abort"));
 
 	//reverse order!! k,j,i

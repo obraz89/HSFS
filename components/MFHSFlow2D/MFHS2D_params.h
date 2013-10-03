@@ -6,9 +6,9 @@
 
 #include "wx/fileconf.h"
 
-namespace mf{
+namespace mfhs{
 
-	class t_HSFlowParams2D: public t_FldParams{
+	class t_HSFlowParams2D: public mf::t_FldParams{
 		void _init_params_map();
 	public:
 		t_HSFlowParams2D():t_FldParams(){};
@@ -27,10 +27,10 @@ namespace mf{
 
 	// To reduce code
 	namespace hsf2d{
-		void _init_fld_base_params(t_FldParams& params, const hsstab::TPluginParamsGroup& g);
+		void _init_fld_base_params(mf::t_FldParams& params, const hsstab::TPluginParamsGroup& g);
 		void _hsflow_default_settings(hsstab::TPluginParamsGroup& g);
 	};
 
-}		// ~namespace hsflow
+}		// ~namespace mfhs
 
 #endif  // __HSMF_PARAMS

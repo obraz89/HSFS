@@ -10,6 +10,7 @@
 #include "common_data.h"
 
 using namespace mf;
+using namespace mfhs;
 using namespace hsstab;
 
 //---------------------------------------------------------------------2D params
@@ -22,17 +23,17 @@ void t_HSFlowParams2D::t_AxeSym::_init_map_vals(){
 	_mapVals.insert(std::make_pair(Plane, _T("Plane")));
 };
 
-const t_HSFlowParams2D& t_MFHSFLOW2D::get_params() const{
+const t_HSFlowParams2D& mfhs::t_Domain2D::get_params() const{
 	return _base_params;
 };
 
-const t_FldParams& t_MFHSFLOW2D::get_mf_params() const{
+const t_FldParams& mfhs::t_Domain2D::get_mf_params() const{
 	return _base_params;
 };
 
 //----------------------------------------------------------------shared init
 
-void mf::hsf2d::_hsflow_default_settings(TPluginParamsGroup& g){
+void mfhs::hsf2d::_hsflow_default_settings(TPluginParamsGroup& g){
 
 	g.add("MFBinPath", _(""), _("Path to binary field container")); // pMFBin
 
@@ -70,7 +71,7 @@ void mf::hsf2d::_hsflow_default_settings(TPluginParamsGroup& g){
 
 }
 
-void mf::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
+void mfhs::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
 
 	params.Alpha = g.get_real_param("Alpha");
 

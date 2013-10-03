@@ -8,11 +8,11 @@ using namespace hsstab;
 
 //---------------------------------------------------------------------3D params
 
-const t_FldParams& t_MFHSFLOW3D::get_mf_params() const{return _base_params;}
+const mf::t_FldParams& mfhs::t_Domain3D::get_mf_params() const{return _base_params;}
 
 //----------------------------------------------------------------shared init
 
-void mf::hsf3d::_hsflow_default_settings(TPluginParamsGroup& g){
+void mfhs::hsf3d::_hsflow_default_settings(TPluginParamsGroup& g){
 
 	g.add("MFBinPath", _(""), _("Path to binary field container")); // pMFBin
 
@@ -50,7 +50,7 @@ void mf::hsf3d::_hsflow_default_settings(TPluginParamsGroup& g){
 
 }
 
-void mf::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
+void mfhs::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
 
 	params.Alpha = g.get_real_param("Alpha");
 

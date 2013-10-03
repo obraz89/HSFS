@@ -20,7 +20,7 @@ void TPluginMFHS3D::default_settings(){
 
 	TPluginParamsGroup g;
 
-	mf::hsf3d::_hsflow_default_settings(g);
+	mfhs::hsf3d::_hsflow_default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 
@@ -38,7 +38,7 @@ TPluginCaps* TPluginMFHS3D::get_caps(){
 	return &_caps;
 };
 
-mf::t_Block* TCapsMFHS3D::create_block(){return new mf::t_MFHSFLOW3D();};
+mf::t_DomainBase* TCapsMFHS3D::create_domain(){return new mfhs::t_Domain3D();};
 
 wxString TPluginMFHS3D::get_name() const
 {

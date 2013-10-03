@@ -20,7 +20,7 @@ void TPluginMFHS2D::default_settings(){
 
 	TPluginParamsGroup g;
 
-	mf::hsf2d::_hsflow_default_settings(g);
+	mfhs::hsf2d::_hsflow_default_settings(g);
 
 	// 2D specific part
 
@@ -44,7 +44,7 @@ TPluginCaps* TPluginMFHS2D::get_caps(){
 	return &_caps;
 };
 
-mf::t_Block* TCapsMFHS2D::create_block(){return new mf::t_MFHSFLOW2D();};
+mf::t_DomainBase* TCapsMFHS2D::create_domain(){return new mfhs::t_Domain2D();};
 
 wxString TPluginMFHS2D::get_name() const
 {

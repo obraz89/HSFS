@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="MFHSFlow-shared"
+	ProjectGUID="{05599E52-E19D-46D8-9616-415D47FFAC12}"
+	VCNestedProjectGUID="{FBCFCE7E-D102-4744-9784-2920523FD9CE}"
+	VCNestedProjectFileName="MFHSFlow-shared.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>

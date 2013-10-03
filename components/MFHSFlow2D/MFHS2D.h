@@ -2,18 +2,27 @@
 #define __MFHS2D
 
 #include "PluginBase.h"
-#include "MFBlockBase.h"
+#include "MFHSDomain.h"
 
 #include "MFHS2D_params.h"
 
+namespace mfhs{
 
-#include "io_helpers.h"
+	class t_Block2D: public mfhs::t_Block{
+	public:
 
+		t_Block2D(const t_Domain& domain);
+		void init(int nx, int ny, int nz, wxString mf_bin_path, const t_HSFlowParams2D& params);
 
-namespace mf{
+	};
 
-	class t_MFHSFLOW2D: public mf::t_Block{
+//-----------------------------------------------------------------------------
+
+	class t_Domain2D: public mfhs::t_Domain, public hsstab::TPlugPhysPart{
+
 	private:
+
+		t_Block2D _blk;
 
 		wxString _mf_bin_path;
 		t_HSFlowParams2D _base_params;
@@ -22,10 +31,14 @@ namespace mf{
 
 	public:
 
-		void init(const hsstab::TPlugin& g_plug);
-
+		// implement t_Domain
+		t_Domain2D();
 		const mf::t_FldParams& get_mf_params() const;
-		const mf::t_HSFlowParams2D& get_params() const;
+
+		// implement TPlugPhysPart
+		void init(const hsstab::TPlugin& g_plug);
+		const t_Block& get_blk() const;
+		const t_HSFlowParams2D& get_params() const;
 	}; 
 
 }			//  ~namespace mf

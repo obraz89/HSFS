@@ -6,10 +6,10 @@
 
 #include "wx/fileconf.h"
 
-namespace mf{
+namespace mfhs{
 
 	namespace hsf3d{
-		void _init_fld_base_params(t_FldParams& params, const hsstab::TPluginParamsGroup& g);
+		void _init_fld_base_params(mf::t_FldParams& params, const hsstab::TPluginParamsGroup& g);
 		void _hsflow_default_settings(hsstab::TPluginParamsGroup& g);
 	}
 

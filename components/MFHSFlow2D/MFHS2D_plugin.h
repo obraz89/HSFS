@@ -5,7 +5,7 @@
 
 namespace hsstab{
 
-	class TCapsMFHS2D: public TCapsMF{	mf::t_Block* create_block();	};
+	class TCapsMFHS2D: public TCapsMF{	mf::t_DomainBase* create_domain();	};
 
 	class TPluginMFHS2D : public TPlugin{
 		TCapsMFHS2D _caps;
