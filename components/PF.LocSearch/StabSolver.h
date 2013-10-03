@@ -2,7 +2,7 @@
 #define __STAB_SOLVER
 
 #include "PluginBase.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
 #include "LocSearchBase.h"
 
 #include "StabSolver_params.h"
@@ -47,7 +47,7 @@ class  t_StabSolver: public stab::t_LSBase{
 	pf::t_StabSolverParams _params;
 	// keep current stability_matrix
 	t_SqMatCmplx _stab_matrix;
-	const mf::t_Block& _rFldNS; // to get global field params
+	const mf::t_DomainBase& _rFldNS; // to get global field params
 	t_ProfileStab _profStab; // current profile
 
 	t_WCharsLoc _waveChars;  // to keep current state of wave 
@@ -94,7 +94,7 @@ class  t_StabSolver: public stab::t_LSBase{
 public:
 	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
 
-	t_StabSolver(const mf::t_Block& a_rFld);
+	t_StabSolver(const mf::t_DomainBase& a_rFld);
 	void init(const hsstab::TPlugin& g_plug);
 
 	inline int getTaskDim() const{return _math_solver.getTaskDim();};
@@ -102,15 +102,15 @@ public:
 
 	inline const t_StabSolverParams& getParams() const{return _params;};
 
-	t_WCharsGlob popGlobalWCharsTime(const mf::t_BlkInd a_ind);
-	t_WCharsGlob popGlobalWCharsSpat(const mf::t_BlkInd a_ind);
+	t_WCharsGlob popGlobalWCharsTime(const mf::t_GeomPoint a_xyz);
+	t_WCharsGlob popGlobalWCharsSpat(const mf::t_GeomPoint a_xyz);
 
 	//========================
 	bool searchWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
 
 	void searchMaxWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
 
-	void setContext(const mf::t_BlkInd a_ind);
+	void setContext(const mf::t_GeomPoint a_xyz);
 
 	void setContext(const t_ProfileStab* prof_stab);
 
@@ -145,8 +145,7 @@ public:
 	void dumpEigenFuctions(const std::wstring& fname);
 
 	std::vector<t_WCharsLoc> filterInitWaves(const std::vector<t_WCharsLoc>& all_initials);
-	t_WCharsLoc getMaxWave(const mf::t_BlkInd a_ind,
-		const std::vector<t_WCharsLoc>& a_inits, const int& a_nnodesStab=0);
+	t_WCharsLoc getMaxWave(const std::vector<t_WCharsLoc>& a_inits, int a_nnodesStab=0);
 	// exceptions
 	class t_UnPhysWave{};
 	class t_WrongMode{};

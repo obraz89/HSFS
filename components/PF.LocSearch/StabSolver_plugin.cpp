@@ -37,8 +37,8 @@ TPluginCaps* TPluginStabSolver::get_caps(){
 	return &_caps;
 };
 
-stab::t_LSBase* TCapsStabSolver::create_ls_solver(const mf::t_Block& blk){
-	return new pf::t_StabSolver(blk);
+stab::t_LSBase* TCapsStabSolver::create_ls_solver(const mf::t_DomainBase& dom){
+	return new pf::t_StabSolver(dom);
 };
 
 wxString TPluginStabSolver::get_name() const

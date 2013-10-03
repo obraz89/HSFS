@@ -38,6 +38,7 @@ t_VecCmplx t_ODES::stepRK3D(const int& ind, const t_VecCmplx& h){
 };
 
 void t_ODES::solve(){
+	t_Vec<t_Complex> sol_vec(2*_dim);
 	for (int i=0; i<this->_nnodes-1; i++){
 		// ortho ...
 		if (this->needOrtho(solution[i])){
@@ -47,7 +48,10 @@ void t_ODES::solve(){
 		};
 		// get solution
 		for (int j=0; j<_dim;j++){
-			solution[i+1][j] = stepRK3D(i, solution[i][j]);
+			//solution[i+1][j] = stepRK3D(i, solution[i][j]);
+			//solution[i+1][j] = stepRK3D(i, sol_vec);
+			solution[i].col_to_vec(j, sol_vec);
+			solution[i+1].set_col(j, stepRK3D(i, sol_vec));
 		}
 
 	}
@@ -59,10 +63,14 @@ t_Complex t_ODES::detGS(const t_MatCmplx& sol, const int& rank) const{
 	if (rank<0) wxLogMessage(_T("GS determinant error: Rank < 0 \n"));
 	if (rank==0) return 1.0;
 	t_SqMatCmplx mat(rank);
+	int sol_nrows = sol.nRows();
+	t_VecCmplx sol_i(sol_nrows), sol_j(sol_nrows);
 	for (int i=0; i<rank; i++){
 		for (int j=0; j<=i; j++){
-			t_Complex val = 
-				vector::dot(t_VecCmplx(sol[i]), t_VecCmplx(sol[j]));
+			sol.col_to_vec(i, sol_i);
+			sol.col_to_vec(j, sol_j);
+			//t_Complex val = vector::dot(t_VecCmplx(sol[i]), t_VecCmplx(sol[j]));
+			t_Complex val = vector::dot(sol_i, sol_j);
 			// Ermith Matrix
 			mat[i][j]= val;
 			mat[j][i]= std::conj(val);	
@@ -82,16 +90,22 @@ t_Complex t_ODES::detGS(const t_MatCmplx& sol, const int& rank) const{
 t_Complex t_ODES::minorGS(const t_MatCmplx& vectors, const int& dim, const int& nExcludeCol) const{
 	if (dim==0) return 1.0;
 	t_SqMatCmplx ret(dim);
+	int vectors_nrows = vectors.nRows();
+	t_VecCmplx vec_i(vectors_nrows), vec_j(vectors_nrows);
 	for (int i=0; i<nExcludeCol; i++){
 		for(int j=0; j<dim; j++){
-			ret[i][j] = 
-				vector::dot(t_VecCmplx(vectors[i]), t_VecCmplx(vectors[j]));
+			vectors.col_to_vec(i, vec_i);
+			vectors.col_to_vec(j, vec_j);
+			//ret[i][j] = vector::dot(t_VecCmplx(vectors[i]), t_VecCmplx(vectors[j]));
+			ret[i][j] = vector::dot(vec_i, vec_j);
 		}
 	}
 	for (int i=nExcludeCol+1; i<=dim; i++){
 		for(int j=0; j<dim; j++){
-			ret[i-1][j] =
-				vector::dot(t_VecCmplx(vectors[i]), t_VecCmplx(vectors[j]));
+			vectors.col_to_vec(i, vec_i);
+			vectors.col_to_vec(j, vec_j);
+			//ret[i-1][j] = vector::dot(t_VecCmplx(vectors[i]), t_VecCmplx(vectors[j]));
+			ret[i-1][j] = vector::dot(vec_i, vec_j);
 		}
 	}
 	return ret.det();
@@ -104,8 +118,9 @@ void t_ODES::ortho(const int& nnode){
 	// via Gramm-Shmidt orthonormization
 	// stored by columns
 	t_SqMatCmplx trans_matrix(_dim);
+	t_VecCmplx column(_dim, 0.0);
 	for (int i=0; i<_dim; i++){
-		t_VecCmplx column(_dim, 0.0);
+		column.set_vals(0.0);
 		// fill non-zero elements
 		for (int j=0; j<=i; j++){
 			double dj0 = detGS(solution[nnode], i).real();
@@ -113,7 +128,9 @@ void t_ODES::ortho(const int& nnode){
 			double coef = 1.0/sqrt(dj0*dj1);
 			column[j] = pow(-1.0, i+j)*coef*minorGS(solution[nnode], i, j);
 		}
-		trans_matrix[i] = column;
+
+		//trans_matrix[i] = column;
+		trans_matrix.set_col(i, column);
 	}
 	t_ODES::t_OrthPoint orth_point(nnode, _dim);
 	orth_point.orthMatrix = trans_matrix;

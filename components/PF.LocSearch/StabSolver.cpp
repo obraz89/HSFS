@@ -11,7 +11,7 @@ using namespace hsstab::cmpnts;
 
 using namespace pf;
 
-t_StabSolver::t_StabSolver(const mf::t_Block& a_rFldNS):
+t_StabSolver::t_StabSolver(const mf::t_DomainBase& a_rFldNS):
 _rFldNS(a_rFldNS), _profStab(), 
 _math_solver(), _stab_matrix(STAB_MATRIX_DIM), _params(){
 
@@ -486,7 +486,7 @@ void t_StabSolver::_verifyAsymptotics3D
 // Use time approach
 /************************************************************************/
 
-t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const mf::t_BlkInd a_ind){
+t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const mf::t_GeomPoint a_xyz){
 
 	t_WCharsLoc restore_wave = _waveChars;
 	t_WCharsLoc adjust_wave = _waveChars;
@@ -501,7 +501,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const mf::t_BlkInd a_ind){
 
 	}
 
-	t_WCharsGlob glob_wave(adjust_wave, _rFldNS.calc_jac_to_loc_rf(a_ind), _profStab.scales());
+	t_WCharsGlob glob_wave(adjust_wave, _rFldNS.calc_jac_to_loc_rf(a_xyz), _profStab.scales());
 
 	_waveChars = restore_wave;
 
@@ -515,7 +515,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsTime(const mf::t_BlkInd a_ind){
 // Use spat approach
 /************************************************************************/
 
-t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_BlkInd a_ind){
+t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_GeomPoint a_xyz){
 
 	t_WCharsLoc restore_wave = _waveChars;
 	t_WCharsLoc adjust_wave = _waveChars;
@@ -532,7 +532,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_BlkInd a_ind){
 
 	}
 
-	t_WCharsGlob glob_wave(adjust_wave, _rFldNS.calc_jac_to_loc_rf(a_ind), _profStab.scales());
+	t_WCharsGlob glob_wave(adjust_wave, _rFldNS.calc_jac_to_loc_rf(a_xyz), _profStab.scales());
 
 	_waveChars = restore_wave;
 
@@ -544,19 +544,20 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_BlkInd a_ind){
 // 
 /************************************************************************/
 
-void t_StabSolver::setContext
-(const mf::t_BlkInd a_ind){
+void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 
 	int nnodes_stab = _params.NNodes;
 
 	_math_solver.setContext(nnodes_stab);
 
 	t_ProfileNS profNS(_rFldNS);
-	profNS.initialize(a_ind, _params.ThickCoef);
+	// TODO: make NNodesNS params to control number of nodes in profNS
+	profNS.initialize(a_xyz, _params.ThickCoef, 0);
 	_profStab.initialize(profNS, nnodes_stab);
 
 	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){
-		_stab_matrix.resize(STAB_MATRIX_DIM);
+		ssuTHROW(t_GenException, 
+		_T("PF.LocSearch Error:Wrong size of stab matrix while setting context"));
 	}
 
 	for (int j=0; j<nnodes_stab; j++){
@@ -580,7 +581,8 @@ void t_StabSolver::setContext(const t_ProfileStab* a_prof_stab){
 	_math_solver.setContext(nnodes);
 
 	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){
-		_stab_matrix.resize(STAB_MATRIX_DIM);
+		ssuTHROW(t_GenException, 
+			_T("PF.LocSearch Error:Wrong size of stab matrix while setting context"));
 	}
 
 	for (int j=0; j<nnodes; j++){
@@ -903,11 +905,11 @@ void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab:
 }
 
 
-t_WCharsLoc t_StabSolver::getMaxWave(const mf::t_BlkInd a_ind, 
-									 const std::vector<t_WCharsLoc>& a_inits, const int& a_nnodesStab){
+t_WCharsLoc t_StabSolver::getMaxWave(const std::vector<t_WCharsLoc>& a_inits, int a_nnodesStab){
     // TODO:to implement somehow "default" parameter
-	int nnodes_stab = (a_nnodesStab==0) ? _rFldNS.get_Ny() : a_nnodesStab;
-	setContext(a_ind);
+	// TODO: nnodes_stab not used here?
+	int nnodes_stab = (a_nnodesStab==0) ? _params.NNodes : a_nnodesStab;
+
 	setInitWaves(a_inits);
 	t_WCharsLoc res_wave;
 	//ensure

@@ -7,7 +7,7 @@
 namespace hsstab{
 
 	class TCapsStabSolver: public TCapsLS{	
-		stab::t_LSBase* create_ls_solver(const mf::t_Block& blk);	};
+		stab::t_LSBase* create_ls_solver(const mf::t_DomainBase& blk);	};
 
 		class TPluginStabSolver : public TPlugin{
 			TCapsStabSolver _caps;

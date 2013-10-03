@@ -15,8 +15,10 @@ bool t_StabSolver::t_StabODES::needOrtho(const t_MatCmplx& a_cur_sol){
 	//debug
 	double max_norm = 0.0;
 	double min_norm = 1.0e+12;
+	t_VecCmplx cur_vec(a_cur_sol.nRows());
 	for (int i=0; i<a_cur_sol.nCols(); i++){
-		double cur_norm = smat::norm(t_VecCmplx(a_cur_sol[i]).norm());
+		a_cur_sol.col_to_vec(i, cur_vec);
+		double cur_norm = smat::norm(cur_vec.norm());
 		if (cur_norm<min_norm){
 			min_norm = cur_norm;
 		}

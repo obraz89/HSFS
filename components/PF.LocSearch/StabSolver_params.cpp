@@ -8,7 +8,7 @@ using namespace pf;
 // ---------------------------------------
 // t_StabSolverParams
 static const int N_VARS_DEFAULT = 5;
-static const int N_NODES_DEFAULT = 51;
+static const int N_NODES_DEFAULT = 201;
 static const double THICK_COEF_DEFAULT = 3.0;
 
 // adjust procedure parameters
