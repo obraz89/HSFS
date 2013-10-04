@@ -24,10 +24,14 @@ namespace mf{
 			virtual void init(const hsstab::TPlugin& g_plug)=0;
 
 			virtual t_Rec get_rec(const t_GeomPoint& xyz) const=0;
+			// TODO: implement for optimization
+			// virtual void get_rec(const t_GeomPoint& xyz, t_Rec& rec) const=0;
 
 			virtual const t_FldParams& get_mf_params() const=0;
 
 			virtual t_Rec interpolate_to_point(const t_GeomPoint& point) const=0;
+			// TODO: implement for optimization
+			//virtual void interpolate_to_point(const t_GeomPoint& point, t_Rec& rec) const=0;
 
 			// jac - transform matrix to local rf S: e'=eS
 			// thus columns of jac are new base vectors in base rf

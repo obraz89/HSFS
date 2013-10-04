@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="MF.CGNS3D"
+	ProjectGUID="{F6EF0EF1-C535-48A3-AE9A-ADB4474AAE1E}"
+	VCNestedProjectGUID="{1C17F11D-0703-42E8-A6F0-A7DD17B4F8C8}"
+	VCNestedProjectFileName="MF.CGNS3D.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>
