@@ -65,7 +65,7 @@ void mfhs::t_Block2D::init(int nx, int ny, int nz, wxString mf_bin_path,
 			rBaseRec.r=gmama*rBaseRec.p/rBaseRec.t;
 			for (int k=0; k<Nz; k++){
 				t_Rec& rRec = _fld[i][j][k];
-				if (params.MFSym==t_HSFlowParams2D::t_AxeSym::AxeSym){
+				if (params.MFSym==mf::t_AxeSym::AxeSym){
 					double psi = M_PI/double(Nz-1)*k;
 					rRec.x = rBaseRec.x;
 					rRec.y = rBaseRec.y*cos(psi);

@@ -63,6 +63,16 @@ protected:
 	};
 };
 
+class t_AxeSym: public t_Enum{
+public:
+	IMPEXP_PHYSCOMMON static const int AxeSym/*=0*/, Plane;
+	IMPEXP_PHYSCOMMON t_AxeSym(){_init_map_vals();set_value(AxeSym);};
+	IMPEXP_PHYSCOMMON void operator=(const int& val){t_Enum::operator =(val);};
+	IMPEXP_PHYSCOMMON bool operator==(const int& val) const{return t_Enum::operator ==(val);};
+protected:
+	IMPEXP_PHYSCOMMON void _init_map_vals();
+};
+
 /************************************************************************/
 /* Common Flow field parameters                                         */
 // some are important to calculate BL thickness etc

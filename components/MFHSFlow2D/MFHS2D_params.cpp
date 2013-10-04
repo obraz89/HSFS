@@ -15,14 +15,6 @@ using namespace hsstab;
 
 //---------------------------------------------------------------------2D params
 
-const int t_HSFlowParams2D::t_AxeSym::AxeSym = 0;
-const int t_HSFlowParams2D::t_AxeSym::Plane  = 1;
-
-void t_HSFlowParams2D::t_AxeSym::_init_map_vals(){
-	_mapVals.insert(std::make_pair(AxeSym, _T("AxeSym")));
-	_mapVals.insert(std::make_pair(Plane, _T("Plane")));
-};
-
 const t_HSFlowParams2D& mfhs::t_Domain2D::get_params() const{
 	return _base_params;
 };
