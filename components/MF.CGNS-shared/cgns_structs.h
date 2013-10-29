@@ -7,6 +7,15 @@
 // Modified by: A.Obraz
 ///////////////////////////////////////////////////////////////////////////////
 
+// TODO: remove fake typedefs and their usage [HSFlow legacy] 
+
+#ifndef __CGNS_STRUCTS
+#define __CGNS_STRUCTS
+
+#include "MFDomainBase.h"
+
+typedef void TfuncPhys;
+
 // maybe use later
 namespace mf{
 	namespace cg{
@@ -233,7 +242,11 @@ namespace mf{
 
 			// Grid cell data
 			TgridCell2D& cell(int i, int j)       {  return grd.c2d[absIdx(i,j)  -1];  }
-			TgridCell3D& cell(int i, int j, int k){  return grd.c3d[absIdx(i,j,k)-1];  }
+			const TgridCell2D& cell(int i, int j) const{  return grd.c2d[absIdx(i,j)  -1];  }
+
+			TgridCell3D& cell(int i, int j, int k)      {  return grd.c3d[absIdx(i,j,k)-1];  }
+			const TgridCell3D& cell(int i, int j, int k) const{  return grd.c3d[absIdx(i,j,k)-1];  }
+
 
 
 			// Global (inter-zones) 0-based index
@@ -314,7 +327,58 @@ namespace mf{
 				delete[] grd.c2d, grd.c3d;
 			}
 		};
+
+		// This is from fieldIO_procs.h, maybe get full src later
+
+#ifndef __int8_t_defined
+		typedef unsigned __int8  uint8_t;
+#endif
+
+		struct TDims
+		{
+			uint8_t numFunc;
+			unsigned int numX, numY, numZ;
+
+			TDims(uint8_t F, unsigned int X , unsigned int Y, unsigned int Z)
+				: numFunc(F), numX(X), numY(Y), numZ(Z) {};
+			TDims()	: numFunc(0), numX(0), numY(0), numZ(0) {};
+		};
 		//-----------------------------------------------------------------------------
+
+		// simple wrapper for (i,j,k) set
+		struct t_BlkInd{
+
+			int i,j,k;
+
+			t_BlkInd():i(0),j(0),k(0){};
+			t_BlkInd(int _i, int _j, int _k):i(_i), j(_j), k(_k){};
+
+			t_BlkInd& set(int _i, int _j, int _k){i=_i; j=_j; k=_k; return *this;}
+
+			// index + shift {di, dj, dk}
+			t_BlkInd(const t_BlkInd& _ind, int di, int dj, int dk)
+			{
+				i = _ind.i + di;
+				j = _ind.j + dj;
+				k = _ind.k + dk;
+			};
+
+		};
+
+		// zoneid, 1-based + local index of real node inside that zone 
+		// i,j,k - is, js, ks-based!
+		// keep a face type
+		// TODO: FluidFaceType
+		struct t_ZoneNode{
+			int iZone;
+			t_BlkInd iNode;
+
+			int iFacePos;
+
+			t_ZoneNode(int _iZone=-1, int i=-1, int j=-1 , int k=-1)
+				:iZone(_iZone), iNode(i,j,k), iFacePos(-1){}
+			t_ZoneNode(int _iZone, const t_BlkInd& ind):iZone(_iZone), iNode(ind), iFacePos(-1){}
+		};
 
 		//
 		// The whole computational domain
@@ -337,9 +401,71 @@ namespace mf{
 			// Gas-dynamic values at infinity
 			//
 			double* infVals;
-			// add 
+			// func names to read from db
+			std::vector<std::string> G_vecCGNSFuncNames;
+
+			// BC names defined on viscous wall
+
+			std::vector<std::string>  _vecBCWallNames;
+			
+			// this funcs can be shared by 2D and 3D domains
+			bool initField(const wxString& fldFName);
+			bool loadField(const wxString& fileName, bool bIsPrev);
+			bool readBlockFromCGNS(
+				int fileID, int iZone,
+				TDims& dims, double** grid, double** field);
+
+			// most low-level rec extractors
+			// i,j,k - local 1-based indices of the real node incide block
+			// realizations are different for 2D and 3D
+			// aliases can be defined here
+			virtual void get_rec(const TZone& zone, int i, int j, int k, mf::t_Rec& rec) const=0;
+
+			void get_rec(const TZone& zone, const t_BlkInd& ind, mf::t_Rec& rec) const;
+			void get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const;
+
+			// grid funcs are different for 2D and 3D
 			virtual bool loadGrid( const wxString& gridFN )=0;
+
+			// set proper counters to iterate over specified face real nodes 
+			// for the zone iZone
+			virtual void set_face_iters(int iZone, int iFace, int& is, int& ie, 
+				int& js, int& je, int& ks, int& ke) const;
+			virtual void get_k_range(int iZone, int& ks, int& ke) const=0;
+
+			// geom interpolation stuff
+
+			virtual t_ZoneNode _get_nrst_node_surf(const t_ZoneNode& src_node) const;
+			virtual t_ZoneNode _get_nrst_node_surf(const t_GeomPoint& xyz) const;
+
+			virtual t_ZoneNode _get_nrst_node_raw(const t_GeomPoint& xyz) const;
+
+			bool _is_face_of_bcwall_type(const char* facename) const;
+
+			// TDomainBase interface realization
+
+			// go along local normal to a surface
+			// surface normal vector is calculated as well
+			virtual void calc_surf_point(const t_GeomPoint& a_xyz, t_GeomPoint& surf_point, t_Vec3Dbl& norm) const;
+			virtual void calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
+
+			virtual t_SqMat3Dbl calc_jac_to_loc_rf(const t_GeomPoint& xyz) const;
+
+			// calc character length scale
+			virtual double calc_x_scale(const t_GeomPoint& xyz) const;
+
+			virtual double calc_bl_thick(const t_GeomPoint& xyz) const;
+
+			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			// tmp, while i don't have good interpolators
+			int estim_num_bl_nodes(t_GeomPoint) const;
+
+			virtual ~TDomain();
 		};
+		//-----------------------------------------------------------------------------
+
 		//-----------------------------------------------------------------------------
 
 	}	// ~namespace cg
@@ -347,3 +473,5 @@ namespace mf{
 	//-----------------------------------------------------------------------------
 
 }	// ~namespace mf
+
+#endif // ~__CGNS_STRUCTS

@@ -12,3 +12,14 @@
 
 
 // TODO: reference additional headers your program requires here
+
+#include <wx/wxprec.h>
+
+#include <wx/intl.h>
+#include <wx/log.h>
+
+#include <wx/filename.h>
+
+#include <iostream>
+#include <string>
+#include <map>

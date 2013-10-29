@@ -82,8 +82,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
@@ -106,7 +106,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -206,8 +207,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -232,7 +233,8 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
@@ -281,7 +283,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\io.cpp"
+				RelativePath=".\geom-shared.cpp"
 				>
 			</File>
 			<File
@@ -328,10 +330,6 @@
 			>
 			<File
 				RelativePath=".\cgns_structs.h"
-				>
-			</File>
-			<File
-				RelativePath=".\io.h"
 				>
 			</File>
 			<File
