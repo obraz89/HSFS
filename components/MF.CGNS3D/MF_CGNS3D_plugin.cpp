@@ -46,7 +46,7 @@ wxString TPluginCGNS3D::get_name() const
 }
 wxString TPluginCGNS3D::get_description() const
 {
-	return _("MF Interface to CGNS Format");
+	return _("MF Interface to CGNS 3D Format");
 }
 
 //-----------------------------------------------------------------------------

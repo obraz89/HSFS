@@ -5,10 +5,10 @@
 
 namespace hsstab{
 
-	class TCapsCGNS2D: public TCapsMF{	mf::t_Block* create_block();	};
+	class TCapsCGNS2D: public TCapsMF{	mf::t_DomainBase* create_domain();	};
 
 	class TPluginCGNS2D : public TPlugin{
-		TCapsCGNS3D _caps;
+		TCapsCGNS2D _caps;
 	public:
 
 		TPluginCGNS2D();

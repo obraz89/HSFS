@@ -9,21 +9,20 @@ using namespace hsstab;
 
 //---------------------------< Exported >--------------------------------------
 // TODO: decide how to export domain later
-cgns_my::TDomain G_Domain;
-hsstab::TPluginCGNS3D g_plugin;
+hsstab::TPluginCGNS2D g_plugin;
 //-----------------------------------------------------------------------------
 
 //---------------------------<parameters>--------------------------------------
-TPluginCGNS3D::TPluginCGNS3D(){default_settings();};
+TPluginCGNS2D::TPluginCGNS2D(){default_settings();};
 
 
-void TPluginCGNS3D::default_settings(){
+void TPluginCGNS2D::default_settings(){
 
 	TPlugin::default_settings();
 
 	TPluginParamsGroup g;
 
-	mf::hsf3d::_hsflow_default_settings(g);
+	mf::cg::hsf2d::_plug_default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 
@@ -31,25 +30,25 @@ void TPluginCGNS3D::default_settings(){
 
 //-----------------------------------------------------------------------------
 
-void TPluginCGNS3D::init(const wxString& settingsFN, const wxString& spec){
+void TPluginCGNS2D::init(const wxString& settingsFN, const wxString& spec){
 
 	TPlugin::init(settingsFN, spec);  // load settings from file
 
 };
 
-TPluginCaps* TPluginCGNS3D::get_caps(){
+TPluginCaps* TPluginCGNS2D::get_caps(){
 	return &_caps;
 };
 
-mf::t_Block* TCapsMFHS3D::create_block(){return new mf::t_MFCGNS3D();};
+mf::t_DomainBase* TCapsCGNS2D::create_domain(){return new mf::t_MFCGNS2D();};
 
-wxString TPluginCGNS3D::get_name() const
+wxString TPluginCGNS2D::get_name() const
 {
-	return _T("MF.CGNS3D-iface");
+	return _T("MF.CGNS2D-iface");
 }
-wxString TPluginCGNS3D::get_description() const
+wxString TPluginCGNS2D::get_description() const
 {
-	return _("MF Interface to CGNS Format");
+	return _("MF Interface to CGNS 2D Format");
 }
 
 //-----------------------------------------------------------------------------

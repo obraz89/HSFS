@@ -10,21 +10,21 @@ namespace mf{
 
 	class t_CGNS2DParams: public t_FldParams{
 
-		int _Nz;
-
 		void _init_params_map();
 	public:
 		t_CGNS2DParams():t_FldParams(){};
-		enum{AxeSym=0, Plane} MFSym;
+		int Nz;
+		t_AxeSym MFSym;
 		double ZSpan;
+		double ThetaSpan;
 	};
 
 	// To reduce code
-	namespace cgns2d{
-
-		//tmp, read later from cgns domain 
-		void _init_fld_base_params(t_FldParams& params, hsstab::TPluginParamsGroup& g);
-		void _plug_default_settings(hsstab::TPluginParamsGroup& g);
+	namespace cg{
+		namespace hsf2d{
+			void _init_fld_base_params(t_FldParams& params, const hsstab::TPluginParamsGroup& g);
+			void _plug_default_settings(hsstab::TPluginParamsGroup& g);
+		}
 	};
 
 }		// ~namespace hsflow

@@ -8,6 +8,11 @@
 using namespace mf;
 using namespace mf::cg;
 
+void t_MFCGNS2D::get_k_range(int iZone, int& ks, int& ke) const{
+	ks = 1;
+	ke = _base_params.Nz;
+}
+
 bool t_MFCGNS2D::loadGrid( const wxString& gridFN ){
 	bool ok = false;
 
@@ -55,18 +60,16 @@ bool t_MFCGNS2D::loadGrid( const wxString& gridFN ){
 	}
 	*/
 
+	// One core distribution
+	this->bs = 0;
+	this->be = nZones - 1;
+
 	// [HSFlow legacy]
 	//G_Plugins.get_mesh_caps().calcHalfnodes();
 
 	return true;
 }
 /**
- *  Read connectivity data from the opened CGNS file
- *  and initialize ghost indices 
- *  
- *  @param[in] ctx - context of the opened CGNS file
- *  
- *  @return true if succeeded, false if failed
 **/  
 //-----------------------------------------------------------------------------
 
@@ -100,7 +103,7 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 	//
 	// Number of zones (aka blocks)
 	//
-	nZones = 0;  cg_nzones(ctx.fileID,ctx.iBase, &nZones);
+	nZones = 0;  cg_nzones(ctx.fileID, ctx.iBase, &nZones);
 	if( nZones < 1 )
 	{
 		wxLogError( _("Domain blocks are not found") );
@@ -158,22 +161,22 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 	//
 	// Connectivity info
 	// NB: blk.{nx, ny, nz} will be updated
-	if( ! parseGhostData2DfromCGNS(ctx) )  return false;
+	if( ! _parseGhostData2DfromCGNS(ctx) )  return false;
 
 	//
 	// Boundary conditions info
 	//
-	if( ! parseBCData2DfromCGNS(ctx) )  return false;
+	if( ! _parseBCData2DfromCGNS(ctx) )  return false;
 
 
 	//
 	// Read grid coordinates for all zones
 	// (to simplify mesh data transfer to ghosts)
 	//
-	for( int b = 0;  b < G_Domain.nZones;  ++b )
+	for( int b = 0;  b < nZones;  ++b )
 	{
 		int iZone = b + 1;
-		TZone& blk = G_Domain.Zones[b];
+		TZone& blk = Zones[b];
 
 		// Original block size without ghosts
 		const int
@@ -224,9 +227,9 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 	//
 	// Transfer grid data to ghost nodes
 	// 
-	for( int b = 0; b < G_Domain.nZones; ++b )
+	for( int b = 0; b < nZones; ++b )
 	{
-		TZone& zne = G_Domain.Zones[b];
+		TZone& zne = Zones[b];
 
 		for( int j = 1; j <= zne.ny; ++j )
 		for( int i = 1; i <= zne.nx; ++i )
@@ -242,13 +245,13 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 
 			// Detect donor zone
 			int nDnrZne = -1;
-			for( nDnrZne = G_Domain.nZones - 1; nDnrZne >= 0; --nDnrZne )
+			for( nDnrZne = nZones - 1; nDnrZne >= 0; --nDnrZne )
 			{
-				if( globInd >= G_Domain.Zones[ nDnrZne ].nGlobStart )
+				if( globInd >= Zones[ nDnrZne ].nGlobStart )
 					break;
 			}
 
-			TZone& dnrZne = G_Domain.Zones[ nDnrZne ];
+			TZone& dnrZne = Zones[ nDnrZne ];
 			int dnrLocInd = dnrZne.absIdxFromGlobInd( globInd ) - 1; // 0-based
 
 			zne.grd.c2d[ locInd ] = dnrZne.grd.c2d[ dnrLocInd ];
@@ -270,7 +273,7 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
  *  
  *  @return true if succeeded, false if failed
 **/  
-bool parseGhostData2DfromCGNS( TcgnsContext& ctx )
+bool t_MFCGNS2D::_parseGhostData2DfromCGNS( TcgnsContext& ctx )
 {
 	// Number of ghost nodes (half of stencil size)
 	int ghostI = 2, ghostJ = 2;
@@ -281,13 +284,13 @@ bool parseGhostData2DfromCGNS( TcgnsContext& ctx )
 //
 // (1) Read connectivity data from CGNS file
 //
-for( int iZone = 1;  iZone <= G_Domain.nZones;  ++iZone )
+for( int iZone = 1;  iZone <= nZones;  ++iZone )
 {
-	TZone& zne = G_Domain.Zones[iZone-1];
+	TZone& zne = Zones[iZone-1];
 	TcgnsZone& cgZne = ctx.cgZones[iZone-1];
 
 	int n1to1 = 0;  cg_n1to1(ctx.fileID,ctx.iBase,iZone, &n1to1);
-	if( n1to1 < 1 && G_Domain.nZones>1 )
+	if( n1to1 < 1 && nZones>1 )
 	{
 		wxLogError(_("Missing inter-block 1-to-1 connectivity info"));
 		return false;
@@ -408,9 +411,9 @@ for( int iZone = 1;  iZone <= G_Domain.nZones;  ++iZone )
 // (2) Initial global indices in all zones
 // 
 int gIdx = 0;
-for( int z = 0; z < G_Domain.nZones; ++z )
+for( int z = 0; z < nZones; ++z )
 {
-	TZone& zne = G_Domain.Zones[z];
+	TZone& zne = Zones[z];
 
 	zne.nGlobStart = gIdx;
 
@@ -437,9 +440,9 @@ for( int z = 0; z < G_Domain.nZones; ++z )
 //
 // (3) Parse connectivity data and fill-in ghost nodes indices
 //
-for( int b = 0; b < G_Domain.nZones; ++b )
+for( int b = 0; b < nZones; ++b )
 {
-	TZone& zne = G_Domain.Zones[b];
+	TZone& zne = Zones[b];
 
 	// Loop through faces
 	for( int f = 0; f < 4; ++f )
@@ -477,7 +480,7 @@ for( int b = 0; b < G_Domain.nZones; ++b )
 		}
 
 		TcgnsZone::TFace& face = ctx.cgZones[b].Faces[f];
-		TZone& zneDonor = G_Domain.Zones[ face.nDnrZne ];
+		TZone& zneDonor = Zones[ face.nDnrZne ];
 
 		// Donor block face starting index with ghosts
 		int ids = face.dnr_is0 + zneDonor.is - 1;
@@ -514,9 +517,9 @@ to nonexistent node (%d,%d) of zone '%s'. Check indices orientation!"),
 //
 // (4) Fill-in remaining ghost node indices around corners
 // 
-for( int b = 0; b < G_Domain.nZones; ++b )
+for( int b = 0; b < nZones; ++b )
 {
-	TZone& zne = G_Domain.Zones[b];
+	TZone& zne = Zones[b];
 
 	// Loop through faces
 	for( int f = 0; f < 4; ++f )
@@ -555,7 +558,7 @@ for( int b = 0; b < G_Domain.nZones; ++b )
 
 		TcgnsZone::TFace& face = ctx.cgZones[b].Faces[f];
 
-		TZone& zneDonor = G_Domain.Zones[ face.nDnrZne ];
+		TZone& zneDonor = Zones[ face.nDnrZne ];
 
 		// Donor block face starting index with ghosts
 		int ids = face.dnr_is0 + zneDonor.is - 1;
@@ -592,12 +595,12 @@ for( int b = 0; b < G_Domain.nZones; ++b )
 //-----------------------------------------------------------------------------
 
 
-bool parseBCData2DfromCGNS( TcgnsContext& ctx )
+bool t_MFCGNS2D::_parseBCData2DfromCGNS( TcgnsContext& ctx )
 {
 
-for( int iZone = 1;  iZone <= G_Domain.nZones;  ++iZone )
+for( int iZone = 1;  iZone <= nZones;  ++iZone )
 {
-	TZone& blk = G_Domain.Zones[iZone-1];
+	TZone& blk = Zones[iZone-1];
 
 	// Original block size without ghosts
 	const int
@@ -680,5 +683,13 @@ for( int iZone = 1;  iZone <= G_Domain.nZones;  ++iZone )
 
 	return true;
 }
+
+
 //-----------------------------------------------------------------------------
 
+bool t_MFCGNS2D::is_point_inside(const t_GeomPoint& xyz) const{
+
+	wxLogError(_T("t_MFCGNS2D: is_point_inside not yet implemented correctly!"));
+	return (xyz.x()>0.05 && xyz.x()<=1.0);
+
+}

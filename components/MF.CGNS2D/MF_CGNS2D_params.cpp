@@ -24,7 +24,7 @@ const t_FldParams& t_MFCGNS2D::get_mf_params() const{
 
 //----------------------------------------------------------------shared init
 
-void mf::cgns2d::_plug_default_settings(TPluginParamsGroup& g){
+void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
 
 	// TODO: read all these params from cgns db
 	// now reading nx, ny, nz of the first(and the only) block
@@ -32,8 +32,6 @@ void mf::cgns2d::_plug_default_settings(TPluginParamsGroup& g){
 	g.add("FldBinPath", _(""), _("Path to binary cgns file containing field")); 
 
 	g.add("GrdBinPath", _(""), _("Path to binary cgns file containing grid")); 
-
-	g.add("Nz", 11, _T("Number of grid nodes in dzeta dir"));
 
 	g.add("Mach", 1.0, _("Free stream Mach number")); // pMach
 
@@ -61,9 +59,19 @@ void mf::cgns2d::_plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
 
+	// 2D specific part
+	// TODO: amke plugin groups AxeSym & Plane
+	g.add("AxeSym", 0, _T("Is Flow AxeSym? 0-axesym, 1-plane"));
+
+	g.add("Nz", 21, _T("Span 2D grid in z-direction with Nz nodes"));
+
+	g.add("ZSpan", 0.2, _T("If AxeSym=Plane, choose Z Span Distance"));
+
+	g.add("ThetaSpan", 0.2, _T("If AxeSym=Conical, set azim angle span"));
+
 }
 
-void mf::cgns2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
+void mf::cg::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
 
 	params.Alpha = g.get_real_param("Alpha");
 
