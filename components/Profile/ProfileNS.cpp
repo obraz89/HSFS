@@ -13,7 +13,8 @@ void t_ProfileNS::initialize(const t_GeomPoint xyz, double a_thick_coef, int a_n
 	//}
 
 	// so I need interpolator right now or tmp solution
-	a_nnodes==0 ? _resize(_rDomain.estim_num_bl_nodes(xyz)) : _resize(a_nnodes);
+	int num_bl_nodes_ns = _rDomain.estim_num_bl_nodes(xyz);
+	a_nnodes<=num_bl_nodes_ns ? _resize(a_nnodes) : _resize(num_bl_nodes_ns);
 
 	t_GeomPoint r_xyz_base;
 	t_Vec3Dbl surf_norm;

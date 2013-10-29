@@ -552,7 +552,7 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 
 	t_ProfileNS profNS(_rFldNS);
 	// TODO: make NNodesNS params to control number of nodes in profNS
-	profNS.initialize(a_xyz, _params.ThickCoef, 0);
+	profNS.initialize(a_xyz, _params.ThickCoef, nnodes_stab);
 	_profStab.initialize(profNS, nnodes_stab);
 
 	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){

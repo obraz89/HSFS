@@ -67,7 +67,7 @@ void t_EigenGS::setContext(const mf::t_GeomPoint a_xyz){
 	t_ProfileNS profNS(_rBlk);
 
 	// TODO: control number of points in NS profile
-	profNS.initialize(a_xyz, _params.ThickCoef);
+	profNS.initialize(a_xyz, _params.ThickCoef, _params.NNodes);
 	_grid.resize(_params.NNodes);
 	_profStab.initialize(profNS, _params.NNodes);
 
