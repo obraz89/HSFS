@@ -44,23 +44,23 @@ namespace mf{
 			// calc character length scale
 			virtual double calc_x_scale(const t_GeomPoint& xyz) const=0;
 
-			virtual double calc_enthalpy(const t_GeomPoint& xyz) const=0;
-			virtual double calc_enthalpy_freestream() const=0;
+			virtual double calc_enthalpy(const t_GeomPoint& xyz) const;
+			virtual double calc_enthalpy_freestream() const;
 
-			virtual double calc_viscosity(const double t) const =0;
-			virtual double calc_viscosity(const t_GeomPoint& xyz) const=0;
+			virtual double calc_viscosity(const double t) const ;
+			virtual double calc_viscosity(const t_GeomPoint& xyz) const;
 
 			// dimensional cinematic viscosity
-			virtual double calc_cin_visc_dim(const t_GeomPoint& xyz)  const=0;
-			virtual double calc_cin_visc_inf_dim() const=0;
+			virtual double calc_cin_visc_dim(const t_GeomPoint& xyz)  const;
+			virtual double calc_cin_visc_inf_dim() const;
 
 			// dimensional
-			virtual double calc_u_inf() const=0;
+			virtual double calc_u_inf() const;
 
-			virtual double calc_c_dim(const double t) const=0;
-			virtual double calc_c_dim(const t_GeomPoint& xyz) const=0;
+			virtual double calc_c_dim(const double t) const;
+			virtual double calc_c_dim(const t_GeomPoint& xyz) const;
 
-			virtual double calc_mach(const t_GeomPoint& xyz) const=0;
+			virtual double calc_mach(const t_GeomPoint& xyz) const;
 
 			virtual double calc_bl_thick(const t_GeomPoint& xyz) const=0;
 
