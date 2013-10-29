@@ -64,8 +64,8 @@ void test::transhyb_base_wartman(){
 
 		// axesym case!!!
 		double x_cur = double(i_cur)/478.;
-		double z_cur = x_cur*tan(7./57.);
-		mf::t_GeomPoint test_xyz(x_cur, 0, z_cur);
+		double y_cur = x_cur*tan(7./57.);
+		mf::t_GeomPoint test_xyz(x_cur, y_cur, 0.);
 
 		t_WCharsLoc init_wave; 
 
