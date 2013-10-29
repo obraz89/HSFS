@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "log.h"
 
+#include "gen_exception.h"
+
 // support console
 #ifndef _USE_OLD_OSTREAMS
 using namespace std;
@@ -36,7 +38,17 @@ int main(int argc, char* argv[]){
 		wxDateTime::Now().Format(_T("%Y-%m-%d %H:%M:%S")).c_str()
 		);
 
-	load_Settings_n_Plugins();
+	try{
+		load_Settings_n_Plugins();
+	}catch(t_GenException e){
+		wxLogMessage(e.what_detailed());
+		return false;
+	}
+	catch(...){
+		wxLogMessage(_T("Unhandled Exception in load_Setting_n_Plugins. Aborting..."));
+		return false;
+	}
+
 
 	//test::selfsim_M45_second_mode();
 
