@@ -567,7 +567,7 @@ t_Rec t_Block::interpolate_to_point(t_GeomPoint point) const{
 			d = dd.norm();
 			l1 = r1.norm();
 			l2 = r2.norm();
-			c = (l2*l2-l1*l1+d*d)/d;
+			c = (l2*l2-l1*l1)/d;
 			d1 = 0.5*(d-c);
 			d2 = 0.5*(d+c);
 			double a = 1.0 - d1/d;
