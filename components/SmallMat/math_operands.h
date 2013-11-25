@@ -87,6 +87,7 @@ public:
 	inline T* operator[](int n);
 	void col_to_vec(int col, t_Vec<T>& vec ) const;
 	void set_col(int col, const t_Vec<T>& vec);
+	void setToZero();
 	t_Matrix& operator=(const t_Matrix& a_mat);
 	const T* operator[](int n) const;
 
@@ -156,6 +157,12 @@ template<typename T> void t_Matrix<T>::set_col(int col, const t_Vec<T>& vec){
 		_T("Matrix col to Vec error: wrong size of dest vec"));
 #endif
 	for (int j=0; j<_nrows; j++) _cont[col][j] = vec[j];
+}
+
+template<typename T> void t_Matrix<T>::setToZero(){
+	for (int i=0; i<_ncols; i++) 
+		for (int j=0; j<_nrows; j++) 
+			_cont[i][j]=0;
 }
 
 template<typename T> t_Matrix<T>& t_Matrix<T>::operator =(const t_Matrix<T>& a_mat){
@@ -330,6 +337,8 @@ namespace matrix{
 #endif
 				type* tmp = new type[nrows];
 				type val; 
+				ret.setToZero();
+
 				for (int i=0; i<r.nCols(); i++){
 					for (int j=0; j<l.nCols(); j++){
 						val = r[i][j];
