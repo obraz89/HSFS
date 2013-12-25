@@ -552,7 +552,23 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 
 	t_ProfileNS profNS(_rFldNS);
 	// TODO: make NNodesNS params to control number of nodes in profNS
-	profNS.initialize(a_xyz, _params.ThickCoef, nnodes_stab);
+	mf::t_ProfDataCfg prof_cfg;
+	prof_cfg.ThickCoef = _params.ThickCoef;
+	prof_cfg.NNodes = _params.NNodes;
+
+	switch (_params.NSProfInit)
+	{
+	case (blp::t_NSInit::EXTRACT):
+		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::EXTRACT);
+		break;
+	case (blp::t_NSInit::INTERPOLATE):
+		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::INTERPOLATE);
+		break;
+	default:
+		wxString msg(_T("PF.LocSearch: ProfNS Initialization type not supported"));
+		wxLogError(msg); ssuGENTHROW(msg);
+	}
+
 	_profStab.initialize(profNS, nnodes_stab);
 
 	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){

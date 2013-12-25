@@ -14,6 +14,7 @@ namespace pf{
 		double ThickCoef;
 		double AdjustTol, AdjustStep;
 		int AdjustMaxIter;
+		int NSProfInit;
 	};
 
 	namespace ls{

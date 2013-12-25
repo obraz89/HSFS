@@ -27,16 +27,6 @@ const t_FldParams& mfhs::t_Domain2D::get_mf_params() const{
 
 void mfhs::hsf2d::_hsflow_default_settings(TPluginParamsGroup& g){
 
-	g.add("FldBinPath", _(""), _("Path to binary file of field")); // _fld_bin_path
-
-	g.add("GrdBinPath", _(""), _("Path to binary file of grid")); // _grd_bin_path
-
-	g.add("Nz", 1, _("Nz")); // pNz
-
-	g.add("ZSpan", 1.0, _("Z Span for plane configuration"));
-
-	// TODO: some values should be read from cgns db
-
 	g.add("Mach", 1.0, _("Free stream Mach number")); // pMach
 
 	g.add("Re", 1.0e+06, _T("nondim Reynolds number calculated by a ref length L_ref")); // pRe

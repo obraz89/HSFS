@@ -1,38 +1,3 @@
-void test::king_al_2_new(){
-	// test : king, al=2
-	wxString TEST_CASE_DIR = _T("C:/science/devel/StabSolverUnited/StabSolverUnited/input/new/");
-	t_TaskManager App(TEST_CASE_DIR);
-	App.load_settings();
-	t_MeanFlow& mf = App.get_mf();
-	t_StabSolver& stab_solver = App.get_stab_solver();
-	t_EigenGS& gs_solver = App.get_eigen_gs();
-// core test - should be nearly converged
-	t_WCharsLoc w_init;
-	w_init.w = t_Complex(1.02e-1, 1.0e-5);
-	w_init.a =	0.102;
-	w_init.b =	0.2577;
-
-	stab_solver.set3DContext(70,50, 150);
-	t_Complex base_resid = stab_solver.solve(w_init);
-	std::wcout<<_T("\nBase Resid:")<<base_resid<<std::endl;
-	stab_solver.adjustLocal(w_init, t_StabSolver::W_MODE);
-	std::wcout<<w_init;
-	std::vector<t_WCharsLoc> inits;
-	inits.push_back(w_init);
-//	std::cout<<stab_solver.getMaxWave(70, 50, inits, 150);
-
-// global search test - max should be near w_init
-	int i_test = 70;	//70
-	int k_test = 50;	//50
-	//t_WaveChars max_instab = gs_solver.searchMaxInstabGlob(i_test,k_test,gs_nnodes);
-	//std::vector<t_WCharsLoc> inits = gs_solver.getDiscreteModes(70, 50, 0.102, 0.2577, gs_nnodes);
-	gs_solver.getSpectrum(i_test, k_test, w_init.a.real(), w_init.b.real());
-	gs_solver.writeSpectrum(_T("king_al_2_test_spectrum.dat"));
-	//std::cout<<"GS max instab result:\n"<<t_WCharsLoc::find_max_instab(inits);
-	
-	
-};	
-
 void test::transhyb_base_08(){
 	const wxString TEST_CASE_DIR = 
 		//_T("C:/science/devel/StabSolverUnited/StabSolverUnited/__tests__/transhyb_2D_base/401x251_ortho/");

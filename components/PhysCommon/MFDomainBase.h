@@ -10,6 +10,20 @@
 
 namespace mf{
 
+/************************************************************************/
+//
+// Type to configure Raw Profile Data
+/************************************************************************/
+	struct IMPEXP_PHYSCOMMON t_ProfDataCfg{
+		double ThickCoef;
+		int NNodes;
+	};
+
+
+/************************************************************************/
+//
+// Basic Mean Flow Domain interface
+/************************************************************************/
 	class IMPEXP_PHYSCOMMON t_DomainBase{
 
 		protected:
@@ -65,6 +79,10 @@ namespace mf{
 			virtual double calc_bl_thick(const t_GeomPoint& xyz) const=0;
 
 			virtual bool is_point_inside(const t_GeomPoint& xyz) const=0;
+
+			// extract raw profile data if possible, index from wall to outer flow
+			virtual void extract_profile_data(const t_GeomPoint& xyz, 
+				const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const=0;
 
 			// tmp, while i don't have good interpolators
 			virtual int estim_num_bl_nodes(t_GeomPoint) const=0;

@@ -7,6 +7,8 @@
 #include "mf_shared.h"
 #include "MFDomainBase.h"
 
+#include <vector>
+
 namespace mfhs{
 
 struct t_BlkInd{
@@ -94,6 +96,9 @@ public:
 
 	void print_entry(const t_BlkInd ind) const;
 
+	void extract_profile_data(const mf::t_GeomPoint& xyz, 
+		const mf::t_ProfDataCfg& prdata_cfg, std::vector<mf::t_Rec>& data) const;
+
 // jac - transform matrix to local rf S: e'=eS
 // thus columns of jac are new base vectors in base rf
 	t_SqMat3Dbl calc_jac_to_loc_rf(const t_BlkInd ind) const;
@@ -178,6 +183,9 @@ public:
 	double calc_bl_thick(const mf::t_GeomPoint& xyz) const;
 
 	bool is_point_inside(const mf::t_GeomPoint& xyz) const;
+
+	void extract_profile_data(const mf::t_GeomPoint& xyz, 
+		const mf::t_ProfDataCfg& prdata_cfg, std::vector<mf::t_Rec>& data) const;
 
 	//tmp
 	virtual int estim_num_bl_nodes(mf::t_GeomPoint) const;

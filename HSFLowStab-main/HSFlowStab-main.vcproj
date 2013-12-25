@@ -355,6 +355,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\test_king_m35.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\test_sm_selfsim.cpp"
 					>
 				</File>

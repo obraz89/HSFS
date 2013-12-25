@@ -17,6 +17,10 @@ static const double ADJUST_TOL_DEFAULT  = 1.0e-4;
 static const double ASYM_TOL_DEFAULT = 1.0e-6;
 static const int ADJUST_MAX_ITER_DEFAULT= 50;
 
+// corresponds to blp::t_NSInit::EXTRACT=0
+// so default is "extract"
+static const int NS_PROF_INIT_DEFAULT = 0;
+
 // small increment to compute smth like
 // dw/da : (w(a+DELTA) - w(a))/DELTA
 static const double DELTA_SMALL = 1.0e-6;
@@ -36,6 +40,8 @@ void pf::ls::_ortho_ls_default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("AdjustMaxIter", ADJUST_MAX_ITER_DEFAULT, _T("Newton Iter number limit"));
 
+	g.add("NSProfInit", NS_PROF_INIT_DEFAULT, _T("NS Profile Initialization type"));
+
 
 }
 
@@ -52,6 +58,8 @@ void pf::ls::_init_ortho_ls_base_params(t_StabSolverParams& params, const hsstab
 	params.AdjustTol = g.get_real_param("AdjustTol");
 
 	params.AdjustMaxIter = g.get_int_param("AdjustMaxIter");
+
+	params.NSProfInit = g.get_int_param("NSProfInit");
 
 }
 

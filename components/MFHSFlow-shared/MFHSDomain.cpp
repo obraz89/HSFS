@@ -114,9 +114,13 @@ bool t_Domain::is_point_inside(const t_GeomPoint& xyz) const{
 	return get_blk().is_point_inside(xyz);
 }
 
+void t_Domain::extract_profile_data(const t_GeomPoint& xyz, const t_ProfDataCfg& cfg, std::vector<t_Rec>& data) const{
+	get_blk().extract_profile_data(xyz, cfg, data);
+}
+
 int  t_Domain::estim_num_bl_nodes(mf::t_GeomPoint xyz) const{
 	const t_Block& blk = get_blk();
-	t_BlkInd nrst_ind = blk.get_nearest_index_raw(xyz);
+ 	t_BlkInd nrst_ind = blk.get_nearest_index_raw(xyz);
 	return blk.get_bound_index(nrst_ind);
 };
 

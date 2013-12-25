@@ -67,12 +67,29 @@ void t_EigenGS::setContext(const mf::t_GeomPoint a_xyz){
 	t_ProfileNS profNS(_rBlk);
 
 	// TODO: control number of points in NS profile
-	profNS.initialize(a_xyz, _params.ThickCoef, _params.NNodes);
+
+	mf::t_ProfDataCfg prof_cfg;
+	prof_cfg.ThickCoef = _params.ThickCoef;
+	prof_cfg.NNodes = _params.NNodes;
+
+	switch (_params.NSProfInit)
+	{
+	case (blp::t_NSInit::EXTRACT):
+		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::EXTRACT);
+		break;
+	case (blp::t_NSInit::INTERPOLATE):
+		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::INTERPOLATE);
+		break;
+	default:
+		wxString msg(_T("PF.GlobSearch: ProfNS Initialization type not supported"));
+		wxLogError(msg); ssuGENTHROW(msg);
+	}
+
 	_grid.resize(_params.NNodes);
 	_profStab.initialize(profNS, _params.NNodes);
 
 	double y_max = _profStab.get_thick() - _profStab.get_y(0);
-	_a_coef = 1.0*y_max; // play with coef
+	_a_coef = 1.0*y_max; // TODO: play with coef
 	_b_coef = 1.0 + _a_coef/y_max;
 	double del = 1.0/(double)(_params.NNodes-1);	
 

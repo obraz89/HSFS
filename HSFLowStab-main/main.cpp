@@ -56,11 +56,22 @@ int main(int argc, char* argv[]){
 
 	//test::selfsim_M2_CF();
 
-	test::transhyb_base_wartman();
+	//test::transhyb_base_wartman();
 
 	//test::test_smat();
 
 	//test::test_conj_grad_min2D();
+
+	
+	try{
+		test::king_m35();
+	}
+	catch(t_GenException e){
+		wxLogError(e.what());
+	}
+	catch(...){
+		wxLogError(_T("Something went wrong..."));
+	}
 }
 /*
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance

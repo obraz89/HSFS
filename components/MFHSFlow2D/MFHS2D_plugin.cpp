@@ -26,7 +26,15 @@ void TPluginMFHS2D::default_settings(){
 
 	g.add("AxeSym", 0, _("Is Field AxeSym"));
 
-	g.add("ZSpan" , 1.0, _T("For a plane field only - z span"));
+	g.add("ZSpan", 0.2, _("Z Span for plane configuration"));
+
+	g.add("ThetaSpan" , 0.2, _T("For a plane field only - z span"));
+
+	g.add("MFBinPath", _T(""));
+
+	g.add("Nx", 1);
+	g.add("Ny", 1);
+	g.add("Nz", 1);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 

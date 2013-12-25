@@ -20,6 +20,7 @@ void test::test_smat(){
 	m1[0]=v;
 	*/
 
+	/*
 	int N = 1.0E+08;
 	_timeb time_start_b, time_end_b;
 	double time_spent;
@@ -62,6 +63,18 @@ void test::test_smat(){
 
 	time_spent = (time_end_b.time - time_start_b.time) + ((double)(time_end_b.millitm - time_start_b.millitm))/1000.;
 	std::cout<<"time spent:"<<time_spent;
+	*/
 
+	t_Vec3Dbl r;
+	t_SqMat3Dbl l;
+	t_Vec3Dbl ret;
+	r[0] = 0.;
+	r[1] = 1.;
+	r[2] = 0.;
+	l.setToUnity();
+	ret = l*r;
+	std::wcout<<ret;
+	matrix::base::mat_mul<double, double>(l,r,ret);
+	std::wcout<<ret;
 	getchar();
 };

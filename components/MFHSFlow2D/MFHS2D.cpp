@@ -19,13 +19,15 @@ void mfhs::t_Domain2D::init(const TPlugin& g_plug){
 
 	const TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
 
-	_mf_bin_path = g.get_string_param("MFBinPath");
-
 	hsf2d::_init_fld_base_params(_base_params, g);
+
+	_mf_bin_path = g.get_string_param("MFBinPath");
 
 	_base_params.MFSym = g.get_int_param("AxeSym");
 
 	_base_params.ZSpan = g.get_real_param("ZSpan");
+
+	_base_params.ThetaSpan = g.get_real_param("ThetaSpan");
 
 
 	int nx = g.get_int_param("Nx");
@@ -66,7 +68,7 @@ void mfhs::t_Block2D::init(int nx, int ny, int nz, wxString mf_bin_path,
 			for (int k=0; k<Nz; k++){
 				t_Rec& rRec = _fld[i][j][k];
 				if (params.MFSym==mf::t_AxeSym::AxeSym){
-					double psi = M_PI/double(Nz-1)*k;
+					double psi = (-0.5+double(k-1)/double(Nz-1))*params.ThetaSpan;
 					rRec.x = rBaseRec.x;
 					rRec.y = rBaseRec.y*cos(psi);
 					rRec.z = rBaseRec.y*sin(psi);
@@ -77,7 +79,6 @@ void mfhs::t_Block2D::init(int nx, int ny, int nz, wxString mf_bin_path,
 					rRec.t = rBaseRec.t;
 					rRec.r = rBaseRec.r;
 				}else{
-					// IMPORTANT TODO: hehe kokoko???
 					double z_span = 1.0;
 					rRec = rBaseRec;
 					rRec.z = (-0.5+double(k)/double(Nz-1))*params.ZSpan; // z from -0.5*ZSpan to 0.5*ZSpan

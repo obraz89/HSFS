@@ -14,12 +14,12 @@
 
 using namespace hsstab;
 
-t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
-								  stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk);
+static t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+	stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk);
 
-void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave, 
-							 stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, 
-							 mf::t_DomainBase* pBlk);
+static void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave, 
+	stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, 
+	mf::t_DomainBase* pBlk);
 
 void test::transhyb_base_wartman(){
 

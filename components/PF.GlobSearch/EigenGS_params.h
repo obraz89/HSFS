@@ -14,6 +14,7 @@ namespace pf{
 		int NVars, NNodes;
 		double ThickCoef;
 		double W_Threshold;
+		int NSProfInit;
 	};
 
 	namespace gs{

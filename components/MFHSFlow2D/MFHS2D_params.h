@@ -14,6 +14,7 @@ namespace mfhs{
 		t_HSFlowParams2D():t_FldParams(){};
 		mf::t_AxeSym MFSym;
 		double ZSpan;
+		double ThetaSpan;
 	};
 
 	// To reduce code

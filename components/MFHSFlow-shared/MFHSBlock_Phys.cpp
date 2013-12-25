@@ -280,6 +280,36 @@ double t_Block::calc_bl_thick(const t_GeomPoint& xyz) const{
 	return calc_bl_thick(nrst_ind);
 }
 
+void t_Block::extract_profile_data(const t_GeomPoint& xyz, const t_ProfDataCfg& cfg, 
+								   std::vector<t_Rec>& data) const{
+
+    // TODO: get_nearest_index_surf
+	t_BlkInd surf_ind = get_nearest_index_raw(xyz);
+	surf_ind.j = 0;
+
+	double bl_thick = calc_bl_thick(xyz);
+
+	double total_thick = cfg.ThickCoef * bl_thick;
+	int total_nodes = 0;
+
+	double eta = 0.0;
+	t_BlkInd cur_ind = surf_ind;
+	do 
+	{
+		eta = calc_distance(cur_ind, surf_ind);
+		cur_ind.j++;total_nodes++;
+
+	} while (eta<total_thick);
+
+	data.resize(total_nodes);
+
+	for (int j=0; j<total_nodes; j++){
+		cur_ind.j = j;
+		data[j] = get_rec(cur_ind);
+	}
+
+}
+
 //##############################################
 // old croosflow low level mess
 /*

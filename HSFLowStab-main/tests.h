@@ -1,6 +1,6 @@
 namespace test{
 
-	void king_al_2_new();
+	void king_m35();
 	void transhyb_base_08();
 	void transhyb_base_wartman();
 	void profile_compar();
