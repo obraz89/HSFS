@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
 		wxLogError(e.what());
 	}
 	catch(...){
-		wxLogError(_T("Something went wrong..."));
+		wxLogError(_T("Something went wrong...see log"));
 	}
 }
 /*

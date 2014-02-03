@@ -16,6 +16,8 @@ bin_*/
 *.suo
 *.res
 *.manifest
+#class diagrams
+*.cd
 # libs, exec
 *.lib
 *.dll
