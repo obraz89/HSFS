@@ -93,8 +93,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -117,8 +117,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="lib;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/MF.CGNS-shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MFCGNS3D_EXPORTS"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/MF.CGNS-shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)/include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -137,7 +137,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib mpi.lib cgns.lib libhdf5.lib shared.lib PhysCommon.lib smallmat.lib MF.CGNS-shared.lib"
 				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MPICH2_DIR)/lib&quot;;&quot;$(CGNS_DIR)/lib&quot;;&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -240,8 +242,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
+			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -266,10 +268,11 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/MF.CGNS-shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MFCGNS3D_EXPORTS"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
+				UsePrecompiledHeader="2"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -284,7 +287,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib mpi.lib cgns.lib libhdf5.lib shared.lib PhysCommon.lib smallmat.lib MF.CGNS-shared.lib"
 				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MPICH2_DIR)/lib&quot;;&quot;$(CGNS_DIR)/lib&quot;;&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -323,11 +328,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\fld_procs.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\grid_procs.cpp"
+				RelativePath=".\grid_procs3D.cpp"
 				>
 			</File>
 			<File
@@ -358,6 +359,10 @@
 			</File>
 			<File
 				RelativePath=".\MF_CGNS3D_plugin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\stdafx.h"
 				>
 			</File>
 		</Filter>

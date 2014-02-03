@@ -6,58 +6,110 @@
 #include "cgns_structs.h"
 
 using namespace mf;
-using namespace cgns_my;
+using namespace mf::cg;
 
 void t_MFCGNS3D::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
 
+	_fld_bin_path = g.get_string_param("FldBinPath");
 	_grd_bin_path = g.get_string_param("GrdBinPath");
 
-	_load_grid_data_3D(_grd_bin_path);
+	if (!wxFileName::FileExists(_fld_bin_path) || 
+		!wxFileName::FileExists(_grd_bin_path)){
+			wxLogError(_T("Fatal Error: MF.CGNS3D: Provided fld or grd file doesn't exist"));
+			ssuTHROW(t_GenException, _T("Error: Failed to initialize MF.CGNS3D, see errlog"));
+	}
 
-	_mf_bin_path = g.get_string_param("MFBinPath");
+	mf::cg::hsf3d::_init_fld_base_params(_base_params, g);
 
-	hsf3d::_init_fld_base_params(_base_params, g);
+	// TODO: read from config ?
+	nu = 5;  // unknown functions number
+	nDim = 3;
 
-	_init();	// init Block
+	//G_strFunctionNames = "u\nv\np\nT";
+
+	G_vecCGNSFuncNames.clear();
+	G_vecCGNSFuncNames.push_back("VelocityX");
+	G_vecCGNSFuncNames.push_back("VelocityY");
+	G_vecCGNSFuncNames.push_back("VelocityZ");
+	G_vecCGNSFuncNames.push_back("Pressure");
+	G_vecCGNSFuncNames.push_back("Temperature");
+
+	// here come all viscous wall bc identifiers
+	// TODO: do i need to keep this 33 size to compare in _is_face_of_bcwall_type
+	// TODO: make entry in config file for wall BCs. 
+	// maybe with wildcards like blk*-Ymin ? o_O
+
+	char viscBCWallName[33];
+
+	sprintf(viscBCWallName, "wall");
+	_vecBCWallNames.push_back(std::string(viscBCWallName));
+
+	// tmp : hardcode identifiers blk*-Ymin 
+	/*
+	for (int bid=1; bid<=64; bid++){
+
+		sprintf(viscBCWallName, "blk%d-Ymin", bid);
+		_vecBCWallNames.push_back(std::string(viscBCWallName));
+	}*/
+
+	_init();	// allocate space and read grd and fld
 };
 
 void t_MFCGNS3D::_init(){
 
-	_allocate();
+	loadGrid(_grd_bin_path);
+	initField(_fld_bin_path);
 
-	const t_FldParams& params = get_mf_params();
-
-	FILE* fld_file = fopen(_mf_bin_path.ToAscii(),"rb");
-	if (fld_file==NULL) ssuGENTHROW(_T("failed to open binary hsflow3d dat file. Abort"));
-
-	//reverse order!! k,j,i
-	for(int k=0; k<Nz; k++)	
-		for (int j=0; j<Ny; j++)
-			for(int i=0; i<Nx; i++){
-				t_Rec& ptr = _fld[i][j][k];
-				fread(&ptr.x,sizeof(double),1,fld_file);
-				fread(&ptr.y,sizeof(double),1,fld_file);
-				fread(&ptr.z,sizeof(double),1,fld_file);
-			}
-			for(int k=0; k<Nz; k++)	
-				for (int j=0; j<Ny; j++)
-					for(int i=0; i<Nx; i++){
-						t_Rec& ptr = _fld[i][j][k];
-						fread(&ptr.u,sizeof(double),1,fld_file);
-						fread(&ptr.v,sizeof(double),1,fld_file);
-						fread(&ptr.w,sizeof(double),1,fld_file);
-						fread(&ptr.p,sizeof(double),1,fld_file);
-						fread(&ptr.t,sizeof(double),1,fld_file);
-						double gmama = params.Gamma*params.Mach*params.Mach;
-						ptr.r=gmama*ptr.p/ptr.t;
-					};
-
-			fclose(fld_file);
 };
 
+t_Rec t_MFCGNS3D::get_rec(const t_GeomPoint& xyz) const{
+
+	return interpolate_to_point(xyz);
+
+};
+
+// simply transform [u,v,w,p,t] to t_Rec{x,y,z,u,v,w,p,t,r}
+void t_MFCGNS3D::get_rec(const TZone& blk, int i, int j, int k, mf::t_Rec& rec) const{
+
+	int glob_ind = blk.absIdx(i,j,k);
+	// cgns-shared.cpp ln.167
+	int glob_offset = nu*( blk.absIdx(i,j,k) - 1 );
+	// TODO: avoid hardcoding?
+	double u_base = blk.U[glob_offset + 0];
+	double v_base = blk.U[glob_offset + 1];
+	double w_base = blk.U[glob_offset + 2];
+	double p_base = blk.U[glob_offset + 3];
+	double t_base = blk.U[glob_offset + 4];
+
+	const t_FldParams& params = _base_params;
+	double gmama = params.Gamma*params.Mach*params.Mach;
+	double r_base = gmama*p_base/t_base;
+
+	const TgridCell3D& cell = blk.cell(i, j, k);
+
+	rec.x = cell.ijk.x;
+	rec.y = cell.ijk.y;
+	rec.z = cell.ijk.z;
+
+	rec.u = u_base;
+	rec.v = v_base;
+	rec.w = w_base;
+	rec.p = p_base;
+	rec.t = t_base;
+	rec.r = r_base;
+
+}
+
+//t_ZoneNode t_MFCGNS2D
+
+
+t_Rec t_MFCGNS3D::interpolate_to_point(const t_GeomPoint& point) const{
+
+	return TDomain::_interpolate_to_point_surf_raw(point);
+
+}  // ~interpolate_to_point
 
 
 
-bool t_MFCGNS3D::_load_fld_data(const wxString& fldFN){return true;}

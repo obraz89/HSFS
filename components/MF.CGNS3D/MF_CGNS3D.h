@@ -2,31 +2,47 @@
 #define __MFCGNS3D
 
 #include "PluginBase.h"
-#include "MFBlockBase.h"
+#include "MFDomainBase.h"
+
+#include "cgns_structs.h"
 
 #include "MF_CGNS3D_params.h"
 
 namespace mf{
 
-	class t_MFCGNS3D: public mf::t_Block{
+	class t_MFCGNS3D: public mf::cg::TDomain{
 	private:
 
 		t_FldParams _base_params;
-		wxString _mf_bin_path, _grd_bin_path;
+		wxString _fld_bin_path, _grd_bin_path;
 
 		void _init();
 
-		bool _load_grid_data(const wxString& a_grdBinPath);
+		bool _parseGhostData3DfromCGNS( cg::TcgnsContext& ctx );
 
-		bool _load_fld_data(const wxString& a_mfBinPath);
+		bool _parseBCData3DfromCGNS( cg::TcgnsContext& ctx );
+
+		bool _doLoadGrid3D_cgns( const wxString& gridFN );
+
+		void get_k_range(int iZone, int& ks, int& ke) const;
 
 	public:
 
+		// t_DomainBase interface realization
+
 		void init(const hsstab::TPlugin& g_plug);
 
-		void default_settings();
-
 		const mf::t_FldParams& get_mf_params() const;
+
+		virtual mf::t_Rec interpolate_to_point(const t_GeomPoint& point) const;
+		// TODO: implement for optimization
+		//virtual void interpolate_to_point(const t_GeomPoint& point, t_Rec& rec) const=0;
+
+		void get_rec(const mf::cg::TZone& blk, int i, int j, int k, mf::t_Rec& rec) const;
+		t_Rec get_rec(const t_GeomPoint& xyz) const;
+
+		// from cg::TDomain
+		bool loadGrid(const wxString& gridFN );
 	};
 
 	}		// ~namespace mf

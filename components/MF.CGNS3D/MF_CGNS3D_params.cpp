@@ -1,28 +1,26 @@
 #include "stdafx.h"
 
-#include "MFHS3D.h"
-#include "MFHS3D_params.h"
+#include "MF_CGNS3D.h"
+#include "MF_CGNS3D_params.h"
 
 using namespace mf;
 using namespace hsstab;
 
 //---------------------------------------------------------------------3D params
 
-const t_FldParams& t_MFHSFLOW3D::get_mf_params() const{return _base_params;}
+const t_FldParams& t_MFCGNS3D::get_mf_params() const{return _base_params;}
 
 //----------------------------------------------------------------shared init
 
-void mf::hsf3d::_hsflow_default_settings(TPluginParamsGroup& g){
+void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 
-	g.add("MFBinPath", _(""), _("Path to binary field container")); // pMFBin
+	// TODO: read all these params from cgns db
 
-	g.add("Nx", 1, _("Nx")); // pNx
+	g.add("FldBinPath", _(""), _("Path to binary cgns file containing field")); 
 
-	g.add("Ny", 1, _("Ny")); // pNy
+	g.add("GrdBinPath", _(""), _("Path to binary cgns file containing grid")); 
 
-	g.add("Nz", 1, _("Nz")); // pNz
-
-	g.add("Mach", 1.0e+00, _("Free stream Mach number")); // pMach
+	g.add("Mach", 1.0, _("Free stream Mach number")); // pMach
 
 	g.add("Re", 1.0e+06, _T("nondim Reynolds number calculated by a ref length L_ref")); // pRe
 
@@ -47,10 +45,10 @@ void mf::hsf3d::_hsflow_default_settings(TPluginParamsGroup& g){
 	g.add("MolWeight", 2.7e-02, _T("Dimensional molecular weight of the gas[kg/mol*K]")); 
 
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
-
 }
 
-void mf::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
+void mf::cg::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
+
 
 	params.Alpha = g.get_real_param("Alpha");
 
@@ -69,7 +67,7 @@ void mf::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGr
 	params.R_Gas = g.get_real_param("RGas");
 
 	params.Re = g.get_real_param("Re");
-	
+
 	params.T_inf = g.get_real_param("TInf");
 
 	params.T_mju = g.get_real_param("TMju");
