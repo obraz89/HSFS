@@ -17,6 +17,8 @@ _math_solver(), _stab_matrix(STAB_MATRIX_DIM), _params(){
 
 	_math_solver._pStab_solver = this;
 
+	_ls_mode.set_defaults();
+
 };
 
 void t_StabSolver::init(const hsstab::TPlugin& g_plug){
@@ -65,6 +67,8 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	const double dMu_U= rec.mu2*rec.t1*rec.u1 + rec.mu1*rec.u2;
 
 	const t_CompVal xi = 1.0/(stabRe*inv_mu+imagUnity*vCoefL*gMaMa*dEicon_dt);
+
+	// compose stab matrix for direct problem first
 
 	// first
 	_stab_matrix[1][0]=1.0;
@@ -161,6 +165,18 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 		alpha*alpha + beta*beta;
 
 	_stab_matrix[7][7] = -inv_mu*dMu1;
+
+
+	t_CompVal swp_val;
+
+	// if solving conjugate problem, H_conj = - H_direct*
+	// * stands for hermitian operand
+
+	if (_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
+	
+		_stab_matrix.setToHermConj();
+
+	}
 }
 
 void t_StabSolver::_setStabMatrix3D(const double& a_y){
@@ -356,6 +372,10 @@ t_VecCmplx t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars)
 	return _stab_matrix*a_vars; 
 };
 
+
+// TODO: to speed up - rewrite to "_setAsymptotcs" 
+// and write directly to destination formal param
+
 t_MatCmplx t_StabSolver::_getAsymptotics3D
 (const t_WCharsLoc& a_waveChars, t_ASYM_MODE mode){
 	const int dim = getTaskDim();
@@ -365,7 +385,7 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D
 	const double& y_e = _profStab.get_thick();
 	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
 	t_ProfRec out_rec = _profStab.get_rec(y_e);
-	if (mode==ASYM_FORCE_SELF_SIM){
+	if (_ls_mode.is_flag_on(stab::t_LSMode::ASYM_HOMOGEN)){
 		// modify ... a little
 		// this is how AVF did it
 		out_rec.t1=0.0;

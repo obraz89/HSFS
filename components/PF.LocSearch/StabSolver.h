@@ -57,10 +57,7 @@ class  t_StabSolver: public stab::t_LSBase{
 	// prepare calculations
 	void _init();
 
-	//const t_SqMatrix& _getStabMatrix3D(const double& a_y) const;
 	void _setStabMatrix3D(const double& a_y);
-
-	// we are in trouble with asymptotics now
 	void _setStabMatrix3D(const t_ProfRec& rec);
 
 	t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);

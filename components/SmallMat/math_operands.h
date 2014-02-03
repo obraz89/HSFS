@@ -654,6 +654,7 @@ public:
 	// TODO: better col first
 	t_SqMatrix<T> get_minor(const int raw, const int col) const;
 	void setToUnity();
+	void setToHermConj();
 	//void resize(int a_size);
 	T det() const;
 	t_SqMatrix<T> inverse() const;
@@ -770,6 +771,25 @@ template<typename T> void t_SqMatrix<T>::setToUnity(){
 		};
 	};
 };
+
+template<typename T> void t_SqMatrix<T>::setToHermConj(){
+	wxString msg(_T("Smat error: setToHermConj not implemented \
+		             for specified template parameter"));
+	ssuTHROW(t_GenException, msg);
+};
+
+template<> void t_SqMatrix<t_CompVal>::setToHermConj(){
+
+	t_CompVal swp_val;
+	for (int i=0; i<_ncols; i++)
+		for (int j=0; j<=i; j++){
+			swp_val = _cont[i][j];
+			_cont[i][j] = std::conj(_cont[j][i]);
+			_cont[j][i] = std::conj(swp_val);
+
+		}
+};
+
 // TODO: rewrite with robust procedures!!!
 template<typename T> t_SqMatrix<T> t_SqMatrix<T>::inverse() const{
 	int dim = this->nCols();

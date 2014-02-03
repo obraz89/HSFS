@@ -15,6 +15,14 @@ class t_ProfileStab;
 // this is a beta concept =) if it's ok, TODO: write explanation
 namespace stab{
 
+
+/************************************************************************/
+/* Struct to set search mode
+   for a stability solver
+   e.g. W_FIXED <=> search with fixed value of W, vary A and B
+   etc 
+*/
+/************************************************************************/
 	class IMPEXP_PHYSCOMMON t_LSCond{
 
 	int _cond;
@@ -42,8 +50,45 @@ namespace stab{
 	};
 
 
-	class IMPEXP_PHYSCOMMON t_LSBase: public hsstab::TPlugPhysPart{
+/************************************************************************/
+/* Struct to set search mode
+   for a stability solver
+   e.g. W_FIXED <=> search with fixed value of W, vary A and B
+   etc 
+*/
+/************************************************************************/
+/* struct to set various regimes of calculations
+   of a local search stability solver
+*/
+	class IMPEXP_PHYSCOMMON t_LSMode{
+		int _mode;
+
 	public:
+		enum t_Mode{
+
+			CONJUGATE = 01,
+
+			ASYM_HOMOGEN = 02
+		};
+
+		t_LSMode(int mode=0);
+		void set_defaults();
+		int get_mode() const;
+		bool is_flag_on(int flag) const;
+
+	};
+/************************************************************************/
+
+/* Common Interface to Stability Local Search Solvers 
+*/
+/************************************************************************/
+	class IMPEXP_PHYSCOMMON t_LSBase: public hsstab::TPlugPhysPart{
+	protected:
+		t_LSMode _ls_mode;
+
+	public:
+
+		void setLSMode(const t_LSMode& mode);
 
 		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
 
