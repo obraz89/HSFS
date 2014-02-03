@@ -57,7 +57,8 @@ t_ZoneNode TDomain::_get_nrst_node_surf(const t_GeomPoint& point) const{
 	{
 		TZone& blk = Zones[iZone-1];
 
-		for (int iface = 0; iface<4; iface++){
+		// TODO: 6 is BRICK_FACENUM
+		for (int iface = 0; iface<6; iface++){
 			if (_is_face_of_bcwall_type(blk.Faces[iface].szName)){
 				// we are on viscous wall
 				int i_s, i_e, j_s, j_e, k_s, k_e;
@@ -153,6 +154,192 @@ void TDomain::calc_surf_point(const t_GeomPoint& a_xyz, t_GeomPoint& surf_point,
 	//ssuTHROW(t_GenException, _T("Not Implemented"));
 
 };
+
+// Simple and relatively fast(~Nz faster than looping through entire Domain) 
+// but not generally correct way to find node(i.e. find zone and local index inside Zone) 
+// that is the nearest to argument geom point;
+// First search for nearest surface point, then go along norm gridline and find min dst
+// with 2-point interpolation, if failed, try to rescue with 1-point(zero-order) interpolation
+
+mf::t_Rec TDomain::_interpolate_to_point_surf_raw(const t_GeomPoint& point) const{
+
+	t_Rec ret, cur_rec;
+
+	t_ZoneNode znode_mdsurf = _get_nrst_node_surf(point);
+	const t_BlkInd& ind_md = znode_mdsurf.iNode;
+
+	// nearest surface node found, now make interpolation
+	// TODO: good interpolation
+
+	//=======================================================
+
+	int i_s = ind_md.i;
+	int i_e = i_s;
+
+	int j_s = ind_md.j;
+	int j_e = j_s;
+
+	int k_s = ind_md.k;
+	int k_e = k_s;
+
+	const TZone& the_zone = Zones[znode_mdsurf.iZone -1];
+
+	bool is_var_x = false;
+	bool is_var_y = false;
+	bool is_var_z = false;
+
+	switch(znode_mdsurf.iFacePos){
+			case(faceXmin):
+			case(faceXmax):
+				// vary i and keep j,k fixed
+				is_var_x = true;
+				i_s = the_zone.is;
+				i_e = the_zone.ie - 1;
+				break;
+			case(faceYmin):
+			case(faceYmax):
+				// vary j and keep i,k fixed
+				is_var_y = true;
+				j_s = the_zone.js;
+				j_e = the_zone.je - 1;
+				break;
+			case(faceZmin):
+			case(faceZmax):
+				// vary k and keep i,j fixed
+				is_var_z = true;
+				k_s = the_zone.ks;
+				k_e = the_zone.ke - 1;
+				break;
+			default:
+				wxLogError(
+					_T("Wrong face pos in interpolate to point, Zone=%d, facepos=%d"), 
+					znode_mdsurf.iZone, znode_mdsurf.iFacePos);
+	}
+
+	t_GeomPoint p1, p2;
+	t_Vec3Dbl dd, r1, r2;
+	t_BlkInd bt_ind = ind_md;
+	t_BlkInd up_ind = ind_md;
+
+	bool point_inside = false;
+
+	t_Rec rec1, rec2;
+
+	for (int i=i_s; i<=i_e; i++)
+		for (int j=j_s; j<=j_e; j++)
+			for (int k=k_s; k<=k_e; k++){
+
+				bt_ind.set(i,j,k);
+				TDomain::get_rec(the_zone, bt_ind, cur_rec);
+				p1.set(cur_rec);
+
+				up_ind = bt_ind;
+
+				if (is_var_x) {
+					up_ind.i = i+1;
+					TDomain::get_rec(the_zone, up_ind, cur_rec);
+				}
+				if (is_var_y){
+					up_ind.j = j+1;
+					TDomain::get_rec(the_zone, up_ind, cur_rec);
+				}
+				if (is_var_z){
+					up_ind.k = k+1;
+					TDomain::get_rec(the_zone, up_ind, cur_rec);
+
+				}
+
+				p2.set(cur_rec);
+
+				matrix::base::minus<double, double>(p2, p1, dd);
+				matrix::base::minus<double, double>(point, p1, r1);
+				matrix::base::minus<double, double>(point, p2, r2);
+
+				double cprod1, cprod2;
+
+				cprod1 = vector::dot(dd, r1);
+				cprod2 = vector::dot(dd, r2);
+
+				if ((cprod1>=0)&&(cprod2<=0)){
+
+					point_inside = true;
+
+					double d, l1, l2, d1, d2, c;
+					d = dd.norm();
+					l1 = r1.norm();
+					l2 = r2.norm();
+					c = (l2*l2-l1*l1)/d;
+					d1 = 0.5*(d-c);
+					d2 = 0.5*(d+c);
+					double a = 1.0 - d1/d;
+					double b = 1.0 - d2/d;
+#ifdef _DEBUG
+					if (a<0.0 || a>1.0 || b<0. || b>1.)
+						wxLogMessage(_T("Two point mf interpolation failed!\n"));
+#endif
+
+					//const t_Rec& rec1 = get_rec(bt_ind);
+					//const t_Rec& rec2 = get_rec(up_ind);
+					TDomain::get_rec(the_zone, bt_ind, rec1);
+					TDomain::get_rec(the_zone, up_ind, rec2);
+
+#define SET_RET(o) ret.o## = a*rec1.o## + b*rec2.o##;
+					SET_RET(u);SET_RET(v);SET_RET(w);
+					SET_RET(p);SET_RET(t);SET_RET(r);
+#undef SET_RET
+					// break looping
+					goto stop;
+				}
+			}
+
+stop:;
+
+			if (!point_inside){
+				// now check robustness
+				wxLogError(
+					_T("Failed to interpolate to point. Zoneid = %d"), 
+					znode_mdsurf.iZone);
+				// rescue with zero order
+
+				t_GeomPoint p;
+				t_Vec3Dbl dr;
+				t_BlkInd cur_ind = ind_md;
+				double min_dst = 1.0E+20;
+				t_BlkInd min_dst_ind = ind_md;
+				double cur_dst;
+
+				for (int i=i_s; i<=i_e; i++)
+					for (int j=j_s; j<=j_e; j++)
+						for (int k=k_s; k<=k_e; k++){
+							get_rec(the_zone, i, j, k, cur_rec);
+							p.set(cur_rec);
+							matrix::base::minus<double, double>(p, point, dr);
+							cur_dst = dr.norm();
+							if (cur_dst<min_dst){
+								min_dst = cur_dst;
+								min_dst_ind.set(i,j,k);
+							}
+						}
+						TDomain::get_rec(the_zone, min_dst_ind, ret);
+
+			}
+
+			ret.set_xyz(point);
+			return ret;
+};
+
+bool TDomain::_is_point_inside(const t_GeomPoint& xyz) const{
+
+	wxLogError(_T("MF.CGNS-shared: _is_point_inside not yet implemented correctly!"));
+	return (xyz.x()>0.05 && xyz.x()<=1.0);
+
+}
+
+bool TDomain::is_point_inside(const t_GeomPoint& xyz) const{
+
+	return _is_point_inside(xyz);
+
+}
 
 // TODO: current version works for ortho near-surface grids only
 void TDomain::calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const{

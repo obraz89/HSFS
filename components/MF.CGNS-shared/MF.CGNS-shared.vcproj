@@ -106,7 +106,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -233,7 +233,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(CGNS_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"

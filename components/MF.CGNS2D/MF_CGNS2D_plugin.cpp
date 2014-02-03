@@ -40,7 +40,7 @@ TPluginCaps* TPluginCGNS2D::get_caps(){
 	return &_caps;
 };
 
-mf::t_DomainBase* TCapsCGNS2D::create_domain(){return new mf::t_MFCGNS2D();};
+mf::t_DomainBase* hsstab::TCapsCGNS2D::create_domain(){return new mf::t_MFCGNS2D();};
 
 wxString TPluginCGNS2D::get_name() const
 {

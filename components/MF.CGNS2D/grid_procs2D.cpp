@@ -133,7 +133,7 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 		TZone& blk = Zones[iZone -1];
 
 		// Get zone (block) name & size
-		int isize[6]; // NVertexI, NVertexJ, NCellI, NCellJ, NBoundVertexI, NBoundVertexJ
+		cgsize_t isize[6]; // NVertexI, NVertexJ, NCellI, NCellJ, NBoundVertexI, NBoundVertexJ
 		res = cg_zone_read(ctx.fileID,ctx.iBase,iZone,  blk.szName,isize);
 		if( res != CG_OK )
 		{
@@ -184,8 +184,8 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 			ny0 = blk.je - blk.js + 1;
 
 		// Zone index ranges
-		int irmin[2] = {1, 1};
-		int irmax[2] = {nx0, ny0};
+		cgsize_t irmin[2] = {1, 1};
+		cgsize_t irmax[2] = {nx0, ny0};
 
 		double* x = new double[nx0*ny0];
 		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",RealDouble,irmin,irmax, x);
@@ -304,15 +304,9 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 	// Loop through connectivity patches
 	for( int iConn = 1; iConn <= n1to1; ++iConn )
 	{
-		int idxRange[4];   // Imin, Jmin, Imax, Jmax
-		const int
-			&is = idxRange[0],  &js = idxRange[1],
-			&ie = idxRange[2],  &je = idxRange[3];
+		cgsize_t idxRange[4];   // Imin, Jmin, Imax, Jmax
 
-		int idxRangeDonor[4];
-		const int
-			&ids = idxRangeDonor[0],  &jds = idxRangeDonor[1],
-			&ide = idxRangeDonor[2],  &jde = idxRangeDonor[3];
+		cgsize_t idxRangeDonor[4];
 
 		char szName[33], szDonor[33];
 		int iTsh[2]; // short-hand notation of transform matrix
@@ -327,6 +321,14 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 			);
 			return false;
 		}
+
+		const long
+			&is = idxRange[0],  &js = idxRange[1],
+			&ie = idxRange[2],  &je = idxRange[3];
+
+		const long
+			&ids = idxRangeDonor[0],  &jds = idxRangeDonor[1],
+			&ide = idxRangeDonor[2],  &jde = idxRangeDonor[3];
 
 		// Check that whole faces connected
 		bool ok = true;
@@ -615,11 +617,11 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 		BCType_t iBCtype;
 
 		PointSetType_t pntSet;
-		int nPnts = -1; // number of points defining the BC region
+		cgsize_t nPnts = -1; // number of points defining the BC region
 
 		// Normals to the BC patch
 		int iNorm[2]; // normal as index vector (computational coords)
-		int normListSize;  DataType_t normDataType; // normals in phys coords
+		cgsize_t normListSize;  DataType_t normDataType; // normals in phys coords
 
 		int nDatasets = 0; // number of datasets with additional info for the BC
 
@@ -650,11 +652,13 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 
 
 		// Read BC patch point range
-		int idxRange[4];   // Imin, Jmin, Imax, Jmax
-		const int
+		cgsize_t idxRange[4];   // Imin, Jmin, Imax, Jmax
+
+		cg_boco_read(ctx.fileID,ctx.iBase,iZone, iBC, idxRange, NULL);
+
+		const long
 			&is = idxRange[0],  &js = idxRange[1],
 			&ie = idxRange[2],  &je = idxRange[3];
-		cg_boco_read(ctx.fileID,ctx.iBase,iZone, iBC, idxRange, NULL);
 
 		// Check that BC patch cover whole face
 		bool ok = true;
@@ -686,10 +690,3 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 
 
 //-----------------------------------------------------------------------------
-
-bool t_MFCGNS2D::is_point_inside(const t_GeomPoint& xyz) const{
-
-	wxLogError(_T("t_MFCGNS2D: is_point_inside not yet implemented correctly!"));
-	return (xyz.x()>0.05 && xyz.x()<=1.0);
-
-}

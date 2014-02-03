@@ -1,12 +1,8 @@
 #include "stdafx.h"
 
-#include <sstream>
-#include <fstream>
-
 #include "MF_CGNS2D.h"
 #include "MF_CGNS2D_params.h"
 
-#include "wx/string.h"
 #include "common_data.h"
 
 using namespace mf;
@@ -27,7 +23,6 @@ const t_FldParams& t_MFCGNS2D::get_mf_params() const{
 void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
 
 	// TODO: read all these params from cgns db
-	// now reading nx, ny, nz of the first(and the only) block
 
 	g.add("FldBinPath", _(""), _("Path to binary cgns file containing field")); 
 

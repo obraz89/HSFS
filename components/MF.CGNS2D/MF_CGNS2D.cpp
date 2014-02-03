@@ -51,21 +51,20 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 
 	// here come all viscous wall bc identifiers
 	// TODO: do i need to keep this 33 size to compare in _is_face_of_bcwall_type
-	// TODO: make entry in config file for wall BCs. With Regexps. o_O
+	// TODO: make entry in config file for wall BCs. 
+	// maybe with wildcards like blk*-Ymin ? o_O
 
 	char viscBCWallName[33];
 
-	sprintf(viscBCWallName, "blk1-Ymin");
+	sprintf(viscBCWallName, "wall");
 	_vecBCWallNames.push_back(std::string(viscBCWallName));
 
-	sprintf(viscBCWallName, "blk2-Ymin");
-	_vecBCWallNames.push_back(std::string(viscBCWallName));
+	// tmp: hardcoded identifiers blk*-Ymin
+	/*for (int bid=1; bid<=64; bid++){
 
-	sprintf(viscBCWallName, "blk3-Ymin");
-	_vecBCWallNames.push_back(std::string(viscBCWallName));
-
-	sprintf(viscBCWallName, "blk4-Ymin");
-	_vecBCWallNames.push_back(std::string(viscBCWallName));
+		sprintf(viscBCWallName, "blk%d-Ymin", bid);
+		_vecBCWallNames.push_back(std::string(viscBCWallName));
+	}*/
 
 	_init();	// allocate space and read grd and fld
 
@@ -142,155 +141,7 @@ void t_MFCGNS2D::get_rec(const TZone& blk, int i, int j, int k, mf::t_Rec& rec) 
 
 t_Rec t_MFCGNS2D::interpolate_to_point(const t_GeomPoint& point) const{
 
-t_Rec ret, cur_rec;
-
-t_ZoneNode znode_mdsurf = _get_nrst_node_surf(point);
-const t_BlkInd& ind_md = znode_mdsurf.iNode;
-
-		// nearest surface node found, now make interpolation
-		// TODO: good interpolation
-
-		//=======================================================
-
-		int i_s = ind_md.i;
-		int i_e = i_s;
-
-		int j_s = ind_md.j;
-		int j_e = j_s;
-
-		int k_s = ind_md.k;
-		int k_e = k_s;
-
-		const TZone& the_zone = Zones[znode_mdsurf.iZone -1];
-
-		bool is_var_x = false;
-		bool is_var_y = false;
-
-		switch(znode_mdsurf.iFacePos){
-			case(faceXmin):
-			case(faceXmax):
-				// vary i and keep j,k fixed
-				is_var_x = true;
-				i_s = the_zone.is;
-				i_e = the_zone.ie - 1;
-				break;
-			case(faceYmin):
-			case(faceYmax):
-				// vary j and keep i,k fixed
-				is_var_y = true;
-				j_s = the_zone.js;
-				j_e = the_zone.je - 1;
-				break;
-			default:
-				wxLogError(
-					_T("Wrong face pos in interpolate to point, Zone=%d, facepos=%d"), 
-					znode_mdsurf.iZone, znode_mdsurf.iFacePos);
-		}
-
-		t_GeomPoint p1, p2;
-		t_Vec3Dbl dd, r1, r2;
-		t_BlkInd bt_ind = ind_md;
-		t_BlkInd up_ind = ind_md;
-
-		bool point_inside = false;
-
-		t_Rec rec1, rec2;
-
-		for (int i=i_s; i<=i_e; i++)
-			for (int j=j_s; j<=j_e; j++)
-				for (int k=k_s; k<=k_e; k++){
-
-			bt_ind.set(i,j,k);
-			TDomain::get_rec(the_zone, bt_ind, cur_rec);
-			p1.set(cur_rec);
-
-			up_ind = bt_ind;
-			if (is_var_x) {
-				up_ind.i = i+1;
-				TDomain::get_rec(the_zone, up_ind, cur_rec);
-			}
-			if (is_var_y){
-				up_ind.j = j+1;
-				TDomain::get_rec(the_zone, up_ind, cur_rec);
-			}
-			p2.set(cur_rec);
-
-			matrix::base::minus<double, double>(p2, p1, dd);
-			matrix::base::minus<double, double>(point, p1, r1);
-			matrix::base::minus<double, double>(point, p2, r2);
-
-			double cprod1, cprod2;
-
-			cprod1 = vector::dot(dd, r1);
-			cprod2 = vector::dot(dd, r2);
-
-			if ((cprod1>=0)&&(cprod2<=0)){
-
-				point_inside = true;
-
-				double d, l1, l2, d1, d2, c;
-				d = dd.norm();
-				l1 = r1.norm();
-				l2 = r2.norm();
-				c = (l2*l2-l1*l1)/d;
-				d1 = 0.5*(d-c);
-				d2 = 0.5*(d+c);
-				double a = 1.0 - d1/d;
-				double b = 1.0 - d2/d;
-#ifdef _DEBUG
-				if (a<0.0 || a>1.0 || b<0. || b>1.)
-					wxLogMessage(_T("Two point mf interpolation failed!\n"));
-#endif
-
-				//const t_Rec& rec1 = get_rec(bt_ind);
-				//const t_Rec& rec2 = get_rec(up_ind);
-				TDomain::get_rec(the_zone, bt_ind, rec1);
-				TDomain::get_rec(the_zone, up_ind, rec2);
-
-#define SET_RET(o) ret.o## = a*rec1.o## + b*rec2.o##;
-				SET_RET(u);SET_RET(v);SET_RET(w);
-				SET_RET(p);SET_RET(t);SET_RET(r);
-#undef SET_RET
-				// break looping
-				goto stop;
-			}
-		}
-
-		stop:;
-
-		if (!point_inside){
-			// now check robustness
-			wxLogError(
-				_T("Failed to interpolate to point. Zoneid = %d"), 
-				znode_mdsurf.iZone);
-			// rescue with zero order
-			
-			t_GeomPoint p;
-			t_Vec3Dbl dr;
-			t_BlkInd cur_ind = ind_md;
-			double min_dst = 1.0E+20;
-			t_BlkInd min_dst_ind = ind_md;
-			double cur_dst;
-
-			for (int i=i_s; i<=i_e; i++)
-				for (int j=j_s; j<=j_e; j++)
-					for (int k=k_s; k<=k_e; k++){
-						get_rec(the_zone, i, j, k, cur_rec);
-						p.set(cur_rec);
-						matrix::base::minus<double, double>(p, point, dr);
-						cur_dst = dr.norm();
-						if (cur_dst<min_dst){
-							min_dst = cur_dst;
-							min_dst_ind.set(i,j,k);
-						}
-					}
-			TDomain::get_rec(the_zone, min_dst_ind, ret);
-			
-		}
-
-		ret.set_xyz(point);
-		return ret;
-
+	return TDomain::_interpolate_to_point_surf_raw(point);
 
 	}  // ~interpolate_to_point
 

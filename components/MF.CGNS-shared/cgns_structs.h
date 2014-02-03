@@ -440,7 +440,12 @@ namespace mf{
 
 			virtual t_ZoneNode _get_nrst_node_raw(const t_GeomPoint& xyz) const;
 
+			virtual mf::t_Rec _interpolate_to_point_surf_raw(const t_GeomPoint& point) const;
+
 			bool _is_face_of_bcwall_type(const char* facename) const;
+
+			bool is_point_inside(const t_GeomPoint& xyz) const;
+			bool _is_point_inside(const t_GeomPoint& xyz) const;
 
 			// TDomainBase interface realization
 
@@ -458,6 +463,9 @@ namespace mf{
 
 			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
 				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			void extract_profile_data(const t_GeomPoint& xyz, 
+				const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const;
 
 			// tmp, while i don't have good interpolators
 			int estim_num_bl_nodes(t_GeomPoint) const;

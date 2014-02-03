@@ -47,10 +47,6 @@ namespace mf{
 		void get_rec(const mf::cg::TZone& blk, int i, int j, int k, mf::t_Rec& rec) const;
 		t_Rec get_rec(const t_GeomPoint& xyz) const;
 
-		// are we still inside domain?
-		// TODO; move to CHNS-shared when implemented
-		bool is_point_inside(const t_GeomPoint& xyz) const;
-
 		// from cg::TDomain
 		bool loadGrid(const wxString& gridFN );
 

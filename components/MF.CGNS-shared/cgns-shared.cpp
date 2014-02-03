@@ -245,7 +245,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 
 	// Get zone size and name
 	char szZone[33];
-	int isize[9];  // NVertexI, NVertexJ, NVertexK,
+	cgsize_t isize[9];  // NVertexI, NVertexJ, NVertexK,
 	               // NCellI, NCellJ, NCellK,
 	               // NBoundVertexI, NBoundVertexJ, NBoundVertexK
 	if( cg_zone_read(fileID,iBase,iZone,  szZone,isize) != CG_OK )
@@ -260,8 +260,8 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 	unsigned int &nz = dims.numZ;  nz = (nDim==2) ? 1 : isize[2];
 
 	// Indexes ranges
-	int irmin[3] = {1, 1, 1};
-	int irmax[3] = {nx, ny, nz};
+	cgsize_t irmin[3] = {1, 1, 1};
+	cgsize_t irmax[3] = {nx, ny, nz};
 
 	//
 	// Read grid coordinates
@@ -398,4 +398,75 @@ void TDomain::get_rec(const TZone& zone, const t_BlkInd& ind, mf::t_Rec& rec) co
 void TDomain::get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const{
 	const TZone& blk = Zones[znode.iZone-1];
 	get_rec(blk, znode.iNode.i, znode.iNode.j, znode.iNode.k, rec);
+}
+//IMPORTANT TODO: check and verify {written at midnight!!!} 
+void TDomain::extract_profile_data(const mf::t_GeomPoint& xyz, 
+	const mf::t_ProfDataCfg& prdata_cfg, std::vector<mf::t_Rec>& data) const{
+
+		double bl_thick;
+		t_ZoneNode surf_znode, outer_znode;
+
+		_calc_bl_thick(xyz, bl_thick, surf_znode, outer_znode);
+
+		double total_thick = bl_thick * prdata_cfg.ThickCoef;
+
+		int total_nodes = 0;
+//////
+
+		double eta = 0.0;
+		t_GeomPoint cur_xyz, surf_xyz;
+		t_Vec3Dbl rvec;
+
+		t_ZoneNode cur_znode = surf_znode;
+		mf::t_Rec cur_rec;
+		get_rec(surf_znode, cur_rec);
+		surf_xyz.set(cur_rec);
+
+		int*pd = NULL;
+		int dd = 0;
+		switch (surf_znode.iFacePos)
+		{
+			case (faceXmin):
+				pd = &(cur_znode.iNode.i);
+				dd = 1;
+				break;
+			case (faceXmax):
+				pd = &(cur_znode.iNode.i);
+				dd = -1;
+				break;
+			case (faceYmin):
+				pd = &(cur_znode.iNode.j);
+				dd = 1;
+				break;
+			case (faceYmax):
+				pd = &(cur_znode.iNode.j);
+				dd = -1;
+				break;
+			case (faceZmin):
+				pd = &(cur_znode.iNode.k);
+				dd = 1;
+				break;
+			case (faceZmax):
+				pd = &(cur_znode.iNode.k);
+				dd = -1;
+				break;
+
+		}
+		do 
+		{
+			get_rec(cur_znode, cur_rec);
+			cur_xyz.set(cur_rec);
+			matrix::base::minus<double, double>(cur_xyz, surf_xyz, rvec);
+			eta = rvec.norm();
+			*pd+=dd;total_nodes++;
+
+		} while (eta<total_thick);
+
+		data.resize(total_nodes);
+
+		for (int d=0; d<total_nodes; d++){
+			cur_znode = surf_znode;
+			*pd+=d*dd;
+			get_rec(cur_znode, data[d]);
+		}
 }
