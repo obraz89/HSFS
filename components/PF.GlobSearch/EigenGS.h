@@ -76,7 +76,9 @@ namespace pf{
 
 		int getSpectrum(const double a_alpha, const double a_beta);
 
-		void writeSpectrum(const std::wstring& a_filename);
+		void writeSpectrum(const std::wstring& a_filename) const;
+
+		void writeSpectrumPhase(const std::wstring& a_filename) const;
 
 		// select unstable discrete modes
 		std::vector<t_WCharsLoc> getDiscreteModes(

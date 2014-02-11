@@ -119,7 +119,9 @@ namespace stab{
 
 		virtual int getSpectrum(const double a_alpha, const double a_beta)=0;
 
-		virtual void writeSpectrum(const std::wstring& a_filename)=0;
+		virtual void writeSpectrum(const std::wstring& a_filename) const=0;
+
+		virtual void writeSpectrumPhase(const std::wstring& a_filename) const=0;
 
 		// select unstable discrete modes
 		virtual std::vector<t_WCharsLoc> getDiscreteModes(

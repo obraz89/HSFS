@@ -37,6 +37,7 @@ void t_EigenGS::_init(){
 	SlepcInitialize((int*)0,(char***)0,(char*)0,"EigenGS slepc context");
 
 };
+
 /*
 void t_EigenGS::setContext(const mf::t_BlkInd a_ind, 
 					  const double a_alpha, const double a_beta,
@@ -578,10 +579,25 @@ int t_EigenGS::getSpectrum(const double a_alpha, const double a_beta){
 
 };
 
-void t_EigenGS::writeSpectrum(const std::wstring &a_filename){
+void t_EigenGS::writeSpectrum(const std::wstring &a_filename) const{
 	std::wofstream to_f(&a_filename[0]);
 	for (int i=0; i<_spectrum.size(); i++){
 		to_f<<_spectrum[i].real()<<_T("\t")<<_spectrum[i].imag()<<std::endl;
+	};
+}
+
+void t_EigenGS::writeSpectrumPhase(const std::wstring &a_filename) const{
+
+	double k = sqrt(_alpha*_alpha + _beta*_beta);
+	t_Complex ca, ck;
+	std::wofstream to_f(&a_filename[0]);
+	for (int i=0; i<_spectrum.size(); i++){
+		
+		ca = _spectrum[i]/_alpha;
+		ck = _spectrum[i]/k;
+		
+		to_f<<ca.real()<<_T("\t")<<ca.imag()<<_T("\t")
+			<<ck.real()<<_T("\t")<<ck.imag()<<_T("\t")<<std::endl;
 	};
 }
 
