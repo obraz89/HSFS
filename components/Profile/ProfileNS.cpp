@@ -20,6 +20,8 @@ void t_ProfileNS::initialize(const mf::t_GeomPoint& xyz,
 		wxString msg(_T("ProfileNS: Initialization type not supported"));
 		wxLogError(msg); ssuGENTHROW(msg);
 	}
+
+	_store_bl_thick_data();
 }
 
 void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const t_ProfDataCfg& init_cfg){
@@ -88,10 +90,6 @@ void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const t_ProfDa
 		_mu[j]=_rDomain.calc_viscosity(_t[j]);
 	}
 
-	// VERY IMPORTANT TODO: how to choose _xScale
-	// [ to keep "wavechars const" behavior in non-dim like for selfsim case]
-	_xScale = _rDomain.calc_x_scale(_xyz);
-
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
 
@@ -150,10 +148,6 @@ void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 		_mu[j]=_rDomain.calc_viscosity(_t[j]);
 	}
 
-	// VERY IMPORTANT TODO: how to choose _xScale
-	// [ to keep "wavechars const" behavior in non-dim like for selfsim case]
-	_xScale = _rDomain.calc_x_scale(_xyz);
-
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
 
@@ -164,10 +158,17 @@ void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 	SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
 }
 
+void t_ProfileNS::_store_bl_thick_data(){
+
+	_bl_thick_scale = _rDomain.calc_bl_thick(_xyz);
+	// TODO: do i need this?
+	//_bl_bound_ind = 0;
+	
+};
+
+inline double t_ProfileNS::get_bl_thick_scale() const{return _bl_thick_scale;}
 
 const mf::t_DomainBase& t_ProfileNS::getMFDomain() const{return _rDomain;};
-
-double t_ProfileNS::get_x_Scale() const{return _xScale;};
 
 int t_ProfileNS::get_bound_ind() const{return get_nnodes()-1;};
 

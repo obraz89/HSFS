@@ -32,25 +32,30 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0*/){
 
 	double mu_e = ns_outer_rec.mu;
 
-	double x = a_rProfNS.get_x_Scale();
-
 	double u_e = ns_outer_rec.u;
 
 	double rho_e = ns_outer_rec.r;
 
 	double t_e = ns_outer_rec.t;
 
-	double y_scale = sqrt(mu_e*x/(u_e*rho_e));
-
 	const mf::t_DomainBase& rMF = a_rProfNS.getMFDomain();
 
 	const t_FldParams& Params = rMF.get_mf_params();
 
-	_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x/mu_e);
+	double bl_thick_scale = a_rProfNS.get_bl_thick_scale();
+
+	// old selfsim scale, TODO: keep as option to nondim ?
+	//double y_scale = sqrt(mu_e*x/(u_e*rho_e));
+	double y_scale = bl_thick_scale*sqrt(Params.Re);
+
+	_scales.ReStab = rho_e*u_e*bl_thick_scale/mu_e*Params.Re;
+	//_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x/mu_e);
 
 	_scales.Me = Params.Mach*u_e/sqrt(t_e);
 
-	_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+	//_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+
+	_scales.Dels = Params.L_ref*bl_thick_scale;
 
 	_scales.UeDim = rMF.calc_c_dim(a_rProfNS.get_bound_rec().t)*_scales.Me;
 
