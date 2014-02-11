@@ -46,7 +46,8 @@ namespace pf{
 		std::vector<t_WPLineRec> _line_up;	// upstream part
 		std::vector<t_WPLineRec> _line_down;	// downstream part
 
-		t_WaveChars _interpolate_wave_chars();
+		t_WaveChars _interpolate_next_wchars(const std::vector<t_WPLineRec>& wpline, 
+			const mf::t_GeomPoint& new_xyz) const;
 
 		void _add_node(std::vector<t_WPLineRec>& add_to, const mf::t_Rec& fld_rec, 
 			const t_WCharsGlob& wave_chars);

@@ -24,6 +24,56 @@ t_WavePackLine::t_WPLineRec::t_WPLineRec(
 	const mf::t_Rec& rMF, const t_WCharsGlob& rWC):
 		mean_flow(rMF), wave_chars(rWC){};
 
+
+t_WaveChars t_WavePackLine::_interpolate_next_wchars(const std::vector<t_WPLineRec>& wpline, 
+								const mf::t_GeomPoint& new_xyz) const{
+
+	t_Vec3Dbl ds;
+	t_GeomPoint l_xyz, r_xyz;
+
+	const int N = wpline.size();
+	if (N<3){
+		return wpline.back().wave_chars;
+	}else{
+		const t_WPLineRec& p1 = wpline[N-3];
+		const t_WPLineRec& p2 = wpline[N-2];
+		const t_WPLineRec& p3 = wpline[N-1];
+		double x1 = 0.;
+
+		l_xyz.set(p1.mean_flow);
+
+		r_xyz.set(p2.mean_flow);
+		matrix::base::minus<double, double>(r_xyz, l_xyz, ds);
+		double x2 = ds.norm();
+
+		r_xyz.set(p3.mean_flow);
+		matrix::base::minus<double, double>(r_xyz, l_xyz, ds);
+		double x3 = ds.norm();
+
+		matrix::base::minus<double, double>(new_xyz, l_xyz, ds);
+		double X = ds.norm();
+
+		t_WaveChars ret;
+
+		ret.a = smat::interpolate_parab(
+			                            x1, p1.wave_chars.a, 
+			                            x2, p2.wave_chars.a, 
+										x3, p3.wave_chars.a, X);
+
+		ret.b = smat::interpolate_parab(
+			                            x1, p1.wave_chars.b, 
+										x2, p2.wave_chars.b, 
+										x3, p3.wave_chars.b, X);
+
+		ret.w = smat::interpolate_parab(x1, p1.wave_chars.w, 
+										x2, p2.wave_chars.w, 
+										x3, p3.wave_chars.w, X);
+
+		return ret;
+	}
+
+}
+
 void t_WavePackLine::_add_node(
 		std::vector<t_WPLineRec>& add_to, const mf::t_Rec& fld_rec, 
 		const t_WCharsGlob& wave_chars){
@@ -85,7 +135,7 @@ t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
 		mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
 		
-		t_WCharsLoc new_wave_chars(last_wchars_loc);
+		t_WCharsLoc new_wave_chars = last_wchars_loc;//_interpolate_next_wchars(*pLine, new_gpoint);
 
 		loc_solver.setContext(new_gpoint);
 
