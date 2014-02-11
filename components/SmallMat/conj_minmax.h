@@ -18,7 +18,7 @@
 
 //#include "math_impexp.h"
 
-#include "math_operands.h"
+#include "small_mat.h"
 
 namespace smat{
 

@@ -356,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fun_interpolate.h"
+				>
+			</File>
+			<File
 				RelativePath=".\fun_zero_1D.h"
 				>
 			</File>

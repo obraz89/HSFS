@@ -51,3 +51,11 @@ template IMPEXP_SMALLMAT void matrix::base::mat_mul<t_Complex, t_Complex>
 template IMPEXP_SMALLMAT void matrix::base::mat_mul<double, double>
 (const t_Matrix<double>& l, const t_Matrix<double>& r,
  t_Matrix<matrix::TypeDeduce<double,double>::type >& ret);
+
+// interpolation functions
+
+template IMPEXP_SMALLMAT double smat::interpolate_parab<double>
+(double x1, double f1, double x2, double f2, double x3, double f3, double x);
+
+template IMPEXP_SMALLMAT t_Complex smat::interpolate_parab<t_Complex>
+(double x1, t_Complex f1, double x2, t_Complex f2, double x3, t_Complex f3, double x);

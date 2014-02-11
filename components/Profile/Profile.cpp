@@ -147,10 +147,10 @@ double t_Profile::_interpolate(const double& a_y, const t_DblVec& arg, const t_D
 	const double& arg_lft = arg[lft_ind];
 	const double& arg_mid = arg[mid_ind];
 	const double& arg_rgt = arg[rgt_ind];
-	double res = fun[lft_ind]*(a_y-arg_mid)*(a_y-arg_rgt)/((arg_lft-arg_mid)*(arg_lft-arg_rgt))+
-				 fun[mid_ind]*(a_y-arg_lft)*(a_y-arg_rgt)/((arg_mid-arg_lft)*(arg_mid-arg_rgt))+
-				 fun[rgt_ind]*(a_y-arg_lft)*(a_y-arg_mid)/((arg_rgt-arg_lft)*(arg_rgt-arg_mid));
-    return res;
+
+	return smat::interpolate_parab(arg_lft, fun[lft_ind],
+		                           arg_mid, fun[mid_ind],
+								   arg_rgt, fun[rgt_ind], a_y);
 };
 
 int t_Profile::_getNearestInd(const double &a_y, const t_DblVec& a_vec) const{
