@@ -175,6 +175,7 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	if (_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
 	
 		_stab_matrix.setToHermConj();
+		_stab_matrix.mul_by_factor(-1.0);
 
 	}
 }
