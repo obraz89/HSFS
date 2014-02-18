@@ -24,6 +24,10 @@
 ** u, u', v, p, t, r, w, w'
 */
 /************************************************************************/
+
+static const int STAB_MATRIX_DIM = 8;
+static const int NSOL_VECS_ODES = 4;
+
 namespace pf{
 
 class  t_StabSolver: public stab::t_LSBase{
@@ -34,11 +38,14 @@ class  t_StabSolver: public stab::t_LSBase{
 		t_StabSolver* _pStab_solver;
 		t_StabODES(); 
 		~t_StabODES();	
-		t_VecCmplx formRHS3D(const double& a_y, const t_VecCmplx& a_var) const;
+
+		void formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& rhs);
+
 		t_VecCmplx calcWallCoefs();
+
 		virtual t_Complex getResidual3D();
-		// TODO:fix param passing by val???
-		void setInitials(t_MatCmplx a_init_vectors);
+
+		void setInitials(const t_MatCmplx& a_init_vectors);
 		bool needOrtho(const t_MatCmplx& a_cur_sol);
 		void solve();
 	};
@@ -60,10 +67,10 @@ class  t_StabSolver: public stab::t_LSBase{
 	void _setStabMatrix3D(const double& a_y);
 	void _setStabMatrix3D(const t_ProfRec& rec);
 
-	t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
+	//t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
 	// rhs function by stab matrix
 	// input for ODES
-	t_VecCmplx _formRHS3D(const double& a_y, const t_VecCmplx& a_var);
+	void _formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& dest);
 	// forms initial vectors for integration from outside down to wall
 	// 2D
 	enum t_ASYM_MODE {ASYM_DIRECT=0, ASYM_FORCE_SELF_SIM};

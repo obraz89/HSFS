@@ -9,6 +9,7 @@ namespace smat{
 
 // instantiate all needed functions here and export them
 // [-]
+// TODO: inlines !!!
 template IMPEXP_SMALLMAT void matrix::base::minus<t_Complex, t_Complex>
 (const t_Matrix<t_Complex>& l, const t_Matrix<t_Complex>& r,
  t_Matrix<TypeDeduce<t_Complex,t_Complex>::type >& ret);

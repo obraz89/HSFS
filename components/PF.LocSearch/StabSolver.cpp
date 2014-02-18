@@ -4,8 +4,6 @@
 #include "common_data.h"
 #include "log.h"
 
-static const int STAB_MATRIX_DIM = 8;
-
 using namespace hsstab;
 using namespace hsstab::cmpnts;
 
@@ -368,9 +366,9 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 	return;
 };*/
 
-t_VecCmplx t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars){
+void t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars, t_VecCmplx& dest){
 	_setStabMatrix3D(a_y);
-	return _stab_matrix*a_vars; 
+	matrix::base::mat_mul<t_Complex, t_Complex>(_stab_matrix, a_vars, dest);
 };
 
 

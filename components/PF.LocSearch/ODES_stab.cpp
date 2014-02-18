@@ -5,10 +5,12 @@
 using namespace pf;
 
 t_StabSolver::t_StabODES::t_StabODES():
-t_ODES(), _pStab_solver(){};
+t_ODES(NSOL_VECS_ODES, STAB_MATRIX_DIM), _pStab_solver(){};
 
-t_VecCmplx t_StabSolver::t_StabODES::formRHS3D(const double& a_y, const t_VecCmplx &a_var) const{
-	return _pStab_solver->_formRHS3D(a_y, a_var);
+inline void t_StabSolver::t_StabODES::formRHS3D(const double& a_y, 
+			const t_VecCmplx &a_var, t_VecCmplx& dest){
+
+	 _pStab_solver->_formRHS3D(a_y, a_var, dest);
 };
 
 bool t_StabSolver::t_StabODES::needOrtho(const t_MatCmplx& a_cur_sol){
@@ -30,7 +32,7 @@ bool t_StabSolver::t_StabODES::needOrtho(const t_MatCmplx& a_cur_sol){
 	return max_norm>1000.0;
 };
 
-void t_StabSolver::t_StabODES::setInitials(t_MatCmplx a_init_vectors){
+void t_StabSolver::t_StabODES::setInitials(const t_MatCmplx& a_init_vectors){
 	solution[0] = a_init_vectors;
 }
 
@@ -40,7 +42,8 @@ void t_StabSolver::t_StabODES::solve(){
 };
 
 t_VecCmplx t_StabSolver::t_StabODES::calcWallCoefs(){
-		const t_MatCmplx& wall_func = solution.back();
+		//const t_MatCmplx& wall_func = solution.back();
+	const t_MatCmplx& wall_func = solution[_nnodes-1];
 /*
 // direct method: calculate the determinant
 // of wall funcs
@@ -74,7 +77,7 @@ t_VecCmplx t_StabSolver::t_StabODES::calcWallCoefs(){
 
 t_Complex t_StabSolver::t_StabODES::getResidual3D(){
 
-	const t_MatCmplx& wall_func = solution.back();
+	const t_MatCmplx& wall_func = solution[_nnodes-1];
 	t_VecCmplx resid_coefs = calcWallCoefs();
 
 	t_Complex resid(0.0);
