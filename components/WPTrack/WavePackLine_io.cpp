@@ -3,13 +3,7 @@
 #include "WavePackLine.h"
 
 using namespace pf;
-
-std::wostream& operator<<(std::wostream& str, t_WavePackLine::t_WPLineRec rec){
-
-	str<<_T("hi! Implement me, please\n");
-	return str;
-
-};
+using namespace stab;
 
 std::wostream& pf::operator<<(std::wostream& str, const t_WavePackLine& line){
 	return line._print_line(str);
@@ -42,16 +36,9 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tc[]\tNju[Hz]\n");
 
 	std::vector<t_WPLineRec>::const_iterator it;
-	double n_factor=0.0;
-	double s_prev=0.0, s=0.0;
 
 	for (it=_line.begin(); it<_line.end(); it++){
 		const t_WPLineRec& rec = *it;
-		s_prev = s;
-		// IMPORTANT TODO: fix this for 3D configurations
-		// calc_distance_along_surf !!!
-		s = Params.L_ref*
-			_rFldMF.calc_x_scale(rec.mean_flow.get_xyz());
 
 		t_WCharsGlob spat_wave = rec.wave_chars;
 
@@ -65,18 +52,47 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 		double c = dim_wave.w.real()/
 			sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.b.real(),2));
 
-		// TODO: second order integration
-		// TODO: tmp fix, make good integration
-		if (it==_line.begin()) sigma=0.0;
-		n_factor+=sigma*(s - s_prev);
-
-		fstr<<s<<_T("\t")<<Params.L_ref*rec.mean_flow.x
+		// TODO: Do not mul by L-Ref for cyl or cone rfs!!!
+		fstr<<_T("\t")<<Params.L_ref*rec.mean_flow.x
 			<<_T("\t")<<Params.L_ref*rec.mean_flow.y
 			<<_T("\t")<<Params.L_ref*rec.mean_flow.z
-			<<_T("\t")<<sigma<<_T("\t")<<n_factor
+			<<_T("\t")<<sigma<<_T("\t")<<rec.n_factor
 			<<_T("\t")<<c
 			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)<<_T("\n");	
 	};
 
 	fstr<<_T("\n\n\n\n");
 };
+
+void t_WavePackLine::to_cyl_ref_frame(){
+	wxLogError(_T("Transition to cyl rf not implemented yet"));
+}
+
+void t_WavePackLine::to_cone_ref_frame(double half_angle){
+	
+	std::vector<t_WPLineRec>::iterator it;
+
+	t_Vec3Dbl cur_vec;
+	t_Vec3Cmplx cur_k_vec;
+	for (it=_line.begin(); it<_line.end(); it++){
+
+		mf::t_Rec& rec = it->mean_flow;
+		t_WCharsGlob& wchars = it->wave_chars;
+
+		cur_vec.set(rec.x, rec.y, rec.z);
+		smat::vec_cart_to_cone(cur_vec, half_angle);
+		rec.set_xyz(cur_vec);
+
+		cur_vec.set(rec.u, rec.v, rec.w);
+		smat::vec_cart_to_cone(cur_vec, half_angle);
+		rec.set_uvw(cur_vec);
+
+		cur_k_vec.set(wchars.a, wchars.kn, wchars.b);
+		smat::vec_cart_to_cone(cur_k_vec, half_angle);
+		wchars.a = cur_k_vec[0];
+		wchars.kn= cur_k_vec[1];
+		wchars.b = cur_k_vec[2];
+
+	}
+
+}

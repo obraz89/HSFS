@@ -6,6 +6,7 @@
 
 using namespace mf;
 using namespace pf;
+using namespace stab;
 
 t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):
 _rFldMF(a_fld), _line(){};
@@ -19,11 +20,6 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 }
 
 t_WavePackLine::~t_WavePackLine(){};
-
-t_WavePackLine::t_WPLineRec::t_WPLineRec(
-	const mf::t_Rec& rMF, const t_WCharsGlob& rWC):
-		mean_flow(rMF), wave_chars(rWC){};
-
 
 t_WaveChars t_WavePackLine::_interpolate_next_wchars(const std::vector<t_WPLineRec>& wpline, 
 								const mf::t_GeomPoint& new_xyz) const{
@@ -202,7 +198,51 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 	for (it=_line_down.begin(); it<_line_down.end(); it++){
 		_line.push_back(*it);
 	};
+
+	calc_n_factor();
 };
+
+
+void t_WavePackLine::calc_n_factor(){
+
+	std::vector<double> s(_line.size(), 0.0);
+	std::vector<double> sigma(_line.size(), 0.0);
+	std::vector<double> nfact(_line.size(), 0.0);
+
+	// TODO: later integrate from neutral point
+	// for now it is always first point
+	s[0] = 0.0;
+	t_Vec3Dbl cur_dr;
+
+
+
+	for (int i=1; i<_line.size(); i++){
+
+		const mf::t_FldParams& MFParams = _rFldMF.get_mf_params();
+
+		const double LRef = MFParams.L_ref;
+		cur_dr = LRef*(_line[i].mean_flow.get_xyz() - _line[i-1].mean_flow.get_xyz());
+		s[i] = s[i-1] + cur_dr.norm();
+
+		//IMPORTANT TODO: correct expressions
+
+		const t_WPLineRec& rec = _line[i];
+
+		t_WCharsGlob spat_wave = rec.wave_chars;
+
+		spat_wave.to_spat();
+
+		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
+		sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
+
+	}
+
+	smat::integrate_over_range(s, sigma, nfact);
+
+	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = nfact[i];
+
+
+}
 
 bool t_WavePackLine::_is_unstable() const{
 	// tolerances ??
@@ -230,4 +270,19 @@ bool t_WavePackLine::_proceed_retrace(mf::t_GeomPoint cur_xyz, t_WCharsLoc wave)
 	//	&&(cur_ind.i<_rFldMF.get_Nx()-10)
 	//	&&(wave.w.imag()>0.0));
 	return (wave.w.imag()>0.0) && _rFldMF.is_point_inside(cur_xyz);
+};
+
+int t_WavePackLine::get_size() const{
+	return _line.size();
+}
+
+const t_WPLineRec& t_WavePackLine::get_rec(int ind) const{
+
+	if (ind<0 || ind>_line.size()-1){
+		wxLogError(_T("WPLine Error: index out of range"));
+		return _line[0];
+	};
+
+	return _line[ind];
+
 };
