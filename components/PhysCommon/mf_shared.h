@@ -18,7 +18,8 @@ struct IMPEXP_PHYSCOMMON t_Rec{
 
 	double x,y,z,u,v,w,p,t,r;
 
-	void set_xyz(t_GeomPoint point);
+	void set_xyz(const t_GeomPoint& point);
+	void set_uvw(const t_Vec3Dbl& vec);
 
 	t_GeomPoint get_xyz() const;
 	t_Vec3Dbl get_uvw() const;

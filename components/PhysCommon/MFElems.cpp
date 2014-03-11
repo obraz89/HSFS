@@ -5,11 +5,17 @@ using namespace mf;
 
 //-------------------------------------------------------------------------t_Rec
 
-void t_Rec::set_xyz(t_GeomPoint point){
+void t_Rec::set_xyz(const t_GeomPoint& point){
 	x = point.x();
 	y = point.y();
 	z = point.z();
 };
+
+void t_Rec::set_uvw(const t_Vec3Dbl& vec){
+	u = vec[0];
+	v = vec[1];
+	w = vec[2];
+}
 
 t_GeomPoint t_Rec::get_xyz() const{return t_GeomPoint(x,y,z);};
 t_Vec3Dbl t_Rec::get_uvw() const{return t_Vec3Dbl(u,v,w);};
