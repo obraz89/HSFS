@@ -644,6 +644,20 @@ t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator-
 	return ret;
 }
 
+// useful geometry transformations of vectors
+
+// get cartesian vector coords in cylindrical ref frame (x, phi, r)
+namespace smat{
+
+	IMPEXP_SMALLMAT void vec_cart_to_cyl(t_Vec3<double>& vec);
+	IMPEXP_SMALLMAT void vec_cart_to_cyl(t_Vec3<t_Complex>& vec);
+
+	// get cartesian vector coords in conical ref frame  (l, phi, h)
+	IMPEXP_SMALLMAT void vec_cart_to_cone(t_Vec3<double>& vec, double semi_cone_angle);
+	IMPEXP_SMALLMAT void vec_cart_to_cone(t_Vec3<t_Complex>& vec, double semi_cone_angle);
+
+}
+
 
 
 /************************************************************************/

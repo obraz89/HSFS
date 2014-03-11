@@ -334,6 +334,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\fun_integrate.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\fun_zero_1D.cpp"
 				>
 			</File>
@@ -353,6 +357,10 @@
 			</File>
 			<File
 				RelativePath=".\dll_impexp_smat.h"
+				>
+			</File>
+			<File
+				RelativePath=".\fun_integrate.h"
 				>
 			</File>
 			<File

@@ -23,4 +23,7 @@
 // interpolation of functions
 #include "fun_interpolate.h"
 
+// integration of functions
+#include "fun_integrate.h"
+
 #endif // __SMALL_MAT_OPERANDS
