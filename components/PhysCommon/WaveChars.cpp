@@ -99,7 +99,7 @@ t_WaveChars& t_WaveChars::to_time(){
 	return *this;
 }
 
-t_WaveChars& t_WaveChars::_set_vals(
+t_WaveChars& t_WaveChars::set_vals(
 				const t_Vec3Cmplx& k, const t_Vec3Cmplx& vg, 
 				t_CompVal a_w, const t_StabScales& stab_scales){
 
@@ -134,6 +134,23 @@ void t_WaveChars::_to_dim(t_WaveChars& dim) const{
 	dim.vgb = vgb*_scales.UeDim;
 
 };
+
+void t_WaveChars::_to_ndim(t_WaveChars& ndim) const{
+
+	ndim.set_scales(_scales);
+
+	// calculate non-dimensional values
+	ndim.a = a*_scales.Dels;
+	ndim.kn= kn*_scales.Dels;
+	ndim.b = b*_scales.Dels;
+
+	ndim.w = w/_scales.UeDim*_scales.Dels;
+
+	ndim.vga = vga/_scales.UeDim;
+	ndim.vgn = vgn/_scales.UeDim;
+	ndim.vgb = vgb/_scales.UeDim;
+
+}
 
 // ---------------------------------------------------------------- ~t_WaveChars
 
@@ -207,20 +224,26 @@ t_WCharsLocDim::t_WCharsLocDim(const t_WCharsLoc& wloc){wloc._to_dim(*this);};
 
 // ---------------------------------------------------------------- t_WCharsGlob
 
+t_WCharsGlob::t_WCharsGlob(){};
+
 t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars, 
 						   const t_SqMat3Dbl& a_jac,
 						   const t_StabScales& a_stab_scales){
 
 	t_Vec3Cmplx k_ked, vg_ked, k_glob, vg_glob;
 
-	k_ked = waveChars.a, 0, waveChars.b;
+	k_ked[0] = waveChars.a; 
+	k_ked[1] = 0.;
+	k_ked[2] = waveChars.b;
 
-	vg_ked = waveChars.vga, 0, waveChars.vgb;
+	vg_ked[0] = waveChars.vga; 
+	vg_ked[1] = 0.;
+	vg_ked[2] = waveChars.vgb;
 
 	k_glob = a_jac*k_ked;
 	vg_glob = a_jac*vg_ked;
 
-	_set_vals(k_glob, vg_glob, waveChars.w, a_stab_scales);
+	set_vals(k_glob, vg_glob, waveChars.w, a_stab_scales);
 };
 
 t_WCharsGlobDim t_WCharsGlob::to_dim() const{
@@ -228,6 +251,40 @@ t_WCharsGlobDim t_WCharsGlob::to_dim() const{
 	_to_dim(ret);
 	return ret;
 };
+
+// ------------------------------------------------------------- t_WCharsGlobDim
+
+t_WCharsGlob t_WCharsGlobDim::to_nondim() const{
+	t_WCharsGlob ret;
+	_to_ndim(ret);
+	return ret;
+}
+
+t_WCharsLoc t_WCharsGlobDim::to_loc(const t_SqMat3Dbl &jac, const t_StabScales &a_stab_scales) const{
+
+	t_WCharsGlob wglob_ndim = to_nondim();
+
+	t_Vec3Cmplx k_ked, vg_ked, k_glob, vg_glob;
+
+	t_SqMat3Dbl inv_jac = jac.inverse();
+
+	k_glob[0] = wglob_ndim.a; 
+	k_glob[1] = wglob_ndim.kn;
+	k_glob[2] = wglob_ndim.b;
+
+	vg_glob[0] = wglob_ndim.vga; 
+	vg_glob[1] = wglob_ndim.vgn; 
+	vg_glob[2] = wglob_ndim.vgb;
+
+	k_ked = inv_jac*k_glob;
+	vg_ked = inv_jac*k_glob;
+
+	t_WCharsLoc ret;
+
+	ret.set_vals(k_ked, vg_ked, wglob_ndim.w, a_stab_scales);
+	return ret;
+
+}
 
 // IO
 std::wostream& operator<<(std::wostream& str, t_WaveChars ww){

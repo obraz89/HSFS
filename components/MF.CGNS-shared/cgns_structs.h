@@ -455,6 +455,7 @@ namespace mf{
 			virtual void calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
 
 			virtual t_SqMat3Dbl calc_jac_to_loc_rf(const t_GeomPoint& xyz) const;
+			void calc_jac_to_loc_rf(const t_GeomPoint& xyz, t_SqMat3Dbl& jac) const;
 
 			// calc character length scale
 			virtual double calc_x_scale(const t_GeomPoint& xyz) const;

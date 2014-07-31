@@ -42,12 +42,7 @@ protected:
 	stab::t_TaskTreat _task_treat;
 
 	void _to_dim(t_WaveChars& dim) const;
-
-	t_WaveChars& _set_vals(
-		const t_Vec3Cmplx& k, 
-		const t_Vec3Cmplx& vg, 
-		t_CompVal a_w, 
-		const t_StabScales& stab_scales);
+	void _to_ndim(t_WaveChars& ndim) const;
 
 public:
 
@@ -58,6 +53,9 @@ public:
 	t_CompVal resid;
 
 	t_WaveChars(stab::t_TaskTreat treat=stab::TIME);
+
+	t_WaveChars& set_vals(const t_Vec3Cmplx& k,	const t_Vec3Cmplx& vg, 
+						  t_CompVal a_w, const t_StabScales& stab_scales);
 
 	stab::t_TaskTreat get_treat() const;
 	void set_treat(stab::t_TaskTreat treat);
@@ -124,11 +122,10 @@ class IMPEXP_PHYSCOMMON t_WCharsGlobDim;
 
 class IMPEXP_PHYSCOMMON t_WCharsGlob: public t_WaveChars{
 
-	t_WCharsGlob();
-
 public:
 
-	t_WCharsGlob(const t_WCharsLoc&, const t_SqMat3Dbl& jac_to_loc_rf , const t_StabScales&);
+	t_WCharsGlob();
+	t_WCharsGlob(const t_WCharsLoc&, const t_SqMat3Dbl& j , const t_StabScales&);
 	t_WCharsGlobDim to_dim() const;
 };
 
@@ -139,5 +136,6 @@ public:
 class IMPEXP_PHYSCOMMON t_WCharsGlobDim: public t_WaveChars{
 public:
 	t_WCharsGlob to_nondim() const;
+	t_WCharsLoc to_loc(const t_SqMat3Dbl& jac , const t_StabScales&) const;
 };
 #endif // __STAB_ELEMS

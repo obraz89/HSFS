@@ -1,6 +1,8 @@
 namespace test{
 
 	void king_m35();
+	void king_m35_eN();
+
 	void transhyb_base_08();
 	void transhyb_base_wartman();
 	void profile_compar();
