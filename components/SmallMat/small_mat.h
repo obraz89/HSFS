@@ -592,7 +592,7 @@ namespace vector{
 			typedef matrix::TypeDeduce<t1,t2>::type type;
 			type v0 = l[1]*r[2] - l[2]*r[1];
 			type v1 = l[2]*r[0] - l[0]*r[2];
-			type v2 = l[0]*r[1] - l[1]*r[2];
+			type v2 = l[0]*r[1] - l[1]*r[0];
 			return t_Vec3<type>(v0,v1,v2);
 	};
 }
