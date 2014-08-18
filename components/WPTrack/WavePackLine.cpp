@@ -8,8 +8,48 @@ using namespace mf;
 using namespace pf;
 using namespace stab;
 
-t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):
-_rFldMF(a_fld), _line(){};
+t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):_rFldMF(a_fld), 
+_s(N_LINE_MAX_HSIZE), _sigma(N_LINE_MAX_HSIZE), _nfact(N_LINE_MAX_HSIZE){};
+
+t_WavePackLine::t_RecArray::t_RecArray():_cont(N_LINE_MAX_HSIZE), _size(0){}
+
+int t_WavePackLine::t_RecArray::size() const{return _size;}
+
+const t_WPLineRec& t_WavePackLine::t_RecArray::operator [](int ind) const{
+	return _cont[ind];
+};
+
+t_WPLineRec& t_WavePackLine::t_RecArray::operator [](int ind){
+	return _cont[ind];
+}
+
+void t_WavePackLine::t_RecArray::push_back
+(const mf::t_Rec& fld_rec, const t_WCharsGlob& wave_chars){
+
+	if(++_size>=N_LINE_MAX_HSIZE) wxLogError(_T("Too long line in WPTrack")) ;
+
+	_cont[_size-1].mean_flow = fld_rec; 
+	_cont[_size-1].wave_chars = wave_chars;
+}
+
+void t_WavePackLine::t_RecArray::push_back(const stab::t_WPLineRec& rec){
+
+	if(++_size>=N_LINE_MAX_HSIZE) wxLogError(_T("Too long line in WPTrack")) ;
+	_cont[_size-1] = rec;
+};
+
+t_WPLineRec& t_WavePackLine::t_RecArray::back(){return _cont[_size-1];}
+
+const t_WPLineRec& t_WavePackLine::t_RecArray::back() const{return _cont[_size-1];}
+
+void t_WavePackLine::t_RecArray::reset(){_size=0;};
+
+void t_WavePackLine::clear(){_line.reset();_line_down.reset(); _line_up.reset();};
+
+const std::vector<stab::t_WPLineRec>& t_WavePackLine::t_RecArray::get_cont() const{return _cont;};
+
+// todo: do i need this to ensure mem free fast?
+t_WavePackLine::t_RecArray::~t_RecArray(){_cont.clear();}
 
 void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 
@@ -71,10 +111,10 @@ t_WaveChars t_WavePackLine::_interpolate_next_wchars(const std::vector<t_WPLineR
 }
 
 void t_WavePackLine::_add_node(
-		std::vector<t_WPLineRec>& add_to, const mf::t_Rec& fld_rec, 
+		t_RecArray& add_to, const mf::t_Rec& fld_rec, 
 		const t_WCharsGlob& wave_chars){
 
-	add_to.push_back(t_WPLineRec(fld_rec, wave_chars));
+	add_to.push_back(fld_rec, wave_chars);
 
 };
 
@@ -85,7 +125,7 @@ void t_WavePackLine::_retrace_dir(t_GeomPoint start_from, t_WCharsLoc init_wave,
 t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 	double wr_dim = init_wave_dim.w.real();
 	double time_direction;
-	std::vector<t_WPLineRec>* pLine;
+	t_RecArray* pLine;
 
 	if (direction==DOWNSTREAM){
 
@@ -114,7 +154,10 @@ t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 	// march until neutral point
 	// or field boundary is reached
 	bool proceed_cond=true;
+	std::wostringstream ostr;
 
+	std::wofstream f_debug_str(_T("wplines_debug_info.dat"), std::ios::app);
+	f_debug_str<<_T("======semiline starts\n");
 	do{
 
 		t_WPLineRec& last_rec = pLine->back();
@@ -162,22 +205,31 @@ t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 		last_wchars_loc = new_wave_chars;
 		proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars);
 
-		std::wostringstream ostr;
 		ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
-		log_my::wxLogMessageStd(ostr.str());
-
-		ostr.clear();
 		ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
 		log_my::wxLogMessageStd(ostr.str());
+		ostr.str(_T(""));ostr.clear();
+
+		// debug
+		const int HALF_CONE_ANGLE = 5./180.*acos(-1.0);
+		smat::vec_cart_to_cone(new_gpoint, HALF_CONE_ANGLE);
+		f_debug_str<<new_gpoint.x()<<_T("\t")
+			       <<new_gpoint.y()<<_T("\t")
+				   <<new_gpoint.z()<<_T("\t")
+				   <<loc_solver.get_stab_scales().Dels<<_T("\n");
+		f_debug_str.flush();
 
 	}while (proceed_cond);
+	f_debug_str<<_T("\n\n\n\n");
 	//======================
 
 };
 
 void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave, 
 							 stab::t_LSBase& loc_solver){
-	_line.clear();
+
+	clear();
+
 	try{
 		_retrace_dir(a_start_from, a_init_wave, loc_solver,DOWNSTREAM);
 	}catch(const t_GenException& x){
@@ -189,15 +241,14 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 		wxLogMessage(x.what());
 	};
 
-	std::vector<t_WPLineRec>::const_reverse_iterator rit;
-	for (rit=_line_up.rbegin(); rit<_line_up.rend(); rit++){
-		_line.push_back(*rit);
-	};
-
-	std::vector<t_WPLineRec>::const_iterator it;
-	for (it=_line_down.begin(); it<_line_down.end(); it++){
-		_line.push_back(*it);
-	};
+	{
+		int nlup = _line_up.size();
+		for (int i=0; i<nlup; i++)	_line.push_back(_line_up[nlup-1-i]);
+	}
+	{
+		int nldn = _line_down.size();
+		for (int i=0; i<nldn; i++) 	_line.push_back(_line_down[i]);
+	}
 
 	calc_n_factor();
 };
@@ -205,24 +256,17 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 
 void t_WavePackLine::calc_n_factor(){
 
-	std::vector<double> s(_line.size(), 0.0);
-	std::vector<double> sigma(_line.size(), 0.0);
-	std::vector<double> nfact(_line.size(), 0.0);
-
 	// TODO: later integrate from neutral point
 	// for now it is always first point
-	s[0] = 0.0;
+	_s[0] = 0.0;
 	t_Vec3Dbl cur_dr;
 
-
+	const mf::t_FldParams& MFParams = _rFldMF.get_mf_params();
+	const double LRef = MFParams.L_ref;
 
 	for (int i=1; i<_line.size(); i++){
-
-		const mf::t_FldParams& MFParams = _rFldMF.get_mf_params();
-
-		const double LRef = MFParams.L_ref;
 		cur_dr = LRef*(_line[i].mean_flow.get_xyz() - _line[i-1].mean_flow.get_xyz());
-		s[i] = s[i-1] + cur_dr.norm();
+		_s[i] = _s[i-1] + cur_dr.norm();
 
 		//IMPORTANT TODO: correct expressions
 
@@ -233,13 +277,13 @@ void t_WavePackLine::calc_n_factor(){
 		spat_wave.to_spat();
 
 		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
-		sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
+		_sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
 
 	}
 
-	smat::integrate_over_range(s, sigma, nfact);
+	smat::integrate_over_range(_s, _sigma, _nfact);
 
-	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = nfact[i];
+	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = _nfact[i];
 
 
 }

@@ -12,19 +12,17 @@ std::wostream& pf::operator<<(std::wostream& str, const t_WavePackLine& line){
 
 std::wostream& t_WavePackLine::_print_line(std::wostream& str) const
 {
-	std::vector<t_WPLineRec>::const_iterator beg = _line.begin();
-	while(beg!=_line.end()) 
-	{
+
+	for (int i=0; i<_line.size(); i++){
+
+		const t_WPLineRec& rec = _line[i];
+
 		str<<_T('(')
-			<<beg->mean_flow.x<<_T(";")
-			<<beg->mean_flow.y<<_T(";")
-			<<beg->mean_flow.z<<_T(");[");
-//			<<beg->nearest_node.i<<_T(";")
-//			<<beg->nearest_node.j<<_T(";")
-//			<<beg->nearest_node.k<<_T("]")<<_T("\n");
-		str<<beg->wave_chars;
-		beg++;
-	};
+			<<rec.mean_flow.x<<_T(";")
+			<<rec.mean_flow.y<<_T(";")
+			<<rec.mean_flow.z<<_T(");[");
+	}
+
 	return str;
 };
 
@@ -35,10 +33,10 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 	std::wofstream fstr(&fname[0], write_mode);
 	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tc[]\tNju[Hz]\n");
 
-	std::vector<t_WPLineRec>::const_iterator it;
 
-	for (it=_line.begin(); it<_line.end(); it++){
-		const t_WPLineRec& rec = *it;
+	for (int i=0; i<_line.size(); i++){
+
+		const t_WPLineRec& rec = _line[i];
 
 		t_WCharsGlob spat_wave = rec.wave_chars;
 
@@ -53,9 +51,14 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 			sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.b.real(),2));
 
 		// TODO: Do not mul by L-Ref for cyl or cone rfs!!!
-		fstr<<_T("\t")<<Params.L_ref*rec.mean_flow.x
-			<<_T("\t")<<Params.L_ref*rec.mean_flow.y
-			<<_T("\t")<<Params.L_ref*rec.mean_flow.z
+
+		// DEbug - printing in cone reference frame, to remove!!!
+		mf::t_GeomPoint cone_xyz= rec.mean_flow.get_xyz();
+		double HALF_ANGLE = 5.0/180.0*acos(-1.0);
+		smat::vec_cart_to_cone(cone_xyz, HALF_ANGLE);
+		fstr<<_T("\t")<<cone_xyz.x()	//Params.L_ref*rec.mean_flow.x
+			<<_T("\t")<<cone_xyz.y()	//Params.L_ref*rec.mean_flow.y
+			<<_T("\t")<<cone_xyz.z()	//Params.L_ref*rec.mean_flow.z
 			<<_T("\t")<<sigma<<_T("\t")<<rec.n_factor
 			<<_T("\t")<<c
 			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)<<_T("\n");	
@@ -70,14 +73,13 @@ void t_WavePackLine::to_cyl_ref_frame(){
 
 void t_WavePackLine::to_cone_ref_frame(double half_angle){
 	
-	std::vector<t_WPLineRec>::iterator it;
 
 	t_Vec3Dbl cur_vec;
 	t_Vec3Cmplx cur_k_vec;
-	for (it=_line.begin(); it<_line.end(); it++){
+	for (int i=0; i<_line.size(); i++){
 
-		mf::t_Rec& rec = it->mean_flow;
-		t_WCharsGlob& wchars = it->wave_chars;
+		mf::t_Rec& rec = _line[i].mean_flow;
+		t_WCharsGlob& wchars = _line[i].wave_chars;
 
 		cur_vec.set(rec.x, rec.y, rec.z);
 		smat::vec_cart_to_cone(cur_vec, half_angle);

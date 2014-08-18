@@ -21,25 +21,59 @@
 #include <vector>
 
 static const int N_BOUND_BUF = 10;
+static const int N_LINE_MAX_HSIZE = 10000;
 
 namespace pf{
 
 	class  t_WavePackLine: public stab::t_WPTrackBase{
 	protected:
 
+		class t_RecArray{
+
+			std::vector<stab::t_WPLineRec> _cont;
+
+			int _size;
+
+		public:
+
+			int size() const;
+
+			const stab::t_WPLineRec& operator[](int ind) const;
+
+			stab::t_WPLineRec& operator[](int ind);
+
+			void push_back(const stab::t_WPLineRec& rec);
+
+			void push_back(const mf::t_Rec& fld_rec, const t_WCharsGlob& wave_chars);
+
+			stab::t_WPLineRec& back();
+
+			const stab::t_WPLineRec& back() const;
+
+			const std::vector<stab::t_WPLineRec>& get_cont() const;
+
+			void reset();
+
+			t_RecArray();
+
+			~t_RecArray();
+		};
+
 		enum t_Direction{UPSTREAM=0, DOWNSTREAM};
 
 		const mf::t_DomainBase& _rFldMF;
 		t_WPLineParams _params;
 
-		std::vector<stab::t_WPLineRec> _line;
-		std::vector<stab::t_WPLineRec> _line_up;	// upstream part
-		std::vector<stab::t_WPLineRec> _line_down;	// downstream part
+		t_RecArray _line;
+		t_RecArray _line_up;	// upstream part
+		t_RecArray _line_down;	// downstream part
+
+		std::vector<double> _s, _sigma, _nfact;
 
 		t_WaveChars _interpolate_next_wchars(const std::vector<stab::t_WPLineRec>& wpline, 
 			const mf::t_GeomPoint& new_xyz) const;
 
-		void _add_node(std::vector<stab::t_WPLineRec>& add_to, const mf::t_Rec& fld_rec, 
+		void _add_node(t_RecArray& add_to, const mf::t_Rec& fld_rec, 
 			const t_WCharsGlob& wave_chars);
 
 		void _retrace_dir(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
@@ -64,6 +98,8 @@ namespace pf{
 		void to_cone_ref_frame(double half_angle);
 
 		int get_size() const;
+
+		void clear();
 
 		const stab::t_WPLineRec& get_rec(int ind) const;
 
