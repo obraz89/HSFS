@@ -27,7 +27,9 @@ namespace stab{
 	define outer flow parameters in parallel flow assumption
 
 	Dels is dimensional y_scale: 
-		sqrt(nu_e*x_e/u_e)
+	Legacy value is	sqrt(nu_e*x_e/u_e)
+	If x_e is not available (3D configuration) boundary layer
+	scales can be used instead
 
 	*Dim are all dimensional values used to restore 
 		dimensional wave characteristics etc

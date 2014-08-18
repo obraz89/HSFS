@@ -16,7 +16,7 @@ const t_StabScales& t_ProfileStab::scales() const{return _scales;};
 /************************************************************************/
 // interpolate to uniform grid and
 // non-dimensionalize y and all derivs
-//to A = sqrt(nu_e*x/u_e)
+//to A = sqrt(nu_e*x/u_e) or just bl thickness scale
 // all values in eq. for A are dimensional
 // NS profiles are nondim by sqrt(Re)
 /************************************************************************/
