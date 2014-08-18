@@ -27,6 +27,7 @@ namespace stab{
 		t_WCharsGlob wave_chars;
 		double n_factor;
 
+		t_WPLineRec();
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);
 
 		//friend std::wostream& operator<<(std::wostream& str, t_WPLineRec rec);
@@ -58,6 +59,8 @@ namespace stab{
 		virtual void to_cone_ref_frame(double half_angle)=0;
 
 		virtual int get_size() const =0;
+
+		virtual void clear() =0; 
 
 		virtual const stab::t_WPLineRec& get_rec(int ind) const=0;
 

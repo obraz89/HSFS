@@ -106,6 +106,8 @@ namespace stab{
 
 		virtual void dumpEigenFuctions(const std::wstring& fname)=0;
 
+		virtual void dumpProfileStab(const std::wstring& fname) const=0;
+
 		virtual ~t_LSBase();
 
 	};

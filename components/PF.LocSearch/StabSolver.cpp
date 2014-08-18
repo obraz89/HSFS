@@ -565,6 +565,8 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_GeomPoint a_xyz){
 
 void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 
+	_cur_xyz = a_xyz;
+
 	int nnodes_stab = _params.NNodes;
 
 	_math_solver.setContext(nnodes_stab);

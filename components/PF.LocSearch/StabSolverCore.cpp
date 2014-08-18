@@ -70,3 +70,9 @@ void t_StabSolver::dumpEigenFuctions(const std::wstring& fname){
 	}
 
 }
+
+void t_StabSolver::dumpProfileStab(const std::wstring& fname) const{
+	_profStab.dump(fname);
+}
+
+

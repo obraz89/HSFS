@@ -55,6 +55,7 @@ class  t_StabSolver: public stab::t_LSBase{
 	// keep current stability_matrix
 	t_SqMatCmplx _stab_matrix;
 	const mf::t_DomainBase& _rFldNS; // to get global field params
+	mf::t_GeomPoint _cur_xyz;
 	t_ProfileStab _profStab; // current profile
 
 	t_WCharsLoc _waveChars;  // to keep current state of wave 
@@ -147,6 +148,8 @@ public:
 	t_Complex solve(t_WCharsLoc& a_wave_chars);
 
 	void dumpEigenFuctions(const std::wstring& fname);
+
+	void dumpProfileStab(const std::wstring& fname) const;
 
 	std::vector<t_WCharsLoc> filterInitWaves(const std::vector<t_WCharsLoc>& all_initials);
 	t_WCharsLoc getMaxWave(const std::vector<t_WCharsLoc>& a_inits, int a_nnodesStab=0);

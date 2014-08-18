@@ -7,6 +7,8 @@ using namespace stab;
 t_WPLineRec::t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC):
 mean_flow(rMF), wave_chars(rWC){};
 
+t_WPLineRec::t_WPLineRec(){};
+
 
 /*std::wostream& operator<<(std::wostream& str, t_WavePackLine::t_WPLineRec rec){
 
