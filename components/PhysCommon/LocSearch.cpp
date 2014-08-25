@@ -4,9 +4,16 @@
 using namespace stab;
 
 //---------------------------------------------------------------------t_LSCond
-t_LSCond::t_LSCond(int cnd):_cond(cnd){};
+void t_LSCond::set(int cnd){_cond=cnd;}
 
-t_LSCond::t_LSCond(int cnd, t_WaveChars a_wchars):_cond(cnd),wchars(a_wchars){};
+t_LSCond::t_LSCond(){}
+t_LSCond::t_LSCond(int cnd){set(cnd);};
+
+void t_LSCond::set(int cnd, const t_WaveChars& a_wchars){
+	_cond=cnd;
+	wchars=a_wchars;
+}
+t_LSCond::t_LSCond(int cnd, const t_WaveChars& a_wchars){set(cnd, a_wchars);};
 
 int t_LSCond::get_mode() const{return _cond;};
 

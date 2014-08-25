@@ -39,13 +39,27 @@ namespace stab{
 // wpline type from a point
 /************************************************************************/
 
+	enum IMPEXP_PHYSCOMMON t_WPRetraceMode{
+
+		// retrace wave packet with dimensional w*=fixed
+		W_FIXED,  
+
+		// retrace with dimensional w*=fixed and b*=fixed
+		// not a "wave packet" in fact 
+		WB_FIXED,
+
+		// envelope retrace
+		ENVELOPE
+		
+	};
+
 	class IMPEXP_PHYSCOMMON t_WPTrackBase: public hsstab::TPlugPhysPart{
 	public:
 
 		t_WPTrackBase();
 
 		virtual void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver)=0;
+			stab::t_LSBase& loc_solver, const stab::t_WPRetraceMode& retrace_mode)=0;
 
 		virtual void calc_n_factor()=0;
 

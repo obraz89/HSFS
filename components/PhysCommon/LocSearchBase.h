@@ -44,8 +44,12 @@ namespace stab{
 		t_WaveChars wchars_dim;	// !!
 		t_WaveChars wchars;
 
+		t_LSCond();
 		t_LSCond(int cnd);
-		t_LSCond(int cnd, t_WaveChars a_wchars);
+		t_LSCond(int cnd, const t_WaveChars& a_wchars);
+
+		void set(int cnd);
+		void set(int cnd, const t_WaveChars& a_wchars);
 		int get_mode() const;
 	};
 

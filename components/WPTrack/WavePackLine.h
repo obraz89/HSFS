@@ -76,8 +76,11 @@ namespace pf{
 		void _add_node(t_RecArray& add_to, const mf::t_Rec& fld_rec, 
 			const t_WCharsGlob& wave_chars);
 
-		void _retrace_dir(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver,t_Direction direction);
+		void _retrace_dir_w(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+			stab::t_LSBase& loc_solver, t_Direction direction);
+
+		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+			stab::t_LSBase& loc_solver,	t_Direction direction);
 
 		bool _is_unstable() const;
 		bool _near_leading_edge() const;
@@ -89,7 +92,8 @@ namespace pf{
 		t_WavePackLine(const mf::t_DomainBase& a_mf);
 		void init(const hsstab::TPlugin& g_plug);
 
-		void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, stab::t_LSBase& loc_solver);
+		void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+			stab::t_LSBase& loc_solver, const stab::t_WPRetraceMode& retrace_mode);
 
 		void calc_n_factor();
 

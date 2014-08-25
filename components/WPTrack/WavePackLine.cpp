@@ -118,12 +118,15 @@ void t_WavePackLine::_add_node(
 
 };
 
-void t_WavePackLine::_retrace_dir(t_GeomPoint start_from, t_WCharsLoc init_wave, 
-						stab::t_LSBase& loc_solver, t_Direction direction){
+// retrace with keeping dimensional w constant
+// this is so called "wave packet" retrace approach
+void t_WavePackLine::_retrace_dir_w(t_GeomPoint start_from, t_WCharsLoc init_wave, 
+								  stab::t_LSBase& loc_solver, t_Direction direction){
 
 	//======================
-t_WCharsLocDim init_wave_dim = init_wave.make_dim();
-	double wr_dim = init_wave_dim.w.real();
+	t_WCharsLocDim init_wave_dim = init_wave.make_dim();
+	double wr_init_dim = init_wave_dim.w.real();
+
 	double time_direction;
 	t_RecArray* pLine;
 
@@ -142,6 +145,7 @@ t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 	t_WCharsLoc last_wchars_loc = init_wave;
 
 	loc_solver.setContext(start_from);
+
 	stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED, init_wave);
 	loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::TIME);
 	loc_solver.calcGroupVelocity(init_wave);
@@ -178,12 +182,13 @@ t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 
 		loc_solver.setContext(new_gpoint);
 
-		double freq_scale = loc_solver.get_stab_scales().FreqScale();
-		double wr = wr_dim/freq_scale;
-
+		stab::t_LSCond srch_cond;
 		t_WCharsLoc wave_cond;
+
+		double freq_scale = loc_solver.get_stab_scales().FreqScale();
+		double wr = wr_init_dim/freq_scale;
 		wave_cond.w = wr;
-		stab::t_LSCond srch_cond(stab::t_LSCond::W_FIXED, wave_cond);
+		srch_cond.set(stab::t_LSCond::W_FIXED, wave_cond);
 
 		try
 		{
@@ -224,22 +229,50 @@ t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 	//======================
 
 };
+// retrace with keeping constant dimensional w and b
+// this is so called "beta constant" retrace strategy
+void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wave, 
+									stab::t_LSBase& loc_solver, t_Direction direction){
+
+										wxLogError(_("Not implemented"));
+
+}
 
 void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave, 
-							 stab::t_LSBase& loc_solver){
+			stab::t_LSBase& loc_solver, const stab::t_WPRetraceMode& retrace_mode){
 
 	clear();
 
-	try{
-		_retrace_dir(a_start_from, a_init_wave, loc_solver,DOWNSTREAM);
-	}catch(const t_GenException& x){
-		wxLogMessage(x.what());
-	};
-	try{
-		_retrace_dir(a_start_from, a_init_wave, loc_solver,UPSTREAM);
-	}catch(const t_GenException& x){
-		wxLogMessage(x.what());
-	};
+	switch (retrace_mode)
+	{
+	case t_WPRetraceMode::W_FIXED :
+		try{
+			_retrace_dir_w(a_start_from, a_init_wave, loc_solver, DOWNSTREAM);
+		}catch(const t_GenException& x){
+			wxLogMessage(x.what());
+		};
+		try{
+			_retrace_dir_w(a_start_from, a_init_wave, loc_solver, UPSTREAM);
+		}catch(const t_GenException& x){
+			wxLogMessage(x.what());
+		};
+		break;
+	case t_WPRetraceMode::WB_FIXED :
+		try{
+			_retrace_dir_wb(a_start_from, a_init_wave, loc_solver, DOWNSTREAM);
+		}catch(const t_GenException& x){
+			wxLogMessage(x.what());
+		};
+		try{
+			_retrace_dir_wb(a_start_from, a_init_wave, loc_solver, UPSTREAM);
+		}catch(const t_GenException& x){
+			wxLogMessage(x.what());
+		};
+		break;
+	default:
+		wxLogError(_T("Retrace : requested mode is not implemented\n"));
+		break;
+	}
 
 	{
 		int nlup = _line_up.size();
