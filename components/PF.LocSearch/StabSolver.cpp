@@ -888,7 +888,12 @@ bool t_StabSolver::searchWave
 	{
 	case stab::t_LSCond::W_FIXED:
 		// TODO: maybe in some cases B_MODE, how to switch ?
-		return getEigenWFixed(cond.wchars.w.real(), wchars, t_StabSolver::A_MODE);
+		if (task_mode==stab::t_TaskTreat::SPAT){
+			wxString msg(_T("PF.LS: W_FIXED implemented only for TIME approach"));
+			wxLogError(msg);
+		}else{
+			return getEigenWFixed(cond.wchars.w.real(), wchars, t_StabSolver::A_MODE);
+		} ;
 
 	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED):
 		return adjustLocal(wchars, W_MODE);

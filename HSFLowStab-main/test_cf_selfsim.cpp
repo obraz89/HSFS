@@ -35,7 +35,7 @@ void test::selfsim_M2_CF(){
 	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
 	stab_solver->init(G_Plugins.get_plugin(plgLS));
 
-	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk);
+	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	//IMPORTANT TODO: WTF happens with PrependDir???
@@ -118,7 +118,7 @@ void test::selfsim_M2_CF(){
 		wchars_test.b = 0.652;
 		wchars_test.w = 0.0;
 
-		t_WCharsLoc wave = gs_solver->searchMaxInstab(-0.512, 0.652);
+		t_WCharsLoc wave = gs_solver->searchMaxInstab(wchars_test);
 
 		std::wcout<<wave;
 
@@ -174,7 +174,12 @@ void test::selfsim_M2_CF(){
 			double al = 0.015;//al_min + da*j;
 			double beta = 0.045;//1.0*al;
 
-			t_WCharsLoc wave = gs_solver->searchMaxInstab(al, beta);	
+			t_WCharsLoc init_wave;
+
+			init_wave.a = al;
+			init_wave.b = beta;
+
+			t_WCharsLoc wave = gs_solver->searchMaxInstab(init_wave);	
 
 			if (wave.w.imag()>0.0){
 

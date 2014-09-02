@@ -49,7 +49,7 @@ namespace hsstab
 
 	public:
 
-		virtual stab::t_GSBase* create_gs_solver(const mf::t_DomainBase& blk)=0;
+		virtual stab::t_GSBase* create_gs_solver(const mf::t_DomainBase& blk, stab::t_TaskTreat treat)=0;
 
 	};
 

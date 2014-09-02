@@ -116,24 +116,29 @@ namespace stab{
 
 	};
 
+/************************************************************************/
+
+/* Common Interface to Stability Global Search Solvers 
+*/
+/************************************************************************/
+
 	class IMPEXP_PHYSCOMMON t_GSBase: public hsstab::TPlugPhysPart{
 	public:
 
-		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
+		virtual void setContext(const mf::t_GeomPoint& a_xyz)=0;
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
 
-		virtual int getSpectrum(const double a_alpha, const double a_beta)=0;
+		virtual int getSpectrum(const t_WCharsLoc& init_wave)=0;
 
 		virtual void writeSpectrum(const std::wstring& a_filename) const=0;
 
 		virtual void writeSpectrumPhase(const std::wstring& a_filename) const=0;
 
 		// select unstable discrete modes
-		virtual std::vector<t_WCharsLoc> getDiscreteModes(
-			const double a_alpha, const double a_beta)=0;
+		virtual std::vector<t_WCharsLoc> getInstabModes(const t_WCharsLoc& init_wave)=0;
 
-		virtual t_WCharsLoc searchMaxInstab(double al, double beta)=0;
+		virtual t_WCharsLoc searchMaxInstab(const t_WCharsLoc& init_wave)=0;
 
 	};
 };

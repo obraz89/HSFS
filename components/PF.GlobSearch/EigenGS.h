@@ -68,24 +68,22 @@ namespace pf{
 			const int a_nnodes=0);
 		*/
 
-		void setContext(const mf::t_GeomPoint a_xyz);
+		void setContext(const mf::t_GeomPoint& a_xyz);
 
 		void setContext(const t_ProfileStab* a_prof_stab);
 
 		/*void setContext(const std::wstring fname, const t_StabScales& a_scales);*/
 
-		int getSpectrum(const double a_alpha, const double a_beta);
+		int getSpectrum(const t_WCharsLoc&);
 
 		void writeSpectrum(const std::wstring& a_filename) const;
 
 		void writeSpectrumPhase(const std::wstring& a_filename) const;
 
 		// select unstable discrete modes
-		std::vector<t_WCharsLoc> getDiscreteModes(
-			const double a_alpha, const double a_beta);
+		std::vector<t_WCharsLoc> getInstabModes(const t_WCharsLoc&);
 
-		t_WCharsLoc searchMaxInstab(
-			const double a_alpha, const double a_beta);
+		t_WCharsLoc searchMaxInstab(const t_WCharsLoc&);
 
 		// tricky
 		void getSpectrumFixedW(double w);

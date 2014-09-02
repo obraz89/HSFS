@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include "EigenGS.h"
+#include "EigenGS_Spatial.h"
+
 #include "EigenGS_plugin.h"
 #include "EigenGS_params.h"
 
@@ -37,8 +39,22 @@ TPluginCaps* TPluginEigenGS::get_caps(){
 	return &_caps;
 };
 
-stab::t_GSBase* TCapsEigenGS::create_gs_solver(const mf::t_DomainBase& blk){
-	return new pf::t_EigenGS(blk);
+stab::t_GSBase* TCapsEigenGS::create_gs_solver(const mf::t_DomainBase& blk, stab::t_TaskTreat treat){
+   switch (treat)
+   {
+	case stab::t_TaskTreat::TIME:
+		return new pf::t_EigenGS(blk);
+   		break;
+	case stab::t_TaskTreat::SPAT:
+		return new pf::t_GlobSrchSpat(blk);
+		break;
+	default:
+		wxString msg(_T("GS Caps Error: Unsupported global search type..."));
+		wxLogError(msg);
+		ssuGENTHROW(msg);
+   }
+
+   return NULL;
 };
 
 wxString TPluginEigenGS::get_name() const

@@ -15,6 +15,7 @@ namespace pf{
 		double ThickCoef;
 		double W_Threshold;
 		int NSProfInit;
+		double SecondViscRatio;
 	};
 
 	namespace gs{

@@ -2,6 +2,7 @@ namespace test{
 
 	void king_m35();
 	void king_m35_eN();
+	void king_m35_gs_spat_vs_time();
 
 	void transhyb_base_08();
 	void transhyb_base_wartman();

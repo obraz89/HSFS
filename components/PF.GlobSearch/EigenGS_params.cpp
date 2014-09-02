@@ -12,6 +12,8 @@ static const int N_NODES_DEFAULT = 51;
 static const double THICK_COEF_DEFAULT = 3.0;
 static const double W_THRESHOLD_DEFAULT = 1.0e-5;
 
+static const double SECOND_VISC_RATIO_DEFAULT = -2./3.;
+
 // corresponds to blp::t_NSInit::EXTRACT=0
 // so default is "extract"
 static const int NS_PROF_INIT_DEFAULT = 0;
@@ -29,6 +31,8 @@ void pf::gs::_eigen_gs_default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("NSProfInit", NS_PROF_INIT_DEFAULT, _T("NS Profile Initialization type"));
 
+	g.add("SecondViscosityRatio", SECOND_VISC_RATIO_DEFAULT, _T("The ratio of second viscosity to shear viscosity"));
+
 }
 
 void pf::gs::_init_eigen_gs_base_params(t_EigenGSParams& params, const hsstab::TPluginParamsGroup& g){
@@ -42,6 +46,8 @@ void pf::gs::_init_eigen_gs_base_params(t_EigenGSParams& params, const hsstab::T
 	params.W_Threshold = g.get_real_param("FreqThreshold");
 
 	params.NSProfInit = g.get_int_param("NSProfInit");
+
+	params.SecondViscRatio = g.get_real_param("SecondViscosityRatio");
 
 }
 

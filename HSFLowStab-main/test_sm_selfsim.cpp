@@ -36,7 +36,7 @@ void test::selfsim_M45_second_mode(){
 	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
 	stab_solver->init(G_Plugins.get_plugin(plgLS));
 
-	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk);
+	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	//IMPORTANT TODO: WTF happens with PrependDir???
@@ -87,8 +87,12 @@ void test::selfsim_M45_second_mode(){
 		for (int j=0; j<n_al; j++){
 			double al = al_min + da*j;
 
-			t_WCharsLoc wave = 
-				gs_solver->searchMaxInstab(al, beta);	
+			t_WCharsLoc init_wave;
+
+			init_wave.a = al;
+			init_wave.b = beta;
+
+			t_WCharsLoc wave = 	gs_solver->searchMaxInstab(init_wave);	
 
 			if (wave.w.imag()>0.0){
 

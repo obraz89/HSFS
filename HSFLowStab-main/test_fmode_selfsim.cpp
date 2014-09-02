@@ -41,7 +41,7 @@ void test::selfsim_M3_first_mode(){
 	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
 	stab_solver->init(G_Plugins.get_plugin(plgLS));
 
-	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk);
+	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	//IMPORTANT TODO: WTF happens with PrependDir???
@@ -170,7 +170,12 @@ void test::selfsim_M3_first_mode(){
 			double al = 0.015;//al_min + da*j;
 			double beta = 0.045;//1.0*al;
 
-			t_WCharsLoc wave = gs_solver->searchMaxInstab(al, beta);	
+			t_WCharsLoc init_wchars_gs;
+
+			init_wchars_gs.a = al;
+			init_wchars_gs.b = beta;
+
+			t_WCharsLoc wave = gs_solver->searchMaxInstab(init_wchars_gs);	
 
 			if (wave.w.imag()>0.0){
 

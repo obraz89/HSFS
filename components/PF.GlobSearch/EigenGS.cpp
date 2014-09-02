@@ -63,7 +63,7 @@ void t_EigenGS::setContext(const mf::t_BlkInd a_ind,
 };
 */
 
-void t_EigenGS::setContext(const mf::t_GeomPoint a_xyz){
+void t_EigenGS::setContext(const mf::t_GeomPoint& a_xyz){
 
 	t_ProfileNS profNS(_rBlk);
 
@@ -179,7 +179,7 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 	// fourth
 	_B[0][3] = 2.0*g_1MaMa*Pr*rec.u1;
 	// k'/k ??
-	_B[3][3] = -2.0*rec.mu1*rec.t1*inv_mu;
+	_B[3][3] = 2.0*rec.mu1*rec.t1*inv_mu; //TODO: was -2.0*... - bug ?
 	_B[4][3] = 2.0*g_1MaMa*Pr*rec.w1;
 	// last
 	_B[1][4] = imagUnity*_beta*lf;
@@ -569,13 +569,17 @@ int t_EigenGS::_solve(){
 	return 0;
 }
 
-int t_EigenGS::getSpectrum(const double a_alpha, const double a_beta){
+int t_EigenGS::getSpectrum(const t_WCharsLoc& init_wave){
 
-  _alpha = a_alpha;
-  _beta  = a_beta;
+	if (init_wave.a.imag()!=0 || init_wave.b.imag()!=0){
+		wxLogMessage(_T("Complex wave number provided for Temporal Global Search, ignoring..."));
+	}
+	
+	_alpha = init_wave.a.real();
+	_beta  = init_wave.b.real();
 
-  int err_code = _solve();
-  return err_code;
+	int err_code = _solve();
+	return err_code;
 
 };
 
@@ -601,12 +605,11 @@ void t_EigenGS::writeSpectrumPhase(const std::wstring &a_filename) const{
 	};
 }
 
-std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(
-	const double a_alpha, const double a_beta){
+std::vector<t_WCharsLoc> t_EigenGS::getInstabModes(const t_WCharsLoc& init_wave){
 
 		std::vector<t_WCharsLoc> inits;
 		std::vector<t_Complex>::const_iterator it;
-		getSpectrum(a_alpha, a_beta);
+		getSpectrum(init_wave);
 		// TODO: empirics!!!
 		for (it=_spectrum.begin(); it<_spectrum.end(); it++){
 			if (it->imag()>_params.W_Threshold){
@@ -618,6 +621,11 @@ std::vector<t_WCharsLoc> t_EigenGS::getDiscreteModes(
 			}
 		}
 		return inits;
+};
+
+t_WCharsLoc t_EigenGS::searchMaxInstab(const t_WCharsLoc& init_wave){
+   const std::vector<t_WCharsLoc>& all_initials = getInstabModes(init_wave);
+   return t_WCharsLoc::find_max_instab_time(all_initials);
 };
 
 
@@ -634,7 +642,10 @@ t_WCharsLoc t_EigenGS::searchMaxInstabGlob(){
 		for(int j=0; j<n_b; j++){
 			double a = a_min + (a_max-a_min)/double(n_a)*i;
 			double b = b_min + (b_max-b_min)/double(n_b)*j;
-			std::vector<t_WCharsLoc> inits = getDiscreteModes(a, b);
+			t_WCharsLoc init_wave;
+			init_wave.a = a;
+			init_wave.b = b;
+			std::vector<t_WCharsLoc> inits = getInstabModes(init_wave);
 			all_initials.push_back(t_WCharsLoc::find_max_instab_time(inits));
 		}
 	}
@@ -659,7 +670,10 @@ std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(t_Mode mode, double fixed_
 	for (int i=0; i<n; i++){
 		std::cout<<"GS fixed: "<<i<<"% done\n";
 		*pArg = arg_min + (arg_max-arg_min)/double(n)*i;
-		std::vector<t_WCharsLoc> inits = getDiscreteModes(a, b);
+		t_WCharsLoc init_wave;
+		init_wave.a = a;
+		init_wave.b = b;
+		std::vector<t_WCharsLoc> inits = getInstabModes(init_wave);
 		all_initials.push_back(t_WCharsLoc::find_max_instab_time(inits));
 	};
 	return all_initials;

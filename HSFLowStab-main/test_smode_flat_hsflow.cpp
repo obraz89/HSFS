@@ -45,7 +45,7 @@ void test::transhyb_base_wartman(){
 	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
 	stab_solver->init(G_Plugins.get_plugin(plgLS));
 
-	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk);
+	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	
@@ -200,7 +200,11 @@ t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solv
 
 		al = al_min + dal*j;
 
-		t_WCharsLoc wave = gs_solver->searchMaxInstab(al, beta);
+		t_WCharsLoc init_wave;
+		init_wave.a = al;
+		init_wave.b = beta;
+
+		t_WCharsLoc wave = gs_solver->searchMaxInstab(init_wave);
 
 		if (wave.w.imag()>0.0){
 
@@ -288,7 +292,12 @@ void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave,
 
 			std::cout<<"a="<<a_cur<<"\n";
 
-			t_WCharsLoc wave_cur = gs_solver->searchMaxInstab(a_cur, 0.0);
+			t_WCharsLoc init_wchars_gs;
+
+			init_wchars_gs.a = a_cur;
+			init_wchars_gs.b = 0.0;
+
+			t_WCharsLoc wave_cur = gs_solver->searchMaxInstab(init_wchars_gs);
 
 			stab_solver->searchWave(wave_cur,
 				stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED),

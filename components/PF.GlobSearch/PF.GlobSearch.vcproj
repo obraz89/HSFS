@@ -346,6 +346,10 @@
 				RelativePath=".\EigenGS_selfsim.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\EigenGS_Spatial.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -362,6 +366,10 @@
 			</File>
 			<File
 				RelativePath=".\EigenGS_plugin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EigenGS_Spatial.h"
 				>
 			</File>
 			<File
