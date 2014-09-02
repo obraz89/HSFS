@@ -626,6 +626,7 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 				wave.a = *it;
 				wave.b = _beta;
 				wave.w = _w;
+				wave.set_treat(stab::t_TaskTreat::SPAT);
 				inits.push_back(wave);
 			}
 		}
