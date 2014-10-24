@@ -38,7 +38,8 @@ void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const t_ProfDa
 	}
 
 
-	a_nnodes<=num_bl_nodes_ns ? _resize(a_nnodes) : _resize(num_bl_nodes_ns);
+	wxLogMessage(_T("ProfileNS: Check _initialize_interpolate"));
+	a_nnodes>0 ? _resize(a_nnodes) : _resize(num_bl_nodes_ns);
 
 	t_GeomPoint r_xyz_base;
 	t_Vec3Dbl surf_norm;
@@ -167,6 +168,15 @@ void t_ProfileNS::_store_bl_thick_data(){
 };
 
 inline double t_ProfileNS::get_bl_thick_scale() const{return _bl_thick_scale;}
+
+double t_ProfileNS::get_x_scale() const{
+
+	// TODO: correct implementation
+	wxLogMessage(_T("ProfileNS: get_x_scale not implemented correctly!"));
+	return _xyz.x();
+
+}
+
 
 const mf::t_DomainBase& t_ProfileNS::getMFDomain() const{return _rDomain;};
 

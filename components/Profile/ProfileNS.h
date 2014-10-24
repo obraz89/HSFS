@@ -46,6 +46,8 @@ public:
 
 	double get_bl_thick_scale() const;
 
+	double get_x_scale() const;
+
 	int get_bound_ind() const;
 
 	t_Rec get_bound_rec();
