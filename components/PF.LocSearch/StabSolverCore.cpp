@@ -35,6 +35,8 @@ void t_StabSolver::dumpEigenFuctions(const std::wstring& fname){
 		}
 	}
 */
+
+	/*
 	for (int i=0; i<nvecs;i++){
 		for (int j=0; j<getNNodes(); j++){
 			t_Complex val;
@@ -50,14 +52,18 @@ void t_StabSolver::dumpEigenFuctions(const std::wstring& fname){
 		}
 		// separate solutions to simplify origin export
 		fstr<<_T("\n\n\n\n\n\n");
-	}
+	}*/
 
-	// finally write down eigen solution
+	// finally write down eigen solution satisfying bc conditions
 	t_VecCmplx wall_coefs = _math_solver.calcWallCoefs();
+
+	t_VecCmplx cur_sol(2*nvecs);// ok
+
 	for (int j=0; j<getNNodes(); j++){
 		const t_VecCmplx* pVecs[4];
 
-		t_VecCmplx cur_sol = solutions[j]*wall_coefs;;
+		//t_VecCmplx cur_sol = solutions[j]*wall_coefs;;
+		matrix::base::mat_mul(solutions[j], wall_coefs, cur_sol);
 
 		for (int k=0; k<2*nvecs; k++){
 			fstr<<std_manip::std_format_sci<double>(cur_sol[k].real())

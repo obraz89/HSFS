@@ -673,43 +673,68 @@ void t_StabSolver::calcGroupVelocity
 t_WCharsLoc t_StabSolver::_getStationaryMaxInstabTime
 (const t_WCharsLoc& initial_guess){
 	t_WCharsLoc nxt_wave = initial_guess;
-	t_WCharsLoc prv_wave;
+	t_WCharsLoc prv_wave = initial_guess;
 	t_Complex gv;
-	double da, db; 
+	double da, db, k, eps; 
 
+	// TODO: configurable, empirics
+	// eps max - max variation of wave vector 
+	const double eps_max = 0.01;
+	const int eps_it_max = 2;
 	int ndebug=0;
 
 	do{
 		prv_wave = nxt_wave;
-		adjustLocal(prv_wave, W_MODE);   
+
+		//adjustLocal(prv_wave, W_MODE);   
+		getEigenWFixed(initial_guess.w.real(), prv_wave, A_MODE);
 		calcGroupVelocity(prv_wave);
-		// IMPORTANT TODO: empirics 1% old val
-		db = 0.01*prv_wave.a.real();
-		double coef = prv_wave.vgb.real()/prv_wave.vga.real();
-		da = -coef*db;
 
-		nxt_wave.a = prv_wave.a + da;
-		nxt_wave.b = prv_wave.b + db;
-		nxt_wave.w = prv_wave.w;
-		adjustLocal(nxt_wave, W_MODE);
+		k = sqrt(pow(prv_wave.a.real(),2)+pow(prv_wave.b.real(),2));
 
-		if (nxt_wave.w.imag()<prv_wave.w.imag()){
+		eps = eps_max;
+		int eps_iter = 0;
+		bool eps_success = false;
+
+		do 
+		{
+			db = eps*k;
+			double coef = prv_wave.vgb.real()/prv_wave.vga.real();
+			da = -coef*db;
+
+			nxt_wave.a = prv_wave.a + da;
+			nxt_wave.b = prv_wave.b + db;
+			nxt_wave.w = prv_wave.w;
+
+			//adjustLocal(nxt_wave, W_MODE);
+			eps_success = getEigenWFixed(initial_guess.w.real(), nxt_wave, A_MODE);
+
+			if (eps_success && nxt_wave.w.imag()>prv_wave.w.imag()) break;
+
 			db = -db;
 			da = -coef*db;
 			nxt_wave.a = prv_wave.a + da;
 			nxt_wave.b = prv_wave.b + db;
 			nxt_wave.w = prv_wave.w;
-			adjustLocal(nxt_wave, W_MODE);	
-		}	
-		//dbg
+			//adjustLocal(nxt_wave, W_MODE);	
+			eps_success = getEigenWFixed(initial_guess.w.real(), nxt_wave, A_MODE);
+
+			if (eps_success && nxt_wave.w.imag()>prv_wave.w.imag()) break;
+
+			eps/=2.;
+		} while (eps_iter++<eps_it_max);
+
+		if (eps_success==false) break;
+
+		double wr_error = abs(1.0-nxt_wave.w.real()/initial_guess.w.real());
+		std::wcout<<_T("getMaxWave Fixed Wr: iter err~")<<wr_error<<_T("\n Cur wave:")<<nxt_wave;
+		
 		if (ndebug++==100){
 			ndebug=0;
 			std::wcout<<_T("getStatMaxInstabTime 100 iters done, cur wave:\n")<<nxt_wave<<_T("\n");
+			break;
 		}
 	} while(prv_wave.w.imag()<nxt_wave.w.imag());
-
-	double wr_error = abs(1.0-initial_guess.w.real()/prv_wave.w.real());
-	std::wcout<<_T("getMaxWave Fixed Wr:err~")<<wr_error<<_T("\n")<<prv_wave;
 
 	return prv_wave;
 };
@@ -872,17 +897,12 @@ bool t_StabSolver::getEigenWFixed
 
 /************************************************************************/   
 // search for a wave chars with conditions provided
-// with keeping Re(w)=const
 // TODO: this is to be developed futher 
 /************************************************************************/
 
-// IMPORTANT TODO: task_mode switch, for now only time!
 bool t_StabSolver::searchWave
 (t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode)
 {
-	/*if (task_mode==stab::t_TaskTreat::SPAT){
-		throw t_WrongMode();
-	}*/
 
 	switch (cond.get_mode())
 	{
@@ -929,6 +949,7 @@ void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab:
 
 	case stab::t_LSCond::W_FIXED:
 		if (task_mode==stab::t_TaskTreat::TIME){
+			wchars.w.real(cond.wchars.w.real());
 			wchars = _getStationaryMaxInstabTime(wchars);
 		}else{
 			throw t_NotImplemented();
@@ -964,4 +985,52 @@ t_WCharsLoc t_StabSolver::getMaxWave(const std::vector<t_WCharsLoc>& a_inits, in
 		}
 	}
 	return res_wave;
+}
+
+// TODO: move to StabSolver plugin when tested
+std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond){
+
+	std::vector<t_WCharsLoc> ret_waves;
+	t_WCharsLoc cur_wave;
+
+	for (int i=0; i<wcands.size(); i++){
+
+		cur_wave = wcands[i];
+
+		std::wcout<<_T("GS Init:")<<cur_wave;
+		bool good_init;
+		try
+		{
+
+			good_init = searchWave(cur_wave, cond, stab::t_TaskTreat::SPAT);
+
+			if (good_init && cur_wave.a.real()>=0)
+				std::wcout<<_T("Discrete mode found:")<<cur_wave;
+
+			if (good_init && cur_wave.a.real()>=0 && cur_wave.a.imag()<0.0){
+
+				cur_wave.set_scales(get_stab_scales());
+
+				t_WCharsLocDim dim_wave = cur_wave.make_dim();
+
+				// TODO: nice checking that wave is physical
+				if ( cur_wave.a.real()>=0 && abs(cur_wave.a.imag())<1.0
+					&& abs(dim_wave.a.imag())<200.0){
+
+					std::wcout<<_T("Instab found:")<<cur_wave;
+
+					ret_waves.push_back(cur_wave);
+				}
+			}
+		}
+		catch (...)
+		{
+			continue;
+
+		}
+
+	}
+
+	return ret_waves;
+
 }
