@@ -341,8 +341,13 @@ namespace matrix{
 				nrows = l.nRows();
 #ifdef _DEBUG
 				chk_size_match_mul<t1,t2>(l,r);
-				if (ret.nCols()!=ncols||ret.nRows()!=nrows)
+				if (ret.nCols()!=ncols||ret.nRows()!=nrows){
+				
+					wxLogMessage(_T("l:c=%d;r=%d"), l.nRows(), l.nCols());
+					wxLogMessage(_T("r:c=%d;r=%d"), r.nRows(), r.nCols());
+					wxLogMessage(_T("ret:c=%d;r=%d"), ret.nRows(), ret.nCols());
 					ssuTHROW(matrix::t_SizeMismatch, _T("Mat mul error: destination matrix has wrong size"));
+				}
 #endif
 				type* tmp = new type[nrows];
 				type val; 
