@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// Project:	StabShared
-// Purpose:	Frequently used stability concepts
+// Project:	WavePackLine
+// Purpose:	Various strategies to build instability trajectories
 ///////////////////////////////////////////////////////////////////////////////
 // File:        WavePackLine.h
-// Purpose:     Interface to wave packets' container classes
+// Purpose:     Interface to wave packets retrace methods
 // Author:      A.Obraz
 ///////////////////////////////////////////////////////////////////////////////
 #ifndef __WAVE_PACK
@@ -73,6 +73,8 @@ namespace pf{
 		t_WaveChars _interpolate_next_wchars(const std::vector<stab::t_WPLineRec>& wpline, 
 			const mf::t_GeomPoint& new_xyz) const;
 
+		void _calc_dr(double dt, const stab::t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr) const;
+
 		void _add_node(t_RecArray& add_to, const mf::t_Rec& fld_rec, 
 			const t_WCharsGlob& wave_chars);
 
@@ -80,11 +82,11 @@ namespace pf{
 			stab::t_LSBase& loc_solver, t_Direction direction);
 
 		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver,	t_Direction direction);
+			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
 
-		bool _is_unstable() const;
+		bool _is_unstable(const t_WCharsLoc&) const;
 		bool _near_leading_edge() const;
-		bool _proceed_retrace(mf::t_GeomPoint cur_xyz, t_WCharsLoc wave) const;
+		bool _proceed_retrace(const mf::t_GeomPoint& cur_xyz, const t_WCharsLoc& wave) const;
 
 		std::wostream& _print_line(std::wostream& str) const;
 
@@ -93,7 +95,8 @@ namespace pf{
 		void init(const hsstab::TPlugin& g_plug);
 
 		void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver, const stab::t_WPRetraceMode& retrace_mode);
+			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
+			const stab::t_WPRetraceMode& retrace_mode);
 
 		void calc_n_factor();
 

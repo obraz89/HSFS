@@ -2,18 +2,20 @@
 #define __WP_LINE_PARAMS
 
 #include "PluginBase.h"
+#include "WPTrackBase.h"
 
 namespace pf{
 
 	struct t_WPLineParams{
 
-		enum t_RetraceMode{GROUP_VELO=0, STREAMLINE};
-
 		static hsstab::TPluginParamsGroup default_settings();
 		static void init_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
 
 		double TimeStep;
-		t_RetraceMode RetraceMode;
+		stab::t_WPRetraceMode RetraceMode;
+
+		enum t_MarchAlong{GROUP_VELO, STREAMLINE};
+		t_MarchAlong RetraceDir;
 	};
 
 	void _init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);

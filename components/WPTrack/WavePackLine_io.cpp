@@ -40,15 +40,15 @@ void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) co
 
 		t_WCharsGlob spat_wave = rec.wave_chars;
 
-		spat_wave.to_spat();
+		if (spat_wave.get_treat()==stab::t_TaskTreat::TIME) spat_wave.to_spat();
 
 		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
 
-		//double sigma = dim_wave.w.imag()/(dim_wave.vga.real());
-		double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
+		// TODO: correct expression for sigma
+		double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
 
 		double c = dim_wave.w.real()/
-			sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.b.real(),2));
+			sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.kn.real(),2)+pow(dim_wave.b.real(),2));
 
 		// TODO: Do not mul by L-Ref for cyl or cone rfs!!!
 

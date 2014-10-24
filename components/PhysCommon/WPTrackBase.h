@@ -59,7 +59,7 @@ namespace stab{
 		t_WPTrackBase();
 
 		virtual void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver, const stab::t_WPRetraceMode& retrace_mode)=0;
+			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, const stab::t_WPRetraceMode& retrace_mode)=0;
 
 		virtual void calc_n_factor()=0;
 

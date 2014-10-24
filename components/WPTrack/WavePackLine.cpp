@@ -118,6 +118,39 @@ void t_WavePackLine::_add_node(
 
 };
 
+void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr) const{
+
+	mf::t_Rec outer_rec;
+	t_GeomPoint xyz = rec.mean_flow.get_xyz();
+	_rFldMF.calc_nearest_inviscid_rec(xyz, outer_rec);
+
+	switch (_params.RetraceDir)
+	{
+	case t_WPLineParams::GROUP_VELO:
+
+		v.set(rec.wave_chars.vga.real(), rec.wave_chars.vgn.real(), rec.wave_chars.vgb.real());
+
+		matrix::base::mul(dt, v, dr);
+
+		break;
+
+	case t_WPLineParams::STREAMLINE:
+
+		v.set(outer_rec.u, outer_rec.v, outer_rec.w);
+
+		matrix::base::mul(dt, v, dr);
+
+		break;
+
+	default:
+		wxString msg(_T("Unsupported retrace dir option"));
+		wxLogError(msg);
+		ssuGENTHROW(msg);
+		break;
+	}
+
+}
+
 // retrace with keeping dimensional w constant
 // this is so called "wave packet" retrace approach
 void t_WavePackLine::_retrace_dir_w(t_GeomPoint start_from, t_WCharsLoc init_wave, 
@@ -147,7 +180,7 @@ void t_WavePackLine::_retrace_dir_w(t_GeomPoint start_from, t_WCharsLoc init_wav
 	loc_solver.setContext(start_from);
 
 	stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED, init_wave);
-	loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::TIME);
+	loc_solver.searchMaxWave(init_wave, search_cond, stab::t_TaskTreat::TIME);
 	loc_solver.calcGroupVelocity(init_wave);
 
 	t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
@@ -160,25 +193,25 @@ void t_WavePackLine::_retrace_dir_w(t_GeomPoint start_from, t_WCharsLoc init_wav
 	bool proceed_cond=true;
 	std::wostringstream ostr;
 
-	std::wofstream f_debug_str(_T("wplines_debug_info.dat"), std::ios::app);
-	f_debug_str<<_T("======semiline starts\n");
+	//std::wofstream f_debug_str(_T("wplines_debug_info.dat"), std::ios::app);
+	//f_debug_str<<_T("======semiline starts\n");
+
+	t_Vec3Dbl vg, dr;
+
 	do{
 
 		t_WPLineRec& last_rec = pLine->back();
 		double dt = _params.TimeStep*time_direction;
 
-		t_Vec3Dbl vg(
-			last_rec.wave_chars.vga.real(), 
-			last_rec.wave_chars.vgn.real(), 
-			last_rec.wave_chars.vgb.real());
-
-		t_Vec3Dbl dr = vg*dt;
+		_calc_dr(dt, last_rec, vg, dr);
 
 		// TODO: IMPORTANT! BE ALWAYS ON SURFACE
 		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
 		mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
 		
-		t_WCharsLoc new_wave_chars = last_wchars_loc;//_interpolate_next_wchars(*pLine, new_gpoint);
+		// IMPORTANT TODO: nice calc of new_wave_chars
+		// t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
+		t_WCharsLoc new_wave_chars = last_wchars_loc;
 
 		loc_solver.setContext(new_gpoint);
 
@@ -192,7 +225,7 @@ void t_WavePackLine::_retrace_dir_w(t_GeomPoint start_from, t_WCharsLoc init_wav
 
 		try
 		{
-			loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
+			loc_solver.searchMaxWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
 		}
 		catch (...)
 		{
@@ -216,30 +249,147 @@ void t_WavePackLine::_retrace_dir_w(t_GeomPoint start_from, t_WCharsLoc init_wav
 		ostr.str(_T(""));ostr.clear();
 
 		// debug
-		const int HALF_CONE_ANGLE = 5./180.*acos(-1.0);
-		smat::vec_cart_to_cone(new_gpoint, HALF_CONE_ANGLE);
-		f_debug_str<<new_gpoint.x()<<_T("\t")
-			       <<new_gpoint.y()<<_T("\t")
-				   <<new_gpoint.z()<<_T("\t")
-				   <<loc_solver.get_stab_scales().Dels<<_T("\n");
-		f_debug_str.flush();
+		//const int HALF_CONE_ANGLE = 5./180.*acos(-1.0);
+		//smat::vec_cart_to_cone(new_gpoint, HALF_CONE_ANGLE);
+		//f_debug_str<<new_gpoint.x()<<_T("\t")
+		//	       <<new_gpoint.y()<<_T("\t")
+		//		   <<new_gpoint.z()<<_T("\t")
+		//		   <<loc_solver.get_stab_scales().Dels<<_T("\n");
+		//f_debug_str.flush();
 
 	}while (proceed_cond);
-	f_debug_str<<_T("\n\n\n\n");
+	//  f_debug_str<<_T("\n\n\n\n");
 	//======================
 
 };
 // retrace with keeping constant dimensional w and b
 // this is so called "beta constant" retrace strategy
 void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wave, 
-									stab::t_LSBase& loc_solver, t_Direction direction){
+									 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
+									 t_Direction direction){
 
-										wxLogError(_("Not implemented"));
+	t_WCharsLocDim init_wave_dim = init_wave.make_dim();
 
+	// IMPORTANT TODO: keeping br_dim constant in local rf
+	// implies that along streamline all local reference frames are the same
+	// (true for 2D plane or axesym geometries, NOT TRUE for 3d geometries)
+	double wr_init_dim = init_wave_dim.w.real();
+	double br_init_dim = init_wave_dim.b.real();
+
+	mf::t_Rec surf_rec;
+	_rFldMF.calc_nearest_surf_rec(start_from, surf_rec);
+
+	start_from.set(surf_rec);
+
+	double time_direction;
+	t_RecArray* pLine;
+
+	if (direction==DOWNSTREAM){
+
+		pLine = &_line_down;
+		time_direction = 1.0;
+
+	}else{
+
+		pLine = &_line_up;
+		time_direction = -1.0;
+
+	};
+
+	t_WCharsLoc last_wchars_loc = init_wave;
+
+	gs_solver.setContext(start_from);
+	loc_solver.setContext(start_from);
+
+	stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+	loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::SPAT);
+
+	t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
+		loc_solver.get_stab_scales());
+
+	_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob);
+
+	const t_StabScales& stab_scales_tmp = loc_solver.get_stab_scales();
+
+	std::wcout<<_T("Init Dels, StabRe:")<<stab_scales_tmp.Dels<<";"<<stab_scales_tmp.ReStab<<_T("\n");
+
+	// march until neutral point
+	// or field boundary is reached
+	bool proceed_cond=true;
+	std::wostringstream ostr;
+
+	t_Vec3Dbl vg, dr;
+
+	do{
+
+		t_WPLineRec& last_rec = pLine->back();
+		double dt = _params.TimeStep*time_direction;
+
+		_calc_dr(dt, last_rec, vg, dr);
+
+		// TODO: IMPORTANT! BE ALWAYS ON SURFACE
+		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
+		mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
+
+		// IMPORTANT TODO: nice calc of new_wave_chars
+		// t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
+		t_WCharsLoc new_wave_chars = last_wchars_loc;
+
+		loc_solver.setContext(new_gpoint);
+		gs_solver.setContext(new_gpoint);
+
+		stab::t_LSCond srch_cond;
+
+		const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+
+		double wr = wr_init_dim/stab_scales.FreqScale();
+		double br = br_init_dim*stab_scales.Dels;
+		std::wcout<<_T("new wr, br")<<wr<<_T(";")<<br<<_T("\n");
+		std::wcout<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
+
+		new_wave_chars.w = wr;
+		new_wave_chars.b = br;
+		srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+
+		try
+		{
+			//std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(new_wave_chars);
+			//std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+			//new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
+			loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+		}
+		catch (...)
+		{
+			wxLogMessage(_T("Retrace: Search Wave Failed"));
+			break;
+		}
+
+		// check that converged to a physical wave
+		// TODO: keep it clear, make separate function somewhere
+		if (abs(new_wave_chars.a.imag())>1.0 || abs(new_wave_chars.w.imag())>1.0) break;
+
+
+		new_wave_chars.set_scales(stab_scales);
+
+		t_WCharsGlob wchars_glob(new_wave_chars, 
+			_rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
+
+		_add_node(*pLine, new_rec_mf, wchars_glob);
+
+		last_wchars_loc = new_wave_chars;
+		proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars);
+
+		ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
+		ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
+		log_my::wxLogMessageStd(ostr.str());
+		ostr.str(_T(""));ostr.clear();
+
+	}while (proceed_cond);
 }
 
 void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave, 
-			stab::t_LSBase& loc_solver, const stab::t_WPRetraceMode& retrace_mode){
+							 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
+							 const stab::t_WPRetraceMode& retrace_mode){
 
 	clear();
 
@@ -259,12 +409,12 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 		break;
 	case t_WPRetraceMode::WB_FIXED :
 		try{
-			_retrace_dir_wb(a_start_from, a_init_wave, loc_solver, DOWNSTREAM);
+			_retrace_dir_wb(a_start_from, a_init_wave, loc_solver,gs_solver, DOWNSTREAM);
 		}catch(const t_GenException& x){
 			wxLogMessage(x.what());
 		};
 		try{
-			_retrace_dir_wb(a_start_from, a_init_wave, loc_solver, UPSTREAM);
+			_retrace_dir_wb(a_start_from, a_init_wave, loc_solver,gs_solver, UPSTREAM);
 		}catch(const t_GenException& x){
 			wxLogMessage(x.what());
 		};
@@ -283,6 +433,7 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 		for (int i=0; i<nldn; i++) 	_line.push_back(_line_down[i]);
 	}
 
+	wxLogMessage(_T("Retrace done, calculating N factor..."));
 	calc_n_factor();
 };
 
@@ -307,10 +458,11 @@ void t_WavePackLine::calc_n_factor(){
 
 		t_WCharsGlob spat_wave = rec.wave_chars;
 
-		spat_wave.to_spat();
+		if (spat_wave.get_treat()==stab::t_TaskTreat::TIME) spat_wave.to_spat();
 
 		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
-		_sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.b.imag(),2));
+		// IMPORTANT TODO: what is correct way to compute sigma ?
+		_sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
 
 	}
 
@@ -321,10 +473,10 @@ void t_WavePackLine::calc_n_factor(){
 
 }
 
-bool t_WavePackLine::_is_unstable() const{
+bool t_WavePackLine::_is_unstable(const t_WCharsLoc& wave) const{
 	// tolerances ??
-	if ((_line.back().wave_chars.w.imag()>1.e-5)||
-		(_line.back().wave_chars.a.imag()<-1.e-5)){
+	if ((wave.w.imag()>1.e-5)||
+		(wave.a.imag()<-1.e-5)){
 		return true;
 	}
 	return false;
@@ -340,13 +492,13 @@ bool t_WavePackLine::_near_leading_edge() const{
 	return false;
 }
 
-bool t_WavePackLine::_proceed_retrace(mf::t_GeomPoint cur_xyz, t_WCharsLoc wave) const{
+bool t_WavePackLine::_proceed_retrace(const mf::t_GeomPoint& cur_xyz, const t_WCharsLoc& wave) const{
 
 	// IMPORTANT TODO: THINK!!!
 	//return ((cur_ind.i>10)
 	//	&&(cur_ind.i<_rFldMF.get_Nx()-10)
 	//	&&(wave.w.imag()>0.0));
-	return (wave.w.imag()>0.0) && _rFldMF.is_point_inside(cur_xyz);
+	return _is_unstable(wave) && _rFldMF.is_point_inside(cur_xyz);
 };
 
 int t_WavePackLine::get_size() const{
