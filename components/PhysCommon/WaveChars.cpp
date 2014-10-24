@@ -121,6 +121,7 @@ t_WaveChars& t_WaveChars::set_vals(
 void t_WaveChars::_to_dim(t_WaveChars& dim) const{
 
 	dim.set_scales(_scales);
+	dim.set_treat(_task_treat);
 
 	// calculate dimension values
 	dim.a = a/_scales.Dels;
@@ -138,6 +139,7 @@ void t_WaveChars::_to_dim(t_WaveChars& dim) const{
 void t_WaveChars::_to_ndim(t_WaveChars& ndim) const{
 
 	ndim.set_scales(_scales);
+	ndim.set_treat(_task_treat);
 
 	// calculate non-dimensional values
 	ndim.a = a*_scales.Dels;
@@ -198,6 +200,7 @@ t_WCharsLocDim t_WCharsLoc::make_dim() const{
 t_WCharsLoc t_WCharsLocDim::to_nondim(const t_StabScales& a_stab_scales) const{
 	t_WCharsLoc ret;
 	ret.set_scales(a_stab_scales);
+	ret.set_treat(_task_treat);
 
 	double inv_dels = 1.0/ret.scales().Dels;
 	double inv_ue = 1.0/ret.scales().UeDim;
@@ -244,6 +247,7 @@ t_WCharsGlob::t_WCharsGlob(const t_WCharsLoc& waveChars,
 	vg_glob = a_jac*vg_ked;
 
 	set_vals(k_glob, vg_glob, waveChars.w, a_stab_scales);
+	set_treat(waveChars.get_treat());
 };
 
 t_WCharsGlobDim t_WCharsGlob::to_dim() const{
@@ -282,6 +286,7 @@ t_WCharsLoc t_WCharsGlobDim::to_loc(const t_SqMat3Dbl &jac, const t_StabScales &
 	t_WCharsLoc ret;
 
 	ret.set_vals(k_ked, vg_ked, wglob_ndim.w, a_stab_scales);
+	ret.set_treat(_task_treat);
 	return ret;
 
 }
