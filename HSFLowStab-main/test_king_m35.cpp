@@ -14,8 +14,14 @@
 
 using namespace hsstab;
 
-static t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+static t_WCharsLoc search_global_initial_time(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
 										 stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk);
+
+// use spatial gs to search initial approach for wr_dim fixed
+// useful for w=0
+static t_WCharsLoc search_global_initial_wr_fixed(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+											  stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk, double wr_dim);
+
 
 static t_WCharsLoc search_global_initial_static_cf(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
 										 stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk);
@@ -26,7 +32,7 @@ static void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave,
 									mf::t_DomainBase* pBlk);
 
 
-void test::king_m35_eN(){
+void test::king_m35_eN_time_envelope(){
 
 const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 
@@ -35,9 +41,9 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
-	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
-	std::wstring fout_maxnfactor_path(_T("max_N.dat"));
+	std::wstring out_path = _T("out_instab_wchars_envlp.dat");
+	std::wstring fout_wplines_path(_T("Wave_pack_lines_envlp.dat"));
+	std::wstring fout_maxnfactor_path(_T("max_N_envlp.dat"));
 	std::wofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
@@ -54,11 +60,14 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
 	stab_solver->init(G_Plugins.get_plugin(plgLS));
 
-	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk);
-	gs_solver->init(G_Plugins.get_plugin(plgGS));
+	stab::t_GSBase* gs_time = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
+	gs_time->init(G_Plugins.get_plugin(plgGS));
 
-	const int NLinesL = 20;
-	const int NLinesPhi = 20;
+	stab::t_GSBase* gs_spat = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::SPAT);
+	gs_spat->init(G_Plugins.get_plugin(plgGS));
+
+	const int NLinesL = 1;
+	const int NLinesPhi = 1;
 	const int NLinesTotal = NLinesPhi*NLinesL;
 
 	const double DL = 0.8/double(NLinesL);
@@ -70,14 +79,17 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 	for (int i=0; i<NLinesL; i++)
 		for (int j=0; j<NLinesPhi; j++){
 
-		double l_start = 0.1 + double(i)/double(NLinesL)*0.8; 
-		double phi_start = 10./57. + double(j)/double(NLinesPhi)*160./57.;
+		double l_start = NLinesL==1 ? 0.5 : 0.1 + double(i)/double(NLinesL-1)*0.8; 
+		double phi_start = NLinesPhi==1 ? 3.14/2.0 : 10./57. + double(j)/double(NLinesPhi-1)*160./57.;
 
 		double x_start, y_start, z_start;
 
 		x_start = l_start*cos(HALF_CONE_ANGLE);
 		y_start = l_start*sin(HALF_CONE_ANGLE)*cos(phi_start);
 		z_start = l_start*sin(HALF_CONE_ANGLE)*sin(phi_start);
+
+		// DEBUG: to be above surface
+		if (NLinesPhi==1) z_start+=0.001;
 
 		int wp_line_id = j*(NLinesL) + i;
 
@@ -88,6 +100,9 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 
 	int npave_pts = StabDB.get_npoints();
 
+	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*pBlk);
+	wp_line->init(G_Plugins.get_plugin(plgWPTrack));
+
 	for (int i=0; i<npave_pts; i++){
 
 		try{
@@ -95,39 +110,168 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 		const mf::t_GeomPoint& test_xyz = StabDB.get_pave_pt(i).xyz;
 
 		t_WCharsLoc w_init;
-		w_init = search_global_initial(test_xyz, stab_solver, gs_solver, pBlk);
+		//w_init = search_global_initial_time(test_xyz, stab_solver, gs_time, pBlk);
 
-		stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*pBlk);
-		wp_line->init(G_Plugins.get_plugin(plgWPTrack));
-
+		// tmp
+		stab_solver->setContext(test_xyz);
+		w_init.a = 0.327971;
+		w_init.b = 0.780213;
+		w_init.w = t_Complex(0.212389, 0.013792);
+		stab_solver->searchWave(w_init, 
+			stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED),
+			stab::t_TaskTreat::TIME);
+		w_init.set_scales(stab_solver->get_stab_scales());
+		std::wcout<<_T("Init for wpline:")<<w_init;getchar();
+		//~tmp
 		int perc_complete = double(i)/double(NLinesTotal)*100.;
 		wxLogMessage(_T("start retrace WPLineId = %d, completed %d perc"), 
 			i, perc_complete);
 
+		stab_solver->setContext(test_xyz);
 
-		wp_line->retrace(test_xyz, w_init, *stab_solver);
+		// DEBUG
+		//wchar_t ch_name[99];
+		//wsprintf(ch_name, _T("profile_%d_dump.dat"), i);
+		//std::wstring prof_dump_fname(ch_name);
+		//stab_solver->dumpProfileStab(prof_dump_fname);
+
+		wp_line->retrace(test_xyz, w_init, *stab_solver,*gs_time, stab::t_WPRetraceMode::W_FIXED);
 		wp_line->print_to_file(fout_wplines_path, std::ios::app);
 
 		StabDB.update(*wp_line);
-
-		delete wp_line;
 
 		}catch(...){
 
 			wxLogMessage(_T("Failed to retrace WPLIneId = %d"), i);
 		}
-
-
 	}
 
 	StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
 	StabDB.export(fout_maxnfactor_path);
 
-final:
-	delete stab_solver, gs_solver, pBlk;
+finish:
+	delete stab_solver, gs_spat, gs_time, pBlk, wp_line;
 	return;
 
 }
+
+void test::king_m35_eN_spat_fixedB(){
+
+	const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
+
+	TCapsMF& caps_mf = G_Plugins.get_caps_mf();
+	TCapsLS& caps_ls = G_Plugins.get_caps_ls();
+	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
+	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
+
+	std::wstring out_path = _T("out_instab_wchars_wbfixed.dat");
+	std::wstring fout_wplines_path(_T("Wave_pack_lines_wbfixed.dat"));
+	std::wstring fout_maxnfactor_path(_T("max_N_wbfixed.dat"));
+	std::wofstream ofstr(&out_path[0]);
+
+	mf::t_DomainBase* pBlk = caps_mf.create_domain();
+	try
+	{
+		pBlk->init(G_Plugins.get_plugin(hsstab::plgMF));
+	}
+	catch (t_GenException e)
+	{
+		wxLogMessage(e.what());
+		return;
+	}
+
+	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
+	stab_solver->init(G_Plugins.get_plugin(plgLS));
+
+	stab::t_GSBase* gs_time = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
+	gs_time->init(G_Plugins.get_plugin(plgGS));
+
+	stab::t_GSBase* gs_spat = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::SPAT);
+	gs_spat->init(G_Plugins.get_plugin(plgGS));
+
+	const int NLinesL = 1;
+	const int NLinesPhi = 1;
+	const int NLinesTotal = NLinesPhi*NLinesL;
+
+	const double DL = 0.8/double(NLinesL);
+	const double DPhi = 160./57./double(NLinesPhi);
+
+	std::vector<mf::t_GeomPoint> PaveGrd(NLinesTotal);
+	stab::t_StabDBase StabDB;
+
+	for (int i=0; i<NLinesL; i++)
+		for (int j=0; j<NLinesPhi; j++){
+
+			double l_start = NLinesL==1 ? 0.49 /*0.2*/ : 0.1 + double(i)/double(NLinesL-1)*0.8; 
+			double phi_start = NLinesPhi==1 ? 3.14/2.0 : 10./57. + double(j)/double(NLinesPhi-1)*160./57.;
+
+			double x_start, y_start, z_start;
+
+			x_start = l_start*cos(HALF_CONE_ANGLE);
+			y_start = l_start*sin(HALF_CONE_ANGLE)*cos(phi_start);
+			z_start = l_start*sin(HALF_CONE_ANGLE)*sin(phi_start);
+
+			if (NLinesPhi==1) z_start+=0.0002;
+
+			int wp_line_id = j*(NLinesL) + i;
+
+			PaveGrd[wp_line_id] = mf::t_GeomPoint(x_start, y_start, z_start);
+		}
+
+		StabDB.init_pave_pts(PaveGrd);
+
+		int npave_pts = StabDB.get_npoints();
+
+		stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*pBlk);
+		wp_line->init(G_Plugins.get_plugin(plgWPTrack));
+
+		for (int i=0; i<npave_pts; i++){
+
+			try{
+
+				const mf::t_GeomPoint& test_xyz = StabDB.get_pave_pt(i).xyz;
+
+				t_WCharsLoc w_init;
+				//0.212389
+				w_init = search_global_initial_wr_fixed(test_xyz, stab_solver, gs_spat, pBlk, 0.212389 /*0.134689*/);//!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				std::wcout<<_T("Init for wpline:")<<w_init; getchar();
+				//stab_solver->dumpProfileStab(_T("profiles_stab.dat"));
+
+				//goto finish;
+
+				int perc_complete = double(i)/double(NLinesTotal)*100.;
+				wxLogMessage(_T("start retrace WPLineId = %d, completed %d perc"), 
+					i, perc_complete);
+
+				// DEBUG
+				//stab_solver->setContext(test_xyz);
+				//wchar_t ch_name[99];
+				//wsprintf(ch_name, _T("profile_%d_dump.dat"), i);
+				//std::wstring prof_dump_fname(ch_name);
+
+				wp_line->retrace(test_xyz, w_init, *stab_solver, *gs_spat, stab::t_WPRetraceMode::WB_FIXED);
+				wp_line->print_to_file(fout_wplines_path, std::ios::app);
+
+				StabDB.update(*wp_line);
+
+			}catch(const t_GenException& ex){
+				wxLogMessage(ex.what());
+			}
+			catch(...){
+
+				wxLogMessage(_T("Failed to retrace WPLIneId = %d"), i);
+			}
+		}
+
+		StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
+		StabDB.export(fout_maxnfactor_path);
+
+finish:
+		delete stab_solver, gs_spat, gs_time, pBlk, wp_line;
+		return;
+
+}
+
 
 void test::king_m35(){
 
@@ -156,7 +300,7 @@ void test::king_m35(){
 	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
 	stab_solver->init(G_Plugins.get_plugin(plgLS));
 
-	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk);
+	stab::t_GSBase* gs_solver = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	const int NLines = 1;
@@ -221,7 +365,7 @@ void test::king_m35(){
 
 			}else{
 
-				w_init = search_global_initial(test_xyz, stab_solver, gs_solver, pBlk);
+				w_init = search_global_initial_time(test_xyz, stab_solver, gs_solver, pBlk);
 
 			}
 
@@ -231,7 +375,7 @@ void test::king_m35(){
 			stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*pBlk);
 			wp_line->init(G_Plugins.get_plugin(plgWPTrack));
 
-			wp_line->retrace(test_xyz, w_init, *stab_solver);
+			wp_line->retrace(test_xyz, w_init, *stab_solver,*gs_solver, stab::t_WPRetraceMode::W_FIXED);
 			wp_line->to_cone_ref_frame(HALF_CONE_ANGLE);
 			wp_line->print_to_file(fout_wplines_path, std::ios::app);
 
@@ -246,7 +390,8 @@ final:
 
 };	
 
-t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+
+t_WCharsLoc search_global_initial_time(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
 								  stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk){
 
 	  stab_solver->setContext(xyz);
@@ -271,7 +416,12 @@ t_WCharsLoc search_global_initial(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solv
 		  al = al_min + dal*j;
 		  beta = al;
 
-		  t_WCharsLoc wave = gs_solver->searchMaxInstab(al, beta);
+		  t_WCharsLoc init_wave;
+
+		  init_wave.a = al;
+		  init_wave.b = beta;
+
+		  t_WCharsLoc wave = gs_solver->searchMaxInstab(init_wave);
 
 		  if (wave.w.imag()>0.0){
 
@@ -325,6 +475,100 @@ trunc_gs:
 
 }
 
+static t_WCharsLoc search_global_initial_wr_fixed(
+	mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
+	stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk, double a_wr){
+
+
+		stab_solver->setContext(xyz);
+
+		const t_StabScales& stab_scales = stab_solver->get_stab_scales();
+
+		gs_solver->setContext(xyz);
+
+		const int n_bt=1; //20
+
+		double bt_min = 0.8;//0.03;
+		double bt_max = 1.2;//2.0;
+
+		double dbt = (bt_max - bt_min)/double(n_bt);
+
+		const double w = a_wr;
+
+		std::vector<t_WCharsLoc> waves_spat;
+
+		std::wofstream fostr_avsb(_T("spectra_a_vs_b_x0.5.dat"));
+		std::wofstream fostr_avsb_raw(_T("spectra_a_vs_b_raw_x0.5.dat"));
+
+		for (int j=0; j<n_bt; j++){
+
+			std::vector<t_WCharsLoc> init_waves_raw;
+
+			std::cout<<"J="<<j<<"\n";
+
+			t_WCharsLoc init_wave;
+
+			init_wave.b = bt_min + dbt*j;
+			init_wave.w = w;
+
+			init_waves_raw = gs_solver->getInstabModes(init_wave);
+
+			//gs_solver->writeSpectrum(_T("spectrum_b0.2_x0.5.dat"));
+
+			for (int i=0; i<init_waves_raw.size(); i++){
+
+				t_WCharsLoc wave = init_waves_raw[i];
+
+
+				//stab_solver->setContext();
+				std::wcout<<_T("GS Init:")<<wave;
+				bool good_init;
+				try
+				{
+					fostr_avsb_raw<<wave.a.real()<<_T("\t")<<wave.a.imag()<<_T("\t")<<wave.b.real()<<_T("\t")<<wave.w.real()<<_T("\n");
+
+					good_init = stab_solver->searchWave(wave, 
+						stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED),
+						stab::t_TaskTreat::SPAT);
+
+					if (good_init && wave.a.real()>=0 && wave.a.imag()<0.0){
+
+						fostr_avsb<<wave.a.real()<<_T("\t")<<wave.a.imag()<<_T("\t")<<wave.b.real()<<_T("\t")<<wave.w.real()<<_T("\n");
+
+						wave.set_scales(stab_solver->get_stab_scales());
+
+						// TODO: nice checking that wave is physical
+						if ( wave.a.real()>=0 && abs(wave.a.imag())<1.0){
+							waves_spat.push_back(wave);
+						}
+					}
+				}
+				catch (...)
+				{
+					continue;
+
+				}
+
+			}
+			
+
+		}	// ~loop over betas
+
+		t_WCharsLoc ret_wave = t_WCharsLoc::find_max_instab_spat(waves_spat);
+
+		// tmp
+		stab_solver->searchWave(ret_wave, 
+			stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED),
+			stab::t_TaskTreat::SPAT);
+		stab_solver->dumpEigenFuctions(_T("crossflow_exmpl.dat"));
+
+		if (ret_wave.a.imag()>=0){
+			ssuGENTHROW(_T("can't find initial!"));
+		}
+
+		return ret_wave;
+};
+
 t_WCharsLoc search_global_initial_static_cf(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
 								  stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk){
 
@@ -350,7 +594,12 @@ t_WCharsLoc search_global_initial_static_cf(mf::t_GeomPoint xyz, stab::t_LSBase*
 		  al = al_min + dal*j;
 		  beta = al;
 
-		  t_WCharsLoc wave = gs_solver->searchMaxInstab(al, beta);
+		  t_WCharsLoc init_wave;
+
+		  init_wave.a = al;
+		  init_wave.b = beta;
+
+		  t_WCharsLoc wave = gs_solver->searchMaxInstab(init_wave);
 
 		  if (wave.w.imag()>0.0){
 
@@ -401,6 +650,92 @@ trunc_gs:
 	  }
 
 	  return ret_wave;
+
+}
+
+// test spatial gs vs temporal gs
+void test::king_m35_gs_spat_vs_time(){
+
+
+	const double PI = acos(-1.0);
+	const double HALF_CONE_ANGLE = 5./180.*PI;
+
+	TCapsMF& caps_mf = G_Plugins.get_caps_mf();
+	TCapsLS& caps_ls = G_Plugins.get_caps_ls();
+	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
+	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
+
+	std::wstring out_path = _T("out_instab_wchars.dat");
+	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
+	std::wstring fout_maxnfactor_path(_T("max_N.dat"));
+	std::wofstream ofstr(&out_path[0]);
+
+	mf::t_DomainBase* pBlk = caps_mf.create_domain();
+	try
+	{
+		pBlk->init(G_Plugins.get_plugin(hsstab::plgMF));
+	}
+	catch (t_GenException e)
+	{
+		wxLogMessage(e.what());
+		return;
+	}
+
+	stab::t_LSBase* stab_solver = caps_ls.create_ls_solver(*pBlk);
+	stab_solver->init(G_Plugins.get_plugin(plgLS));
+
+	stab::t_GSBase* gs_time = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::TIME);
+	gs_time->init(G_Plugins.get_plugin(plgGS));
+
+	stab::t_GSBase* gs_spat = caps_gs.create_gs_solver(*pBlk, stab::t_TaskTreat::SPAT);
+	gs_spat->init(G_Plugins.get_plugin(plgGS));
+
+	double x_start, y_start, z_start;
+
+	double l_start = 0.5;
+	double phi_start = PI/2.0;
+
+	x_start = l_start*cos(HALF_CONE_ANGLE);
+	y_start = l_start*sin(HALF_CONE_ANGLE)*cos(phi_start);
+	z_start = l_start*sin(HALF_CONE_ANGLE)*sin(phi_start);
+
+
+	mf::t_GeomPoint test_xyz(x_start, y_start, z_start);
+
+	t_WCharsLoc w_init;
+	w_init = search_global_initial_time(test_xyz, stab_solver, gs_time, pBlk);
+
+	std::wostringstream wostr;
+	wostr<<w_init<<_T("\nTime to Spat:\n");
+	w_init.to_spat();wostr<<w_init<<_T("\nAdjust with local search:\n");
+
+	stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED, w_init);
+	stab_solver->searchWave(w_init, cond, stab::t_TaskTreat::SPAT);
+	stab_solver->calcGroupVelocity(w_init);
+	wostr<<w_init;log_my::wxLogMessageStd(wostr.str());wostr.str(_T(""));
+
+	// time srch result (after transition to spat & adjust):
+	// alpha = 0.328148 - i*0.018956
+	// beta  = 0.780231
+	//    w  = 0.212389
+
+	t_WCharsLoc w_init_spat;
+	w_init_spat.b = -0.780231;
+	w_init_spat.w = 0.212389;
+
+	gs_spat->setContext(test_xyz);
+	t_WCharsLoc gs_spat_wave = gs_spat->searchMaxInstab(w_init_spat);
+	wostr<<_T("GS Spat result:\n")<<gs_spat_wave;
+	log_my::wxLogMessageStd(wostr.str());wostr.str(_T(""));
+	gs_spat->writeSpectrum(_T("spectrum_spat.dat"));
+
+	cond.wchars = gs_spat_wave;
+	stab_solver->searchWave(gs_spat_wave, cond, stab::t_TaskTreat::SPAT);
+	wostr<<_T("GS With adjust:\n")<<gs_spat_wave;
+	log_my::wxLogMessageStd(wostr.str());wostr.str(_T(""));
+
+
+	delete stab_solver, gs_time, gs_spat, pBlk;
 
 }
 

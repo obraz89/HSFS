@@ -16,7 +16,43 @@
 #include "settings.h"
 //-----------------------------------------------------------------------------
 
+
+task::TTaskParams g_taskParams;
+
 using namespace hsstab;
+
+int get_task_id(const wxString& strName){
+
+	for (int i=0; i<task::TaskNum; i++){
+		if (strName==task::TaskNames[i])
+		{
+			return i;
+		}
+		
+	}
+
+	wxLogMessage(_T("Wrong task name, allowed options:"));
+	for (int i=0; i<task::TaskNum; i++){
+		wxLogMessage(task::TaskNames[i]);
+	}
+	ssuGENTHROW(_T("Wrong task name"));
+	return -1;
+
+}
+
+int get_spattime_id(const wxString& strName){
+
+	for (int i=0; i<task::SpatTimeNum; i++){
+		if (strName==task::SpatTimeNames[i])
+		{
+			return i;
+		}
+
+	}
+	ssuGENTHROW(_T("Wrong Stab Approach Name: Spat or Time allowed"));
+	return -1;
+
+}
 
 bool load_Settings_n_Plugins()
 {
@@ -46,8 +82,6 @@ bool load_Settings_n_Plugins()
 	name[hsstab::plgGS] = conf->Read(_T("glob_search"), cmpnts::PF_GLOBSRCH_NAME);
 	name[hsstab::plgWPTrack] = conf->Read(_T("wptrack"), _T("WPTrack"));
 
-	delete conf;
-
 
 	//
 	// Load selected plugins
@@ -66,6 +100,61 @@ bool load_Settings_n_Plugins()
 
 	ok = G_Plugins.load_plugin(hsstab::plgWPTrack, name[hsstab::plgWPTrack]);
 	if( !ok ) return false;
+
+	//---
+	// configure stability task
+	conf->SetPath(_T("/task") );
+
+	task::TaskNames[task::SearchInstabLoc] = _T("SearchInstabLoc");
+	task::TaskNames[task::Retrace] = _T("Retrace");
+	task::TaskNames[task::MaxInstabLine] = _T("MaxInstabLine");
+	task::TaskNames[task::AnalyzeWChars] = _T("AnalyzeWChars");
+
+	task::SpatTimeNames[task::Spat] = _T("Spat");
+	task::SpatTimeNames[task::Time] = _T("Time");
+
+	wxString strTaskType = conf->Read(_T("task_type"), task::TaskNames[task::SearchInstabLoc]);
+	g_taskParams.id = get_task_id(strTaskType);
+
+	wxString strSpatTime = conf->Read(_T("SpatOrTimeApproach"), task::SpatTimeNames[task::Spat]);
+	g_taskParams.spattime = get_spattime_id(strSpatTime);
+
+	g_taskParams.pave_grd_fname = conf->Read(_T("pave_points_fname"), _T("pave_points.dat"));
+
+	int zero=0;
+
+	if (g_taskParams.id==task::SearchInstabLoc){
+
+		conf->Read(_T("a_ndim_min"), &g_taskParams.a_ndim_min, 1.0e-06);
+		conf->Read(_T("a_ndim_max"), &g_taskParams.a_ndim_max ,1.0);
+		g_taskParams.N_a = conf->Read(_T("N_a"), 10);
+
+
+		conf->Read(_T("b_ndim_min"), &g_taskParams.b_ndim_min, 0.0e+00);
+		conf->Read(_T("b_ndim_max"), &g_taskParams.b_ndim_max, 1.0e+00);
+		g_taskParams.N_b = conf->Read(_T("N_b"), 10);
+
+		conf->Read(_T("w_ndim_min"), &g_taskParams.w_ndim_min, 0.0e+00);
+		conf->Read(_T("w_ndim_max"), &g_taskParams.w_ndim_max, 1.0e+00);
+		g_taskParams.N_w = conf->Read(_T("N_w"), 10);
+
+		g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
+	}
+
+	if (g_taskParams.id==task::Retrace)
+	{
+		conf->Read(_T("w_ndim_min"), &g_taskParams.w_ndim_min, 2.4);
+		conf->Read(_T("w_ndim_max"), &g_taskParams.w_ndim_max, 2.8);
+		g_taskParams.N_w = conf->Read(_T("N_w"), 10);
+
+		conf->Read(_T("b_ndim_min"), &g_taskParams.b_ndim_min, 0.0);
+		conf->Read(_T("b_ndim_max"), &g_taskParams.b_ndim_max, 1.0);
+		g_taskParams.N_b = conf->Read(_T("N_b"), 10);
+
+		g_taskParams.retrace_mode = conf->Read(_T("retrace_mode"), zero);
+	}
+
+	delete conf;
 
 	return true;
 }

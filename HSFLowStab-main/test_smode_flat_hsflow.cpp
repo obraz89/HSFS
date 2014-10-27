@@ -157,7 +157,7 @@ void test::transhyb_base_wartman(){
 		stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*pBlk);
 		wp_line->init(G_Plugins.get_plugin(plgWPTrack));
 
-		wp_line->retrace(test_xyz, init_wave, *stab_solver, stab::t_WPRetraceMode::W_FIXED);
+		wp_line->retrace(test_xyz, init_wave, *stab_solver,*gs_solver, stab::t_WPRetraceMode::W_FIXED);
 		wp_line->print_to_file(fout_wplines_path, std::ios::app);
 
 		//tmp

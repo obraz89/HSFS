@@ -14,22 +14,40 @@ struct TgenericSettings
 	wxString strPrevFieldFN; //файл поля на предыдущем шаге по времени, если пустой - то апроксимация
 	bool initTimeFromFile; //для поля из файла: 0 - обнуление времени, 1 - взять из файла
 	wxString strGridFN;  //имя файла сетки
-	bool remapField;  //пересчитать поле на новую сетку
 
-	//--- Time ---
-	int numTimeSteps; //число шагов по времени
-
-	//--- Iterations ---
-	double epsOut;   //мин погрешность "внешних" интераций (итераций Ньютона на каждом шаге по времени)
-	int iterOut;     //макс число "внешних" итераций (итераций Ньютона на каждом шаге по времени)
-	double epsIn;    //мин погрешность "внутренних" интераций (итераций GMRES на каждой итерации Ньютона)
-	int iterIn;      //макс число "внутренних" итераций (итераций GMRES на каждой итерации Ньютона)
-	int itsFalseJac; //макс число итераций БЕЗ пересчета матрицы Якоби (iterations with False Jacoby matrix)
-	double startNwtM;   //начальное значение параметра регуляризации tau метода Ньютона
-
-	//--- Save ---
-	int timeSteps2Write; //число шагов по времени перед записью в файл
 };
+
+namespace task{
+
+	enum TTaskType { SearchInstabLoc=0, Retrace, MaxInstabLine, AnalyzeWChars, TaskNum};
+
+	extern wxString TaskNames[TaskNum];
+
+	enum TSpatTime {Spat=0, Time, SpatTimeNum};
+
+	extern wxString SpatTimeNames[SpatTimeNum];
+
+	struct TTaskParams{
+
+		int id;
+		wxString pave_grd_fname;
+		int spattime;
+
+		double a_ndim_min, a_ndim_max,
+			   b_ndim_min, b_ndim_max,
+			   w_ndim_min, w_ndim_max;
+
+		int pave_point_id;
+		int N_a, N_b, N_w;
+
+		int retrace_mode;
+
+	};
+
+}
+
+extern task::TTaskParams g_taskParams;
+
 //-----------------------------------------------------------------------------
 
 extern TgenericSettings g_genOpts;

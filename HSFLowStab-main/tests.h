@@ -1,7 +1,13 @@
 namespace test{
 
 	void king_m35();
-	void king_m35_eN();
+	// TODO: after tests trnasform into universal
+	// calc_eN_time_envelope
+	void king_m35_eN_time_envelope();
+	// TODO: after tests transform into universal
+	// calc_eN_spat_fixedB
+	void king_m35_eN_spat_fixedB();
+	// test spatial gs vs time gs
 	void king_m35_gs_spat_vs_time();
 
 	void transhyb_base_08();
@@ -18,5 +24,8 @@ namespace test{
 	//math testing
 	void test_smat();
 	void test_conj_grad_min2D();
+
+	//e-N closures testing
+	void test_fixed_beta_calc();
 
 };
