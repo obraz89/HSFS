@@ -41,7 +41,17 @@ void t_GlobSrchSpat::_init(){
 
 	SlepcInitialize((int*)0,(char***)0,(char*)0,"EigenGS slepc context");
 
+	_resize(_params.NNodes);
+
 };
+
+void t_GlobSrchSpat::_resize(const int new_nnodes){
+
+	_grid.resize(new_nnodes);
+
+	_grid_y_stab.resize(new_nnodes);
+
+}
 
 void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 
@@ -66,39 +76,85 @@ void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 		wxLogError(msg); ssuGENTHROW(msg);
 	}
 
-	_grid.resize(_params.NNodes);
-	_profStab.initialize(profNS, _params.NNodes);
+	// TODO: play with coef
+	// half nodes are placed into coef*bl_thick region
+	const double Thick_HalfNodes_Coef = _params.ThickHalfNodesCoef;
 
-	double y_max = _profStab.get_thick() - _profStab.get_y(0);
-	// TODO: play with coef a
-	// a=1*y_max : half of nodes inside 1/3 of comp domain
-	// a=infinity*y_max : even physical distribution of nodes
-	_a_coef = 1.0*y_max;
-	_b_coef = 1.0 + _a_coef/y_max;
+	double y_max_mf = profNS.get_thick();
+	double bl_thick_mf = y_max_mf/prof_cfg.ThickCoef;
+	double y_i_mf = Thick_HalfNodes_Coef*bl_thick_mf;
+
+	if (y_i_mf>=0.5*y_max_mf){
+		wxString msg(_T("Spatial GS Error: computation domain too small, set larger Bl_Thick coefficient"));
+		wxLogMessage(msg); ssuGENTHROW(msg);
+	}
+
+	double a_coef_mf = y_max_mf*y_i_mf/(y_max_mf - 2*y_i_mf);
+	double b_coef_mf = 1.0 + a_coef_mf/y_max_mf;
+
 	_deta = 1.0/(double)(_params.NNodes-1);	
 
-	for (int i=0; i<_params.NNodes; i++) _grid[i] = i*_deta;
+	std::vector<double> grid_y_mf(_params.NNodes);
+
+	for (int i=0; i<_params.NNodes; i++) {
+		// computation grid
+		_grid[i] = i*_deta;
+		// physical grid
+		grid_y_mf[i] = a_coef_mf*_grid[i]/(b_coef_mf - _grid[i]);
+	}
+
+	_profStab.initialize(profNS, grid_y_mf ,_params.NNodes);
+
+	for (int i=0; i<_params.NNodes; i++) {
+		_grid_y_stab[i] = _profStab.get_rec(i).y;
+	}
+
+	double y_max_stab = _profStab.get_thick();
+	double bl_thick_stab = y_max_stab/prof_cfg.ThickCoef;
+	double y_i_stab = Thick_HalfNodes_Coef*bl_thick_stab;
+
+	//std::wcout<<"bl_thick_stab="<<y_max_stab/prof_cfg.ThickCoef;
+	//_profStab.dump(_T("profStab_x0.2.dat"));
+
+	_a_coef = y_max_stab*y_i_stab/(y_max_stab - 2*y_i_stab);
+	_b_coef = 1.0 + _a_coef/y_max_stab;
 
 }
 
 void t_GlobSrchSpat::setContext(const t_ProfileStab* a_prof_stab){
+	ssuGENTHROW(_T("GS Spatial: Can't set context without bl_thick scale"));
+}
+
+void t_GlobSrchSpat::setContext(const t_ProfileStab* a_prof_stab, double bl_thick_scale){
 	
-	_grid.resize(_params.NNodes);
+	int nnodes = a_prof_stab->get_nnodes();
+
+	_resize(nnodes);
 
 	_profStab = *a_prof_stab;
 
-	double y_max = _profStab.get_thick() - _profStab.get_y(0);
+	// TODO: configurable!
+	const double Thick_HalfNodes_Coef = 2.0;
 
-	// this is what Malik advises
-	double y_semi = _profStab.get_y_by_velo(0.5);
+	double y_max = _profStab.get_thick();
+	// Important: bl_thick_scale should be given in stab scales !
+	double bl_thick = bl_thick_scale;
+	double y_i = Thick_HalfNodes_Coef*bl_thick;
 
-	_a_coef = 2.0*y_semi; // play with coef
+	if (y_i>=0.5*y_max){
+		wxString msg(_T("Spatial GS Error: computation domain too small, set larger Bl_Thick coefficient"));
+		wxLogMessage(msg); ssuGENTHROW(msg);
+	}
+
+	_a_coef = y_max*y_i/(y_max - 2*y_i);
 	_b_coef = 1.0 + _a_coef/y_max;
-	double del = 1.0/(double)(_params.NNodes-1);	
-	for (int i=0; i<_params.NNodes; i++){
-		_grid[i] = (double)(i)*del;
-	};
+	_deta = 1.0/(double)(_params.NNodes-1);	
 
+	for (int i=0; i<nnodes; i++) {
+		// computation grid
+		_grid[i] = i*_deta;
+		_grid_y_stab[i] = _profStab.get_rec(i).y;
+	}
 }
 
 // semi-flag is true if it is k+1/2 point
@@ -127,14 +183,12 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 	const double g_1MaMa = (mf_params.Gamma-1.0)*Me*Me;
 	const double Pr = mf_params.Pr;
 
-	// rename a_y is not input but lazy to rewrite
-	// get physical y
-	double cur_eta = _grid[a_nnode];
+	double cur_y_stab = _grid_y_stab[a_nnode];
 	if (a_semi_flag){
-		cur_eta+=0.5*(_grid[a_nnode+1]-_grid[a_nnode]);
+		cur_y_stab+=0.5*(_grid_y_stab[a_nnode+1]-_grid_y_stab[a_nnode]);
 	};
-	const double a_y = _a_coef*cur_eta/(_b_coef-cur_eta);
-	t_ProfRec rec = _profStab.get_rec(a_y);
+
+	t_ProfRec rec = _profStab.get_rec(cur_y_stab);
 
 	const double U = rec.u;
 	const double U1 = rec.u1;

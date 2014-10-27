@@ -29,6 +29,8 @@ namespace pf{
 		t_ProfileStab _profStab;
 		double _a_coef, _b_coef;
 		std::vector<double> _grid;
+		std::vector<double> _grid_y_stab;
+		double _deta;
 
 		std::vector<t_Complex> _spectrum;
 		std::vector<t_WCharsLoc> _eigens;
@@ -52,6 +54,8 @@ namespace pf{
 			const int a_nnode, const int a_eq_id);
 
 		void _init();
+
+		void _resize(const int new_nnodes);
 
 		int _solve();
 	public:

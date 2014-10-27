@@ -37,6 +37,7 @@ namespace pf{
 		t_ProfileStab _profStab;
 		double _a_coef, _b_coef;
 		std::vector<double> _grid;
+		std::vector<double> _grid_y_stab;
 		double _deta;
 
 		std::vector<t_Complex> _spectrum;
@@ -67,6 +68,8 @@ namespace pf{
 
 		void _init();
 
+		void _resize(const int new_nnodes);
+
 		int _solve();
 	public:
 
@@ -78,6 +81,7 @@ namespace pf{
 		void setContext(const mf::t_GeomPoint& a_xyz);
 
 		void setContext(const t_ProfileStab* a_prof_stab);
+		void setContext(const t_ProfileStab* a_prof_stab, double bl_thick_scale);
 
 		/*void setContext(const std::wstring fname, const t_StabScales& a_scales);*/
 

@@ -15,7 +15,12 @@ t_EigenGS::t_EigenGS(const mf::t_DomainBase& a_blk):_rBlk(a_blk),
 _A(GS_NVARS_TIME),
 _B(GS_NVARS_TIME),
 _C(GS_NVARS_TIME),
-_CW(GS_NVARS_TIME){};
+_CW(GS_NVARS_TIME){
+	_A.setToZero(); 
+	_B.setToZero();
+	_C.setToZero();
+	_CW.setToZero();
+};
 
 void t_EigenGS::init(const hsstab::TPlugin& g_plug){
 
@@ -29,39 +34,19 @@ void t_EigenGS::init(const hsstab::TPlugin& g_plug){
 
 void t_EigenGS::_init(){
 
-	//_A.resize(_params.NVars);
-	//_B.resize(_params.NVars);
-	//_C.resize(_params.NVars);
-	//_CW.resize(_params.NVars);
-
 	SlepcInitialize((int*)0,(char***)0,(char*)0,"EigenGS slepc context");
 
+	_resize(_params.NNodes);
+
 };
 
-/*
-void t_EigenGS::setContext(const mf::t_BlkInd a_ind, 
-					  const double a_alpha, const double a_beta,
-					  const int a_nnodes){
-	if (a_nnodes>0){
-		_params.NNodes = a_nnodes;
-	}
-	_alpha = a_alpha;
-	_beta = a_beta;
-	t_ProfileNS profNS(_rBlk);
+void t_EigenGS::_resize(const int new_nnodes){
 
-	profNS.initialize(a_ind, _params.ThickCoef);
-	_grid.resize(_params.NNodes);
-	_profStab.initialize(profNS, _params.NNodes);
-	
-	double y_max = _profStab.get_thick() - _profStab.get_y(0);
-	_a_coef = 1.0*y_max; // play with coef
-	_b_coef = 1.0 + _a_coef/y_max;
-	double del = 1.0/(double)(_params.NNodes-1);	
-	for (int i=0; i<_params.NNodes; i++){
-		_grid[i] = (double)(i)*del;
-	};
-};
-*/
+	_grid.resize(new_nnodes);
+
+	_grid_y_stab.resize(new_nnodes);
+
+}
 
 void t_EigenGS::setContext(const mf::t_GeomPoint& a_xyz){
 
@@ -86,17 +71,48 @@ void t_EigenGS::setContext(const mf::t_GeomPoint& a_xyz){
 		wxLogError(msg); ssuGENTHROW(msg);
 	}
 
-	_grid.resize(_params.NNodes);
-	_profStab.initialize(profNS, _params.NNodes);
+	// TODO: play with coef
+	// half nodes are placed into coef*bl_thick region
+	const double Thick_HalfNodes_Coef = _params.ThickHalfNodesCoef;
 
-	double y_max = _profStab.get_thick() - _profStab.get_y(0);
-	_a_coef = 1.0*y_max; // TODO: play with coef
-	_b_coef = 1.0 + _a_coef/y_max;
-	double del = 1.0/(double)(_params.NNodes-1);	
+	double y_max_mf = profNS.get_thick();
+	double bl_thick_mf = y_max_mf/prof_cfg.ThickCoef;
+	double y_i_mf = Thick_HalfNodes_Coef*bl_thick_mf;
 
-	for (int i=0; i<_params.NNodes; i++){
-		_grid[i] = (double)(i)*del;
-	};
+	if (y_i_mf>=0.5*y_max_mf){
+		wxString msg(_T("Spatial GS Error: computation domain too small, set larger Bl_Thick coefficient"));
+		wxLogMessage(msg); ssuGENTHROW(msg);
+	}
+
+	double a_coef_mf = y_max_mf*y_i_mf/(y_max_mf - 2*y_i_mf);
+	double b_coef_mf = 1.0 + a_coef_mf/y_max_mf;
+
+	_deta = 1.0/(double)(_params.NNodes-1);	
+
+	std::vector<double> grid_y_mf(_params.NNodes);
+
+	for (int i=0; i<_params.NNodes; i++) {
+		// computation grid
+		_grid[i] = i*_deta;
+		// physical grid
+		grid_y_mf[i] = a_coef_mf*_grid[i]/(b_coef_mf - _grid[i]);
+	}
+
+	_profStab.initialize(profNS, grid_y_mf ,_params.NNodes);
+
+	for (int i=0; i<_params.NNodes; i++) {
+		_grid_y_stab[i] = _profStab.get_rec(i).y;
+	}
+
+	double y_max_stab = _profStab.get_thick();
+	double bl_thick_stab = y_max_stab/prof_cfg.ThickCoef;
+	double y_i_stab = Thick_HalfNodes_Coef*bl_thick_stab;
+
+	//std::wcout<<"bl_thick_stab="<<y_max_stab/prof_cfg.ThickCoef;
+	//_profStab.dump(_T("profStab_x0.2.dat"));
+
+	_a_coef = y_max_stab*y_i_stab/(y_max_stab - 2*y_i_stab);
+	_b_coef = 1.0 + _a_coef/y_max_stab;
 
 }
 
@@ -125,29 +141,15 @@ void t_EigenGS::setMatrices(const int a_nnode, const bool a_semi_flag){
 
 	// rename a_y is not input but lazy to rewrite
 	// get physical y
-	double cur_eta = _grid[a_nnode];
+
+	double cur_y_stab = _grid_y_stab[a_nnode];
 	if (a_semi_flag){
-		cur_eta-=0.5*(_grid[a_nnode]-_grid[a_nnode-1]);
+		cur_y_stab-=0.5*(_grid_y_stab[a_nnode]-_grid_y_stab[a_nnode-1]);
 	};
-	const double a_y = _a_coef*cur_eta/(_b_coef-cur_eta);
+
+	const double a_y = cur_y_stab;
 	t_ProfRec rec = _profStab.get_rec(a_y);
-	/*
-	const double u = _profStab.getValue(a_y, _profStab.u);
-	const double u1 = _profStab.getValue(a_y, _profStab.u1);
-	const double u2 = _profStab.getValue(a_y, _profStab.u2);
 
-	const double w = _profStab.getValue(a_y, _profStab.w);
-	const double w1 = _profStab.getValue(a_y, _profStab.w1);
-	const double w2 = _profStab.getValue(a_y, _profStab.w2);
-
-	const double t = _profStab.getValue(a_y, _profStab.t);
-	const double t1 = _profStab.getValue(a_y, _profStab.t1);
-	const double t2 = _profStab.getValue(a_y, _profStab.t2);
-
-	const double mu = _profStab.getValue(a_y, _profStab.mu);
-	const double mu1 = _profStab.getValue(a_y, _profStab.mu1);
-	const double mu2 = _profStab.getValue(a_y, _profStab.mu2);
-	*/
 	const double inv_t = 1.0/rec.t;
 	const double inv_mu = 1.0/rec.mu;
 	// k''/k:
@@ -278,7 +280,7 @@ void t_EigenGS::fill_SO_template(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx&
 	int l_base = first_block ? 0 : (a_nnode-2)*_params.NVars;
 	int s_base=0;
 // uniform grid
-	const double step = _grid[a_nnode] - _grid[a_nnode-1];
+	const double step = _deta;
 	const double inv_step = 1.0/step;
 	const double inv_step2 = inv_step*inv_step;
 	double f1, f2, f3;
@@ -331,13 +333,6 @@ void t_EigenGS::fill_SO_template(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx&
 		};	
 		_insert_inds[s_base+i] = l_base + i;
 	};
-	// DEBUG
-	double del = 1.0/(double)(_params.NNodes-1);
-	for (int i=0; i<_insert_vals.size(); i++){
-	//	_insert_vals[i]*=pow(del,2);
-	};
-	// DEBUG		
-	// _insert_vals and _insert_inds filled
 };
 // we have only one first order continuity equation 
 // a_eq_id = 2 
@@ -359,7 +354,7 @@ void t_EigenGS::fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx&
 	int l_base = first_block ? 0 : (a_nnode-2)*_params.NVars;
 	int s_base=0;
 // uniform grid
-	const double step = _grid[a_nnode] - _grid[a_nnode-1];
+	const double step = _deta;
 	const double inv_step = 1.0/step;
 	const double inv_step2 = inv_step*inv_step;
 	double f1, f2, f3;
@@ -392,13 +387,6 @@ void t_EigenGS::fill_FO_template(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx&
 		};
 		_insert_inds[s_base+i] = l_base + i;
 	};
-	// DEBUG
-	double del = 1.0/(double)(_params.NNodes-1);
-	for (int i=0; i<_insert_vals.size(); i++){
-		//_insert_vals[i]*=del;
-	}
-	// DEBUG
-	// filled FO template
 };
 
 
@@ -617,6 +605,7 @@ std::vector<t_WCharsLoc> t_EigenGS::getInstabModes(const t_WCharsLoc& init_wave)
 				init_wave.a = _alpha;
 				init_wave.b = _beta;
 				init_wave.w = *it;
+				init_wave.set_treat(stab::t_TaskTreat::TIME);
 				inits.push_back(init_wave);
 			}
 		}
@@ -673,6 +662,7 @@ std::vector<t_WCharsLoc> t_EigenGS::searchInstabFixed(t_Mode mode, double fixed_
 		t_WCharsLoc init_wave;
 		init_wave.a = a;
 		init_wave.b = b;
+		init_wave.set_treat(stab::t_TaskTreat::TIME);
 		std::vector<t_WCharsLoc> inits = getInstabModes(init_wave);
 		all_initials.push_back(t_WCharsLoc::find_max_instab_time(inits));
 	};
