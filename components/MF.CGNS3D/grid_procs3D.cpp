@@ -203,6 +203,9 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 		double* x = new double[nx0*ny0*nz0];
 		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",RealDouble,irmin,irmax, x);
 
+		if( res != CG_OK )
+			wxLogError(_T("cg_ccord_read error:%s"), wxString::FromAscii(cg_get_error()).c_str());
+
 		double* y = new double[nx0*ny0*nz0];
 		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateY",RealDouble,irmin,irmax, y);
 
@@ -282,6 +285,9 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 	return true;
 }
 //-----------------------------------------------------------------------------
+
+// ~_doLoadGrid_cgns from HSFlow(20140508)
+// version of _doLoadGrid_cgns from _HSFlow(20140508)
 
 
 /**

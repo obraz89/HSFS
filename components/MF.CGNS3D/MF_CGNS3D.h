@@ -39,6 +39,7 @@ namespace mf{
 		//virtual void interpolate_to_point(const t_GeomPoint& point, t_Rec& rec) const=0;
 
 		void get_rec(const mf::cg::TZone& blk, int i, int j, int k, mf::t_Rec& rec) const;
+
 		t_Rec get_rec(const t_GeomPoint& xyz) const;
 
 		// from cg::TDomain

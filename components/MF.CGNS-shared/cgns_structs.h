@@ -462,6 +462,10 @@ namespace mf{
 
 			virtual double calc_bl_thick(const t_GeomPoint& xyz) const;
 
+			void calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const;
+
+			void calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const;
+
 			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
 				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
 

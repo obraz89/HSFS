@@ -134,6 +134,7 @@ public:
 	int get_bound_ind_velo(const t_BlkInd ind) const;
 
 	double calc_bl_thick(const t_BlkInd ind) const;
+
 	double calc_bl_thick(const mf::t_GeomPoint& xyz) const;
 
 	double calc_delta(const t_BlkInd ind) const;
@@ -181,6 +182,10 @@ public:
 	virtual double calc_mach(const mf::t_GeomPoint& xyz) const;
 
 	double calc_bl_thick(const mf::t_GeomPoint& xyz) const;
+
+	void calc_nearest_surf_rec(const mf::t_GeomPoint& xyz, mf::t_Rec& surf_rec) const;
+
+	void calc_nearest_inviscid_rec(const mf::t_GeomPoint& xyz, mf::t_Rec& outer_rec) const;
 
 	bool is_point_inside(const mf::t_GeomPoint& xyz) const;
 

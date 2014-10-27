@@ -106,6 +106,27 @@ double t_Domain::calc_bl_thick(const t_GeomPoint& xyz) const{
 	return get_blk().calc_bl_thick(xyz);
 }
 
+void t_Domain::calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const{
+
+	const t_Block& blk = get_blk();
+	t_BlkInd nrst_ind = blk.get_nearest_index_raw(xyz);
+	t_BlkInd surf_ind = nrst_ind;
+	surf_ind.j = 0;
+
+	surf_rec = blk.get_rec(surf_ind);
+
+};
+
+void t_Domain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const{
+
+	const t_Block& blk = get_blk();
+	t_BlkInd nrst_ind = blk.get_nearest_index_raw(xyz);
+	t_BlkInd bound_ind = nrst_ind;
+	bound_ind.j = blk.get_bound_index(nrst_ind);
+
+	outer_rec = blk.get_rec(bound_ind);
+};
+
 double t_Domain::calc_x_scale(const mf::t_GeomPoint& xyz) const{
 	return get_blk().calc_x_scale(xyz);
 }

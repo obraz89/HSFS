@@ -41,6 +41,10 @@ namespace mf{
 			// TODO: implement for optimization
 			// virtual void get_rec(const t_GeomPoint& xyz, t_Rec& rec) const=0;
 
+			virtual void calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const = 0;
+
+			virtual void calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const = 0;
+
 			virtual const t_FldParams& get_mf_params() const=0;
 
 			virtual t_Rec interpolate_to_point(const t_GeomPoint& point) const=0;

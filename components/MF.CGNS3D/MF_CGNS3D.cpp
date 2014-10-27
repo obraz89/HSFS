@@ -102,9 +102,6 @@ void t_MFCGNS3D::get_rec(const TZone& blk, int i, int j, int k, mf::t_Rec& rec) 
 
 }
 
-//t_ZoneNode t_MFCGNS2D
-
-
 t_Rec t_MFCGNS3D::interpolate_to_point(const t_GeomPoint& point) const{
 
 	return TDomain::_interpolate_to_point_surf_raw(point);

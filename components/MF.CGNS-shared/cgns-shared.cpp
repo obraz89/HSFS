@@ -270,6 +270,12 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 	{
 		double* x = new double[nx*ny*nz];
 		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateX",RealDouble,irmin,irmax, x);
+		if( r != CG_OK ){
+
+			wxLogError(_T("cg_ccord_read error"));
+			wxLogError(_T("%s"), wxString::FromAscii(cg_get_error()).c_str());
+
+		}  
 
 		double* y = new double[nx*ny*nz];
 		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateY",RealDouble,irmin,irmax, y);
@@ -286,7 +292,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 			wxLogError( _("Can't read coordinates from zone '%s'(#%d)"),
 				wxString::FromAscii(szZone).c_str(), iZone
 			);
-			return false;
+			//return false;
 		}
 
 		for( int k=0; k<nz; ++k )
@@ -341,6 +347,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 			r = cg_field_read(fileID,iBase,iZone,iFlow,(char*)name,RealDouble,irmin,irmax, FF);
 			if( r != CG_OK )
 			{
+				wxLogError(_T("%s"), wxString::FromAscii(cg_get_error()).c_str());
 				wxLogError(
 					_("CGNS: Can't read '%s' data from zone '%s'(#%d)"),
 					wxString::FromAscii(name).c_str(),
@@ -383,7 +390,8 @@ bool mf::cg::TDomain::_is_face_of_bcwall_type(const char* facename) const{
 
 		std::string facename_str(facename);
 
-		if (*iter==facename_str) return true;
+		if (*iter==facename_str) 
+			return true;
 
 	}
 
