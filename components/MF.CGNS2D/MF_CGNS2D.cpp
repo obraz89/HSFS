@@ -51,13 +51,28 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 
 	// here come all viscous wall bc identifiers
 	// TODO: do i need to keep this 33 size to compare in _is_face_of_bcwall_type
-	// TODO: make entry in config file for wall BCs. 
-	// maybe with wildcards like blk*-Ymin ? o_O
+	// IMPORTANT TODO: make entry in config file for wall BCs names.
+
+	// now just using common names wall and Ymin
 
 	char viscBCWallName[33];
 
 	sprintf(viscBCWallName, "wall");
 	_vecBCWallNames.push_back(std::string(viscBCWallName));
+
+	sprintf(viscBCWallName, "Ymin");
+	_vecBCWallNames.push_back(std::string(viscBCWallName));
+
+	// tmp, TODO: read file with wall faces identifiers
+	for (int i=1; i<=8; i++){
+
+		sprintf(viscBCWallName, "dom-k001_j001_i00%d-Ymin", i);
+		_vecBCWallNames.push_back(std::string(viscBCWallName));
+
+		sprintf(viscBCWallName, "dom-j001_i00%d-Ymin", i);
+		_vecBCWallNames.push_back(std::string(viscBCWallName));
+
+	}
 
 	// tmp: hardcoded identifiers blk*-Ymin
 	/*for (int bid=1; bid<=64; bid++){

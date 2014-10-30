@@ -122,7 +122,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -272,7 +272,7 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -351,6 +351,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\test_fixed_beta_calc.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\test_fmode_selfsim.cpp"
 					>
 				</File>
@@ -371,6 +375,14 @@
 					>
 				</File>
 			</Filter>
+			<Filter
+				Name="tasks"
+				>
+				<File
+					RelativePath=".\tasks.cpp"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -386,7 +398,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\solvers_glob.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath=".\tasks.h"
 				>
 			</File>
 			<File

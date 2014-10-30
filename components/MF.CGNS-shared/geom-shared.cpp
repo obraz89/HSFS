@@ -297,7 +297,7 @@ stop:;
 			if (!point_inside){
 				// now check robustness
 				wxLogError(
-					_T("Failed to interpolate to point. Zoneid = %d"), 
+					_T("Failed to interpolate to point - point is outside. Zoneid = %d\n Rescue with zero order..."), 
 					znode_mdsurf.iZone);
 				// rescue with zero order
 
@@ -330,8 +330,8 @@ stop:;
 
 bool TDomain::_is_point_inside(const t_GeomPoint& xyz) const{
 
-	wxLogError(_T("MF.CGNS-shared: _is_point_inside not yet implemented correctly! Cones only!"));
-	return (xyz.x()>0.05 && xyz.x()<=1.0 && xyz.z()>0.0);
+	wxLogError(_T("MF.CGNS-shared: _is_point_inside not yet implemented correctly! Treating x only, case dependent!"));
+	return (xyz.x()>0.05 && xyz.x()<=0.9 /*&& xyz.z()>0.0*/);
 
 }
 
@@ -458,6 +458,7 @@ void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 	matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
 
 	du_dn_wall = du.norm()/dr.norm();
+	//std::cout<<"wall dudn="<<du_dn_wall<<"\n";
 	wall_xyz.set(cur_rec);
 
 	// 1 step done
@@ -489,12 +490,45 @@ void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 				if (du_dn_cur<=du_dn_wall*BL_BOUND_VELO_TOL)
 				{
 
+					//wxLogMessage(_T("Zone=%d, i=%d,j=%d,k=%d"), surf_znode.iZode, i,j,k);
 					outer_znode.iZone = surf_znode.iZone;
 					outer_znode.iNode.set(i,j,k);
 
+					// debug 
+					//std::cout<<"iZone="<<outer_znode.iZone<<";ijk=["<<outer_znode.iNode.i<<";"<<outer_znode.iNode.j<<";"<<outer_znode.iNode.k<<"]\n";
+					//std::cout<<"Debug: Bound i,j,k="<<i<<";"<<j<<";"<<k<<"\n";
+
 					out_xyz = cur_xyz;
 					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-					bl_thick = dr.norm();
+
+					double bl_thick_direct = dr.norm();
+
+					// calculate disp thick
+					double delta = 0;
+					t_Vec3Dbl uu, ue;
+					double ue_norm = cur_uvw.norm();
+					for (int ii=i_s; ii<=i; ii++)
+						for (int jj=j_s; jj<=j; jj++)	// j
+							for(int kk=k_s; kk<=k; kk++){
+								get_rec(blk, ii, jj, kk, cur_rec);
+								get_rec(blk, ii + di, jj + dj, kk + dk, nxt_rec);
+
+								cur_xyz.set(cur_rec);
+								nxt_xyz.set(nxt_rec);
+
+								uu.set(cur_rec.u, cur_rec.v, cur_rec.w);
+
+								matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+								double coef = 1.0-uu.norm()/ue_norm;
+								delta+=coef*dr.norm();
+							}
+
+
+					//bl_thick = dr.norm();
+					bl_thick = bl_thick_direct;
+					//wxLogMessage(_T("Old Dels=%f"), float(bl_thick_direct));
+					//bl_thick = 2.84256*delta;
+					//wxLogMessage(_T("Bl Thick=%f"), float(bl_thick));
 					return;
 				}
 				
@@ -520,6 +554,30 @@ double TDomain::calc_bl_thick(const t_GeomPoint& xyz) const{
 
 	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
 	return bl_thick;
+
+};
+
+void TDomain::calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const{
+
+	t_ZoneNode surf_znode, outer_znode;
+	double bl_thick;
+
+	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
+	t_BlkInd& ind = surf_znode.iNode;
+
+	get_rec(Zones[surf_znode.iZone-1], ind.i, ind.j, ind.k, surf_rec);
+
+};
+
+void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const{
+
+	t_ZoneNode surf_znode, outer_znode;
+	double bl_thick;
+
+	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
+	t_BlkInd& ind = outer_znode.iNode;
+
+	get_rec(Zones[outer_znode.iZone-1], ind.i, ind.j, ind.k, outer_rec);
 
 };
 

@@ -12,6 +12,10 @@ using namespace std;
 
 #include "tests.h"
 
+#include "tasks.h"
+
+#include "solvers_glob.h"
+
 bool load_Settings_n_Plugins();
 
 int main(int argc, char* argv[]){
@@ -64,7 +68,52 @@ int main(int argc, char* argv[]){
 
 	
 	try{
-		test::king_m35();
+		//test::king_m35();
+		//test::king_m35_eN();
+		test::king_m35_gs_spat_vs_time();getchar();return 0;
+		//test::king_m35_eN_time_envelope();
+
+		//test::king_m35_eN_spat_fixedB();
+		//return 0;
+
+		task::init_glob_solvers();
+
+		// tmp. debug
+		//mf::t_GeomPoint test_xyz(0.08859,0.022,0.0);
+		//g_pStabSolver->setContext(test_xyz);return 0;
+		//g_pStabSolver->dumpProfileStab(_T("profiles_stab_test.dat"));
+
+		//double ff = g_pMFDomain->calc_bl_thick(test_xyz);
+		//std::cout<<"BL Thick:"<<ff<<"\n";
+
+		//std::cout<<"Dels="<<g_pStabSolver->get_stab_scales().Dels<<";"
+		//	     <<"UeDim="<<g_pStabSolver->get_stab_scales().UeDim
+		//		 <<"Me"<<g_pStabSolver->get_stab_scales().Me<<"\n";
+
+		//g_pStabSolver->setContext(mf::t_GeomPoint(0.458244,0.054810,0.0));
+		//return 0;
+
+		task::init_stab_db();
+
+		switch (g_taskParams.id)
+		{
+		case task::TTaskType::SearchInstabLoc:
+			switch (g_taskParams.spattime)
+			{
+			case task::TSpatTime::Spat:
+				task::search_max_instab_fixed_point_spat(g_taskParams);
+				break;
+			case task::TSpatTime::Time:
+				task::search_max_instab_fixed_point_time(g_taskParams);
+			default :
+				ssuGENTHROW(_T("Search Max Instab Local: Wrong Mode"));
+				break;
+			}
+			break;
+		case task::TTaskType::Retrace:
+			task::retrace_wplines_wfixed();
+			break;
+		}
 	}
 	catch(t_GenException e){
 		wxLogError(e.what());
@@ -72,6 +121,8 @@ int main(int argc, char* argv[]){
 	catch(...){
 		wxLogError(_T("Something went wrong...see log"));
 	}
+
+	task::destroy_glob_solvers();
 }
 /*
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
