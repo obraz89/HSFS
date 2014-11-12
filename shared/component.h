@@ -13,7 +13,7 @@
 
 #include "wx/fileconf.h"
 
-#include "common_struct.h"
+#include "common_data.h"
 
  class IMPEXP_SHARED t_BaseParam{
 public:

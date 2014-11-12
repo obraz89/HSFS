@@ -2,7 +2,7 @@
 #define __MF_SHARED
 
 #include "math_operands.h"
-#include "common_struct.h"
+#include "common_data.h"
 
 #include "dll_impexp-phys_common.h"
 

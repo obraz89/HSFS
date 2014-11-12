@@ -17,3 +17,6 @@ const wxString cmpnts::PF_GLOBSRCH_NAME = _T("PF.GlobSearch");
 const wxString cmpnts::MF_CONF_DOMAIN = _T("MeanFlow");
 const wxString cmpnts::STABSOLVER_CONF_DOMAIN = _T("LocalSearch");
 const wxString cmpnts::EIGEN_CONF_DOMAIN= _T("GlobalSearch");
+
+// solving state
+TState G_State;

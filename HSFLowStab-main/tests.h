@@ -10,6 +10,8 @@ namespace test{
 	// test spatial gs vs time gs
 	void king_m35_gs_spat_vs_time();
 
+	void king_m35_generate_pave_points();
+
 	void transhyb_base_08();
 	void transhyb_base_wartman();
 	void profile_compar();
