@@ -23,5 +23,7 @@ namespace task{
 
 	void retrace_wplines_wfixed();
 
+	void get_profiles();
+
 
 }

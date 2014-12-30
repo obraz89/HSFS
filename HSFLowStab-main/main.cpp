@@ -16,6 +16,10 @@ using namespace std;
 
 #include "solvers_glob.h"
 
+// IMPORTANT TODO: migrate from slepc to sequential in global search solvers
+// after that slepc can be replaced by MPI here
+//#include "slepcs.h"
+
 bool load_Settings_n_Plugins();
 
 int main(int argc, char* argv[]){
@@ -70,7 +74,7 @@ int main(int argc, char* argv[]){
 	try{
 		//test::king_m35();
 		//test::king_m35_eN();
-		test::king_m35_gs_spat_vs_time();getchar();return 0;
+		//test::king_m35_generate_pave_points();getchar();return 0;
 		//test::king_m35_eN_time_envelope();
 
 		//test::king_m35_eN_spat_fixedB();
@@ -113,6 +117,8 @@ int main(int argc, char* argv[]){
 		case task::TTaskType::Retrace:
 			task::retrace_wplines_wfixed();
 			break;
+		case task::TTaskType::GetProfiles:
+			task::get_profiles();
 		}
 	}
 	catch(t_GenException e){

@@ -191,6 +191,10 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 		pid_e = pave_pnt_ind;
 	}
 
+
+	std::ofstream fostr_all("wchars_all_loc.dat", std::ios::app);
+	std::ofstream fostr_max("wchars_max_loc.dat", std::ios::app);
+
 	for (int pid=pid_s; pid<=pid_e; pid++){
 
 		if (pid_s!=pid_e){
@@ -221,14 +225,12 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 
 			// debug
 			const t_WCharsLoc& lw = cur_max_wave;
-			std::ofstream fostr("wchars_all_loc.dat", std::ios::app);
-			fostr<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
+			fostr_all<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
 				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()
 				<<"\n";
 
 		}
 
-		std::ofstream fostr("wchars_max_loc.dat", std::ios::app);
 		if (max_waves_spat.size()>0){
 			cur_max_wave = t_WCharsLoc::find_max_instab_spat(max_waves_spat);
 
@@ -237,14 +239,16 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 			const t_WCharsLoc& lw = cur_max_wave;
 			const t_WCharsLocDim& ld = ret_wave;
 
-			fostr<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
+			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
 				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()<<"\t"
 				<<ld.a.real()<<"\t"<<ld.a.imag()<<"\t"<<ld.b.real()<<"\t"<<ld.b.imag()<<"\t"<<ld.w.real()<<"\t"<<ld.w.imag()
 				<<"\n";
 		}else{
-			fostr<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"Failed to find wave"<<"\n";
+			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<" --- Failed to find wave"<<"\n";
 
 		}
+
+		fostr_max.flush();
 
 
 	}
@@ -492,3 +496,20 @@ void task::retrace_wplines_wfixed(){
 	}
 
 };
+
+void task::get_profiles(){
+
+	int npts = g_pStabDB->get_npoints();
+
+	if (npts<=0) wxLogError(_T("Err: No points provided to extract profiles from..."));
+
+	for (int j=0; j<npts; j++){
+
+		g_pStabSolver->setContext(g_pStabDB->get_pave_pt(j).xyz);
+		wchar_t szFname[33];
+		swprintf(szFname, _T("ProfileStab_%d.dat"), j);
+		g_pStabSolver->dumpProfileStab(szFname);
+
+	}
+
+}

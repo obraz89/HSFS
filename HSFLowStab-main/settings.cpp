@@ -109,6 +109,7 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::Retrace] = _T("Retrace");
 	task::TaskNames[task::MaxInstabLine] = _T("MaxInstabLine");
 	task::TaskNames[task::AnalyzeWChars] = _T("AnalyzeWChars");
+	task::TaskNames[task::GetProfiles] = _T("GetProfiles");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
