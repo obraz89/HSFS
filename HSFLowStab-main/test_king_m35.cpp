@@ -31,6 +31,43 @@ static void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave,
 									stab::t_LSBase* stab_solver, stab::t_GSBase* gs_solver, 
 									mf::t_DomainBase* pBlk);
 
+void test::king_m35_generate_pave_points(){
+
+	const double PI = acos(-1.0);
+	const double HALF_CONE_ANGLE = 5./180.*PI;
+
+	std::ofstream f_ostr("pave_points.dat");
+
+	const int NLinesL = 10;
+	const int NLinesPhi = 10;
+	const int NLinesTotal = NLinesPhi*NLinesL;
+
+	f_ostr<<NLinesTotal<<"\n";
+
+	for (int j=0; j<NLinesPhi; j++)
+		for (int i=0; i<NLinesL; i++)
+		{
+
+			double l_start = NLinesL==1 ? 0.5 : 0.1 + double(i)/double(NLinesL-1)*0.8; 
+			double phi_start = NLinesPhi==1 ? 3.14/2.0 : 0. + double(j)/double(NLinesPhi-1)*PI;
+
+			double x_start, y_start, z_start;
+
+			x_start = l_start*cos(HALF_CONE_ANGLE);
+
+			// to be a little above surface
+			double r_start = l_start*sin(HALF_CONE_ANGLE) + 1.0e-04;
+
+			y_start = r_start*cos(phi_start);
+			z_start = r_start*sin(phi_start);
+
+			int wp_line_id = j*(NLinesL) + i;
+
+			f_ostr<<x_start<<"\t"<<y_start<<"\t"<<z_start<<"\n";
+
+		}
+
+}
 
 void test::king_m35_eN_time_envelope(){
 
