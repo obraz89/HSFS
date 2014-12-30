@@ -8,6 +8,10 @@ using namespace hsstab;
 
 //---------------------------------------------------------------------3D params
 
+const t_CGNS3DParams& t_MFCGNS3D::get_params() const{
+	return _base_params;
+};
+
 const t_FldParams& t_MFCGNS3D::get_mf_params() const{return _base_params;}
 
 //----------------------------------------------------------------shared init
@@ -45,6 +49,8 @@ void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 	g.add("MolWeight", 2.7e-02, _T("Dimensional molecular weight of the gas[kg/mol*K]")); 
 
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
+
+	g.add("BCWallFamilyNames", _T("Ymin, wall"), _T("BC Family names for viscous wall"));
 }
 
 void mf::cg::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){

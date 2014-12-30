@@ -3,6 +3,8 @@
 #include "MF_CGNS2D.h"
 #include "common_data.h"
 
+#include "wx/tokenzr.h"
+
 using namespace hsstab;
 using namespace mf;
 using namespace mf::cg;
@@ -49,37 +51,22 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 	G_vecCGNSFuncNames.push_back("Pressure");
 	G_vecCGNSFuncNames.push_back("Temperature");
 
-	// here come all viscous wall bc identifiers
-	// TODO: do i need to keep this 33 size to compare in _is_face_of_bcwall_type
-	// IMPORTANT TODO: make entry in config file for wall BCs names.
+	wxString strBCWallFamNames = g.get_string_param("BCWallFamilyNames");
 
-	// now just using common names wall and Ymin
+	wxArrayString wxBCNames = wxStringTokenize(strBCWallFamNames, _T(","));
 
-	char viscBCWallName[33];
+	for (int i=0; i<wxBCNames.Count(); i++) {
 
-	sprintf(viscBCWallName, "wall");
-	_vecBCWallNames.push_back(std::string(viscBCWallName));
+		wxString& rStr = wxBCNames[i];
 
-	sprintf(viscBCWallName, "Ymin");
-	_vecBCWallNames.push_back(std::string(viscBCWallName));
+		// trim from both left and right
+		rStr.Trim(true);rStr.Trim(false);
+		char viscBCWallName[33];
 
-	// tmp, TODO: read file with wall faces identifiers
-	for (int i=1; i<=8; i++){
-
-		sprintf(viscBCWallName, "dom-k001_j001_i00%d-Ymin", i);
-		_vecBCWallNames.push_back(std::string(viscBCWallName));
-
-		sprintf(viscBCWallName, "dom-j001_i00%d-Ymin", i);
+		sprintf(viscBCWallName, rStr.ToAscii());
 		_vecBCWallNames.push_back(std::string(viscBCWallName));
 
 	}
-
-	// tmp: hardcoded identifiers blk*-Ymin
-	/*for (int bid=1; bid<=64; bid++){
-
-		sprintf(viscBCWallName, "blk%d-Ymin", bid);
-		_vecBCWallNames.push_back(std::string(viscBCWallName));
-	}*/
 
 	_init();	// allocate space and read grd and fld
 

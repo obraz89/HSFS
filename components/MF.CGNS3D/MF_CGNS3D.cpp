@@ -5,6 +5,8 @@
 #include <cgnslib.h>
 #include "cgns_structs.h"
 
+#include "wx/tokenzr.h"
+
 using namespace mf;
 using namespace mf::cg;
 
@@ -36,23 +38,21 @@ void t_MFCGNS3D::init(const hsstab::TPlugin& g_plug){
 	G_vecCGNSFuncNames.push_back("Pressure");
 	G_vecCGNSFuncNames.push_back("Temperature");
 
-	// here come all viscous wall bc identifiers
-	// TODO: do i need to keep this 33 size to compare in _is_face_of_bcwall_type
-	// TODO: make entry in config file for wall BCs. 
-	// maybe with wildcards like blk*-Ymin ? o_O
+	wxString strBCWallFamNames = g.get_string_param("BCWallFamilyNames");
 
-	char viscBCWallName[33];
+	wxArrayString wxBCNames = wxStringTokenize(strBCWallFamNames, _T(","));
 
-	sprintf(viscBCWallName, "wall");
-	_vecBCWallNames.push_back(std::string(viscBCWallName));
+	for (int i=0; i<wxBCNames.Count(); i++) {
 
-	// tmp : hardcode identifiers blk*-Ymin 
-	/*
-	for (int bid=1; bid<=64; bid++){
+		wxString& rStr = wxBCNames[i];
+		// trim from both left and right
+		rStr.Trim(true);rStr.Trim(false);
+		char viscBCWallName[33];
 
-		sprintf(viscBCWallName, "blk%d-Ymin", bid);
+		sprintf(viscBCWallName, rStr.ToAscii());
 		_vecBCWallNames.push_back(std::string(viscBCWallName));
-	}*/
+
+	}
 
 	_init();	// allocate space and read grd and fld
 };

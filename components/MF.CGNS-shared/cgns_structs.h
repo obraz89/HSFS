@@ -190,7 +190,7 @@ namespace mf{
 
 		struct TZoneFace
 		{
-			char szName[33]; // unique name to link with BC
+			char szBCFamName[33];	// BC family name the face belongs to
 
 			TBlockBCType bcType;
 

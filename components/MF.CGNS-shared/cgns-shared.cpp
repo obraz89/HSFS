@@ -380,15 +380,13 @@ mf::cg::TDomain::~TDomain(){
 	delete[] Zones;
 }
 
-bool mf::cg::TDomain::_is_face_of_bcwall_type(const char* facename) const{
-
-//	return _vecBCWallNames.contains(facename);
+bool mf::cg::TDomain::_is_face_of_bcwall_type(const char* faceBCFamName) const{
 
 	std::vector<std::string>::const_iterator iter = _vecBCWallNames.begin();
 
-	for (;iter<_vecBCWallNames.end(); iter++){
+	std::string facename_str(faceBCFamName);
 
-		std::string facename_str(facename);
+	for (;iter<_vecBCWallNames.end(); iter++){
 
 		if (*iter==facename_str) 
 			return true;

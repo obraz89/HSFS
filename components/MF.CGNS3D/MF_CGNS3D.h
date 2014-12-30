@@ -13,7 +13,7 @@ namespace mf{
 	class t_MFCGNS3D: public mf::cg::TDomain{
 	private:
 
-		t_FldParams _base_params;
+		t_CGNS3DParams _base_params;
 		wxString _fld_bin_path, _grd_bin_path;
 
 		void _init();
@@ -33,6 +33,8 @@ namespace mf{
 		void init(const hsstab::TPlugin& g_plug);
 
 		const mf::t_FldParams& get_mf_params() const;
+
+		const mf::t_CGNS3DParams& get_params() const;
 
 		virtual mf::t_Rec interpolate_to_point(const t_GeomPoint& point) const;
 		// TODO: implement for optimization

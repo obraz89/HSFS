@@ -158,14 +158,6 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 		blk.ks = 1;  blk.ke = blk.nz;
 
 		ctx.map_zoneName_id[blk.szName] = iZone;
-
-		// Initial face names, will be redefined below
-		sprintf(blk.Faces[faceXmin].szName, "blk%d-Xmin", iZone);
-		sprintf(blk.Faces[faceXmax].szName, "blk%d-Xmax", iZone);
-		sprintf(blk.Faces[faceYmin].szName, "blk%d-Ymin", iZone);
-		sprintf(blk.Faces[faceYmax].szName, "blk%d-Ymax", iZone);
-		sprintf(blk.Faces[faceZmin].szName, "blk%d-Zmin", iZone);
-		sprintf(blk.Faces[faceZmax].szName, "blk%d-Zmax", iZone);
 	}
 
 
@@ -418,7 +410,6 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 		}
 
 		blk.Faces[posFace].bcType = bcAbutted;
-		strcpy(blk.Faces[posFace].szName, szName);
 
 		TcgnsZone::TFace& face = cgZne.Faces[posFace];
 		face.nDnrZne = ctx.map_zoneName_id[szDonor] - 1; // 0-based
@@ -766,7 +757,7 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 		else if( ks==ke )  // Zmin or Zmax block face
 			bF = ( ks==1 ) ? &blk.Faces[faceZmin] : &blk.Faces[faceZmax];
 
-		strcpy(bF->szName, szName);
+		strcpy(bF->szBCFamName, szName);
 	} // for iBC
 } // for iZone
 

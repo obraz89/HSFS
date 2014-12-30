@@ -34,3 +34,5 @@ bin_*/
 *.dat
 *.txt
 *.dg
+#others
+*.rar

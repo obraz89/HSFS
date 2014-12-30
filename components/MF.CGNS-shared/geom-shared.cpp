@@ -59,7 +59,7 @@ t_ZoneNode TDomain::_get_nrst_node_surf(const t_GeomPoint& point) const{
 
 		// TODO: 6 is BRICK_FACENUM
 		for (int iface = 0; iface<6; iface++){
-			if (_is_face_of_bcwall_type(blk.Faces[iface].szName)){
+			if (_is_face_of_bcwall_type(blk.Faces[iface].szBCFamName)){
 				// we are on viscous wall
 				int i_s, i_e, j_s, j_e, k_s, k_e;
 

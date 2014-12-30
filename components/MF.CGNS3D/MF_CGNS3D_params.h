@@ -8,6 +8,13 @@
 
 namespace mf{
 
+	class t_CGNS3DParams: public t_FldParams{
+
+		void _init_params_map();
+	public:
+		t_CGNS3DParams():t_FldParams(){};
+	};
+
 	namespace cg{
 		namespace hsf3d{
 			void _init_fld_base_params(t_FldParams& params, const hsstab::TPluginParamsGroup& g);

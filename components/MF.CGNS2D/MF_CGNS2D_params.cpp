@@ -64,6 +64,8 @@ void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("ThetaSpan", 0.2, _T("If AxeSym=Conical, set azim angle span"));
 
+	g.add("BCWallFamilyNames", _T("Ymin, wall"), _T("BC Family names for viscous wall"));
+
 }
 
 void mf::cg::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
