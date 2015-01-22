@@ -3,8 +3,6 @@
 #include "MF_CGNS2D.h"
 #include "common_data.h"
 
-#include "wx/tokenzr.h"
-
 using namespace hsstab;
 using namespace mf;
 using namespace mf::cg;
@@ -53,20 +51,11 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 
 	wxString strBCWallFamNames = g.get_string_param("BCWallFamilyNames");
 
-	wxArrayString wxBCNames = wxStringTokenize(strBCWallFamNames, _T(","));
+	_read_parse_bc_wall_names(strBCWallFamNames);
 
-	for (int i=0; i<wxBCNames.Count(); i++) {
-
-		wxString& rStr = wxBCNames[i];
-
-		// trim from both left and right
-		rStr.Trim(true);rStr.Trim(false);
-		char viscBCWallName[33];
-
-		sprintf(viscBCWallName, rStr.ToAscii());
-		_vecBCWallNames.push_back(std::string(viscBCWallName));
-
-	}
+	wxString strBLCalcType = g.get_string_param("BLCalcType");
+	
+	_read_parse_bl_thick_calc_type(strBLCalcType);
 
 	_init();	// allocate space and read grd and fld
 

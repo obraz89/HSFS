@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "cgns_structs.h"
 
+#include <fstream>
+
 static const double BL_BOUND_VELO_TOL = 0.01;
 
 using namespace mf::cg;
@@ -385,7 +387,7 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	return get_mf_params().L_ref;
 };
 
-void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
 					t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
 
 	surf_znode = _get_nrst_node_surf(xyz);
@@ -546,23 +548,206 @@ void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 
 };
 
+void TDomain::_calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
+									t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	int i_s = surf_znode.iNode.i;
+	int i_e = i_s;
+
+	int j_s = surf_znode.iNode.j;
+	int j_e = j_s;
+
+	int k_s = surf_znode.iNode.k;
+	int k_e = k_s;
+
+	const TZone& blk = Zones[surf_znode.iZone-1];
+
+	int i = i_s;
+	int j = j_s;
+	int k = k_s;
+
+	int di = 0, dj =0 , dk = 0;
+
+	switch(surf_znode.iFacePos){
+		case(faceXmin):
+			di = 1;
+			i_s = blk.is;
+			i_e = blk.ie;
+			break;
+		case(faceXmax):
+			di = -1;
+			i_s = blk.ie;
+			i_e = blk.is;
+			break;
+		case(faceYmin):
+			dj = 1;
+			j_s = blk.js;
+			j_e = blk.je;
+			break;
+		case(faceYmax):
+			dj = -1;
+			j_s = blk.js;
+			j_e = blk.je;
+			break;
+		case(faceZmin):
+			dk = 1;
+			get_k_range(surf_znode.iZone, k_s, k_e);
+			break;
+		case(faceZmax):
+			dk=-1;
+			get_k_range(surf_znode.iZone, k_e, k_s);
+			break;
+	}
+
+// get du_dn wall
+	mf::t_Rec cur_rec, nxt_rec;
+	t_GeomPoint cur_xyz, nxt_xyz, dr;
+	t_GeomPoint wall_xyz, out_xyz;
+	t_Vec3Dbl cur_uvw, nxt_uvw, du;
+	double du_dn_wall, du_dn_cur;
+
+	get_rec(blk, i_s, j_s, k_s, cur_rec);
+	get_rec(blk, i_s + di, j_s + dj, k_s + dk, nxt_rec);
+
+	cur_xyz.set(cur_rec);
+	nxt_xyz.set(nxt_rec);
+
+	cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
+	nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+
+	matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
+	matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
+
+	du_dn_wall = du.norm()/dr.norm();
+	//std::cout<<"wall dudn="<<du_dn_wall<<"\n";
+	wall_xyz.set(cur_rec);
+
+	// 1 step done
+	i+=di;
+	j+=dj;
+	k+=dk;
+	
+	do 
+	{
+		do 
+		{
+			do 
+			{
+				
+				get_rec(blk, i, j, k, cur_rec);
+				get_rec(blk, i + di, j + dj, k + dk, nxt_rec);
+
+				cur_xyz.set(cur_rec);
+				nxt_xyz.set(nxt_rec);
+
+				cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
+				nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+
+				matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
+				matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
+
+				du_dn_cur = du.norm()/dr.norm();
+
+				if (du_dn_cur<=du_dn_wall*BL_BOUND_VELO_TOL)
+				{
+
+					//wxLogMessage(_T("Zone=%d, i=%d,j=%d,k=%d"), surf_znode.iZode, i,j,k);
+					outer_znode.iZone = surf_znode.iZone;
+					outer_znode.iNode.set(i,j,k);
+
+					// debug 
+					//std::cout<<"iZone="<<outer_znode.iZone<<";ijk=["<<outer_znode.iNode.i<<";"<<outer_znode.iNode.j<<";"<<outer_znode.iNode.k<<"]\n";
+					//std::cout<<"Debug: Bound i,j,k="<<i<<";"<<j<<";"<<k<<"\n";
+
+					out_xyz = cur_xyz;
+					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+					double bl_thick_direct = dr.norm();
+
+					// calculate disp thick
+					double delta = 0;
+					t_Vec3Dbl uu, ue;
+					double ue_norm = cur_uvw.norm();
+					for (int ii=i_s; ii<=i; ii++)
+						for (int jj=j_s; jj<=j; jj++)	// j
+							for(int kk=k_s; kk<=k; kk++){
+								get_rec(blk, ii, jj, kk, cur_rec);
+								get_rec(blk, ii + di, jj + dj, kk + dk, nxt_rec);
+
+								cur_xyz.set(cur_rec);
+								nxt_xyz.set(nxt_rec);
+
+								uu.set(cur_rec.u, cur_rec.v, cur_rec.w);
+
+								matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+								double coef = 1.0-uu.norm()/ue_norm;
+								delta+=coef*dr.norm();
+							}
+
+
+					//bl_thick = dr.norm();
+					bl_thick = bl_thick_direct;
+					//wxLogMessage(_T("Old Dels=%f"), float(bl_thick_direct));
+					//bl_thick = 2.84256*delta;
+					//wxLogMessage(_T("Bl Thick=%f"), float(bl_thick));
+					return;
+				}
+				
+
+				k+=dk;
+			} while ((k_e-k)*dk>0);
+			j+=dj;
+		} while ((j_e-j)*dj>0);
+		i+=di;
+	} while ((i_e-i)*di>0);
+
+	wxLogError(_T("Failed to calculate bl thickness, iZone=%d"), surf_znode.iZone);
+	return;
+
+
+};
+
+inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+									t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+
+
+	switch (_bl_thick_ctype)
+	{
+	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
+		_calc_bl_thick_vderiv(xyz,bl_thick, surf_znode, outer_znode);
+		break;
+
+	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
+		_calc_bl_thick_enthalpy(xyz,bl_thick, surf_znode, outer_znode);
+		break;
+	default:
+		wxString msg(_T("Provided BL Thick Calc Type not implemented"));
+		wxLogError(msg); ssuGENTHROW(msg);
+	}
+
+
+}
+
 
 double TDomain::calc_bl_thick(const t_GeomPoint& xyz) const{
 	
 	t_ZoneNode surf_znode, outer_znode;
 	double bl_thick;
 
-	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
+	_calc_bl_thick(xyz, bl_thick, surf_znode, outer_znode);
 	return bl_thick;
 
 };
 
 void TDomain::calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const{
 
-	t_ZoneNode surf_znode, outer_znode;
-	double bl_thick;
+	t_ZoneNode surf_znode;	
 
-	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
+	surf_znode = _get_nrst_node_surf(xyz);
+
 	t_BlkInd& ind = surf_znode.iNode;
 
 	get_rec(Zones[surf_znode.iZone-1], ind.i, ind.j, ind.k, surf_rec);
@@ -581,7 +766,7 @@ void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec
 
 };
 
-int TDomain::estim_num_bl_nodes(t_GeomPoint xyz) const{
+int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 
 	t_ZoneNode surf_znode, outer_znode;
 	double bl_thick;
@@ -647,3 +832,93 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	return jac;
 
 }
+
+// tmp func to print enthalpy profiles for enthalpy criteria
+// IMPORTANT TODO: the profile coord Y is along gridline (may be curvilinear)
+void TDomain::dump_full_enthalpy_profile(const mf::t_GeomPoint& xyz, int pid) const{
+
+	t_ZoneNode surf_znode = _get_nrst_node_surf(xyz);
+
+	int i_s = surf_znode.iNode.i;
+	int i_e = i_s;
+
+	int j_s = surf_znode.iNode.j;
+	int j_e = j_s;
+
+	int k_s = surf_znode.iNode.k;
+	int k_e = k_s;
+
+	const TZone& blk = Zones[surf_znode.iZone-1];
+
+	int i = i_s;
+	int j = j_s;
+	int k = k_s;
+
+	int di = 0, dj =0 , dk = 0;
+
+	switch(surf_znode.iFacePos){
+		case(faceXmin):
+			di = 1;
+			i_s = blk.is;
+			i_e = blk.ie;
+			break;
+		case(faceXmax):
+			di = -1;
+			i_s = blk.ie;
+			i_e = blk.is;
+			break;
+		case(faceYmin):
+			dj = 1;
+			j_s = blk.js;
+			j_e = blk.je;
+			break;
+		case(faceYmax):
+			dj = -1;
+			j_s = blk.js;
+			j_e = blk.je;
+			break;
+		case(faceZmin):
+			dk = 1;
+			get_k_range(surf_znode.iZone, k_s, k_e);
+			break;
+		case(faceZmax):
+			dk=-1;
+			get_k_range(surf_znode.iZone, k_e, k_s);
+			break;
+	}
+
+	char fname[33];sprintf(fname, "profile_enthalpy_%d.dat", pid);
+	std::ofstream ofstr(fname);
+
+	mf::t_Rec mf_rec;
+	mf::t_GeomPoint cur_xyz,prev_xyz, surf_xyz, dr;
+
+	get_rec(blk, i, j, k, mf_rec);
+	surf_xyz.set(mf_rec);
+
+	// Prints all but 1 points 
+	int M = (i_e==i_s ? 0 : abs(i_e - i_s)+1) + 
+		    (j_e==j_s ? 0 : abs(j_e - j_s)+1) + 
+			(k_e==k_s ? 0 : abs(k_e - k_s)+1);
+
+	double s = 0.0;
+
+	cur_xyz = surf_xyz; prev_xyz = surf_xyz;
+
+	for (int m=0; m<M; m++){
+
+		get_rec(blk, i, j, k, mf_rec);
+		cur_xyz.set(mf_rec);
+		matrix::base::minus<double, double>(cur_xyz, prev_xyz, dr);
+		s+= dr.norm();
+		double enth = calc_enthalpy(mf_rec);
+		ofstr<<s<<"\t"<<enth<<"\n";
+
+		prev_xyz = cur_xyz;
+
+		i+=di; 
+		j+=dj;
+		k+=dk;
+	}
+
+};

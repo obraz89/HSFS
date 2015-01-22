@@ -5,22 +5,28 @@ mf::t_DomainBase::t_DomainBase(){};
 
 mf::t_DomainBase::~t_DomainBase(){};
 
-//===============================================================
+void mf::t_DomainBase::set_bl_thick_calc_type(t_BLThickCalcType v){_bl_thick_ctype = v;}
 
-double mf::t_DomainBase::calc_enthalpy(const t_GeomPoint& xyz) const
-{
-
-	double cp_t, v_2;
+double mf::t_DomainBase::calc_enthalpy(const mf::t_Rec& ptr) const{
 
 	const t_FldParams& mf_prms = get_mf_params();
 
-	const t_Rec& ptr = get_rec(xyz);
+	double cp_t, v_2;
 
 	cp_t = ptr.t/((mf_prms.Gamma-1.0)*mf_prms.Mach*mf_prms.Mach);
 
 	v_2 = 0.5*(pow(ptr.u,2.0)+pow(ptr.v,2.0)+pow(ptr.w,2.0));
 
 	return (cp_t + v_2);
+
+}
+
+double mf::t_DomainBase::calc_enthalpy(const t_GeomPoint& xyz) const
+{
+
+	const t_Rec& ptr = get_rec(xyz);
+
+	return calc_enthalpy(ptr);
 
 };
 

@@ -11,12 +11,19 @@
 namespace mf{
 
 /************************************************************************/
-//
+// Boundary Layer Character Thickness Calculation Types
+	enum t_BLThickCalcType {
+		BLTHICK_BY_VDERIV=0, 
+		BLTHICK_BY_ENTHALPY, 
+		BLTHICK_BY_VELO, 
+		BLTHICK_BY_DISPTHICK
+	};
 // Type to configure Raw Profile Data
 /************************************************************************/
 	struct IMPEXP_PHYSCOMMON t_ProfDataCfg{
 		double ThickCoef;
 		int NNodes;
+		t_BLThickCalcType BLThickCalcType;
 	};
 
 
@@ -30,6 +37,8 @@ namespace mf{
 
 			bool _allocated;
 
+			t_BLThickCalcType _bl_thick_ctype;
+
 		public:
 
 			t_DomainBase();
@@ -42,6 +51,8 @@ namespace mf{
 			// virtual void get_rec(const t_GeomPoint& xyz, t_Rec& rec) const=0;
 
 			virtual void calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const = 0;
+
+			void set_bl_thick_calc_type(t_BLThickCalcType v);
 
 			virtual void calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const = 0;
 
@@ -62,20 +73,26 @@ namespace mf{
 			// calc character length scale
 			virtual double calc_x_scale(const t_GeomPoint& xyz) const=0;
 
+			double calc_enthalpy(const mf::t_Rec& mf_rec) const;
+
 			virtual double calc_enthalpy(const t_GeomPoint& xyz) const;
+
 			virtual double calc_enthalpy_freestream() const;
 
 			virtual double calc_viscosity(const double t) const ;
+
 			virtual double calc_viscosity(const t_GeomPoint& xyz) const;
 
 			// dimensional cinematic viscosity
 			virtual double calc_cin_visc_dim(const t_GeomPoint& xyz)  const;
+
 			virtual double calc_cin_visc_inf_dim() const;
 
 			// dimensional
 			virtual double calc_u_inf() const;
 
 			virtual double calc_c_dim(const double t) const;
+
 			virtual double calc_c_dim(const t_GeomPoint& xyz) const;
 
 			virtual double calc_mach(const t_GeomPoint& xyz) const;
@@ -89,7 +106,10 @@ namespace mf{
 				const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const=0;
 
 			// tmp, while i don't have good interpolators
-			virtual int estim_num_bl_nodes(t_GeomPoint) const=0;
+			virtual int estim_num_bl_nodes(const t_GeomPoint& xyz) const=0;
+
+			// tmp, to test enthalpy criteria
+			virtual void dump_full_enthalpy_profile(const t_GeomPoint& xyz, int pid) const=0;
 
 	};	// ~t_DomainBase
 }	// ~namespace mf

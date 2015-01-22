@@ -51,6 +51,8 @@ void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
 
 	g.add("BCWallFamilyNames", _T("Ymin, wall"), _T("BC Family names for viscous wall"));
+
+	g.add("BLCalcType", _T("BY_VELO_DERIV"), _T("Method of computing Boundary Layer thickness"));
 }
 
 void mf::cg::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){

@@ -415,6 +415,10 @@ namespace mf{
 				int fileID, int iZone,
 				TDims& dims, double** grid, double** field);
 
+			// common params readers
+			void _read_parse_bc_wall_names(const wxString& str);
+			void _read_parse_bl_thick_calc_type(const wxString& str);
+
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block
 			// realizations are different for 2D and 3D
@@ -422,6 +426,7 @@ namespace mf{
 			virtual void get_rec(const TZone& zone, int i, int j, int k, mf::t_Rec& rec) const=0;
 
 			void get_rec(const TZone& zone, const t_BlkInd& ind, mf::t_Rec& rec) const;
+
 			void get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const;
 
 			// grid funcs are different for 2D and 3D
@@ -431,11 +436,13 @@ namespace mf{
 			// for the zone iZone
 			virtual void set_face_iters(int iZone, int iFace, int& is, int& ie, 
 				int& js, int& je, int& ks, int& ke) const;
+
 			virtual void get_k_range(int iZone, int& ks, int& ke) const=0;
 
 			// geom interpolation stuff
 
 			virtual t_ZoneNode _get_nrst_node_surf(const t_ZoneNode& src_node) const;
+
 			virtual t_ZoneNode _get_nrst_node_surf(const t_GeomPoint& xyz) const;
 
 			virtual t_ZoneNode _get_nrst_node_raw(const t_GeomPoint& xyz) const;
@@ -445,6 +452,7 @@ namespace mf{
 			bool _is_face_of_bcwall_type(const char* facename) const;
 
 			bool is_point_inside(const t_GeomPoint& xyz) const;
+
 			bool _is_point_inside(const t_GeomPoint& xyz) const;
 
 			// TDomainBase interface realization
@@ -452,9 +460,11 @@ namespace mf{
 			// go along local normal to a surface
 			// surface normal vector is calculated as well
 			virtual void calc_surf_point(const t_GeomPoint& a_xyz, t_GeomPoint& surf_point, t_Vec3Dbl& norm) const;
+
 			virtual void calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
 
 			virtual t_SqMat3Dbl calc_jac_to_loc_rf(const t_GeomPoint& xyz) const;
+
 			void calc_jac_to_loc_rf(const t_GeomPoint& xyz, t_SqMat3Dbl& jac) const;
 
 			// calc character length scale
@@ -469,11 +479,20 @@ namespace mf{
 			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
 				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
 
+			void _calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
+				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			void _calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
+					t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
 			void extract_profile_data(const t_GeomPoint& xyz, 
-				const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const;
+					const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const;
 
 			// tmp, while i don't have good interpolators
-			int estim_num_bl_nodes(t_GeomPoint) const;
+			int estim_num_bl_nodes(const t_GeomPoint& xyz) const;
+
+			// tmp, to test enthalpy criteria
+			void dump_full_enthalpy_profile(const t_GeomPoint& xyz, int pid) const;
 
 			virtual ~TDomain();
 		};

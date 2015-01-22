@@ -3,11 +3,57 @@
 
 #include <cgnslib.h>
 
+#include "wx/tokenzr.h"
+
 using namespace mf::cg;
 
 // Computational domain composed of blocks with own grid and field
 
 static int g_time = 0.0;
+
+void mf::cg::TDomain::_read_parse_bc_wall_names(const wxString& strBCWallFamNames){
+
+	wxArrayString wxBCNames = wxStringTokenize(strBCWallFamNames, _T(","));
+
+	for (int i=0; i<wxBCNames.Count(); i++) {
+
+		wxString& rStr = wxBCNames[i];
+
+		// trim from both left and right
+		rStr.Trim(true);rStr.Trim(false);
+		char viscBCWallName[33];
+
+		sprintf(viscBCWallName, rStr.ToAscii());
+		_vecBCWallNames.push_back(std::string(viscBCWallName));
+
+	}
+
+}
+
+void mf::cg::TDomain::_read_parse_bl_thick_calc_type(const wxString& a_str){
+
+	wxString str = a_str;
+
+	str.Trim(true);str.Trim(false);
+
+	if (str.CmpNoCase(_T("BY_VELO_DERIV"))==0){
+
+		_bl_thick_ctype = mf::t_BLThickCalcType::BLTHICK_BY_VDERIV;
+		return;
+
+	}
+
+	if (str.CmpNoCase(_T("BY_ENTHALPY"))==0){
+
+		_bl_thick_ctype = mf::t_BLThickCalcType::BLTHICK_BY_ENTHALPY;
+		return;
+
+	}
+
+	wxString msg(_T("Unknown BLCalcType value, supported options are: BY_VELO_DERIV, BY_ENTHALPY"));
+	wxLogError(msg); ssuGENTHROW(msg);
+
+}
 
 bool mf::cg::TDomain::initField(const wxString& a_fldFName)
 {
@@ -407,7 +453,7 @@ void TDomain::get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const{
 }
 //IMPORTANT TODO: check and verify {written at midnight!!!} 
 void TDomain::extract_profile_data(const mf::t_GeomPoint& xyz, 
-	const mf::t_ProfDataCfg& prdata_cfg, std::vector<mf::t_Rec>& data) const{
+		const mf::t_ProfDataCfg& prdata_cfg, std::vector<mf::t_Rec>& data) const{
 
 		double bl_thick;
 		t_ZoneNode surf_znode, outer_znode;

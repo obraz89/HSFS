@@ -776,4 +776,10 @@ void test::king_m35_gs_spat_vs_time(){
 
 }
 
+void test::test_wchars_filter_c(){
+
+	std::ifstream ifstr("wchars_max_loc.dat");
+
+}
+
 

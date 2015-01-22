@@ -1007,15 +1007,14 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 			if (good_init && cur_wave.a.real()>=0)
 				std::wcout<<_T("Discrete mode found:")<<cur_wave;
 
-			if (good_init && cur_wave.a.real()>=0 && cur_wave.a.imag()<0.0){
+			if (good_init && cur_wave.a.real()>0 && cur_wave.a.imag()<0.0){
 
 				cur_wave.set_scales(get_stab_scales());
 
 				t_WCharsLocDim dim_wave = cur_wave.make_dim();
 
 				// TODO: nice checking that wave is physical
-				if ( cur_wave.a.real()>=0 && abs(cur_wave.a.imag())<1.0
-					&& abs(dim_wave.a.imag())<200.0){
+				if ( cur_wave.a.real()>0 && stab::check_wchars_c(cur_wave)){
 
 					std::wcout<<_T("Instab found:")<<cur_wave;
 

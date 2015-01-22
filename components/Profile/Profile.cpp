@@ -232,21 +232,21 @@ t_Profile::~t_Profile(){};
 
 void t_Profile::dump(const std::wstring& fname) const{
 	std::wofstream fstr(&fname[0], std::ios::out);
-	t_Rec cur_rec;
+	t_Rec rec;
+
+	fstr<<_T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\th\n");
+
 	for (int i=0; i<_nnodes; i++){
-		cur_rec = get_rec(i);
-		cur_rec.raw_cout(fstr);
+
+		rec = get_rec(i);
+
+		fstr<<rec.y<<_T("\t")<<
+		rec.u<<_T("\t")<<rec.u1<<_T("\t")<<rec.u2<<_T("\t")<<
+		rec.t<<_T("\t")<<rec.t1<<_T("\t")<<rec.t2<<_T("\t")<<rec.r<<_T("\t")<<
+		rec.mu<<_T("\t")<<rec.mu1<<_T("\t")<<rec.mu2<<_T("\t")<<
+		rec.w<<_T("\t")<<rec.w1<<_T("\t")<<rec.w2<<_T("\t")<<_T("\n");
+
+
 	}
 };
-
-std::wostream& t_Profile::t_Rec::raw_cout(std::wostream& os){
-	// for now simple form to compare with AVF
-	os<<y<<_T("\t")<<
-		u<<_T("\t")<<u1<<_T("\t")<<u2<<_T("\t")<<
-		t<<_T("\t")<<t1<<_T("\t")<<t2<<_T("\t")<<r<<_T("\t")<<
-		mu<<_T("\t")<<mu1<<_T("\t")<<mu2<<_T("\t")<<
-		w<<_T("\t")<<w1<<_T("\t")<<w2<<_T("\t")<<_T("\n");
-	return os;
-
-} 
 

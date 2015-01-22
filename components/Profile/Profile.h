@@ -19,8 +19,6 @@ public:
 
 		double y,u, u1, u2, w, w1, w2, t, t1, t2, mu, mu1, mu2, p, r;	
 
-		std::wostream& raw_cout(std::wostream& os);
-
 	};
 protected:
 	t_DblVec _y, _u, _u1, _u2, 

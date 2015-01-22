@@ -30,4 +30,7 @@ namespace test{
 	//e-N closures testing
 	void test_fixed_beta_calc();
 
+	// test robustness of wchars checker by phase speed
+	void test_wchars_filter_c();
+
 };

@@ -66,6 +66,8 @@ void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("BCWallFamilyNames", _T("Ymin, wall"), _T("BC Family names for viscous wall"));
 
+	g.add("BLCalcType", _T("BY_VELO_DERIV"), _T("Method of computing Boundary Layer thickness"));
+
 }
 
 void mf::cg::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){

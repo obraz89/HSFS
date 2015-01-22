@@ -204,7 +204,7 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 
 		}
 
-		max_waves_spat.clear();
+		max_waves_spat.resize(0);max_waves_spat.clear();
 
 		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
 
@@ -221,7 +221,10 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 
 			bool ok = search_global_initial_wr_fixed(task_params, cur_w, cur_max_wave);
 
-			if (ok) max_waves_spat.push_back(cur_max_wave);
+			if (ok) {
+				max_waves_spat.push_back(cur_max_wave);
+			} else
+				{continue;}
 
 			// debug
 			const t_WCharsLoc& lw = cur_max_wave;
@@ -505,10 +508,16 @@ void task::get_profiles(){
 
 	for (int j=0; j<npts; j++){
 
-		g_pStabSolver->setContext(g_pStabDB->get_pave_pt(j).xyz);
+		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
+
+		g_pStabSolver->setContext(xyz);
+
 		wchar_t szFname[33];
 		swprintf(szFname, _T("ProfileStab_%d.dat"), j);
+
 		g_pStabSolver->dumpProfileStab(szFname);
+
+		g_pMFDomain->dump_full_enthalpy_profile(xyz, j);
 
 	}
 

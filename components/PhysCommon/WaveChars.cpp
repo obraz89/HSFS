@@ -156,6 +156,36 @@ void t_WaveChars::_to_ndim(t_WaveChars& ndim) const{
 
 // ---------------------------------------------------------------- ~t_WaveChars
 
+// ----------------------------------------------------------------- checkers
+
+namespace stab{
+
+	// tranform oblique wave to plane and check its phase speed
+	// see [Gaponov, Maslov] p.43 for details
+	// works only with t_WcharsLoc
+	// t_WaveChars argument left for better usability
+	bool check_wchars_c(const t_WaveChars& w){
+
+		const t_StabScales& s = w.scales();
+
+		double ar = w.a.real();
+		double br = w.b.real();
+
+		double af = sqrt(ar*ar+br*br);
+		double Mf = ar/af*s.Me;
+
+		double c = w.w.real()/ar;
+
+		double c_min = 1.0 - 1.0/Mf;
+		double c_max = 1.0 + 1.0/Mf;
+
+		if ((c_min<=c) && (c<=c_max)) return true;
+
+		return false;
+
+	}
+}
+
 // ----------------------------------------------------------------- t_WCharsLoc
 
 t_WCharsLoc::t_WCharsLoc():t_WaveChars(){};
