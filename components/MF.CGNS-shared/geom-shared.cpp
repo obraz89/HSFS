@@ -3,8 +3,6 @@
 
 #include <fstream>
 
-static const double BL_BOUND_VELO_TOL = 0.01;
-
 using namespace mf::cg;
 
 void TDomain::set_face_iters(int iZone, int iFace, int& is, int& ie, 
@@ -479,84 +477,6 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 		}
 
 	};
-/*
-	do 
-	{
-		do 
-		{
-			do 
-			{
-				
-				get_rec(blk, i, j, k, cur_rec);
-				get_rec(blk, i + di, j + dj, k + dk, nxt_rec);
-
-				cur_xyz.set(cur_rec);
-				nxt_xyz.set(nxt_rec);
-
-				cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
-				nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
-
-				matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
-				matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
-
-				du_dn_cur = du.norm()/dr.norm();
-
-				if (du_dn_cur<=du_dn_wall*BL_BOUND_VELO_TOL)
-				{
-
-					//wxLogMessage(_T("Zone=%d, i=%d,j=%d,k=%d"), surf_znode.iZode, i,j,k);
-					outer_znode.iZone = surf_znode.iZone;
-					outer_znode.iNode.set(i,j,k);
-
-					// debug 
-					//std::cout<<"iZone="<<outer_znode.iZone<<";ijk=["<<outer_znode.iNode.i<<";"<<outer_znode.iNode.j<<";"<<outer_znode.iNode.k<<"]\n";
-					//std::cout<<"Debug: Bound i,j,k="<<i<<";"<<j<<";"<<k<<"\n";
-
-					out_xyz = cur_xyz;
-					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-					double bl_thick_direct = dr.norm();
-
-					// calculate disp thick
-					double delta = 0;
-					t_Vec3Dbl uu, ue;
-					double ue_norm = cur_uvw.norm();
-					for (int ii=i_s; ii<=i; ii++)
-						for (int jj=j_s; jj<=j; jj++)	// j
-							for(int kk=k_s; kk<=k; kk++){
-								get_rec(blk, ii, jj, kk, cur_rec);
-								get_rec(blk, ii + di, jj + dj, kk + dk, nxt_rec);
-
-								cur_xyz.set(cur_rec);
-								nxt_xyz.set(nxt_rec);
-
-								uu.set(cur_rec.u, cur_rec.v, cur_rec.w);
-
-								matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
-								double coef = 1.0-uu.norm()/ue_norm;
-								delta+=coef*dr.norm();
-							}
-
-
-					//bl_thick = dr.norm();
-					bl_thick = bl_thick_direct;
-					//wxLogMessage(_T("Old Dels=%f"), float(bl_thick_direct));
-					//bl_thick = 2.84256*delta;
-					//wxLogMessage(_T("Bl Thick=%f"), float(bl_thick));
-					return;
-				}
-				
-
-				k+=dk;
-			} while ((k_e-k)*dk>0);
-			j+=dj;
-		} while ((j_e-j)*dj>0);
-		i+=di;
-	} while ((i_e-i)*di>0);
-
-*/
-
-//	wxLogError(_T("Failed to calculate bl thickness by velo deriv, iZone=%d"), surf_znode.iZone);
 
 };
 
