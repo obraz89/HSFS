@@ -191,9 +191,13 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 		pid_e = pave_pnt_ind;
 	}
 
+	char fname[33];
 
-	std::ofstream fostr_all("wchars_all_loc.dat", std::ios::app);
-	std::ofstream fostr_max("wchars_max_loc.dat", std::ios::app);
+	sprintf(fname, "%s/wchars_all_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
+	std::ofstream fostr_all(fname);
+
+	sprintf(fname, "%s/wchars_max_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
+	std::ofstream fostr_max(fname);
 
 	for (int pid=pid_s; pid<=pid_e; pid++){
 
@@ -231,6 +235,7 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 			fostr_all<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
 				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()
 				<<"\n";
+			fostr_all.flush();
 
 		}
 
@@ -389,8 +394,13 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 
 void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 
-	std::wstring fout_wplines_path(_T("Wave_pack_lines_wbfixed.dat"));
-	std::wstring fout_maxnfactor_path(_T("max_N_wbfixed.dat"));
+	wxChar szFname[64];
+
+	swprintf(szFname, _T("%s/Wave_pack_lines_wbfixed.dat.dat"),hsstab::OUTPUT_DIR.c_str());
+	std::wstring fout_wplines_path(szFname);
+
+	swprintf(szFname, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
+	std::wstring fout_maxnfactor_path(szFname);
 
 
 	int npave_pts = g_pStabDB->get_npoints();
@@ -513,8 +523,17 @@ void task::get_profiles(){
 		g_pStabSolver->setContext(xyz);
 
 		wchar_t szFname[33];
-		swprintf(szFname, _T("ProfileStab_%d.dat"), j);
 
+		t_ProfileNS prof_NS(*g_pMFDomain);
+
+		mf::t_ProfDataCfg data_cfg;
+		data_cfg.ThickCoef = g_pMFDomain->get_prof_extr_cfg().ThickCoefDefault;
+		prof_NS.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
+
+		swprintf(szFname, _T("%s/ProfileNS_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
+		prof_NS.dump(szFname);
+
+		swprintf(szFname, _T("%s/ProfileStab_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
 		g_pStabSolver->dumpProfileStab(szFname);
 
 		g_pMFDomain->dump_full_enthalpy_profile(xyz, j);

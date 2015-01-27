@@ -7,6 +7,67 @@
 
 using namespace mf::cg;
 
+t_ZoneGrdLine::t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode){
+
+	zne = &a_dom.getZone(surf_znode.iZone);
+
+	ind_s = surf_znode.iNode;
+
+	ind_e = ind_s;
+
+	di = dj = dk = 0;
+
+	switch(surf_znode.iFacePos){
+		case(faceXmin):
+			di = 1;
+			ind_s.i = zne->is;
+			ind_e.i = zne->ie;
+			idx_change = I_LINE;
+			break;
+		case(faceXmax):
+			di = -1;
+			ind_s.i = zne->ie;
+			ind_e.i = zne->is;
+			idx_change = I_LINE;
+			break;
+		case(faceYmin):
+			dj = 1;
+			ind_s.j = zne->js;
+			ind_e.j = zne->je;
+			idx_change = J_LINE;
+			break;
+		case(faceYmax):
+			dj = -1;
+			ind_s.j = zne->je;
+			ind_e.j = zne->js;
+			idx_change = J_LINE;
+			break;
+		case(faceZmin):
+			dk = 1;
+			a_dom.get_k_range(surf_znode.iZone, ind_s.k, ind_e.k);
+			idx_change = K_LINE;
+			break;
+		case(faceZmax):
+			dk=-1;
+			a_dom.get_k_range(surf_znode.iZone, ind_e.k, ind_s.k);
+			idx_change = K_LINE;
+			break;
+	}
+
+	switch (idx_change)
+	{
+	case I_LINE:
+		nnodes = zne->nx;
+		break;
+	case J_LINE:
+		nnodes = zne->ny;
+		break;
+	case K_LINE:
+		nnodes = zne->nz;
+		break;
+	}
+}
+
 // Computational domain composed of blocks with own grid and field
 
 static int g_time = 0.0;
@@ -38,14 +99,21 @@ void mf::cg::TDomain::_read_parse_bl_thick_calc_type(const wxString& a_str){
 
 	if (str.CmpNoCase(_T("BY_VELO_DERIV"))==0){
 
-		_bl_thick_ctype = mf::t_BLThickCalcType::BLTHICK_BY_VDERIV;
+		_profile_cfg.BLThickCalcType = mf::t_BLThickCalcType::BLTHICK_BY_VDERIV;
 		return;
 
 	}
 
 	if (str.CmpNoCase(_T("BY_ENTHALPY"))==0){
 
-		_bl_thick_ctype = mf::t_BLThickCalcType::BLTHICK_BY_ENTHALPY;
+		_profile_cfg.BLThickCalcType = mf::t_BLThickCalcType::BLTHICK_BY_ENTHALPY;
+		return;
+
+	}
+
+	if (str.CmpNoCase(_T("FULL_GRIDLINE"))==0){
+
+		_profile_cfg.BLThickCalcType = mf::t_BLThickCalcType::FULL_DATA;
 		return;
 
 	}
@@ -426,6 +494,7 @@ mf::cg::TDomain::~TDomain(){
 	delete[] Zones;
 }
 
+// TODO: make less restrictive comparison (case insensitive maybe, trimming)
 bool mf::cg::TDomain::_is_face_of_bcwall_type(const char* faceBCFamName) const{
 
 	std::vector<std::string>::const_iterator iter = _vecBCWallNames.begin();
@@ -451,24 +520,107 @@ void TDomain::get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const{
 	const TZone& blk = Zones[znode.iZone-1];
 	get_rec(blk, znode.iNode.i, znode.iNode.j, znode.iNode.k, rec);
 }
-//IMPORTANT TODO: check and verify {written at midnight!!!} 
-void TDomain::extract_profile_data(const mf::t_GeomPoint& xyz, 
-		const mf::t_ProfDataCfg& prdata_cfg, std::vector<mf::t_Rec>& data) const{
+
+void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz, 
+				const mf::t_ProfDataCfg& init_cfg, std::vector<t_Rec> &data) const{
+
+	switch (_profile_cfg.BLThickCalcType)
+	{
+	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
+	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
+
+		_extract_profile_data_blbound(xyz, init_cfg, data);
+		break;
+
+	case t_BLThickCalcType::FULL_DATA:
+
+		_extract_profile_data_full(xyz, init_cfg, data);
+		break;
+
+	default:
+		ssuGENTHROW(_T("MF.CGNS error: profile exctraction not implemented for BLCalcType option specified"));
+	};
+
+}
+
+// IMPORTANT TODO: this only works for ortho grids (see eta calculations)
+void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz, 
+				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
 
 		double bl_thick;
 		t_ZoneNode surf_znode, outer_znode;
 
 		_calc_bl_thick(xyz, bl_thick, surf_znode, outer_znode);
 
-		double total_thick = bl_thick * prdata_cfg.ThickCoef;
+		double total_thick = bl_thick * init_cfg.ThickCoef;
+
+		t_ZoneGrdLine grd_line(*this, surf_znode);
+		const TZone& blk = *grd_line.zne;
+
+		int i_s = grd_line.ind_s.i;
+		int i_e = grd_line.ind_e.i;
+
+		int j_s = grd_line.ind_s.j;
+		int j_e = grd_line.ind_e.j;
+
+		int k_s = grd_line.ind_s.k;
+		int k_e = grd_line.ind_e.k;
+
+		int i = i_s;
+		int j = j_s;
+		int k = k_s;
+
+		int di = grd_line.di;
+		int dj = grd_line.dj;
+		int dk = grd_line.dk;
 
 		int total_nodes = 0;
-//////
 
 		double eta = 0.0;
 		t_GeomPoint cur_xyz, surf_xyz;
+		t_Rec cur_rec;
 		t_Vec3Dbl rvec;
 
+		get_rec(blk, i,j,k, cur_rec);
+		surf_xyz.set(cur_rec);
+
+		for (int m=0; m<grd_line.nnodes; m++){
+
+			get_rec(blk, i,j,k, cur_rec);
+			cur_xyz.set(cur_rec);
+			matrix::base::minus<double, double>(cur_xyz, surf_xyz, rvec);
+			eta = rvec.norm();
+
+			if (eta>total_thick) break;
+
+			i+=di; 
+			j+=dj; 
+			k+=dk;
+			total_nodes++;
+
+		}
+
+		if (total_nodes==grd_line.nnodes){
+			wxLogError(_T("Profile extract error: Requested thickness \
+						  is greater than computational domain, trying to proceed"));
+			total_nodes = grd_line.nnodes;
+		}
+
+		data.resize(total_nodes);
+
+		i=i_s;
+		j=j_s;
+		k=k_s;
+
+		for (int p=0; p<total_nodes; p++){
+
+			get_rec(blk, i, j, k, data[p]);
+			i+=di; 
+			j+=dj;
+			k+=dk;
+
+		}
+/*
 		t_ZoneNode cur_znode = surf_znode;
 		mf::t_Rec cur_rec;
 		get_rec(surf_znode, cur_rec);
@@ -520,5 +672,50 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint& xyz,
 			cur_znode = surf_znode;
 			*pd+=d*dd;
 			get_rec(cur_znode, data[d]);
+		}
+*/
+}
+
+// Extract full block gridline as a profile
+// created mainly to read profile data from blwf2cgns converter 
+// init_cfg not used now, but may be used later
+void TDomain::_extract_profile_data_full(const mf::t_GeomPoint& xyz, 
+				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
+
+		double bl_thick;
+		t_ZoneNode surf_znode, outer_znode;
+
+		surf_znode = _get_nrst_node_surf(xyz);
+
+		t_ZoneGrdLine grd_line(*this, surf_znode);
+
+		TZone& blk = Zones[surf_znode.iZone-1];
+
+		int i_s = grd_line.ind_s.i;
+		int i_e = grd_line.ind_e.i;
+
+		int j_s = grd_line.ind_s.j;
+		int j_e = grd_line.ind_e.j;
+
+		int k_s = grd_line.ind_s.k;
+		int k_e = grd_line.ind_e.k;
+
+		int i = i_s;
+		int j = j_s;
+		int k = k_s;
+
+		int di = grd_line.di;
+		int dj = grd_line.dj;
+		int dk = grd_line.dk;
+
+		data.resize(grd_line.nnodes);
+
+		for (int p=0; p<grd_line.nnodes; p++){
+
+			get_rec(blk, i, j, k, data[p]);
+			i+=di; 
+			j+=dj;
+			k+=dk;
+
 		}
 }

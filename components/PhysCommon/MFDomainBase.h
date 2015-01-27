@@ -16,14 +16,38 @@ namespace mf{
 		BLTHICK_BY_VDERIV=0, 
 		BLTHICK_BY_ENTHALPY, 
 		BLTHICK_BY_VELO, 
-		BLTHICK_BY_DISPTHICK
+		BLTHICK_BY_DISPTHICK,
+		FULL_DATA
 	};
+
 // Type to configure Raw Profile Data
+// BLThickCalcType - method to use to determine bl scale, 
+// see definition above;
+// DerivThreshold - for methods that deal with some value derivative
+// (typically absolute velocity or Enthalpy)
+// boundary is calculated this way : find Y where
+// deriv = DerivThreshold*MaxDeriv
+// or deriv = DerivThreshold*WallDeriv
+/************************************************************************/
+	struct IMPEXP_PHYSCOMMON t_ProfExtrCfg{
+
+		t_BLThickCalcType BLThickCalcType;
+
+		double DerivThreshold;
+
+		double ThickCoefDefault;
+
+	};
+// Type to control extracted profile data 
+// ThickCoef - total thickness is scale*ThickCoef
+// NNodes - use later with interpolators
 /************************************************************************/
 	struct IMPEXP_PHYSCOMMON t_ProfDataCfg{
+
 		double ThickCoef;
+
 		int NNodes;
-		t_BLThickCalcType BLThickCalcType;
+
 	};
 
 
@@ -37,7 +61,7 @@ namespace mf{
 
 			bool _allocated;
 
-			t_BLThickCalcType _bl_thick_ctype;
+			t_ProfExtrCfg _profile_cfg;
 
 		public:
 
@@ -45,6 +69,9 @@ namespace mf{
 			virtual ~t_DomainBase();
 
 			virtual void init(const hsstab::TPlugin& g_plug)=0;
+
+			t_ProfExtrCfg& get_prof_extr_cfg();
+			const t_ProfExtrCfg& get_prof_extr_cfg() const;
 
 			virtual t_Rec get_rec(const t_GeomPoint& xyz) const=0;
 			// TODO: implement for optimization
@@ -102,8 +129,9 @@ namespace mf{
 			virtual bool is_point_inside(const t_GeomPoint& xyz) const=0;
 
 			// extract raw profile data if possible, index from wall to outer flow
-			virtual void extract_profile_data(const t_GeomPoint& xyz, 
-				const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const=0;
+			// type of calculation is controlled via set_bl_thick_calc_type method
+			virtual void extract_profile_data(const t_GeomPoint& xyz, const t_ProfDataCfg& data_cfg, 
+				std::vector<t_Rec>& data) const=0;
 
 			// tmp, while i don't have good interpolators
 			virtual int estim_num_bl_nodes(const t_GeomPoint& xyz) const=0;

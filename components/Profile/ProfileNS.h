@@ -33,14 +33,14 @@ class IMPEXP_PROFILE t_ProfileNS : public t_Profile{
 
 	void _store_bl_thick_data();
 
-	void _initialize_extract(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg );
-	void _initialize_interpolate(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg );
+	void _initialize_extract(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg);
+	void _initialize_interpolate(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg);
 
 public:
 
 	t_ProfileNS(const mf::t_DomainBase& rDomain);
 
-	void initialize(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, blp::t_NSInit init_type);
+	void initialize(const mf::t_GeomPoint& xyz,const mf::t_ProfDataCfg& data_cfg, blp::t_NSInit init_type);
 
 	const mf::t_DomainBase& getMFDomain() const;
 

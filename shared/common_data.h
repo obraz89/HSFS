@@ -9,6 +9,7 @@
 namespace hsstab{
 
 	IMPEXP_SHARED extern wxString CASE_SETTINGS_DIR;
+	IMPEXP_SHARED extern wxString OUTPUT_DIR;
 	IMPEXP_SHARED extern wxString LOG_FILE;
 
 

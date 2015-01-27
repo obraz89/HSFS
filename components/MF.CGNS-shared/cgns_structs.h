@@ -419,6 +419,44 @@ namespace mf{
 			void _read_parse_bc_wall_names(const wxString& str);
 			void _read_parse_bl_thick_calc_type(const wxString& str);
 
+			// geom interpolation stuff
+
+			virtual t_ZoneNode _get_nrst_node_surf(const t_ZoneNode& src_node) const;
+
+			virtual t_ZoneNode _get_nrst_node_surf(const t_GeomPoint& xyz) const;
+
+			virtual t_ZoneNode _get_nrst_node_raw(const t_GeomPoint& xyz) const;
+
+			virtual mf::t_Rec _interpolate_to_point_surf_raw(const t_GeomPoint& point) const;
+
+			bool _is_face_of_bcwall_type(const char* facename) const;
+
+			bool _is_point_inside(const t_GeomPoint& xyz) const;
+
+			void _extract_profile_data_blbound(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+				std::vector<t_Rec>& data) const;
+
+			void _extract_profile_data_full(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+				std::vector<t_Rec>& data) const;
+
+			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			void _calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
+				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			void _calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
+				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			void _calc_bl_thick_full_gridline(const t_GeomPoint& xyz, double& bl_thick, 
+				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+
+			// TDomainBase interface realization
+
+			// go along local normal to a surface
+			// surface normal vector is calculated as well
+		public:
+
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block
 			// realizations are different for 2D and 3D
@@ -437,28 +475,15 @@ namespace mf{
 			virtual void set_face_iters(int iZone, int iFace, int& is, int& ie, 
 				int& js, int& je, int& ks, int& ke) const;
 
+			// zIdx is 1-based index
+			TZone& getZone(const int zIdx){return Zones[zIdx-1];}
+
+			const TZone& getZone(const int zIdx) const{return Zones[zIdx-1];}
+
 			virtual void get_k_range(int iZone, int& ks, int& ke) const=0;
-
-			// geom interpolation stuff
-
-			virtual t_ZoneNode _get_nrst_node_surf(const t_ZoneNode& src_node) const;
-
-			virtual t_ZoneNode _get_nrst_node_surf(const t_GeomPoint& xyz) const;
-
-			virtual t_ZoneNode _get_nrst_node_raw(const t_GeomPoint& xyz) const;
-
-			virtual mf::t_Rec _interpolate_to_point_surf_raw(const t_GeomPoint& point) const;
-
-			bool _is_face_of_bcwall_type(const char* facename) const;
 
 			bool is_point_inside(const t_GeomPoint& xyz) const;
 
-			bool _is_point_inside(const t_GeomPoint& xyz) const;
-
-			// TDomainBase interface realization
-
-			// go along local normal to a surface
-			// surface normal vector is calculated as well
 			virtual void calc_surf_point(const t_GeomPoint& a_xyz, t_GeomPoint& surf_point, t_Vec3Dbl& norm) const;
 
 			virtual void calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
@@ -476,17 +501,8 @@ namespace mf{
 
 			void calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const;
 
-			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
-				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
-
-			void _calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
-				                t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
-
-			void _calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
-					t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
-
-			void extract_profile_data(const t_GeomPoint& xyz, 
-					const t_ProfDataCfg& prdata_cfg, std::vector<t_Rec>& data) const;
+			void extract_profile_data(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+				std::vector<t_Rec>& data) const;
 
 			// tmp, while i don't have good interpolators
 			int estim_num_bl_nodes(const t_GeomPoint& xyz) const;
@@ -499,6 +515,25 @@ namespace mf{
 		//-----------------------------------------------------------------------------
 
 		//-----------------------------------------------------------------------------
+
+		// Zone grid line
+		// stores i,j,k ranges for a certain grid line inside a zone
+		// can set iters for profile methods
+		struct t_ZoneGrdLine{
+
+			const TZone* zne; 
+			t_BlkInd ind_s, ind_e;
+			int di, dj, dk;
+
+			int nnodes;
+
+			enum t_GrdLineAlong{I_LINE=0, J_LINE, K_LINE};
+
+			t_GrdLineAlong idx_change;
+
+			t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode);
+
+		};
 
 	}	// ~namespace cg
 

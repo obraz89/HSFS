@@ -56,6 +56,8 @@ void t_EigenGS::setContext(const mf::t_GeomPoint& a_xyz){
 
 	mf::t_ProfDataCfg prof_cfg;
 	prof_cfg.ThickCoef = _params.ThickCoef;
+
+	// NNodes can be used in INTERPOLATE types of initialization
 	prof_cfg.NNodes = _params.NNodes;
 
 	switch (_params.NSProfInit)

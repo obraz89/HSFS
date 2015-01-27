@@ -53,6 +53,10 @@ void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 	g.add("BCWallFamilyNames", _T("Ymin, wall"), _T("BC Family names for viscous wall"));
 
 	g.add("BLCalcType", _T("BY_VELO_DERIV"), _T("Method of computing Boundary Layer thickness"));
+
+	g.add("BLThickTol", 0.1, _T("Parameter-tolerance for a specified BLCalcTypeMethod"));
+
+	g.add("BLThickCoefDefault", 3.0, _T("Thick Coef to use in GetProfiles task"));
 }
 
 void mf::cg::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){

@@ -6,15 +6,15 @@ using namespace mf;
 
 t_ProfileNS::t_ProfileNS(const t_DomainBase& a_rDomain):t_Profile(0), _rDomain(a_rDomain){};
 
-void t_ProfileNS::initialize(const mf::t_GeomPoint& xyz, 
-							 const mf::t_ProfDataCfg& prof_cfg, blp::t_NSInit init_type){
+void t_ProfileNS::initialize(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg, 
+							 blp::t_NSInit init_type){
 	switch (init_type)
 	{
 	case (blp::t_NSInit::INTERPOLATE):
-		_initialize_interpolate(xyz, prof_cfg);
+		_initialize_interpolate(xyz, data_cfg);
 		break;
 	case (blp::t_NSInit::EXTRACT):
-		_initialize_extract(xyz, prof_cfg);
+		_initialize_extract(xyz, data_cfg);
 		break;
 	default:
 		wxString msg(_T("ProfileNS: Initialization type not supported"));
@@ -24,7 +24,7 @@ void t_ProfileNS::initialize(const mf::t_GeomPoint& xyz,
 	_store_bl_thick_data();
 }
 
-void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const t_ProfDataCfg& init_cfg){
+void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg){
 
 	//IMPORTANT TODO: remove all "estimations" when 2-nd order interpolation done!!!
 	const double& a_thick_coef = init_cfg.ThickCoef;
@@ -102,11 +102,11 @@ void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const t_ProfDa
 }
 
 
-void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& prof_cfg){
+void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg){
 
 	std::vector<mf::t_Rec> raw_profile;
 
-	_rDomain.extract_profile_data(xyz, prof_cfg, raw_profile);
+	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile);
 
 	_resize(raw_profile.size());
 

@@ -5,7 +5,15 @@ mf::t_DomainBase::t_DomainBase(){};
 
 mf::t_DomainBase::~t_DomainBase(){};
 
-void mf::t_DomainBase::set_bl_thick_calc_type(t_BLThickCalcType v){_bl_thick_ctype = v;}
+void mf::t_DomainBase::set_bl_thick_calc_type(t_BLThickCalcType v){
+
+	_profile_cfg.BLThickCalcType = v;
+
+}
+
+mf::t_ProfExtrCfg& mf::t_DomainBase::get_prof_extr_cfg() {return _profile_cfg;}
+
+const mf::t_ProfExtrCfg& mf::t_DomainBase::get_prof_extr_cfg() const{return _profile_cfg;}
 
 double mf::t_DomainBase::calc_enthalpy(const mf::t_Rec& ptr) const{
 

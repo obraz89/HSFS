@@ -201,10 +201,17 @@ void test::king_m35_eN_spat_fixedB(){
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars_wbfixed.dat");
-	std::wstring fout_wplines_path(_T("Wave_pack_lines_wbfixed.dat"));
-	std::wstring fout_maxnfactor_path(_T("max_N_wbfixed.dat"));
-	std::wofstream ofstr(&out_path[0]);
+	//std::wstring out_path = _T("out_instab_wchars_wbfixed.dat");
+
+	wxChar szFname[64];
+	swprintf(szFname, _T("%s/Wave_pack_lines_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
+
+	std::wstring fout_wplines_path(szFname);
+
+	swprintf(szFname, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
+	std::wstring fout_maxnfactor_path(szFname);
+
+	//std::wofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
 	try

@@ -57,6 +57,10 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 	
 	_read_parse_bl_thick_calc_type(strBLCalcType);
 
+	_profile_cfg.DerivThreshold = g.get_real_param("BLThickTol");
+
+	_profile_cfg.ThickCoefDefault = g.get_real_param("BLThickCoefDefault");
+
 	_init();	// allocate space and read grd and fld
 
 }

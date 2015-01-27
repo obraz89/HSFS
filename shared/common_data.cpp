@@ -5,6 +5,7 @@ using namespace hsstab;
 
 // task
 wxString hsstab::CASE_SETTINGS_DIR = _T("settings");
+wxString hsstab::OUTPUT_DIR = _T("output");
 wxString hsstab::LOG_FILE = _T("log.txt");
 
 // component names

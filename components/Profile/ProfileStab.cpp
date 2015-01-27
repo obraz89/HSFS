@@ -80,6 +80,7 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double
 	double y_scale_bl = bl_thick_scale*sqrt(Params.Re);
 
 	double y_scale;
+	// TODO: make an option when adequate x_scale calculations added
 	if (true)
 	// variant 1
 	// use scaling with bl_thick_scale provided by MF 

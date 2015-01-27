@@ -387,87 +387,99 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	return get_mf_params().L_ref;
 };
 
+// TODO: works only for grids nearly orthogonal to viscous wall 
 void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
 					t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
 
 	surf_znode = _get_nrst_node_surf(xyz);
 
-	int i_s = surf_znode.iNode.i;
-	int i_e = i_s;
+	t_ZoneGrdLine grd_line(*this, surf_znode);
 
-	int j_s = surf_znode.iNode.j;
-	int j_e = j_s;
+	int i_s = grd_line.ind_s.i;
+	int i_e = grd_line.ind_e.i;
 
-	int k_s = surf_znode.iNode.k;
-	int k_e = k_s;
+	int j_s = grd_line.ind_s.j;
+	int j_e = grd_line.ind_e.j;
 
-	const TZone& blk = Zones[surf_znode.iZone-1];
+	int k_s = grd_line.ind_s.k;
+	int k_e = grd_line.ind_e.k;
+
+	const TZone& blk = *grd_line.zne;
 
 	int i = i_s;
 	int j = j_s;
 	int k = k_s;
 
-	int di = 0, dj =0 , dk = 0;
+	int di = grd_line.di;
+	int dj = grd_line.dj;
+	int dk = grd_line.dk;
 
-	switch(surf_znode.iFacePos){
-		case(faceXmin):
-			di = 1;
-			i_s = blk.is;
-			i_e = blk.ie;
-			break;
-		case(faceXmax):
-			di = -1;
-			i_s = blk.ie;
-			i_e = blk.is;
-			break;
-		case(faceYmin):
-			dj = 1;
-			j_s = blk.js;
-			j_e = blk.je;
-			break;
-		case(faceYmax):
-			dj = -1;
-			j_s = blk.js;
-			j_e = blk.je;
-			break;
-		case(faceZmin):
-			dk = 1;
-			get_k_range(surf_znode.iZone, k_s, k_e);
-			break;
-		case(faceZmax):
-			dk=-1;
-			get_k_range(surf_znode.iZone, k_e, k_s);
-			break;
-	}
+	// if du_dy increases search max
+	// use du_dy wall otherwise
+	double du_dy_max = 0.0;
+	double du_dy;
 
-// get du_dn wall
 	mf::t_Rec cur_rec, nxt_rec;
-	t_GeomPoint cur_xyz, nxt_xyz, dr;
-	t_GeomPoint wall_xyz, out_xyz;
+	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
 	t_Vec3Dbl cur_uvw, nxt_uvw, du;
-	double du_dn_wall, du_dn_cur;
 
-	get_rec(blk, i_s, j_s, k_s, cur_rec);
-	get_rec(blk, i_s + di, j_s + dj, k_s + dk, nxt_rec);
-
-	cur_xyz.set(cur_rec);
-	nxt_xyz.set(nxt_rec);
-
-	cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
-	nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
-
-	matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
-	matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
-
-	du_dn_wall = du.norm()/dr.norm();
-	//std::cout<<"wall dudn="<<du_dn_wall<<"\n";
+	// wall rec is used to calculate bl_thick
+	get_rec(blk, i, j, k, cur_rec);
 	wall_xyz.set(cur_rec);
 
-	// 1 step done
-	i+=di;
-	j+=dj;
-	k+=dk;
-	
+	bool searching_max = true;
+	for (int m=0; m<grd_line.nnodes-1; m++) 
+	{
+
+		get_rec(blk, i, j, k, cur_rec);
+
+		cur_xyz.set(cur_rec);
+
+		cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
+
+		i+=di;
+		j+=dj;
+		k+=dk;
+
+		get_rec(blk, i, j, k, nxt_rec);
+
+		nxt_xyz.set(nxt_rec);
+
+		nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+
+		matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
+		matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
+
+		du_dy = abs(du.norm()/dr.norm());
+
+		if (searching_max){
+
+			if (du_dy<du_dy_max) searching_max = false;
+
+			du_dy_max = du_dy;
+
+			continue;
+
+		}else{
+
+			double eps = _profile_cfg.DerivThreshold;
+			if (du_dy<eps*du_dy_max){
+
+				outer_znode.iZone = surf_znode.iZone;
+				outer_znode.iNode.set(i,j,k);
+
+				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+				bl_thick = dr.norm();
+
+				break;
+
+			};
+
+		}
+
+	};
+/*
 	do 
 	{
 		do 
@@ -542,179 +554,115 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 		i+=di;
 	} while ((i_e-i)*di>0);
 
-	wxLogError(_T("Failed to calculate bl thickness, iZone=%d"), surf_znode.iZone);
-	return;
-	
+*/
+
+//	wxLogError(_T("Failed to calculate bl thickness by velo deriv, iZone=%d"), surf_znode.iZone);
 
 };
 
+// TODO : works only for grids nearly orthogonal to viscous wall
 void TDomain::_calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
 									t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
 
 
 	surf_znode = _get_nrst_node_surf(xyz);
 
-	int i_s = surf_znode.iNode.i;
-	int i_e = i_s;
+	t_ZoneGrdLine grd_line(*this, surf_znode);
 
-	int j_s = surf_znode.iNode.j;
-	int j_e = j_s;
+	int i_s = grd_line.ind_s.i;
+	int i_e = grd_line.ind_e.i;
 
-	int k_s = surf_znode.iNode.k;
-	int k_e = k_s;
+	int j_s = grd_line.ind_s.j;
+	int j_e = grd_line.ind_e.j;
 
-	const TZone& blk = Zones[surf_znode.iZone-1];
+	int k_s = grd_line.ind_s.k;
+	int k_e = grd_line.ind_e.k;
 
-	int i = i_s;
-	int j = j_s;
-	int k = k_s;
+	const TZone& blk = *grd_line.zne;
 
-	int di = 0, dj =0 , dk = 0;
-
-	switch(surf_znode.iFacePos){
-		case(faceXmin):
-			di = 1;
-			i_s = blk.is;
-			i_e = blk.ie;
-			break;
-		case(faceXmax):
-			di = -1;
-			i_s = blk.ie;
-			i_e = blk.is;
-			break;
-		case(faceYmin):
-			dj = 1;
-			j_s = blk.js;
-			j_e = blk.je;
-			break;
-		case(faceYmax):
-			dj = -1;
-			j_s = blk.js;
-			j_e = blk.je;
-			break;
-		case(faceZmin):
-			dk = 1;
-			get_k_range(surf_znode.iZone, k_s, k_e);
-			break;
-		case(faceZmax):
-			dk=-1;
-			get_k_range(surf_znode.iZone, k_e, k_s);
-			break;
-	}
-
-// get du_dn wall
 	mf::t_Rec cur_rec, nxt_rec;
-	t_GeomPoint cur_xyz, nxt_xyz, dr;
-	t_GeomPoint wall_xyz, out_xyz;
-	t_Vec3Dbl cur_uvw, nxt_uvw, du;
-	double du_dn_wall, du_dn_cur;
+	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
+	double h_cur, h_inf;
 
+	// wall rec is used to calculate bl_thick
 	get_rec(blk, i_s, j_s, k_s, cur_rec);
-	get_rec(blk, i_s + di, j_s + dj, k_s + dk, nxt_rec);
-
-	cur_xyz.set(cur_rec);
-	nxt_xyz.set(nxt_rec);
-
-	cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
-	nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
-
-	matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
-	matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
-
-	du_dn_wall = du.norm()/dr.norm();
-	//std::cout<<"wall dudn="<<du_dn_wall<<"\n";
 	wall_xyz.set(cur_rec);
 
-	// 1 step done
-	i+=di;
-	j+=dj;
-	k+=dk;
-	
-	do 
+	h_inf = calc_enthalpy_freestream();
+
+	// march from outside of bl
+
+	int i = i_e;
+	int j = j_e;
+	int k = k_e;
+
+	int di = -grd_line.di;
+	int dj = -grd_line.dj;
+	int dk = -grd_line.dk;
+
+	for (int m=0; m<grd_line.nnodes; m++) 
 	{
-		do 
-		{
-			do 
-			{
-				
-				get_rec(blk, i, j, k, cur_rec);
-				get_rec(blk, i + di, j + dj, k + dk, nxt_rec);
 
-				cur_xyz.set(cur_rec);
-				nxt_xyz.set(nxt_rec);
+		get_rec(blk, i, j, k, cur_rec);
 
-				cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
-				nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+		h_cur = calc_enthalpy(cur_rec);
 
-				matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
-				matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
+		double tol = abs(h_cur/h_inf -1);
 
-				du_dn_cur = du.norm()/dr.norm();
+		if (tol>_profile_cfg.DerivThreshold){
 
-				if (du_dn_cur<=du_dn_wall*BL_BOUND_VELO_TOL)
-				{
+			outer_znode.iZone = surf_znode.iZone;
+			outer_znode.iNode.set(i,j,k);
 
-					//wxLogMessage(_T("Zone=%d, i=%d,j=%d,k=%d"), surf_znode.iZode, i,j,k);
-					outer_znode.iZone = surf_znode.iZone;
-					outer_znode.iNode.set(i,j,k);
+			cur_xyz.set(cur_rec);
 
-					// debug 
-					//std::cout<<"iZone="<<outer_znode.iZone<<";ijk=["<<outer_znode.iNode.i<<";"<<outer_znode.iNode.j<<";"<<outer_znode.iNode.k<<"]\n";
-					//std::cout<<"Debug: Bound i,j,k="<<i<<";"<<j<<";"<<k<<"\n";
+			matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
 
-					out_xyz = cur_xyz;
-					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+			bl_thick = dr.norm();
 
-					double bl_thick_direct = dr.norm();
+			break;
+		}
 
-					// calculate disp thick
-					double delta = 0;
-					t_Vec3Dbl uu, ue;
-					double ue_norm = cur_uvw.norm();
-					for (int ii=i_s; ii<=i; ii++)
-						for (int jj=j_s; jj<=j; jj++)	// j
-							for(int kk=k_s; kk<=k; kk++){
-								get_rec(blk, ii, jj, kk, cur_rec);
-								get_rec(blk, ii + di, jj + dj, kk + dk, nxt_rec);
-
-								cur_xyz.set(cur_rec);
-								nxt_xyz.set(nxt_rec);
-
-								uu.set(cur_rec.u, cur_rec.v, cur_rec.w);
-
-								matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
-								double coef = 1.0-uu.norm()/ue_norm;
-								delta+=coef*dr.norm();
-							}
-
-
-					//bl_thick = dr.norm();
-					bl_thick = bl_thick_direct;
-					//wxLogMessage(_T("Old Dels=%f"), float(bl_thick_direct));
-					//bl_thick = 2.84256*delta;
-					//wxLogMessage(_T("Bl Thick=%f"), float(bl_thick));
-					return;
-				}
-				
-
-				k+=dk;
-			} while ((k_e-k)*dk>0);
-			j+=dj;
-		} while ((j_e-j)*dj>0);
 		i+=di;
-	} while ((i_e-i)*di>0);
+		j+=dj;
+		k+=dk;
 
-	wxLogError(_T("Failed to calculate bl thickness, iZone=%d"), surf_znode.iZone);
-	return;
 
+	};
 
 };
+
+void TDomain::_calc_bl_thick_full_gridline(const t_GeomPoint& xyz, double& bl_thick, 
+				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	t_ZoneGrdLine grd_line(*this, surf_znode);
+
+	outer_znode.iZone = surf_znode.iZone;
+	outer_znode.iNode = grd_line.ind_e;
+
+	mf::t_Rec rec1, rec2;
+
+	get_rec(surf_znode, rec1);
+	get_rec(outer_znode, rec2);
+
+	t_GeomPoint r1, r2;
+	t_Vec3Dbl dr;
+
+	r1.set(rec1);
+	r2.set(rec2);
+
+	matrix::base::minus<double, double>(r1, r2, dr);
+	bl_thick = dr.norm();
+	
+}
 
 inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
 									t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
 
 
-	switch (_bl_thick_ctype)
+	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
 		_calc_bl_thick_vderiv(xyz,bl_thick, surf_znode, outer_znode);
@@ -723,6 +671,10 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
 		_calc_bl_thick_enthalpy(xyz,bl_thick, surf_znode, outer_znode);
 		break;
+	case t_BLThickCalcType::FULL_DATA:
+		_calc_bl_thick_full_gridline(xyz,bl_thick, surf_znode, outer_znode);
+		break;
+
 	default:
 		wxString msg(_T("Provided BL Thick Calc Type not implemented"));
 		wxLogError(msg); ssuGENTHROW(msg);
@@ -887,7 +839,8 @@ void TDomain::dump_full_enthalpy_profile(const mf::t_GeomPoint& xyz, int pid) co
 			break;
 	}
 
-	char fname[33];sprintf(fname, "profile_enthalpy_%d.dat", pid);
+	char fname[33];
+	sprintf(fname, "%s/profile_enthalpy_%d.dat", hsstab::OUTPUT_DIR.ToAscii(), pid);
 	std::ofstream ofstr(fname);
 
 	mf::t_Rec mf_rec;
