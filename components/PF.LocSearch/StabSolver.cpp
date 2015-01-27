@@ -667,6 +667,31 @@ void t_StabSolver::calcGroupVelocity
 	a_wave_chars.vgb = 0.5*(rght_chars.w - left_chars.w)/dd;
 }
 
+
+/************************************************************************/   
+//Check wave chars - if wave is physical, group velo is good
+//
+/************************************************************************/
+bool t_StabSolver::checkWCharsByGroupV(t_WCharsLoc& wchars){
+
+	try{
+		calcGroupVelocity(wchars);
+	}catch(...){
+		wxLogMessage(_T("WChars Check: Failed to calculate group velo - unphysical wave"));
+		return false;
+	}
+
+	double vga_r = wchars.vga.real();
+	double vgb_r = wchars.vgb.real();
+
+	double vgr = sqrt(vga_r*vga_r + vgb_r*vgb_r);
+
+	if (vgr<1.0) return true;
+
+	wxLogMessage(_T("WChars Check: group velo is big - unphysical wave"));
+	return false;
+
+};
 /************************************************************************/   
 // Search maximum instability with keeping Re(w)=const
 // Use time approach
@@ -1016,7 +1041,7 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 				t_WCharsLocDim dim_wave = cur_wave.make_dim();
 
 				// TODO: nice checking that wave is physical
-				if ( cur_wave.a.real()>0 && stab::check_wchars_c(cur_wave)){
+				if ( stab::check_wchars_c_phase(cur_wave) && this->checkWCharsByGroupV(cur_wave)){
 
 					std::wcout<<_T("Instab found:")<<cur_wave;
 

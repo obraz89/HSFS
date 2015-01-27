@@ -123,6 +123,8 @@ public:
 
 	void calcGroupVelocity(t_WCharsLoc& wchars);
 
+	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
+
 	const t_StabScales& get_stab_scales() const;
 	//========================
 

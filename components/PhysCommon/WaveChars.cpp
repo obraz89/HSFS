@@ -164,7 +164,7 @@ namespace stab{
 	// see [Gaponov, Maslov] p.43 for details
 	// works only with t_WcharsLoc
 	// t_WaveChars argument left for better usability
-	bool check_wchars_c(const t_WaveChars& w){
+	bool check_wchars_c_phase(const t_WaveChars& w){
 
 		const t_StabScales& s = w.scales();
 
@@ -180,6 +180,8 @@ namespace stab{
 		double c_max = 1.0 + 1.0/Mf;
 
 		if ((c_min<=c) && (c<=c_max)) return true;
+
+		wxLogMessage(_T("Checking Wchars: Phase speed looks bad, treating unphysical"));
 
 		return false;
 

@@ -80,7 +80,7 @@ public:
 // to help filtering unphysical waves
 namespace stab{
 	// check by phase speed
-	IMPEXP_PHYSCOMMON bool check_wchars_c(const t_WaveChars& w);
+	IMPEXP_PHYSCOMMON bool check_wchars_c_phase(const t_WaveChars& w);
 }
 
 /************************************************************************/
