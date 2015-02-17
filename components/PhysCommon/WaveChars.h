@@ -81,6 +81,9 @@ public:
 namespace stab{
 	// check by phase speed
 	IMPEXP_PHYSCOMMON bool check_wchars_c_phase(const t_WaveChars& w);
+
+	// "ai/ar" should always be small
+	IMPEXP_PHYSCOMMON bool check_wchars_increment(const t_WaveChars& w);
 }
 
 /************************************************************************/

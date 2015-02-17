@@ -22,26 +22,6 @@ void t_WaveChars::check_treat(stab::t_TaskTreat treat) const{
 		ssuGENTHROW(_T("Wrong type of task treat[Time, Spat]!"));
 	};
 
-	/*
-
-	switch (_task_treat)
-	{
-	case stab::t_TaskTreat::SPAT:
-
-		ok =  (w.imag()==0.0);
-		break;
-
-	case stab::t_TaskTreat::TIME:
-
-		ok = (a.imag()==0.0)&&(b.imag()==0.0);
-		break;
-
-	default:
-
-		ok = false;
-		break;
-	}
-	*/
 	return;
 }
 
@@ -184,6 +164,45 @@ namespace stab{
 		wxLogMessage(_T("Checking Wchars: Phase speed looks bad, treating unphysical"));
 
 		return false;
+
+	}
+
+	bool check_wchars_increment(const t_WaveChars& w){
+
+		double inc, coef;
+		double k, ar, knr, br, ai, kni, bi, wi;
+
+		switch (w.get_treat())
+		{
+		case stab::t_TaskTreat::SPAT:
+
+			ar = w.a.real(); knr = w.kn.real(); br = w.b.real();
+
+			k = sqrt(ar*ar + knr*knr + br*br);
+
+			ai = w.a.imag(); kni = w.kn.imag(); bi = w.b.imag();
+
+			inc = sqrt(ai*ai+kni*kni+bi*bi);
+
+			coef = inc/k;
+
+			break;
+
+		case stab::t_TaskTreat::TIME:
+
+			coef = abs(w.w.imag()/w.w.real());
+
+			break;
+
+		default:
+
+			wxLogMessage(_T("Error: Bad wave treat in check_wchars_increment"));
+			coef = 1.0;
+			break;
+		}
+
+	// TODO: empiric constant
+	return (coef<0.1);
 
 	}
 }
