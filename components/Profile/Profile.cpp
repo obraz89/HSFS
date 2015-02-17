@@ -29,6 +29,7 @@ _nnodes(a_nnodes){
 
 	_profiles.push_back(&_p);
 	_profiles.push_back(&_r);
+	_profiles.push_back(&_v);
 
 	this->_resize(a_nnodes);
 	_init_extractor();
@@ -193,6 +194,8 @@ void t_Profile::_init_extractor(){
 
 	_extract_map.push_back(t_Extractor(&t_Rec::p, &t_Profile::_p));
 	_extract_map.push_back(t_Extractor(&t_Rec::r, &t_Profile::_r));
+
+	_extract_map.push_back(t_Extractor(&t_Rec::v, &t_Profile::_v));
 }
 
 t_Profile::t_Rec t_Profile::_extract(int j) const{
@@ -234,7 +237,7 @@ void t_Profile::dump(const std::wstring& fname) const{
 	std::wofstream fstr(&fname[0], std::ios::out);
 	t_Rec rec;
 
-	fstr<<_T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\th\n");
+	fstr<<_T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\tv\n");
 
 	for (int i=0; i<_nnodes; i++){
 
@@ -244,9 +247,59 @@ void t_Profile::dump(const std::wstring& fname) const{
 		rec.u<<_T("\t")<<rec.u1<<_T("\t")<<rec.u2<<_T("\t")<<
 		rec.t<<_T("\t")<<rec.t1<<_T("\t")<<rec.t2<<_T("\t")<<rec.r<<_T("\t")<<
 		rec.mu<<_T("\t")<<rec.mu1<<_T("\t")<<rec.mu2<<_T("\t")<<
-		rec.w<<_T("\t")<<rec.w1<<_T("\t")<<rec.w2<<_T("\t")<<_T("\n");
+		rec.w<<_T("\t")<<rec.w1<<_T("\t")<<rec.w2<<_T("\t")<<rec.v<<_T("\n");
 
 
 	}
 };
+//--------------------------------------------------------------------------------~t_Profile
+
+//--------------------------------------------------------------------------------t_ProfMF
+
+t_ProfMF::t_ProfMF(const mf::t_DomainBase& a_rDomain):t_Profile(0), _rDomain(a_rDomain){};
+
+void t_ProfMF::initialize(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg, 
+							 blp::t_NSInit init_type){
+	switch (init_type)
+	{
+	case (blp::t_NSInit::INTERPOLATE):
+		_initialize_interpolate(xyz, data_cfg);
+		break;
+	case (blp::t_NSInit::EXTRACT):
+		_initialize_extract(xyz, data_cfg);
+		break;
+	default:
+		wxString msg(_T("ProfMF: Initialization type not supported"));
+		wxLogError(msg); ssuGENTHROW(msg);
+	}
+
+	_store_bl_thick_data();
+}
+
+void t_ProfMF::_store_bl_thick_data(){
+
+	_bl_thick_scale = _rDomain.calc_bl_thick(_xyz);
+	// TODO: do i need this?
+	//_bl_bound_ind = 0;
+	
+};
+
+inline double t_ProfMF::get_bl_thick_scale() const{return _bl_thick_scale;}
+
+double t_ProfMF::get_x_scale() const{
+
+	// TODO: correct implementation
+	wxLogMessage(_T("ProfileNS: get_x_scale not implemented correctly!"));
+	return _xyz.x();
+
+}
+
+
+const mf::t_DomainBase& t_ProfMF::getMFDomain() const{return _rDomain;};
+
+int t_ProfMF::get_bound_ind() const{return get_nnodes()-1;};
+
+t_ProfRec t_ProfMF::get_bound_rec(){
+	return get_rec(get_bound_ind());
+}
 
