@@ -111,159 +111,6 @@ delete g_pMFDomain;
 
 }
 
-bool search_global_initial_wr_fixed(const task::TTaskParams& task_params, double a_wr, t_WCharsLoc& ret_wave){
-
-	// solvers Contexts must be already set here!
-
-	stab::t_LSBase* const stab_solver = g_pStabSolver;
-
-	stab::t_GSBase* const gs_solver = g_pGSSolverSpat;
-
-	const t_StabScales& stab_scales = stab_solver->get_stab_scales();
-
-	const int n_bt=g_taskParams.N_b;
-
-	double bt_min = g_taskParams.b_ndim_min;
-	double bt_max = g_taskParams.b_ndim_max;
-
-	double dbt = (bt_max - bt_min)/double(n_bt);
-
-	const double w = a_wr;
-
-	std::vector<t_WCharsLoc> waves_spat;
-
-	for (int j=0; j<n_bt; j++){
-
-		std::vector<t_WCharsLoc> init_waves_raw;
-		std::vector<t_WCharsLoc> init_waves_filtered;
-
-		std::cout<<"J="<<j<<"\n";
-
-		t_WCharsLoc init_wave;
-
-		init_wave.b = bt_min + dbt*j;
-		init_wave.w = w;
-
-		init_waves_raw = gs_solver->getInstabModes(init_wave);
-
-		init_waves_filtered = g_pStabSolver->filter_gs_waves_spat(init_waves_raw, 
-			stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED));
-
-		for (int k=0; k<init_waves_filtered.size(); k++)
-			waves_spat.push_back(init_waves_filtered[k]);	
-
-	}	// ~loop over betas
-
-	if (waves_spat.size()>0){
-		ret_wave = t_WCharsLoc::find_max_instab_spat(waves_spat); 
-		return true;
-	}else 
-		return false;
-};
-
-
-void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_params){
-
-	double w_min = g_taskParams.w_ndim_min;
-	double w_max = g_taskParams.w_ndim_max;
-
-	int Nw = g_taskParams.N_w;
-
-	double dw = (w_max - w_min)/double(Nw);
-
-	std::vector<t_WCharsLoc> max_waves_spat;
-
-	t_WCharsLoc cur_max_wave;
-
-	int pave_pnt_ind = g_taskParams.pave_point_id;
-	if ( pave_pnt_ind>=g_pStabDB->get_npoints())
-	{
-		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
-		return;
-	}
-
-	int pid_s, pid_e;
-	if (pave_pnt_ind<0){
-		pid_s = 0;
-		pid_e = g_pStabDB->get_npoints()-1;
-	}else{
-		pid_s = pave_pnt_ind;
-		pid_e = pave_pnt_ind;
-	}
-
-	char fname[33];
-
-	sprintf(fname, "%s/wchars_all_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
-	std::ofstream fostr_all(fname);
-
-	sprintf(fname, "%s/wchars_max_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
-	std::ofstream fostr_max(fname);
-
-	for (int pid=pid_s; pid<=pid_e; pid++){
-
-		if (pid_s!=pid_e){
-
-			int task_perc_done = double(pid-pid_s)/double(pid_e-pid_s)*100;
-			wxLogMessage(_T("\n=============Task : %d perc done =============\n"), task_perc_done);
-
-		}
-
-		max_waves_spat.resize(0);max_waves_spat.clear();
-
-		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
-
-		g_pStabSolver->setContext(xyz);
-
-		g_pGSSolverSpat->setContext(xyz);
-
-		for (int j=0; j<Nw; j++){
-
-			int perc_done = double(j)/double(Nw)*100;
-			wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
-
-			double cur_w = w_min + dw*j;
-
-			bool ok = search_global_initial_wr_fixed(task_params, cur_w, cur_max_wave);
-
-			if (ok) {
-				max_waves_spat.push_back(cur_max_wave);
-			} else
-				{continue;}
-
-			// debug
-			const t_WCharsLoc& lw = cur_max_wave;
-			fostr_all<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
-				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()
-				<<"\n";
-			fostr_all.flush();
-
-		}
-
-		if (max_waves_spat.size()>0){
-			cur_max_wave = t_WCharsLoc::find_max_instab_spat(max_waves_spat);
-
-			t_WCharsLocDim ret_wave = cur_max_wave.make_dim();
-
-			const t_WCharsLoc& lw = cur_max_wave;
-			const t_WCharsLocDim& ld = ret_wave;
-
-			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
-				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()<<"\t"
-				<<ld.a.real()<<"\t"<<ld.a.imag()<<"\t"<<ld.b.real()<<"\t"<<ld.b.imag()<<"\t"<<ld.w.real()<<"\t"<<ld.w.imag()
-				<<"\n";
-		}else{
-			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<" --- Failed to find wave"<<"\n";
-
-		}
-
-		fostr_max.flush();
-
-
-	}
-
-	return;
-
-};
 
 void task::analyze_wchars(const std::string& fname){
 
@@ -350,10 +197,6 @@ void task::analyze_wchars(const std::string& fname){
 
 }
 
-void task::search_max_instab_fixed_point_time(const task::TTaskParams& task_params){
-	wxLogError(_T("Migrate from tests!"));
-};
-
 
 void do_retrace_wplines_wfixed_bfree(const task::TTaskParams& params){
 	wxLogMessage(_T("Migrate do_retrace_wplines_wfixed_bfree from tests"));
@@ -361,34 +204,54 @@ void do_retrace_wplines_wfixed_bfree(const task::TTaskParams& params){
 
 bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc& wave){
 
-	std::wifstream ifstr(&fname_max_waves[0]);
+
+	wxChar szFname[64];
+
+	swprintf(szFname, _T("%s/%s"),hsstab::OUTPUT_DIR.c_str(), &fname_max_waves[0]);
+
+	std::wifstream ifstr(szFname);
+
+	if (!ifstr.is_open())
+	{
+		// Dump the contents of the file to cout.
+		wxLogError(_("Error: Can't find file with max wchars!"));
+		return false;
+	}
+
 
 	bool line_read_ok = true; const int MaxBufSize = 256;
 	wchar_t line[MaxBufSize];
 
 	int cur_pid; double x,y,z,ar,ai,br,bi,wr,wi;
 
-	bool rec_found = false;
 	do 
 	{
 		line_read_ok = ifstr.getline(&line[0], MaxBufSize); 
 
 		std::wistringstream istr(line);
-		istr>>cur_pid>>x>>y>>z
+
+		int good_rec;
+
+		istr>>cur_pid>>x>>y>>z>>good_rec
 			>>ar>>ai>>br>>bi>>wr>>wi;
 		if (pid==cur_pid){
 
-			wave.a = t_Complex(ar, ai);
-			wave.b = t_Complex(br, bi);
-			wave.w = t_Complex(wr, wi);
-			rec_found = true;
-			break;
+			if (good_rec){
+
+				wave.a = t_Complex(ar, ai);
+				wave.b = t_Complex(br, bi);
+				wave.w = t_Complex(wr, wi);
+				return true;
+
+			}else{
+				return false;
+			}
 
 		}
 
 	} while (line_read_ok);
 
-	return rec_found;
+	return false;
 };
 
 
@@ -524,6 +387,7 @@ void task::get_profiles(){
 
 		wchar_t szFname[33];
 
+		// generate profile NS
 		t_ProfileNS prof_NS(*g_pMFDomain);
 
 		mf::t_ProfDataCfg data_cfg;
@@ -533,6 +397,14 @@ void task::get_profiles(){
 		swprintf(szFname, _T("%s/ProfileNS_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
 		prof_NS.dump(szFname);
 
+		// generate profile MF (Glob RF)
+		t_ProfMFGlob prof_MF(*g_pMFDomain);
+		prof_MF.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
+
+		swprintf(szFname, _T("%s/ProfileMFGlob_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
+		prof_MF.dump(szFname);
+
+		// generate profile Stab
 		swprintf(szFname, _T("%s/ProfileStab_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
 		g_pStabSolver->dumpProfileStab(szFname);
 

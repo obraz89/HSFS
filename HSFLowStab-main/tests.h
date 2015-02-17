@@ -33,4 +33,7 @@ namespace test{
 	// test robustness of wchars checker by phase speed
 	void test_wchars_filter_c();
 
+	// verify Lapack GS & test against Petsc
+	void gs_lapack_vs_petsc();
+
 };

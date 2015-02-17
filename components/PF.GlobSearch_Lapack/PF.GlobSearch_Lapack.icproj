@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<VisualStudioProject
+	ProjectType="Intel C++ Project"
+	Version="11.1"
+	Name="PF.GlobSearch_Lapack"
+	ProjectGUID="{03DBACEE-AD12-42F5-A73D-162162917D1A}"
+	VCNestedProjectGUID="{5B2E73C7-6CBD-49E2-B5E2-9A9A9773AD28}"
+	VCNestedProjectFileName="PF.GlobSearch_Lapack.vcproj">
+	<Configurations/>
+	<Files/>
+</VisualStudioProject>

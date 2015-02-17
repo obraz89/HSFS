@@ -2,10 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="HSFlowStab-main"
-	ProjectGUID="{D0D37BF9-2256-44EC-B290-F21C253238CF}"
-	RootNamespace="HSFlowStabmain"
-	Keyword="Win32Proj"
+	Name="PF.GlobSearch_Lapack"
+	ProjectGUID="{5B2E73C7-6CBD-49E2-B5E2-9A9A9773AD28}"
+	RootNamespace="PFGlobSearch_Lapack"
 	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
@@ -21,10 +20,10 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
-			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
+			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -44,12 +43,9 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -64,9 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				LinkIncremental="2"
 				GenerateDebugInformation="true"
-				SubSystem="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -95,7 +89,7 @@
 			Name="Debug|x64"
 			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
 			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			CharacterSet="1"
 			>
 			<Tool
@@ -117,12 +111,11 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(MKL_DIR)/include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -137,11 +130,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib wxzlibd.lib wxregexud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib"
-				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
+				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib PhysCommon.lib profile.lib smallmat.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;"
 				GenerateDebugInformation="true"
-				SubSystem="1"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -171,7 +162,7 @@
 			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
-			CharacterSet="1"
+			CharacterSet="2"
 			WholeProgramOptimization="1"
 			>
 			<Tool
@@ -193,10 +184,9 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
+				AdditionalIncludeDirectories="C:\lib\mkl-11.1.067\include"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -211,9 +201,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				LinkIncremental="1"
+				AdditionalDependencies="mkl_core.lib mkl_intel_lp64.lib mkl_sequential.lib"
+				AdditionalLibraryDirectories="C:\lib\mkl-11.1.067\em64t\lib"
 				GenerateDebugInformation="true"
-				SubSystem="1"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="1"
@@ -244,7 +234,7 @@
 			Name="Release|x64"
 			OutputDirectory="$(SolutionDir)/bin_$(PlatformName)_$(ConfigurationName)"
 			IntermediateDirectory="$(OutDir)/intermed/$(PlatformName)_$(ConfigurationName)/$(ProjectName)"
-			ConfigurationType="1"
+			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -268,11 +258,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(MKL_DIR)/include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -287,11 +276,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28u_core.lib wxbase28u.lib wxzlib.lib wxregexu.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib SmallMat.lib Profile.lib"
-				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
-				GenerateDebugInformation="false"
-				SubSystem="1"
+				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib smallmat.lib mkl_core.lib mkl_intel_lp64.lib mkl_sequential.lib"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;"
+				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				TargetMachine="17"
@@ -328,65 +315,25 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\cmd_parse.cpp"
+				RelativePath=".\EigenGS.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\main.cpp"
+				RelativePath=".\EigenGS_params.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\settings.cpp"
+				RelativePath=".\EigenGS_plugin.cpp"
 				>
 			</File>
-			<Filter
-				Name="tests"
+			<File
+				RelativePath=".\EigenGS_selfsim.cpp"
 				>
-				<File
-					RelativePath=".\test_cf_selfsim.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_conj_grad.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_fixed_beta_calc.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_fmode_selfsim.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_king_m35.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_sm_selfsim.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_smat.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\test_smode_flat_hsflow.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="tasks"
+			</File>
+			<File
+				RelativePath=".\EigenGS_Spatial.cpp"
 				>
-				<File
-					RelativePath=".\tasks.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\tasks_gs.cpp"
-					>
-				</File>
-			</Filter>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -394,27 +341,23 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\cmd_parse.h"
+				RelativePath=".\EigenGS.h"
 				>
 			</File>
 			<File
-				RelativePath=".\settings.h"
+				RelativePath=".\EigenGS_params.h"
 				>
 			</File>
 			<File
-				RelativePath=".\solvers_glob.h"
+				RelativePath=".\EigenGS_plugin.h"
+				>
+			</File>
+			<File
+				RelativePath=".\EigenGS_Spatial.h"
 				>
 			</File>
 			<File
 				RelativePath=".\stdafx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\tasks.h"
-				>
-			</File>
-			<File
-				RelativePath=".\tests.h"
 				>
 			</File>
 		</Filter>

@@ -97,6 +97,9 @@ int main(int argc, char* argv[]){
 		//g_pStabSolver->setContext(mf::t_GeomPoint(0.458244,0.054810,0.0));
 		//return 0;
 
+		// tmp, debugging
+		//test::gs_lapack_vs_petsc();return 0;
+
 		task::init_stab_db();
 
 		switch (g_taskParams.id)
@@ -109,6 +112,7 @@ int main(int argc, char* argv[]){
 				break;
 			case task::TSpatTime::Time:
 				task::search_max_instab_fixed_point_time(g_taskParams);
+				break;
 			default :
 				ssuGENTHROW(_T("Search Max Instab Local: Wrong Mode"));
 				break;
@@ -124,9 +128,11 @@ int main(int argc, char* argv[]){
 	catch(t_GenException e){
 		wxLogError(e.what());
 	}
+	// todo - catch & dump other exceptions
+	/*
 	catch(...){
 		wxLogError(_T("Something went wrong...see log"));
-	}
+	}*/
 
 	task::destroy_glob_solvers();
 }
