@@ -1014,7 +1014,6 @@ t_WCharsLoc t_StabSolver::getMaxWave(const std::vector<t_WCharsLoc>& a_inits, in
 	return res_wave;
 }
 
-// TODO: move to StabSolver plugin when tested
 std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond){
 
 	std::vector<t_WCharsLoc> ret_waves;
@@ -1041,11 +1040,63 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 				t_WCharsLocDim dim_wave = cur_wave.make_dim();
 
 				// TODO: nice checking that wave is physical
-				if ( stab::check_wchars_c_phase(cur_wave) && this->checkWCharsByGroupV(cur_wave)){
+				if ( stab::check_wchars_c_phase(cur_wave) && 
+					this->checkWCharsByGroupV(cur_wave) &&
+					stab::check_wchars_increment(cur_wave)
+					){
 
 					std::wcout<<_T("Instab found:")<<cur_wave;
 
 					ret_waves.push_back(cur_wave);
+				}
+			}
+		}
+		catch (...)
+		{
+			continue;
+
+		}
+
+	}
+
+	return ret_waves;
+
+}
+
+std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_time(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond){
+
+	std::vector<t_WCharsLoc> ret_waves;
+	t_WCharsLoc cur_wave;
+
+	for (int i=0; i<wcands.size(); i++){
+
+		cur_wave = wcands[i];
+
+		std::wcout<<_T("GS Init:")<<cur_wave;
+		bool good_init;
+		try
+		{
+
+			good_init = searchWave(cur_wave, cond, stab::t_TaskTreat::TIME);
+
+			if (good_init && cur_wave.a.real()>=0)
+				std::wcout<<_T("Discrete mode found:")<<cur_wave;
+
+			if (good_init && cur_wave.a.real()>0 && cur_wave.w.imag()>0.0){
+
+				cur_wave.set_scales(get_stab_scales());
+
+				t_WCharsLocDim dim_wave = cur_wave.make_dim();
+
+				// TODO: nice checking that wave is physical
+				if ( stab::check_wchars_c_phase(cur_wave) && 
+					this->checkWCharsByGroupV(cur_wave) &&
+					stab::check_wchars_increment(cur_wave)
+					){
+
+						std::wcout<<_T("Instab found:")<<cur_wave;
+
+						ret_waves.push_back(cur_wave);
 				}
 			}
 		}

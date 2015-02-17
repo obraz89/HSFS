@@ -104,6 +104,8 @@ namespace stab{
 
 		virtual std::vector<t_WCharsLoc> filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond)=0;
 
+		virtual std::vector<t_WCharsLoc> filter_gs_waves_time(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond)=0;
+
 		virtual void searchMaxWave(t_WCharsLoc&, t_LSCond cond, t_TaskTreat task_mode)=0;
 
 		virtual void calcGroupVelocity(t_WCharsLoc& wchars)=0;
