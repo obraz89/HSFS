@@ -25,5 +25,7 @@ namespace task{
 
 	void get_profiles();
 
+	void mpi_test();
+
 
 }

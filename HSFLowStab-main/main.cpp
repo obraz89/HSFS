@@ -16,14 +16,18 @@ using namespace std;
 
 #include "solvers_glob.h"
 
-// IMPORTANT TODO: migrate from slepc to sequential in global search solvers
-// after that slepc can be replaced by MPI here
-//#include "slepcs.h"
+#include "mpi.h"
 
 bool load_Settings_n_Plugins();
 
 int main(int argc, char* argv[]){
 	int err = 0;
+
+	int rc = MPI_Init(&argc,&argv);
+	if (rc != MPI_SUCCESS) {
+		printf ("Error starting MPI program. Terminating.\n");
+		MPI_Abort(MPI_COMM_WORLD, rc);
+	}
 
 #ifdef wxUSE_UNICODE
 	wxChar **wxArgv = new wxChar*[argc + 1];
@@ -123,6 +127,12 @@ int main(int argc, char* argv[]){
 			break;
 		case task::TTaskType::GetProfiles:
 			task::get_profiles();
+			break;
+		case task::MPITest:
+			task::mpi_test();
+			break;
+		default:
+			break;
 		}
 	}
 	catch(t_GenException e){
@@ -135,6 +145,8 @@ int main(int argc, char* argv[]){
 	}*/
 
 	task::destroy_glob_solvers();
+
+	MPI_Finalize();
 }
 /*
 int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance

@@ -14,6 +14,8 @@
 
 #include "solvers_glob.h"
 
+#include "mpi.h"
+
 // tmp
 #include "tests.h"
 #include <time.h>
@@ -346,6 +348,64 @@ void task::search_max_instab_fixed_point_time(const task::TTaskParams& task_para
 
 	return;
 };
+
+void task::mpi_test(){
+
+	double w_min = g_taskParams.w_ndim_min;
+	double w_max = g_taskParams.w_ndim_max;
+
+	int Nw = g_taskParams.N_w;
+
+	double dw = (w_max - w_min)/double(Nw);
+
+	std::vector<t_WCharsLoc> max_waves_spat;
+
+	t_WCharsLoc cur_max_wave;
+
+	int mpi_rank, mpi_size;
+
+	MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+
+	int pid_s_glob, pid_e_glob, pid_n_glob;
+	int pid_s_loc, pid_e_loc;
+
+	pid_s_glob = 0;
+	pid_n_glob = g_pStabDB->get_npoints();
+	pid_e_glob = pid_n_glob - 1;
+
+	wxLogMessage(_T("rank=%d, size=%d"), mpi_rank, mpi_size);
+
+	const int nAvg   = pid_n_glob / mpi_size;
+	const int nResdl = pid_n_glob % mpi_size;
+
+	wxLogMessage(_T("avg=%d, resid=%d"), nAvg, nResdl);
+
+	for( int r = 0; r < mpi_size; ++r )
+	{
+		int bs = r * nAvg + ((r<nResdl) ?r :nResdl);
+		int be = bs + nAvg + ((r<nResdl) ?1 :0) - 1;
+
+		pid_s_loc = bs;
+		pid_e_loc = be;
+
+		wxLogMessage( _("* MPI rank %d owns range : %d-%d"), mpi_rank, bs, be );
+
+	}
+	//==========================
+
+	char fname[33];
+
+	for (int pid=pid_s_loc; pid<=pid_e_loc; pid++){
+
+		// do some job, collect on master and output...
+
+
+	}
+
+	return;
+
+}
 
 // tmp, debugging...
 

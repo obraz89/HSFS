@@ -89,6 +89,8 @@ bool load_Settings_n_Plugins()
 	name[hsstab::plgGS] = conf->Read(_T("glob_search"), cmpnts::PF_GLOBSRCH_NAME);
 	name[hsstab::plgWPTrack] = conf->Read(_T("wptrack"), _T("WPTrack"));
 
+	conf->Flush();
+
 
 	//
 	// Load selected plugins
@@ -97,16 +99,24 @@ bool load_Settings_n_Plugins()
 	bool ok = G_Plugins.load_plugin(hsstab::plgMF, name[hsstab::plgMF]);
 	if( ! ok ) return false;
 
+	conf->Flush();
+
 	// 
 	ok = G_Plugins.load_plugin(hsstab::plgLS, name[hsstab::plgLS]);
 	if( ! ok ) return false;
+
+	conf->Flush();
 	//---
 
 	ok = G_Plugins.load_plugin(hsstab::plgGS, name[hsstab::plgGS]);
 	if( !ok ) return false;
 
+	conf->Flush();
+
 	ok = G_Plugins.load_plugin(hsstab::plgWPTrack, name[hsstab::plgWPTrack]);
 	if( !ok ) return false;
+
+	conf->Flush();
 
 	//---
 	// configure stability task
@@ -117,6 +127,8 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::MaxInstabLine] = _T("MaxInstabLine");
 	task::TaskNames[task::AnalyzeWChars] = _T("AnalyzeWChars");
 	task::TaskNames[task::GetProfiles] = _T("GetProfiles");
+
+	task::TaskNames[task::MPITest] = _T("MPITest");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
