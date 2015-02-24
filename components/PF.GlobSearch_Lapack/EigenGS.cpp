@@ -460,6 +460,14 @@ int t_EigenGS::_solve(){
 
 	int n_inserts = 0;
 
+	// IMPORTANT: reset global matrices -
+	// they are corrupted after zggev call...
+	for (int i=0; i<_NDIM_G*_NDIM_G; i++){
+
+		_A_G[i] = getMKLCmplx(0.0,0.0);
+		_B_G[i] = getMKLCmplx(0.0,0.0);
+	}
+
 	// fill A~ by rows
 	for (int i=1; i<_params.NNodes; i++){
 		for (int j=0; j<_params.NVars; j++){

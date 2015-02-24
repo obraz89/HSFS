@@ -508,6 +508,14 @@ int t_GlobSrchSpat::_solve(){
 
 	int n_inserts = 0;
 
+	// IMPORTANT: reset global matrices -
+	// they are corrupted after zggev call...
+	for (int i=0; i<_NDIM_G*_NDIM_G; i++){
+
+		_A_G[i] = getMKLCmplx(0.0,0.0);
+		_B_G[i] = getMKLCmplx(0.0,0.0);
+	}
+
 	// fill A~ and B~ by rows
 	// first block - bc,bc,fo,bc,bc
 	int row_num=0;
@@ -618,8 +626,6 @@ int t_GlobSrchSpat::_solve(){
 		_spectrum[i] = -a_s/b_s;
 
 	}
-
-
 
 	return 0;
 }
