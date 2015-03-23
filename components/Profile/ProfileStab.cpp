@@ -161,15 +161,14 @@ void t_ProfileStab::initialize_2D(const std::wstring wfname,
 							   const t_StabScales& a_scales)
 {
 
-	std::string fname = wx_to_stdstr(wxString(&wfname[0]));
-	std::ifstream ifstr(&fname[0]);
-	std::stringstream istr;
+	std::wifstream ifstr(&wfname[0]);
+	std::wstringstream istr;
 
 	int n_line=0;
 	int nnodes=0;
 	const int max_lsize = 1000;
-	char line[max_lsize];
-	char ch;
+	__wchar_t line[max_lsize];
+	__wchar_t ch;
 	
 	_scales = a_scales;
 
@@ -215,15 +214,14 @@ void t_ProfileStab::initialize_3D(const std::wstring wfname,
 							   const t_StabScales& a_scales)
 {
 
-	std::string fname = wx_to_stdstr(wxString(&wfname[0]));
-	std::ifstream ifstr(&fname[0]);
-	std::stringstream istr;
+	std::wifstream ifstr(&wfname[0]);
+	std::wstringstream istr;
 
 	int n_line=0;
 	int nnodes=0;
 	const int max_lsize = 1000;
-	char line[max_lsize];
-	char ch;
+	__wchar_t line[max_lsize];
+	__wchar_t ch;
 
 	_scales = a_scales;
 

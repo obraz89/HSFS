@@ -331,10 +331,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\component.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\gen_exception.cpp"
 				>
 			</File>
@@ -358,10 +354,6 @@
 			>
 			<File
 				RelativePath=".\common_data.h"
-				>
-			</File>
-			<File
-				RelativePath=".\component.h"
 				>
 			</File>
 			<File

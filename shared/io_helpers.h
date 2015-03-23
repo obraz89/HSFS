@@ -17,6 +17,14 @@ namespace io_hlp{
 			return istr;
 		};
 
+	IMPEXP_SHARED std::wistream& eat_white(std::wistream& istr);
+	template<typename T> 
+	inline std::wistream& write_to_val(std::wistream& istr, T& val){
+		io_hlp::eat_white(istr);
+		istr>>val;
+		return istr;
+	};
+
 }
 
 inline std::wostream& operator<<(std::wostream& ostr, const std::string& str){
