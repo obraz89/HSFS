@@ -1,0 +1,28 @@
+#
+# HSFlow makefile configuration
+#
+# Author: Andrey V. Novikov
+#
+
+OUTDIR := bin-lnx64
+
+#-------------------------
+
+CC := icpc
+CFLAGS := -xHost -O3 -DNDEBUG
+
+#-------------------------
+
+WXFLAGS := $(shell wx-config --unicode=yes --static=no --cxxflags)
+WXLIBS := $(shell wx-config --unicode=yes --static=no --libs core,base)
+
+PETSC_ARCH := icc-rlz-lnx64
+
+MPI_INC := -I/usr/lib64/mpi/gcc/openmpi/include
+MPI_LIBS := -L/usr/lib64/mpi/gcc/openmpi/lib64 -lmpi -lopen-rte -lopen-pal
+
+BLAS_LIBS := -L$(MKLROOT)/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+#-------------------------
+
+LFLAGS := $(WXLIBS)
