@@ -1028,6 +1028,11 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 		try
 		{
 
+			// first make raw estimate - good wave or not
+			if (!( stab::check_wchars_c_phase(cur_wave) && 
+				stab::check_wchars_increment(cur_wave)
+				)) continue;
+
 			good_init = searchWave(cur_wave, cond, stab::t_TaskTreat::SPAT);
 
 			if (good_init && cur_wave.a.real()>=0)
