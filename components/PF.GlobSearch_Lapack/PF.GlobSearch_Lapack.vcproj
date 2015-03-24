@@ -131,7 +131,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib PhysCommon.lib profile.lib smallmat.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)\lib\intel64&quot;"
 				GenerateDebugInformation="true"
 				TargetMachine="17"
 			/>
@@ -277,7 +277,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib smallmat.lib mkl_core.lib mkl_intel_lp64.lib mkl_sequential.lib"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)\lib\intel64&quot;"
 				GenerateDebugInformation="true"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
