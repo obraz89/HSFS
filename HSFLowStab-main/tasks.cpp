@@ -67,15 +67,15 @@ void task::init_stab_db(){
 
 	int NPavePnts;
 
-	std::string points_fname = wx_to_stdstr(g_taskParams.pave_grd_fname);
+	//std::string points_fname = wx_to_stdstr(g_taskParams.pave_grd_fname);
 
-	std::ifstream f_cin(&points_fname[0]);
+	std::wifstream f_cin(g_taskParams.pave_grd_fname.c_str());
 
 	f_cin>>NPavePnts;
 
 	std::vector<mf::t_GeomPoint> PaveGrd(NPavePnts);
 	const int BufSize = 256;
-	char line[BufSize];
+	wxChar line[BufSize];
 
 	double x,y,z;
 
