@@ -983,23 +983,6 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator-
 	return ret;
 }
 
-//typedefs
-template class IMPEXP_SMALLMAT t_Matrix<t_Complex>;
-template class IMPEXP_SMALLMAT t_Matrix<double>;
-
-template class IMPEXP_SMALLMAT t_Vec<t_Complex>;
-template class IMPEXP_SMALLMAT t_Vec<double>;
-
-template class IMPEXP_SMALLMAT t_Vec3<t_Complex>;
-template class IMPEXP_SMALLMAT t_Vec3<double>;
-
-template class IMPEXP_SMALLMAT t_SqMatrix<t_Complex>;
-template class IMPEXP_SMALLMAT t_SqMatrix<double>;
-
-template class IMPEXP_SMALLMAT t_SqMat3<t_Complex>;
-template class IMPEXP_SMALLMAT t_SqMat3<double>;
-
-
 typedef t_Matrix<t_Complex> t_MatCmplx;
 typedef t_Matrix<double> t_MatDbl;
 

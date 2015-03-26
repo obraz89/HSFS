@@ -1,4 +1,5 @@
 #include "stdafx.h"
+
 #include "fun_zero_1D.h"
 
 using namespace smat;

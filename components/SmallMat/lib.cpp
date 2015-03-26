@@ -62,6 +62,25 @@ namespace smat{
 }
 
 // instantiate all needed functions here and export them
+
+// try to instantiate needed classes
+/*
+template class IMPEXP_SMALLMAT t_Matrix<t_Complex>;
+template class IMPEXP_SMALLMAT t_Matrix<double>;
+
+template class IMPEXP_SMALLMAT t_Vec<t_Complex>;
+template class IMPEXP_SMALLMAT t_Vec<double>;
+
+template class IMPEXP_SMALLMAT t_Vec3<t_Complex>;
+template class IMPEXP_SMALLMAT t_Vec3<double>;
+
+template class IMPEXP_SMALLMAT t_SqMatrix<t_Complex>;
+template class IMPEXP_SMALLMAT t_SqMatrix<double>;
+
+template class IMPEXP_SMALLMAT t_SqMat3<t_Complex>;
+template class IMPEXP_SMALLMAT t_SqMat3<double>;
+*/
+
 // [-]
 // TODO: inlines !!!
 template IMPEXP_SMALLMAT void matrix::base::minus<t_Complex, t_Complex>

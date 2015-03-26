@@ -119,7 +119,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(MKL_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__;SMALLMAT_EXPORT"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -139,9 +139,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib"
+				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib mkl_core.lib mkl_intel_lp64.lib mkl_sequential.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(OutDir);$(WX_DIR)/lib/$(WX_ARCH)"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)/lib/intel64&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -270,7 +270,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(MKL_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;SMALLMAT_EXPORT"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -289,9 +289,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib shared.lib"
+				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib shared.lib mkl_core.lib mkl_intel_lp64.lib mkl_sequential.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(OutDir);$(WX_DIR)/lib/$(WX_ARCH)"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MKL_DIR)/lib/intel64&quot;"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -335,6 +335,10 @@
 			</File>
 			<File
 				RelativePath=".\fun_integrate.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\fun_interpolate.cpp"
 				>
 			</File>
 			<File

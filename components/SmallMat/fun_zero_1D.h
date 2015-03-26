@@ -10,13 +10,7 @@
 #ifndef __SMAT_ROOT_1D
 #define __SMAT_ROOT_1D
 
-#include <complex>
-#include <cmath>
-#include <vector>
-
-//#include "math_impexp.h"
-
-#include "math_operands.h"
+#include "dll_impexp_smat.h"
 
 namespace smat{
 
