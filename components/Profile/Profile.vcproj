@@ -286,7 +286,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib imsl.lib smooth.lib physcommon.lib smallmat.lib"
+				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib SmallMat.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(OutDir)&quot;;&quot;$(CTT_DIR)/lib/em64t&quot;"
 				IgnoreDefaultLibraryNames=""

@@ -1,6 +1,9 @@
 #include "ProfileNS.h"
 #include "math_operands.h"
-#include "smooth.h"
+//#include "smooth.h"
+
+// tmp
+#include <fstream>
 
 using namespace mf;
 
@@ -73,14 +76,20 @@ void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_Pr
 		_mu[j]=_rDomain.calc_viscosity(_t[j]);
 	}
 
+	int nnodes = get_nnodes();
+
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
+	//SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
 
-	int nnodes = get_nnodes();
-	SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_u[0], nnodes, &_u1[0], &_u2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_w[0], nnodes, &_w1[0], &_w2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
+
 }
 
 
@@ -135,10 +144,17 @@ void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 	// FORTRAN CALLING CONVENTION
 
 	int nnodes = get_nnodes();
-	SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
+
+	//SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
+
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_u[0], nnodes, &_u1[0], &_u2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_w[0], nnodes, &_w1[0], &_w2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
+
 }
 
 //--------------------------------------------------------------------------------~t_ProfileNS
@@ -207,14 +223,19 @@ void t_ProfMFGlob::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_P
 		_mu[j]=_rDomain.calc_viscosity(_t[j]);
 	}
 
+	int nnodes = get_nnodes();
+
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
+	//SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
 
-	int nnodes = get_nnodes();
-	SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_u[0], nnodes, &_u1[0], &_u2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_w[0], nnodes, &_w1[0], &_w2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
 }
 
 
@@ -255,12 +276,17 @@ void t_ProfMFGlob::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfD
 		_mu[j]=_rDomain.calc_viscosity(_t[j]);
 	}
 
+	int nnodes = get_nnodes();
+
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
+	//SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
 
-	int nnodes = get_nnodes();
-	SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
-	SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_u[0], nnodes, &_u1[0], &_u2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_w[0], nnodes, &_w1[0], &_w2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
 }
