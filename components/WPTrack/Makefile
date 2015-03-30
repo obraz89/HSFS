@@ -1,27 +1,32 @@
 #
-# HSFlow makefile
+# HSFlowStab makefile
+
+# Project : WPTrack
+
 #
 # Author: Andrey V. Novikov
+# Modified : A.Obraz
 #
 
-OUTLIB := shared
+OUTLIB := WPTrack
 
 #-------------------------
 
-topDIR = ../
+topDIR = ../..
+plugDIR = ../../components
 
 include $(topDIR)/build_linux/Make-conf
 
 INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
-CFLAGS += -I. $(WXFLAGS) -vec_report3 -DSHARED_EXPORT
-#LFLAGS += -Wl,-no-undefined
+CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon
+CFLAGS += $(WXFLAGS) -vec_report3
+LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so -lSmallMat.so -lPhysCommon.so
 
 SRCDIRS := . 
-#OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
-#OBJS := $(notdir $(OBJS))
-OBJS := common_data.cpp gen_exception.cpp io_helpers.cpp log.cpp
+OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
+OBJS := $(notdir $(OBJS))
 OBJS := $(addprefix  $(INTDIR)/, $(OBJS:.cpp=.o))
 
 VPATH := $(SRCDIRS)

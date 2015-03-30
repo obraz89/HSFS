@@ -1,23 +1,28 @@
 #
 # HSFlowStab makefile
+
+# Project : MF.CGNS-shared
+
 #
 # Author: Andrey V. Novikov
 # Modified : A.Obraz
 #
 
-OUTLIB := SmallMat
+OUTLIB := MF.CGNS-shared
 
 #-------------------------
 
 topDIR = ../..
+plugDIR = ../../components
 
 include $(topDIR)/build_linux/Make-conf
 
 INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
-CFLAGS += -I. -I$(topDIR)/shared $(WXFLAGS) -DSMALLMAT_EXPORT -vec_report3
-LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so
+CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon 
+CFLAGS += $(WXFLAGS) -vec_report3
+#LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so -lSmallMat.so -lPhysCommon.so
 
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
@@ -27,8 +32,8 @@ OBJS := $(addprefix  $(INTDIR)/, $(OBJS:.cpp=.o))
 VPATH := $(SRCDIRS)
 #-------------------------
 
-$(OUTDIR)/$(OUTLIB).so : $(OBJS) $(OUTDIR)
-	$(CC) -o $@ -shared $(LFLAGS) $(OBJS)
+$(OUTDIR)/$(OUTLIB).a : $(OBJS) $(OUTDIR)
+	$(CC) -o $@ -static $(LFLAGS) $(OBJS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
 	$(CC) -o $@ -fPIC $(CFLAGS) -c $<

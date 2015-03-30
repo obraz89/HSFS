@@ -1,23 +1,32 @@
 #
 # HSFlowStab makefile
+
+# Project : MF.CGNS3D
+
 #
 # Author: Andrey V. Novikov
 # Modified : A.Obraz
 #
 
-OUTLIB := SmallMat
+OUTLIB := MF.CGNS3D
 
 #-------------------------
 
 topDIR = ../..
+plugDIR = ../../components
+libDIR = $(topDIR)/lib
 
 include $(topDIR)/build_linux/Make-conf
 
 INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
-CFLAGS += -I. -I$(topDIR)/shared $(WXFLAGS) -DSMALLMAT_EXPORT -vec_report3
-LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so
+CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I$(plugDIR)/Profile -I$(plugDIR)/MF.CGNS-shared
+CFLAGS += -I$(libDIR)/cgns
+CFLAGS += $(WXFLAGS) -vec_report3
+LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so -lSmallMat.so -lPhysCommon.so -lProfile.so -lMF.CGNS-shared.a
+LFLAGS += -L$(libDIR)/cgns -llibhdf5.a -llibcgns.a
+LFLAGS += -L$(libDIR)/mpi -llibmpi.a
 
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )

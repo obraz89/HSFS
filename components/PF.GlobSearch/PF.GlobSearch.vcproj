@@ -139,9 +139,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib PhysCommon.lib profile.lib smallmat.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib mpi.lib libpetsc.lib libslepc.lib"
+				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib PhysCommon.lib profile.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib smallmat.lib mpi.lib libpetsc.lib libslepc.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH)\lib&quot;;&quot;$(MKL_DIR)\lib\intel64&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -291,7 +291,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib shared.lib PhysCommon.lib smallmat.lib profile.lib mkl_intel_lp64.lib mkl_sequential.lib mkl_core.lib mpi.lib libpetsc.lib libslepc.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH_RELEASE)\lib&quot;;&quot;$(MKL_DIR)\em64t\lib&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(OutDir)&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(INTEL_COMPILERS)\lib\intel64&quot;;&quot;$(IFORT)\IA32\Lib&quot;;&quot;$(WX_DIR)\lib\$(WX_ARCH)&quot;;&quot;$(PETSC_DIR)\$(PETSC_ARCH_RELEASE)\lib&quot;;&quot;$(MKL_DIR)\lib\intel64&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(SLEPC_DIR)\$(SLEPC_ARCH)\lib&quot;"
 				IgnoreDefaultLibraryNames="msvcrtd.lib"
 				GenerateDebugInformation="false"
 				SubSystem="2"

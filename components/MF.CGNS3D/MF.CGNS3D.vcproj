@@ -287,7 +287,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib mpi.lib cgns.lib libhdf5.lib shared.lib PhysCommon.lib smallmat.lib MF.CGNS-shared.lib"
+				AdditionalDependencies="wxbase28u.lib wxmsw28u_core.lib mpi.lib cgns.lib libhdf5.lib smallmat.lib MF.CGNS-shared.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(MPICH2_DIR)/lib&quot;;&quot;$(CGNS_DIR)/lib&quot;;&quot;$(OutDir)&quot;"
 				GenerateDebugInformation="true"
