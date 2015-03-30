@@ -143,7 +143,7 @@ bool load_Settings_n_Plugins()
 
 	int zero=0;
 
-	if (g_taskParams.id==task::SearchInstabLoc){
+	if (g_taskParams.id==task::SearchInstabLoc || g_taskParams.id == task::MPITest){
 
 		conf->Read(_T("a_ndim_min"), &g_taskParams.a_ndim_min, 1.0e-06);
 		conf->Read(_T("a_ndim_max"), &g_taskParams.a_ndim_max ,1.0);

@@ -36,7 +36,7 @@ void t_StabDBase::init_pave_pts(const std::vector<mf::t_GeomPoint>& pnts, const 
 
 	int nsize_glob = pnts.size();
 
-	if (is_glob<0 || ie_glob<=0 || ie_glob<is_glob)
+	if (is_glob<0 || ie_glob<0 || ie_glob<is_glob)
 		wxLogMessage(_T("Error in stab pave points init: bad range : %d,%d"), is_glob, ie_glob);
 
 	if ((nsize > nsize_glob))

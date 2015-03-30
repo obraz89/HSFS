@@ -6,12 +6,14 @@ void t_MsgBase::write2file(std::wofstream& ofstr) const{}
 
 const double& t_MsgBase::operator[](int i) const{
 	if (i<0 || i>=SerSize) wxLogError(_T("Message for MPI error: vector subscript out of range"));
-	return _pCont[i];
+	double* pos = _pCont + i;
+	return *pos;
 }
 
 double& t_MsgBase::operator[](int i){
 	if (i<0 || i>=SerSize) wxLogError(_T("Message for MPI error: vector subscript out of range"));
-	return _pCont[i];
+	double* pos = _pCont + i;
+	return *pos;
 }
 
 double* t_MsgBase::get_cont(){return _pCont;}

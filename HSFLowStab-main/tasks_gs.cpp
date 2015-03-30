@@ -424,6 +424,11 @@ void generate_msg_pack_gs(t_MsgPack & msg_pack){
 		return;
 	}
 
+	// debug
+	int mpi_rank;
+	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+	wxLogMessage(_T("task params pid on worker %d : %d"), mpi_rank, g_taskParams.pave_point_id);
+
 	int pid_s, pid_e;
 	if (pave_pnt_ind<0){
 		pid_s = 0;
@@ -615,13 +620,20 @@ void task::mpi_test(){
 	// all message packs should be that long
 	int max_pnts_num;
 
-	double npoints_loc = g_pStabDB->get_npoints();
-	MPI_Allreduce(&npoints_loc, &max_pnts_num, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+	int npoints_loc = g_pStabDB->get_npoints();
 
-	t_MsgPack msg_pack_snd(t_MsgGSRec::SerSize, max_pnts_num);
+	wxLogMessage(_T("loc msg_pack size:%d"), npoints_loc);
+
+	MPI_Allreduce(&npoints_loc, &max_pnts_num, 1, MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+
+	wxLogMessage(_T("max msg_pack size:%d"), max_pnts_num);
+
+	t_MsgPack msg_pack_snd(t_MsgGSRec::SerSize, npoints_loc);
 	int msg_pack_len_max = msg_pack_snd.get_flat_len();
 
 	generate_msg_pack_gs(msg_pack_snd);
+
+	wxLogMessage(_T("msg generated"));
 
 	if (rank!=MASTER){
 		MPI_Send(msg_pack_snd.get_cont(), msg_pack_len_max, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
@@ -636,9 +648,9 @@ void task::mpi_test(){
 
 //		calcs are done on master too, write them
 //		write_msg(msg_snd, BUF_SIZE, ofstr);
-		write_msg_pack_gs(msg_pack_snd, ofstr);
+		write_msg_pack_gs(msg_pack_snd, ofstr);ofstr.flush();
 
-		/*
+		
 		for (int i=1; i<numtasks; i++){
 			MPI_Recv(msg_pack_rcv.get_cont(), msg_pack_rcv.get_flat_len(), MPI_DOUBLE, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			wxLogMessage(_T("master received msg from worker %d, writing to output file now...\n"), i);
@@ -646,8 +658,10 @@ void task::mpi_test(){
 			write_msg_pack_gs(msg_pack_rcv, ofstr);
 
 		}
-		*/
+		
 	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
 
 }
 
