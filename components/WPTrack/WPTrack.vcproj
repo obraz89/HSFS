@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)/shared&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__;WPTRACK_EXPORTS"
+				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -348,10 +348,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath=".\StabField.h"
-				>
-			</File>
 			<File
 				RelativePath=".\stdafx.h"
 				>
