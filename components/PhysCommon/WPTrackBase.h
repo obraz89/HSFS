@@ -102,6 +102,12 @@ namespace stab{
 
 	class IMPEXP_PHYSCOMMON t_StabDBase{
 
+		// start & end indexes of points in global array of pave points
+		// for current worker processor
+		// 0-based
+
+		int _is, _ie;
+
 		std::vector<t_PavePoint> _pave_pts;
 
 		t_PavePoint& _get_nrst_pnt(const mf::t_GeomPoint& xyz);
@@ -110,9 +116,10 @@ namespace stab{
 
 		int get_npoints() const;
 		const t_PavePoint& get_pave_pt(int ind) const;
+		int get_global_pid(int local_pid) const;
 
 		// tmp, decide how to initialize in general case
-		void init_pave_pts(const std::vector<mf::t_GeomPoint>& pnts);
+		void init_pave_pts(const std::vector<mf::t_GeomPoint>& glob_pnts, const int is_glob, const int ie_glob);
 		void update(const t_WPTrackBase& wpline);
 
 		void to_cone_ref_frame(double half_angle);

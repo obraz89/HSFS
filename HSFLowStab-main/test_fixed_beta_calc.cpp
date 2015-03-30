@@ -78,7 +78,7 @@ void test::test_fixed_beta_calc(){
 			PaveGrd[wp_line_id] = mf::t_GeomPoint(x_start, y_start, z_start);
 		}
 
-		StabDB.init_pave_pts(PaveGrd);
+		StabDB.init_pave_pts(PaveGrd, 0 , NLinesTotal-1);
 
 		int npave_pts = StabDB.get_npoints();
 

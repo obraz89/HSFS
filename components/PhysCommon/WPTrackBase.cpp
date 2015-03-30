@@ -30,14 +30,28 @@ const t_PavePoint& t_StabDBase::get_pave_pt(int ind) const{
 };
 
 
-void t_StabDBase::init_pave_pts(const std::vector<mf::t_GeomPoint>& pnts){
+void t_StabDBase::init_pave_pts(const std::vector<mf::t_GeomPoint>& pnts, const int is_glob, const int ie_glob){
 
-	int nsize = pnts.size();
+	int nsize = ie_glob - is_glob + 1;
+
+	int nsize_glob = pnts.size();
+
+	if (is_glob<0 || ie_glob<=0 || ie_glob<is_glob)
+		wxLogMessage(_T("Error in stab pave points init: bad range : %d,%d"), is_glob, ie_glob);
+
+	if ((nsize > nsize_glob))
+		wxLogMessage(_T("Error in stab pave points init: too many points : %d, total is %d"), nsize, nsize_glob);
+
 	_pave_pts.resize(nsize);
 
-	for (int i=0; i<nsize; i++) _pave_pts[i].xyz = pnts[i];
+	_is = is_glob;
+	_ie = ie_glob;
+
+	for (int i=0; i<nsize; i++) _pave_pts[i].xyz = pnts[_is + i];
 
 }
+
+int t_StabDBase::get_global_pid(int local_pid) const{return _is+local_pid;}
 
 t_PavePoint& t_StabDBase::_get_nrst_pnt(const mf::t_GeomPoint& xyz){
 

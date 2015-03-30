@@ -104,7 +104,7 @@ int main(int argc, char* argv[]){
 		// tmp, debugging
 		//test::gs_lapack_vs_petsc();return 0;
 
-		task::init_stab_db();
+		task::init_stab_dbs();
 
 		switch (g_taskParams.id)
 		{

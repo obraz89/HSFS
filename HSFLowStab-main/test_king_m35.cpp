@@ -133,7 +133,7 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 		PaveGrd[wp_line_id] = mf::t_GeomPoint(x_start, y_start, z_start);
 	}
 
-	StabDB.init_pave_pts(PaveGrd);
+	StabDB.init_pave_pts(PaveGrd, 0 , NLinesTotal-1);
 
 	int npave_pts = StabDB.get_npoints();
 
@@ -262,7 +262,7 @@ void test::king_m35_eN_spat_fixedB(){
 			PaveGrd[wp_line_id] = mf::t_GeomPoint(x_start, y_start, z_start);
 		}
 
-		StabDB.init_pave_pts(PaveGrd);
+		StabDB.init_pave_pts(PaveGrd, 0 , NLinesTotal-1);
 
 		int npave_pts = StabDB.get_npoints();
 

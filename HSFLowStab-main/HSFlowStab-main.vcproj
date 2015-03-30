@@ -117,7 +117,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;"
+				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswud&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(MPICH2_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -137,9 +137,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib wxzlibd.lib wxregexud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib"
+				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib wxzlibd.lib wxregexud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib mpi.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(OutDir)&quot;;&quot;$(MPICH2_DIR)/lib&quot;"
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="17"
@@ -268,7 +268,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;"
+				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(MPICH2_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -287,9 +287,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28u_core.lib wxbase28u.lib wxzlib.lib wxregexu.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib SmallMat.lib Profile.lib"
+				AdditionalDependencies="wxmsw28u_core.lib wxbase28u.lib mpi.lib SmallMat.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
+				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(OutDir)&quot;;&quot;$(MPICH2_DIR)\lib&quot;"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -333,6 +333,10 @@
 			</File>
 			<File
 				RelativePath=".\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\msg_pack.cpp"
 				>
 			</File>
 			<File
@@ -395,6 +399,10 @@
 			>
 			<File
 				RelativePath=".\cmd_parse.h"
+				>
+			</File>
+			<File
+				RelativePath=".\msg_pack.h"
 				>
 			</File>
 			<File

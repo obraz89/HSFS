@@ -14,6 +14,8 @@
 
 #include "solvers_glob.h"
 
+#include "mpi.h"
+
 using namespace hsstab;
 
 // global references
@@ -63,23 +65,25 @@ void task::init_glob_solvers(){
 
 }
 
-void task::init_stab_db(){
+void task::init_stab_dbs(){
 
-	int NPavePnts;
-
-	//std::string points_fname = wx_to_stdstr(g_taskParams.pave_grd_fname);
+	int NPntsGlob;
 
 	std::wifstream f_cin(g_taskParams.pave_grd_fname.c_str());
 
-	f_cin>>NPavePnts;
+	f_cin>>NPntsGlob;
 
-	std::vector<mf::t_GeomPoint> PaveGrd(NPavePnts);
+	if (NPntsGlob<=0 || NPntsGlob>1000000)
+		wxLogMessage(_T("Error reading pave points : bad global number of points : %d"), NPntsGlob);
+
+	std::vector<mf::t_GeomPoint> PaveGrdGlob(NPntsGlob);
+
 	const int BufSize = 256;
 	wxChar line[BufSize];
 
 	double x,y,z;
 
-	for (int i=0; i<NPavePnts; i++){
+	for (int i=0; i<NPntsGlob; i++){
 
 		if (!f_cin.good()){
 			wxString msg(_T("Error during reading of pave points"));
@@ -88,12 +92,33 @@ void task::init_stab_db(){
 
 		f_cin>>x>>y>>z;
 	
-		PaveGrd[i] = mf::t_GeomPoint(x,y,z);
+		PaveGrdGlob[i] = mf::t_GeomPoint(x,y,z);
 		
 	}
 
+	//=========================================
+
+	// rank of worker, total number of workers 
+	int mpi_rank, mpi_size;
+
+	MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+
+	const int nAvg   = NPntsGlob / mpi_size;
+	const int nResdl = NPntsGlob % mpi_size;
+
+	int r = mpi_rank;
+
+	// interval of global pave points
+	// to work with on current worker
+
+	int bs = r * nAvg + ((r<nResdl) ?r :nResdl);
+	int be = bs + nAvg + ((r<nResdl) ?1 :0) - 1;
+
+	wxLogMessage( _("* MPI rank %d owns range : %d-%d"), mpi_rank, bs, be );
+
 	g_pStabDB = new stab::t_StabDBase();
-	g_pStabDB->init_pave_pts(PaveGrd);
+	g_pStabDB->init_pave_pts(PaveGrdGlob, bs, be);
 
 }
 

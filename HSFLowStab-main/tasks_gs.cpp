@@ -16,6 +16,7 @@
 
 #include "mpi.h"
 
+#include "msg_pack.h"
 // tmp
 #include "tests.h"
 #include <time.h>
@@ -349,8 +350,202 @@ void task::search_max_instab_fixed_point_time(const task::TTaskParams& task_para
 	return;
 };
 
+
+// serializer for a gs record
+
+class t_MsgGSRec : public t_MsgBase{
+
+public:
+	t_MsgGSRec(double* cont);
+	t_MsgGSRec(const t_MsgBase& );
+	void write2file(std::wofstream& ofstr) const;
+
+};
+
+t_MsgGSRec::t_MsgGSRec(double *cont):t_MsgBase(cont){}
+
+t_MsgGSRec::t_MsgGSRec(const t_MsgBase& bb):t_MsgBase(bb){}
+
+const int t_MsgGSRec::SerSize = 17;
+
+void t_MsgGSRec::write2file(std::wofstream& ofstr) const{
+
+	int pid = _pCont[0];
+	double x = _pCont[1];
+	double y = _pCont[2];
+	double z = _pCont[3];
+	int ok = _pCont[4];
+
+	double w_ar = _pCont[5];
+	double w_ai = _pCont[6];
+	double w_br = _pCont[7];
+	double w_bi = _pCont[8];
+	double w_wr = _pCont[9];
+	double w_wi = _pCont[10];
+
+	double d_ar = _pCont[11];
+	double d_ai = _pCont[12];
+	double d_br = _pCont[13];
+	double d_bi = _pCont[14];
+	double d_wr = _pCont[15];
+	double d_wi = _pCont[16];
+
+
+	ofstr<<pid<<"\t"<<x<<"\t"<<y<<"\t"<<z<<"\t"<<ok<<"\t"
+		<<w_ar<<"\t"<<w_ai<<"\t"<<w_br<<"\t"<<w_bi<<"\t"<<w_wr<<"\t"<<w_wi<<"\t"
+		<<d_ar<<"\t"<<d_ai<<"\t"<<d_br<<"\t"<<d_bi<<"\t"<<d_wr<<"\t"<<d_wi
+		<<"\n";
+
+
+};
+
+// testing mpi send-receive, remove when done
+
+void generate_msg_pack_gs(t_MsgPack & msg_pack){
+
+	// alias
+	const task::TTaskParams& task_params = g_taskParams;
+
+	double a_min = g_taskParams.a_ndim_min;
+	double a_max = g_taskParams.a_ndim_max;
+
+	int Na = g_taskParams.N_a;
+
+	double da = (a_max - a_min)/double(Na);
+
+	std::vector<t_WCharsLoc> max_waves_time;
+
+	t_WCharsLoc cur_max_wave;
+
+	int pave_pnt_ind = g_taskParams.pave_point_id;
+	if ( pave_pnt_ind>=g_pStabDB->get_npoints())
+	{
+		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
+		return;
+	}
+
+	int pid_s, pid_e;
+	if (pave_pnt_ind<0){
+		pid_s = 0;
+		pid_e = g_pStabDB->get_npoints()-1;
+	}else{
+		wxLogError(_T("Fix gs calc for single point - multiproc version"));
+		pid_s = pave_pnt_ind;
+		pid_e = pave_pnt_ind;
+	}
+
+	for (int pid=pid_s; pid<=pid_e; pid++){
+
+		if (pid_s!=pid_e){
+
+			int task_perc_done = double(pid-pid_s)/double(pid_e-pid_s)*100;
+			wxLogMessage(_T("\n=============Task : %d perc done =============\n"), task_perc_done);
+
+		}
+
+		max_waves_time.resize(0);max_waves_time.clear();
+
+		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+		g_pStabSolver->setContext(xyz);
+
+		g_pGSSolverTime->setContext(xyz);
+
+		for (int j=0; j<Na; j++){
+
+			int perc_done = double(j)/double(Na)*100;
+			wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
+
+			double cur_a = a_min + da*j;
+
+			bool ok = search_global_initial_ar_fixed_time(task_params, cur_a, cur_max_wave);
+
+			if (ok) {
+				max_waves_time.push_back(cur_max_wave);
+			} else
+			{continue;}
+
+		}
+
+		t_MsgGSRec a_msg(msg_pack.get_msg(pid));
+
+		if (max_waves_time.size()>0){
+			cur_max_wave = t_WCharsLoc::find_max_instab_time(max_waves_time);
+
+			const int ok = 1;
+
+			t_WCharsLocDim ret_wave = cur_max_wave.make_dim();
+
+			const t_WCharsLoc& lw = cur_max_wave;
+			const t_WCharsLocDim& ld = ret_wave;
+
+			// fill msg_flat, init msg and push to msg pack
+			a_msg[0] = g_pStabDB->get_global_pid(pid);
+			a_msg[1] = xyz.x();
+			a_msg[2] = xyz.y();
+			a_msg[3] = xyz.z();
+			a_msg[4] = ok;
+			a_msg[5] = lw.a.real();
+			a_msg[6] = lw.a.imag();
+			a_msg[7] = lw.b.real();
+			a_msg[8] = lw.b.imag();
+			a_msg[9] = lw.w.real();
+			a_msg[10]= lw.w.imag();
+			a_msg[11]= ld.a.real();
+			a_msg[12]= ld.a.imag();
+			a_msg[13]= ld.b.real();
+			a_msg[14]= ld.b.imag();
+			a_msg[15]= ld.w.real();
+			a_msg[16]= ld.w.imag();
+
+		}else{
+			const int ok = 0; double false_val = -1.0;
+			a_msg[0] = g_pStabDB->get_global_pid(pid);
+			a_msg[1] = xyz.x();
+			a_msg[2] = xyz.y();
+			a_msg[3] = xyz.z();
+			a_msg[4] = ok;
+			a_msg[5] = false_val;
+			a_msg[6] = false_val;
+			a_msg[7] = false_val;
+			a_msg[8] = false_val;
+			a_msg[9] = false_val;
+			a_msg[10]= false_val;
+			a_msg[11]= false_val;
+			a_msg[12]= false_val;
+			a_msg[13]= false_val;
+			a_msg[14]= false_val;
+			a_msg[15]= false_val;
+			a_msg[16]= false_val;
+
+		}
+
+	}
+
+}
+
+void write_msg(double *msg, int size, std::ofstream& ofstr){
+
+	for (int i=0; i<size; i++)
+		ofstr<<msg[i]<<"\t";
+
+	ofstr<<"\n";
+
+}
+
+void write_msg_pack_gs(const t_MsgPack& msg_pack, std::wofstream& ofstr){
+
+	for (int i=0; i<msg_pack.get_n_msgs(); i++){
+		t_MsgBase msg_base = msg_pack.get_msg(i);
+		t_MsgGSRec msg_gs = msg_base;
+		msg_gs.write2file(ofstr);
+	}
+
+}
+
 void task::mpi_test(){
 
+	/*
 	double w_min = g_taskParams.w_ndim_min;
 	double w_max = g_taskParams.w_ndim_max;
 
@@ -404,6 +599,55 @@ void task::mpi_test(){
 	}
 
 	return;
+	*/
+
+	int  numtasks, rank, len, rc; 
+	char hostname[MPI_MAX_PROCESSOR_NAME];
+
+	MPI_Comm_size(MPI_COMM_WORLD,&numtasks);
+	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	MPI_Get_processor_name(hostname, &len);
+	printf ("Number of tasks= %d My rank= %d Running on %s\n", numtasks,rank,hostname);
+
+	const int MASTER = 0;
+
+	// maximum number of points on a worker
+	// all message packs should be that long
+	int max_pnts_num;
+
+	double npoints_loc = g_pStabDB->get_npoints();
+	MPI_Allreduce(&npoints_loc, &max_pnts_num, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
+	t_MsgPack msg_pack_snd(t_MsgGSRec::SerSize, max_pnts_num);
+	int msg_pack_len_max = msg_pack_snd.get_flat_len();
+
+	generate_msg_pack_gs(msg_pack_snd);
+
+	if (rank!=MASTER){
+		MPI_Send(msg_pack_snd.get_cont(), msg_pack_len_max, MPI_DOUBLE, 0, 0, MPI_COMM_WORLD);
+	}else{
+
+		t_MsgPack msg_pack_rcv(t_MsgGSRec::SerSize, max_pnts_num);
+
+		MPI_Status status;
+
+		std::wofstream ofstr(_T("output.txt"));
+
+
+//		calcs are done on master too, write them
+//		write_msg(msg_snd, BUF_SIZE, ofstr);
+		write_msg_pack_gs(msg_pack_snd, ofstr);
+
+		/*
+		for (int i=1; i<numtasks; i++){
+			MPI_Recv(msg_pack_rcv.get_cont(), msg_pack_rcv.get_flat_len(), MPI_DOUBLE, i, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+			wxLogMessage(_T("master received msg from worker %d, writing to output file now...\n"), i);
+
+			write_msg_pack_gs(msg_pack_rcv, ofstr);
+
+		}
+		*/
+	}
 
 }
 
@@ -413,7 +657,7 @@ void test::gs_lapack_vs_petsc(){
 
 	stab::t_LSBase* const stab_solver = g_pStabSolver;
 
-	stab::t_GSBase* const gs_solver = g_pGSSolverTime;
+	stab::t_GSBase* const gs_solver = g_pGSSolverSpat;
 
 	mf::t_GeomPoint xyz(0.6309, 0.0, 0.0553);
 

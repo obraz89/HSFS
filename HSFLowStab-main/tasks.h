@@ -13,7 +13,7 @@ namespace task{
 
 	void destroy_glob_solvers();
 
-	void init_stab_db();
+	void init_stab_dbs();
 	
 	void search_max_instab_fixed_point_spat(const task::TTaskParams& task_params);
 
