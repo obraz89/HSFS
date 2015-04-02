@@ -259,7 +259,7 @@ namespace matrix{
 	namespace base{
 		template<typename t1, typename t2> void mul
 			(const t1 num, const t_Matrix<t2>& mat, 
-			t_Matrix<TypeDeduce<t1,t2>::type >& ret){
+			typename t_Matrix<typename TypeDeduce<t1,t2>::type >& ret){
 
 				int ncols = mat.nCols();
 				int nrows = mat.nRows();
@@ -274,7 +274,7 @@ namespace matrix{
 
 		template<typename t1, typename t2> void div
 			(const t_Matrix<t1>& mat, const t2 num,
-			t_Matrix<TypeDeduce<t1,t2>::type >& ret){
+			t_Matrix<typename TypeDeduce<t1,t2>::type >& ret){
 				mul(1.0/num, mat, ret);
 		};
 
@@ -296,7 +296,7 @@ namespace matrix{
 
 		template<typename t1, typename t2> void plus
 			(const t_Matrix<t1>& l, const t_Matrix<t1>& r,
-			t_Matrix<TypeDeduce<t1,t2>::type >& ret){
+			t_Matrix<typename TypeDeduce<t1,t2>::type >& ret){
 #ifdef _DEBUG
 				typedef TypeDeduce<t1,t2>::type type; 
 				chk_size_match_add<t1,t2>(l,r);
@@ -314,7 +314,7 @@ namespace matrix{
 
 		template<typename t1, typename t2> void minus
 			(const t_Matrix<t1>& l, const t_Matrix<t1>& r,
-			t_Matrix<TypeDeduce<t1,t2>::type >& ret){
+			t_Matrix<typename TypeDeduce<t1,t2>::type >& ret){
 #ifdef _DEBUG
 				typedef TypeDeduce<t1,t2>::type type; 
 				chk_size_match_add<t1,t2>(l,r);
@@ -333,7 +333,7 @@ namespace matrix{
 
 		template<typename t1, typename t2> void mat_mul
 			(const t_Matrix<t1>& l, const t_Matrix<t2>& r, 
-			t_Matrix<TypeDeduce<t1,t2>::type >& ret){
+			t_Matrix<typename TypeDeduce<t1,t2>::type >& ret){
 
 				typedef TypeDeduce<t1,t2>::type type;
 				int ncols, nrows;
@@ -375,49 +375,49 @@ namespace matrix{
 //matrix-specific operators
 
 template<typename t1, typename t2> inline
-t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_Matrix<t1>& mat, const t2 num){
-	t_Matrix<matrix::TypeDeduce<t1,t2>::type > ret(mat.nCols(), mat.nRows());
+	t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > ret(mat.nCols(), mat.nRows());
 	return matrix::base::mul<t1,t2>(num, mat, ret);
 	return ret;
 }
 
 template<typename t1, typename t2> inline
-t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t2 num, const t_Matrix<t1>& mat){
-	t_Matrix<matrix::TypeDeduce<t1,t2>::type > ret(mat.nCols(), mat.nRows());
+	t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > ret(mat.nCols(), mat.nRows());
 	matrix::base::mul<t1,t2>(num, mat, ret);
 	return ret;
 }
 
 template<typename t1, typename t2> inline
-t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_Matrix<t1>& l, const t_Matrix<t2>& r){
-	t_Matrix<matrix::TypeDeduce<t1,t2>::type > ret(r.nCols(), l.nRows());
+	t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > ret(r.nCols(), l.nRows());
 	matrix::base::mat_mul<t1,t2>(l,r, ret);
 	return ret;
 }
 
 template<typename t1, typename t2> inline
-t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator/
+t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > operator/
 (const t_Matrix<t1>& l, const t2 r){
-	t_Matrix<matrix::TypeDeduce<t1,t2>::type > ret(l.nCols(), l.nRows());
+	t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > ret(l.nCols(), l.nRows());
 	matrix::base::div<t1,t2>(l, r, ret);
 	return ret;
 }
 
 template<typename t1, typename t2> inline 
-t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator+
+t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > operator+
 (const t_Matrix<t1>& l, const t_Matrix<t2>& r){
-	t_Matrix<matrix::TypeDeduce<t1,t2>::type > ret(l.nCols(), r.nRows());
+	t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > ret(l.nCols(), r.nRows());
 	matrix::base::plus<t1,t2>(l,r,ret);
 	return ret;
 }
 
 template<typename t1, typename t2> inline 
-t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator-
+t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > operator-
 (const t_Matrix<t1>& l, const t_Matrix<t2>& r){
-	t_Matrix<matrix::TypeDeduce<t1,t2>::type > ret(l.nCols(), l.nRows());
+	t_Matrix<typename matrix::TypeDeduce<t1,t2>::type > ret(l.nCols(), l.nRows());
 	matrix::base::minus<t1,t2>(l,r,ret);
 	return ret;
 }
@@ -430,8 +430,8 @@ t_Matrix<matrix::TypeDeduce<t1,t2>::type > operator-
 
 namespace vector{
 	template<typename t1, typename t2>
-	matrix::TypeDeduce<t1,t2>::type dot
-		(const t_Vec<t1>&, const t_Vec<t2>&);
+		typename matrix::TypeDeduce<t1,t2>::type 
+			dot(const t_Vec<t1>&, const t_Vec<t2>&);
 }
 
 template<typename T> class  t_Vec: public t_Matrix<T>{
@@ -474,7 +474,7 @@ template<typename T>t_Vec<T>& t_Vec<T>::normalize(){
 
 namespace vector{
 	template<typename t1, typename t2> inline
-		matrix::TypeDeduce<t1,t2>::type dot
+		typename matrix::TypeDeduce<t1,t2>::type dot
 		(const t_Vec<t1>& l, const t_Vec<t2>& r) {
 			typedef matrix::TypeDeduce<t1,t2>::type type;
 			type ret = 0;
@@ -492,7 +492,7 @@ namespace vector{
 //Vec-specific operators
 
 template<typename t1, typename t2> inline
-t_Vec<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Vec<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_Vec<t1>& vec, const t2 num){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	//t_Vec<type> ret(matrix::base::mul<t1,t2>(num, vec)[0]);
@@ -502,7 +502,7 @@ t_Vec<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2> inline
-t_Vec<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Vec<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t1 num, const t_Vec<t2>& vec){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	//t_Vec<type> ret(matrix::base::mul<t1,t2>(num, vec)[0]);
@@ -511,7 +511,7 @@ t_Vec<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2> inline
-t_Vec<matrix::TypeDeduce<t1,t2>::type > operator/
+t_Vec<typename matrix::TypeDeduce<t1,t2>::type > operator/
 (const t_Vec<t1>& vec, const t2 num){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	//t_Vec<type> ret(matrix::base::div<t1,t2>(vec, num)[0]);
@@ -521,7 +521,7 @@ t_Vec<matrix::TypeDeduce<t1,t2>::type > operator/
 }
 
 template<typename t1, typename t2> inline
-t_Vec<matrix::TypeDeduce<t1,t2>::type > operator+
+t_Vec<typename matrix::TypeDeduce<t1,t2>::type > operator+
 (const t_Vec<t1>& l, const t_Vec<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	//t_Vec<type> ret(matrix::base::plus<t1,t2>(l,r)[0]);
@@ -534,7 +534,7 @@ t_Vec<matrix::TypeDeduce<t1,t2>::type > operator+
 }
 
 template<typename t1, typename t2> inline
-t_Vec<matrix::TypeDeduce<t1,t2>::type > operator-
+t_Vec<typename matrix::TypeDeduce<t1,t2>::type > operator-
 (const t_Vec<t1>& l, const t_Vec<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	//t_Vec<type> ret(matrix::base::minus<t1,t2>(l,r)[0]);
@@ -549,7 +549,7 @@ t_Vec<matrix::TypeDeduce<t1,t2>::type > operator-
 
 // A*h=b
 template<typename t1, typename t2> inline
-t_Vec<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Vec<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_Matrix<t1>& l, const t_Vec<t2>& r){
 	// TODO: check sizes
 	typedef matrix::TypeDeduce<t1,t2>::type type;
@@ -592,7 +592,7 @@ public:
 
 namespace vector{
 	template<typename t1, typename t2> 
-	t_Vec3<matrix::TypeDeduce<t1,t2>::type> cross
+	t_Vec3<typename matrix::TypeDeduce<t1,t2>::type> cross
 		(const t_Vec3<t1>& l, const t_Vec3<t2>& r){
 			typedef matrix::TypeDeduce<t1,t2>::type type;
 			type v0 = l[1]*r[2] - l[2]*r[1];
@@ -605,7 +605,7 @@ namespace vector{
 //3d-vector-specific operators
 
 template<typename t1, typename t2>
-t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Vec3<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_Vec3<t1>& vec, const t2 num){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_Vec3<type> ret;
@@ -614,7 +614,7 @@ t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Vec3<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t2 num, const t_Vec3<t1>& vec){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_Vec3<type> ret;
@@ -623,7 +623,7 @@ t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator/
+t_Vec3<typename matrix::TypeDeduce<t1,t2>::type > operator/
 (const t_Vec3<t1>& vec, const t2 num){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_Vec3<type> ret;
@@ -632,7 +632,7 @@ t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator/
 }
 
 template<typename t1, typename t2>
-t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator+
+t_Vec3<typename matrix::TypeDeduce<t1,t2>::type > operator+
 (const t_Vec3<t1>& l, const t_Vec3<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_Vec3<type> ret;
@@ -641,7 +641,7 @@ t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator+
 }
 
 template<typename t1, typename t2>
-t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator-
+t_Vec3<typename matrix::TypeDeduce<t1,t2>::type > operator-
 (const t_Vec3<t1>& l, const t_Vec3<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_Vec3<type> ret;
@@ -842,7 +842,7 @@ template<typename T> t_SqMatrix<T> t_SqMatrix<T>::inverse() const{
 //sq-matrix-specific operators
 
 template<typename t1, typename t2>
-t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator*
+t_SqMatrix<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_SqMatrix<t1>& mat, const t2 num){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMatrix<type> ret(mat.size());
@@ -851,7 +851,7 @@ t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator*
+t_SqMatrix<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t2 num, const t_SqMatrix<t1>& mat){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMatrix<type> ret(mat.size());
@@ -860,7 +860,7 @@ t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator*
+t_SqMatrix<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_SqMatrix<t1>& l, const t_SqMatrix<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMatrix<type> ret(l.size());
@@ -869,7 +869,7 @@ t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator/
+t_SqMatrix<typename matrix::TypeDeduce<t1,t2>::type > operator/
 (const t_SqMatrix<t1>& l, const t2 r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMatrix<type> ret(matrix::base::div<t1,t2>(l,r));
@@ -877,7 +877,7 @@ t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator/
 }
 
 template<typename t1, typename t2>
-t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator+
+t_SqMatrix<typename matrix::TypeDeduce<t1,t2>::type > operator+
 (const t_SqMatrix<t1>& l, const t_SqMatrix<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMatrix<type> ret(l.size());
@@ -886,7 +886,7 @@ t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator+
 }
 
 template<typename t1, typename t2>
-t_SqMatrix<matrix::TypeDeduce<t1,t2>::type > operator-
+t_SqMatrix<typename matrix::TypeDeduce<t1,t2>::type > operator-
 (const t_SqMatrix<t1>& l, const t_SqMatrix<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMatrix<type> ret(l.size());
@@ -921,7 +921,7 @@ public:
 // 3d-matrix-specific operators
 
 template<typename t1, typename t2>
-t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator*
+t_SqMat3<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_SqMat3<t1>& mat, const t2 num){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMat3<type> ret;
@@ -930,7 +930,7 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator*
+t_SqMat3<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t1 l, const t_SqMat3<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMat3<type> ret;
@@ -939,7 +939,7 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator*
+t_Vec3<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_SqMat3<t1>& l, const t_Vec3<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_Vec3<type> ret;
@@ -948,7 +948,7 @@ t_Vec3<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator*
+t_SqMat3<typename matrix::TypeDeduce<t1,t2>::type > operator*
 (const t_SqMat3<t1>& l, const t_SqMat3<t1>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMat3<type> ret;
@@ -957,7 +957,7 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator*
 }
 
 template<typename t1, typename t2>
-t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator/
+t_SqMat3<typename matrix::TypeDeduce<t1,t2>::type > operator/
 (const t_SqMat3<t1>& l, const t2 r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMat3<type> ret;
@@ -966,7 +966,7 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator/
 }
 
 template<typename t1, typename t2>
-t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator+
+t_SqMat3<typename matrix::TypeDeduce<t1,t2>::type > operator+
 (const t_SqMat3<t1>& l, const t_SqMat3<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMat3<type> ret;
@@ -975,7 +975,7 @@ t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator+
 }
 
 template<typename t1, typename t2>
-t_SqMat3<matrix::TypeDeduce<t1,t2>::type > operator-
+t_SqMat3<typename matrix::TypeDeduce<t1,t2>::type > operator-
 (const t_SqMat3<t1>& l, const t_SqMat3<t2>& r){
 	typedef matrix::TypeDeduce<t1,t2>::type type;
 	t_SqMat3<type> ret;
