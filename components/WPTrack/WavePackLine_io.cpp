@@ -26,7 +26,7 @@ std::wostream& t_WavePackLine::_print_line(std::wostream& str) const
 	return str;
 };
 
-void t_WavePackLine::print_to_file(const std::wstring& fname, int write_mode) const{
+void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::openmode write_mode) const{
 
 	const mf::t_FldParams& Params = _rFldMF.get_mf_params();
 

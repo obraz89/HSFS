@@ -29,7 +29,7 @@ namespace smat{
 class t_GradSrchBase{
 protected:
 	int _ndim;
-	enum t_Mode{MIN=0, MAX} _mode; 
+	enum t_Mode{MIN=0, MAX} _mode;
 
 	virtual double _calc_fun(const t_VecDbl& arg)=0;
 

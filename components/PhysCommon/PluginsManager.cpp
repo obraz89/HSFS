@@ -39,7 +39,9 @@ bool hsstab::TPluginsManager::load_plugin(hsstab::TPluginType type, const wxStri
 	hsstab::TPlugin* plugin = NULL;
 	try
 	{
+		wxLogMessage(_T("creating plugin %s from dll..."), name);
 		plugin = hsstab::TPlugin::create_from_dll(fn);
+		wxLogMessage(_T("initializng plugin..."));
 		plugin->init( wxFileName(hsstab::CASE_SETTINGS_DIR, name, _T("ini")).GetFullPath(), wxEmptyString );
 	}
 	catch(const t_GenException& e)

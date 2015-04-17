@@ -4,11 +4,11 @@
 # Author: Andrey V. Novikov
 #
 
-OUTLIB := shared
+OUTLIB := libhsfs_shared
 
 #-------------------------
 
-topDIR = ../
+topDIR = $(realpath ../)
 
 include $(topDIR)/build_linux/Make-conf
 
@@ -28,7 +28,7 @@ VPATH := $(SRCDIRS)
 #-------------------------
 
 $(OUTDIR)/$(OUTLIB).so : $(OBJS) $(OUTDIR)
-	$(CC) -o $@ -shared $(LFLAGS) $(OBJS)
+	$(CC) -o $@ -shared $(OBJS) $(WXLIBS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
 	$(CC) -o $@ -fPIC $(CFLAGS) -c $<

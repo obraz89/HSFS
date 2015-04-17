@@ -8,6 +8,8 @@
 using namespace mf;
 using namespace mf::cg;
 
+t_MFCGNS3D::~t_MFCGNS3D(){}
+
 void t_MFCGNS3D::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
@@ -101,6 +103,3 @@ t_Rec t_MFCGNS3D::interpolate_to_point(const t_GeomPoint& point) const{
 	return TDomain::_interpolate_to_point_surf_raw(point);
 
 }  // ~interpolate_to_point
-
-
-

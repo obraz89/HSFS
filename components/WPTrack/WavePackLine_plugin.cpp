@@ -7,7 +7,7 @@
 using namespace hsstab;
 
 //---------------------------< Exported >--------------------------------------
-hsstab::TPluginWPLine g_plugin;
+static hsstab::TPluginWPLine g_plugin;
 //-----------------------------------------------------------------------------
 
 //---------------------------<parameters>--------------------------------------
@@ -19,7 +19,7 @@ void TPluginWPLine::default_settings(){
 
 	TPluginParamsGroup g;
 
-	pf::_wpline_default_settings(g);
+	pf::t_WPLineParams::wpline_default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 

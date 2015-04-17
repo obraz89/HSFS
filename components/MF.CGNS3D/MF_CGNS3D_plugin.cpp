@@ -7,7 +7,7 @@
 using namespace hsstab;
 
 //---------------------------< Exported >--------------------------------------
-hsstab::TPluginCGNS3D g_plugin;
+static hsstab::TPluginCGNS3D g_plugin;
 //-----------------------------------------------------------------------------
 
 //---------------------------<parameters>--------------------------------------
@@ -28,7 +28,7 @@ void TPluginCGNS3D::default_settings(){
 
 //-----------------------------------------------------------------------------
 
-void TPluginCGNS3D::init(const wxString& settingsFN, const wxString& spec){
+void TPluginCGNS3D::init(const wxString& settingsFN, const wxString& spec) {
 
 	TPlugin::init(settingsFN, spec);  // load settings from file
 

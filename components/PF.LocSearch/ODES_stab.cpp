@@ -71,7 +71,8 @@ t_VecCmplx t_StabSolver::t_StabODES::calcWallCoefs(){
             mat[i][2] = wall_func[i][2];
             mat[i][3] = wall_func[i][6];
 	}
-	resid_coefs = mat.inverse()*rhs;
+	matrix::base::mat_mul<t_CompVal, t_CompVal>(mat.inverse(),rhs,resid_coefs);
+	//resid_coefs = mat.inverse()*rhs;
 	return resid_coefs;
 }
 

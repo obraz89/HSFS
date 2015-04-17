@@ -12,32 +12,29 @@ static const double TIME_STEP_DEFAULT = 0.01;
 
 typedef std::map<wxString,int> t_MapWxStrInt; 
 
-static t_MapWxStrInt  RETRACE_MODES_STR;
-wxString RETRACE_MODE_DEFAULT_STR;
+t_MapWxStrInt  t_WPLineParams::RETRACE_MODES_STR;
+#define RETRACE_MODE_DEFAULT_STR _T("W_FIXED")
 
-static t_MapWxStrInt MARCH_OPTS_STR;
-wxString MARCH_OPT_DEFAULT_STR;
+t_MapWxStrInt t_WPLineParams::MARCH_OPTS_STR;
+#define MARCH_OPT_DEFAULT_STR _T("GROUP_VELO")
 
-struct t_InitSupportedOptions{
-	t_InitSupportedOptions(){
-		RETRACE_MODES_STR.insert(std::make_pair(_T("W_FIXED"), stab::t_WPRetraceMode::W_FIXED));
-		RETRACE_MODES_STR.insert(std::make_pair(_T("WB_FIXED"), stab::t_WPRetraceMode::WB_FIXED));
-		RETRACE_MODES_STR.insert(std::make_pair(_T("ENVELOPE"), stab::t_WPRetraceMode::ENVELOPE));
 
-		RETRACE_MODE_DEFAULT_STR = _T("W_FIXED");
+void t_WPLineParams::init_supported_options(){
+		RETRACE_MODES_STR.clear();
+		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("W_FIXED")), stab::t_WPRetraceMode::W_FIXED));
+		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WB_FIXED")), stab::t_WPRetraceMode::WB_FIXED));
+		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("ENVELOPE")), stab::t_WPRetraceMode::ENVELOPE));
 
-		MARCH_OPTS_STR.insert(std::make_pair(_T("GROUP_VELO"), t_WPLineParams::GROUP_VELO));
-		MARCH_OPTS_STR.insert(std::make_pair(_T("STREAMLINE"), t_WPLineParams::STREAMLINE));
+		MARCH_OPTS_STR.clear();
+		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("GROUP_VELO")), t_WPLineParams::GROUP_VELO));
+		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("STREAMLINE")), t_WPLineParams::STREAMLINE));
 		
-		MARCH_OPT_DEFAULT_STR = _T("GROUP_VELO");
 		
-	}
 };
 
-// initialize supported modes before entering any wptrack method
-t_InitSupportedOptions init_supported_modes;
+void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
 
-void pf::_wpline_default_settings(hsstab::TPluginParamsGroup& g){
+	init_supported_options();
 
 	g.add("TimeStep", TIME_STEP_DEFAULT , _T("dr=V*dt, set dt"));
 
@@ -47,7 +44,7 @@ void pf::_wpline_default_settings(hsstab::TPluginParamsGroup& g){
 
 }
 
-void pf::_init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g){
+void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g){
 
 	params.TimeStep = g.get_real_param("TimeStep");
 
@@ -100,3 +97,6 @@ void pf::_init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginP
 
 // ~t_WPLineParams
 // ---------------------------------------
+
+
+

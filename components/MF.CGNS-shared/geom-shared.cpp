@@ -283,7 +283,7 @@ mf::t_Rec TDomain::_interpolate_to_point_surf_raw(const t_GeomPoint& point) cons
 					TDomain::get_rec(the_zone, bt_ind, rec1);
 					TDomain::get_rec(the_zone, up_ind, rec2);
 
-#define SET_RET(o) ret.o## = a*rec1.o## + b*rec2.o##;
+#define SET_RET(o) ret.o = a*rec1.o + b*rec2.o
 					SET_RET(u);SET_RET(v);SET_RET(w);
 					SET_RET(p);SET_RET(t);SET_RET(r);
 #undef SET_RET

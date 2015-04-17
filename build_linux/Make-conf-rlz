@@ -9,20 +9,34 @@ OUTDIR := bin-lnx64
 #-------------------------
 
 CC := icpc
-CFLAGS := -xHost -O3 -DNDEBUG
+CFLAGS := -xHost -O3 -DNDEBUG -std=c++0x
 
 #-------------------------
+
+# wx 2.8.1 release
 
 WXFLAGS := $(shell wx-config --unicode=yes --static=no --cxxflags)
-WXLIBS := $(shell wx-config --unicode=yes --static=no --libs core,base)
+WXLIBS := $(shell wx-config --unicode=yes --static=no --libs base)
 
-PETSC_ARCH := icc-rlz-lnx64
+# try wx 3.0.2 debug
+#WXFLAGS := -I/home/obraz/libs/wxWidgets-3.0.2/build_dbg/lib/wx/include/base-unicode-3.0 \
+#-I/home/obraz/libs/wxWidgets-3.0.2/include -pthread
+#WXLIBS := -lwx_baseu-3.0 -pthread
 
-MPI_INC := -I/usr/lib64/mpi/gcc/openmpi/include
-MPI_LIBS := -L/usr/lib64/mpi/gcc/openmpi/lib64 -lmpi -lopen-rte -lopen-pal
+CGNS_DIR := /home/obraz/lib/cgnslib-3.2.0-rlz-x64-seq
+CGNS_INC_DIR := $(CGNS_DIR)/include
+CGNS_LIB_DIR := $(CGNS_DIR)/lib
+CGNS_LFLAGS := -L$(CGNS_LIB_DIR) -lcgns
 
-BLAS_LIBS := -L$(MKLROOT)/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+MPI_INC_DIR := -I/usr/include/openmpi-x86_64
+MPI_LIB_DIR := /usr/lib64/openmpi/lib
+MPI_LFLAGS := -L$(MPI_LIB_DIR) -lmpi -lopen-rte -lopen-pal
+
+MKL_INC_DIR := $(MKLROOT)/include
+MKL_LIB_DIR := $(MKLROOT)/lib/em64t
+MKL_LFLAGS := -L$(MKL_LIB_DIR) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #-------------------------
 
-LFLAGS := $(WXLIBS)
+LFLAGS := -Wl,-no-undefined
+

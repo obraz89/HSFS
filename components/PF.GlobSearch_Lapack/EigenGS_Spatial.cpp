@@ -640,14 +640,14 @@ int t_GlobSrchSpat::getSpectrum(const t_WCharsLoc& init_wave){
 
 };
 
-void t_GlobSrchSpat::writeSpectrum(const std::wstring &a_filename) const{
+void t_GlobSrchSpat::writeSpectrum(const std::string &a_filename) const{
 	std::wofstream to_f(&a_filename[0]);
 	for (int i=0; i<_spectrum.size(); i++){
 		to_f<<_spectrum[i].real()<<_T("\t")<<_spectrum[i].imag()<<std::endl;
 	};
 }
 
-void t_GlobSrchSpat::writeSpectrumPhase(const std::wstring &a_filename) const{
+void t_GlobSrchSpat::writeSpectrumPhase(const std::string &a_filename) const{
 
 	wxLogMessage(_T("writeSpectrumPhase not implemented for Spatial GS!\n"));
 	/*

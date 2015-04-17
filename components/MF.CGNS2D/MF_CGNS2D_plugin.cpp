@@ -9,7 +9,7 @@ using namespace hsstab;
 
 //---------------------------< Exported >--------------------------------------
 // TODO: decide how to export domain later
-hsstab::TPluginCGNS2D g_plugin;
+static hsstab::TPluginCGNS2D g_plugin;
 //-----------------------------------------------------------------------------
 
 //---------------------------<parameters>--------------------------------------
@@ -30,7 +30,7 @@ void TPluginCGNS2D::default_settings(){
 
 //-----------------------------------------------------------------------------
 
-void TPluginCGNS2D::init(const wxString& settingsFN, const wxString& spec){
+void TPluginCGNS2D::init(const wxString& settingsFN, const wxString& spec) {
 
 	TPlugin::init(settingsFN, spec);  // load settings from file
 

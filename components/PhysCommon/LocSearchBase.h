@@ -114,9 +114,9 @@ namespace stab{
 
 		virtual const t_StabScales& get_stab_scales() const =0;
 
-		virtual void dumpEigenFuctions(const std::wstring& fname)=0;
+		virtual void dumpEigenFuctions(const std::string& fname)=0;
 
-		virtual void dumpProfileStab(const std::wstring& fname) const=0;
+		virtual void dumpProfileStab(const std::string& fname) const=0;
 
 		virtual ~t_LSBase();
 
@@ -137,9 +137,9 @@ namespace stab{
 
 		virtual int getSpectrum(const t_WCharsLoc& init_wave)=0;
 
-		virtual void writeSpectrum(const std::wstring& a_filename) const=0;
+		virtual void writeSpectrum(const std::string& a_filename) const=0;
 
-		virtual void writeSpectrumPhase(const std::wstring& a_filename) const=0;
+		virtual void writeSpectrumPhase(const std::string& a_filename) const=0;
 
 		// select unstable discrete modes
 		virtual std::vector<t_WCharsLoc> getInstabModes(const t_WCharsLoc& init_wave)=0;

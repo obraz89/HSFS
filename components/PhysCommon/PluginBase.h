@@ -74,7 +74,7 @@ private:
 	wxString m_description;
 	std::map<wxString, TPluginParam> mapParams;
 
-	const TPluginParam& get_raw_param(const wxString& parName) const throw(t_GenException);
+	const TPluginParam& get_raw_param(const wxString& parName) const ;
 
 public:
 	TPluginParamsGroup();
@@ -85,9 +85,9 @@ public:
 	void add(const char* pszParName, int value, const wxString& aDescr = wxEmptyString);
 	void add(const char* pszParName, const wxString& value, const wxString& aDescr = wxEmptyString);
 
-	double get_real_param(const char* pszName) const throw(t_GenException);
-	int get_int_param(const char* pszName) const throw(t_GenException);
-	const wxString& get_string_param(const char* pszName) const throw(t_GenException);
+	double get_real_param(const char* pszName) const ;
+	int get_int_param(const char* pszName) const ;
+	const wxString& get_string_param(const char* pszName) const ;
 };
 #pragma warning(pop)
 //-----------------------------------------------------------------------------
@@ -124,7 +124,7 @@ protected:
 	virtual void default_settings();
 
 public:
-	static TPlugin* create_from_dll(const wxString& name)  throw(t_GenException);
+	static TPlugin* create_from_dll(const wxString& name)  ;
 
 	TPlugin();
 	virtual ~TPlugin();
@@ -133,7 +133,7 @@ public:
 	virtual wxString get_description() const = 0;
 
 
-	virtual void init(const wxString& settingsFN, const wxString& spec) throw(t_GenException)
+	virtual void init(const wxString& settingsFN, const wxString& spec) 
 	{
 		_spec = spec;
 		load_settings(settingsFN);
@@ -142,11 +142,11 @@ public:
 	{
 		return _mapParamsGrps;
 	}
-	TPluginParamsGroup& get_settings_grp(const char* pszGrpName) throw(t_GenException);
-	const TPluginParamsGroup& get_settings_grp_const(const char* pszGrpName) const throw(t_GenException);
+	TPluginParamsGroup& get_settings_grp(const char* pszGrpName) ;
+	const TPluginParamsGroup& get_settings_grp_const(const char* pszGrpName) const ;
 
-	virtual void load_settings(const wxString& file) throw(t_GenException);
-	virtual void save_settings(const wxString& file) throw(t_GenException);
+	virtual void load_settings(const wxString& file) ;
+	virtual void save_settings(const wxString& file) ;
 
 //----- 
 	virtual TPluginCaps* get_caps(){ return NULL; }

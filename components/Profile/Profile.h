@@ -81,7 +81,7 @@ public:
 	virtual ~t_Profile();
 
 	// for debug and comparisons
-	void dump(const std::wstring& fname) const;
+	void dump(const std::string& fname) const;
 };
 
 /************************************************************************/

@@ -83,7 +83,7 @@ int main(int argc, char* argv[]){
 
 		//test::king_m35_eN_spat_fixedB();
 		//return 0;
-
+		
 		task::init_glob_solvers();
 
 		// tmp. debug

@@ -2,16 +2,21 @@
 
 t_MsgBase::t_MsgBase(double* arr){_pCont = arr;}
 
+int t_MsgBase::getSerSize() const{
+    wxLogError(_T("Generic message - size is unknown!"));
+    return 0;
+}
+
 void t_MsgBase::write2file(std::wofstream& ofstr) const{}
 
 const double& t_MsgBase::operator[](int i) const{
-	if (i<0 || i>=SerSize) wxLogError(_T("Message for MPI error: vector subscript out of range"));
+	if (i<0 || i>=getSerSize()) wxLogError(_T("Message for MPI error: vector subscript out of range"));
 	double* pos = _pCont + i;
 	return *pos;
 }
 
 double& t_MsgBase::operator[](int i){
-	if (i<0 || i>=SerSize) wxLogError(_T("Message for MPI error: vector subscript out of range"));
+	if (i<0 || i>=getSerSize()) wxLogError(_T("Message for MPI error: vector subscript out of range"));
 	double* pos = _pCont + i;
 	return *pos;
 }
@@ -52,9 +57,9 @@ int t_MsgPack::get_flat_len() const{return 2+get_msg_size()*get_n_msgs();};
 
 void t_MsgPack::add_msg(const t_MsgBase& msg){
 
-	if (msg.size()!=get_msg_size()) wxLogError(_T("Error: size mismatch in mpi msg packing"));
+	if (msg.getSerSize()!=get_msg_size()) wxLogError(_T("Error: size mismatch in mpi msg packing"));
 
-	for (int i=0; i<msg.size(); i++)
+	for (int i=0; i<msg.getSerSize(); i++)
 	{
 		*_pCur=msg[i];
 		_pCur++;

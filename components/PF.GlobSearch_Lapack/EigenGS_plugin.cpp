@@ -9,7 +9,7 @@
 using namespace hsstab;
 
 //---------------------------< Exported >--------------------------------------
-hsstab::TPluginEigenGS g_plugin;
+static hsstab::TPluginEigenGS g_plugin;
 //-----------------------------------------------------------------------------
 
 //---------------------------<parameters>--------------------------------------
@@ -29,7 +29,7 @@ void TPluginEigenGS::default_settings(){
 
 //-----------------------------------------------------------------------------
 
-void TPluginEigenGS::init(const wxString& settingsFN, const wxString& spec){
+void TPluginEigenGS::init(const wxString& settingsFN, const wxString& spec) {
 
 	TPlugin::init(settingsFN, spec);  // load settings from file
 

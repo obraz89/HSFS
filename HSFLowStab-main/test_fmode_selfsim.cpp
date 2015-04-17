@@ -8,7 +8,8 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
+#include <fstream>
 
 #include "io_helpers.h"
 
@@ -45,7 +46,7 @@ void test::selfsim_M3_first_mode(){
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	//IMPORTANT TODO: WTF happens with PrependDir???
-	std::wstring profiles_path = (wxFileName::GetCwd()+_T("\\profiles.dat"));
+	std::string profiles_path("profiles.dat");
 	//log_my::wxLogMessageStd(profiles_path);
 
 	int n_al = 51;
@@ -53,7 +54,7 @@ void test::selfsim_M3_first_mode(){
 	double al_max = 0.07;
 	double da = (al_max - al_min)/double(n_al-1);
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
+	std::string out_path("out_instab_wchars.dat");
 
 	std::wofstream ofstr(&out_path[0]);
 
@@ -163,9 +164,7 @@ void test::selfsim_M3_first_mode(){
 		std::vector<t_WCharsLoc> waves_spat;
 		/*for (int j=0; j<n_al; j++)*/{
 
-			std::wstringstream wsstr;
-			//wsstr<<_T("inspect: started j=")<<j<<_T("\n");
-			log_my::wxLogMessageStd(wsstr.str());
+			wxLogMessage(_T("inspect: started j=%d\n"),0);
 
 			double al = 0.015;//al_min + da*j;
 			double beta = 0.045;//1.0*al;
@@ -232,9 +231,7 @@ void test::selfsim_M3_first_mode(){
 			ofstr.flush();
 
 		}else{
-			std::wostringstream ostr;
-			ostr<<_T("Failed to retrieve max instab wave: R=")<<R<<_T("\n");
-			log_my::wxLogMessageStd(ostr.str());
+			wxLogMessage(_T("Failed to retrieve max instab wave: R=%f"),R);
 
 		}
 	}

@@ -87,7 +87,7 @@ bool load_Settings_n_Plugins()
 	name[hsstab::plgMF] = conf->Read(_T("mean_flow"), cmpnts::MF_HSFLOW3D_NAME);
 	name[hsstab::plgLS] = conf->Read(_T("loc_search"), cmpnts::PF_LOCSRCH_NAME);
 	name[hsstab::plgGS] = conf->Read(_T("glob_search"), cmpnts::PF_GLOBSRCH_NAME);
-	name[hsstab::plgWPTrack] = conf->Read(_T("wptrack"), _T("WPTrack"));
+	name[hsstab::plgWPTrack] = conf->Read(_T("wptrack"), cmpnts::WPTRACK_DEFAULT_NAME);
 
 	conf->Flush();
 
@@ -106,16 +106,14 @@ bool load_Settings_n_Plugins()
 	if( ! ok ) return false;
 
 	conf->Flush();
-	//---
+	
 
 	ok = G_Plugins.load_plugin(hsstab::plgGS, name[hsstab::plgGS]);
-	if( !ok ) return false;
-
-	conf->Flush();
-
+	if( !ok )	return false;
+	
 	ok = G_Plugins.load_plugin(hsstab::plgWPTrack, name[hsstab::plgWPTrack]);
 	if( !ok ) return false;
-
+	
 	conf->Flush();
 
 	//---
@@ -134,6 +132,8 @@ bool load_Settings_n_Plugins()
 	task::SpatTimeNames[task::Time] = _T("Time");
 
 	wxString strTaskType = conf->Read(_T("task_type"), task::TaskNames[task::SearchInstabLoc]);
+	conf->Flush();
+	
 	g_taskParams.id = get_task_id(strTaskType);
 
 	wxString strSpatTime = conf->Read(_T("SpatOrTimeApproach"), task::SpatTimeNames[task::Spat]);

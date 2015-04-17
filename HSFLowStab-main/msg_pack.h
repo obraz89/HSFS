@@ -13,11 +13,9 @@ protected:
 
 public:
 
-	static const int SerSize;
+	virtual int getSerSize()const;
 
 	t_MsgBase(double*);
-
-	int size() const{return SerSize;};
 
 	double* get_cont();
 

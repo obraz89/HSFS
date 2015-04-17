@@ -7,7 +7,7 @@
 using namespace hsstab;
 
 //---------------------------< Exported >--------------------------------------
-hsstab::TPluginStabSolver g_plugin;
+static hsstab::TPluginStabSolver g_plugin;
 //-----------------------------------------------------------------------------
 
 //---------------------------<parameters>--------------------------------------

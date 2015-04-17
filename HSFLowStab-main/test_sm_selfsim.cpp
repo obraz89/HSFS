@@ -11,7 +11,7 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
 
 using namespace hsstab;
 
@@ -40,7 +40,7 @@ void test::selfsim_M45_second_mode(){
 	gs_solver->init(G_Plugins.get_plugin(plgGS));
 
 	//IMPORTANT TODO: WTF happens with PrependDir???
-	std::wstring profiles_path = (wxFileName::GetCwd()+_T("\\profiles.dat"));
+	std::string profiles_path("profiles.dat");
 	//log_my::wxLogMessageStd(profiles_path);
 
 	int n_re = 21;
@@ -56,7 +56,7 @@ void test::selfsim_M45_second_mode(){
 	double beta = 0.0;
 	double F = 1.265e-04;
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
+	std::string out_path("out_instab_wchars.dat");
 
 	std::wofstream ofstr(&out_path[0]);
 
@@ -69,7 +69,7 @@ void test::selfsim_M45_second_mode(){
 
 		std::wostringstream ostr;
 		ostr<<_T("Start R=")<<R<<_T("\t//")<<(100.0/n_re)*(i+1)<<_T("perc\n");
-		log_my::wxLogMessageStd(ostr.str());
+		wxLogMessage(&ostr.str()[0]);
 
 		t_StabScales stab_scales;
 
@@ -147,7 +147,7 @@ void test::selfsim_M45_second_mode(){
 		}else{
 			std::wostringstream ostr;
 			ostr<<_T("Failed to retrieve nearest wave: R=")<<R<<_T("\n");
-			log_my::wxLogMessageStd(ostr.str());
+			wxLogMessage(&ostr.str()[0]);
 
 		}
 	}

@@ -180,7 +180,7 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 
 void t_StabSolver::_setStabMatrix3D(const double& a_y){
 
-	t_ProfRec& rec = _profStab.get_rec(a_y);
+	const t_ProfRec& rec = _profStab.get_rec(a_y);
 	_setStabMatrix3D(rec);
 };
 

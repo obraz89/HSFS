@@ -8,11 +8,14 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
+#include <fstream>
 
 #include "io_helpers.h"
 
 using namespace hsstab;
+
+static const int MAX_FNAME_SIZE = 100;
 
 static t_WCharsLoc search_global_initial_time(mf::t_GeomPoint xyz, stab::t_LSBase* stab_solver, 
 										 stab::t_GSBase* gs_solver, mf::t_DomainBase* pBlk);
@@ -78,9 +81,9 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars_envlp.dat");
-	std::wstring fout_wplines_path(_T("Wave_pack_lines_envlp.dat"));
-	std::wstring fout_maxnfactor_path(_T("max_N_envlp.dat"));
+	std::string out_path("out_instab_wchars_envlp.dat");
+	std::string fout_wplines_path("Wave_pack_lines_envlp.dat");
+	std::string fout_maxnfactor_path("max_N_envlp.dat");
 	std::wofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
@@ -184,7 +187,7 @@ const double HALF_CONE_ANGLE = 5./180.*acos(-1.0);
 	}
 
 	StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
-	StabDB.export(fout_maxnfactor_path);
+	StabDB.write_to_file(fout_maxnfactor_path);
 
 finish:
 	delete stab_solver, gs_spat, gs_time, pBlk, wp_line;
@@ -204,12 +207,15 @@ void test::king_m35_eN_spat_fixedB(){
 	//std::wstring out_path = _T("out_instab_wchars_wbfixed.dat");
 
 	wxChar szFname[64];
-	swprintf(szFname, _T("%s/Wave_pack_lines_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
+	swprintf(szFname, MAX_FNAME_SIZE, _T("%s/Wave_pack_lines_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
 
-	std::wstring fout_wplines_path(szFname);
+	wxString szFname_wx(szFname);
+	std::string fout_wplines_path(std::string(szFname_wx.ToAscii()));
 
-	swprintf(szFname, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
-	std::wstring fout_maxnfactor_path(szFname);
+	swprintf(szFname, MAX_FNAME_SIZE, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
+	wxString szFnameMax_wx(szFname);
+	
+	std::string fout_maxnfactor_path(std::string(szFnameMax_wx.ToAscii()));
 
 	//std::wofstream ofstr(&out_path[0]);
 
@@ -308,7 +314,7 @@ void test::king_m35_eN_spat_fixedB(){
 		}
 
 		StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
-		StabDB.export(fout_maxnfactor_path);
+		StabDB.write_to_file(fout_maxnfactor_path);
 
 finish:
 		delete stab_solver, gs_spat, gs_time, pBlk, wp_line;
@@ -326,8 +332,8 @@ void test::king_m35(){
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
-	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
+	std::string out_path("out_instab_wchars.dat");
+	std::string fout_wplines_path("Wave_pack_lines.dat");
 	std::wofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
@@ -541,8 +547,8 @@ static t_WCharsLoc search_global_initial_wr_fixed(
 
 		std::vector<t_WCharsLoc> waves_spat;
 
-		std::wofstream fostr_avsb(_T("spectra_a_vs_b_x0.5.dat"));
-		std::wofstream fostr_avsb_raw(_T("spectra_a_vs_b_raw_x0.5.dat"));
+		std::wofstream fostr_avsb("spectra_a_vs_b_x0.5.dat");
+		std::wofstream fostr_avsb_raw("spectra_a_vs_b_raw_x0.5.dat");
 
 		for (int j=0; j<n_bt; j++){
 
@@ -604,7 +610,7 @@ static t_WCharsLoc search_global_initial_wr_fixed(
 		stab_solver->searchWave(ret_wave, 
 			stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED),
 			stab::t_TaskTreat::SPAT);
-		stab_solver->dumpEigenFuctions(_T("crossflow_exmpl.dat"));
+		stab_solver->dumpEigenFuctions("crossflow_exmpl.dat");
 
 		if (ret_wave.a.imag()>=0){
 			ssuGENTHROW(_T("can't find initial!"));
@@ -709,9 +715,9 @@ void test::king_m35_gs_spat_vs_time(){
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
-	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
-	std::wstring fout_maxnfactor_path(_T("max_N.dat"));
+	std::string out_path("out_instab_wchars.dat");
+	std::string fout_wplines_path("Wave_pack_lines.dat");
+	std::string fout_maxnfactor_path("max_N.dat");
 	std::wofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
@@ -756,7 +762,8 @@ void test::king_m35_gs_spat_vs_time(){
 	stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED, w_init);
 	stab_solver->searchWave(w_init, cond, stab::t_TaskTreat::SPAT);
 	stab_solver->calcGroupVelocity(w_init);
-	wostr<<w_init;log_my::wxLogMessageStd(wostr.str());wostr.str(_T(""));
+	wostr<<w_init;
+	wxLogMessage(&wostr.str()[0]);wostr.str(_T(""));
 
 	// time srch result (after transition to spat & adjust):
 	// alpha = 0.328148 - i*0.018956
@@ -770,13 +777,13 @@ void test::king_m35_gs_spat_vs_time(){
 	gs_spat->setContext(test_xyz);
 	t_WCharsLoc gs_spat_wave = gs_spat->searchMaxInstab(w_init_spat);
 	wostr<<_T("GS Spat result:\n")<<gs_spat_wave;
-	log_my::wxLogMessageStd(wostr.str());wostr.str(_T(""));
-	gs_spat->writeSpectrum(_T("spectrum_spat.dat"));
+	wxLogMessage(&wostr.str()[0]);wostr.str(_T(""));
+	gs_spat->writeSpectrum("spectrum_spat.dat");
 
 	cond.wchars = gs_spat_wave;
 	stab_solver->searchWave(gs_spat_wave, cond, stab::t_TaskTreat::SPAT);
 	wostr<<_T("GS With adjust:\n")<<gs_spat_wave;
-	log_my::wxLogMessageStd(wostr.str());wostr.str(_T(""));
+	wxLogMessage(&wostr.str()[0]);wostr.str(_T(""));
 
 
 	delete stab_solver, gs_time, gs_spat, pBlk;

@@ -21,6 +21,8 @@ namespace hsstab{
 // pf plugins
 		IMPEXP_SHARED extern const wxString PF_LOCSRCH_NAME;	
 		IMPEXP_SHARED extern const wxString PF_GLOBSRCH_NAME;
+		
+		IMPEXP_SHARED extern const wxString WPTRACK_DEFAULT_NAME;
 
 		IMPEXP_SHARED extern const wxString MF_CONF_DOMAIN;
 		IMPEXP_SHARED extern const wxString EIGEN_CONF_DOMAIN;

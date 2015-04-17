@@ -152,9 +152,9 @@ public:
 	// for a given wave
 	t_Complex solve(t_WCharsLoc& a_wave_chars);
 
-	void dumpEigenFuctions(const std::wstring& fname);
+	void dumpEigenFuctions(const std::string& fname);
 
-	void dumpProfileStab(const std::wstring& fname) const;
+	void dumpProfileStab(const std::string& fname) const;
 
 	std::vector<t_WCharsLoc> filterInitWaves(const std::vector<t_WCharsLoc>& all_initials);
 	t_WCharsLoc getMaxWave(const std::vector<t_WCharsLoc>& a_inits, int a_nnodesStab=0);

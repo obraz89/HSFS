@@ -4,7 +4,12 @@
 
 #include <cmath>
 
-#include "log.h"
+//#include "log.h"
+
+#include "wx/log.h"
+
+#include "fstream"
+#include "sstream"
 
 using namespace mf;
 
@@ -157,8 +162,7 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double
 	}
 };
 
-void t_ProfileStab::initialize_2D(const std::wstring wfname, 
-							   const t_StabScales& a_scales)
+void t_ProfileStab::initialize_2D(const std::string& wfname, const t_StabScales& a_scales)
 {
 
 	std::wifstream ifstr(&wfname[0]);
@@ -167,8 +171,8 @@ void t_ProfileStab::initialize_2D(const std::wstring wfname,
 	int n_line=0;
 	int nnodes=0;
 	const int max_lsize = 1000;
-	__wchar_t line[max_lsize];
-	__wchar_t ch;
+	wxChar line[max_lsize];
+	wxChar ch;
 	
 	_scales = a_scales;
 
@@ -183,7 +187,7 @@ void t_ProfileStab::initialize_2D(const std::wstring wfname,
 	// read profiles
 	while(ifstr.get(line, max_lsize, '\n')){
 		if (ifstr.get(ch) && ch!='\n'){
-			wxString msg = _("failed to initialize stability profile from file: line exceeded");
+			wxString msg = _T("failed to initialize stability profile from file: line exceeded");
 			wxLogMessage(msg);
 			ssuGENTHROW(msg);
 		}
@@ -210,7 +214,7 @@ void t_ProfileStab::initialize_2D(const std::wstring wfname,
 	}
 }
 
-void t_ProfileStab::initialize_3D(const std::wstring wfname, 
+void t_ProfileStab::initialize_3D(const std::string& wfname, 
 							   const t_StabScales& a_scales)
 {
 
@@ -220,8 +224,8 @@ void t_ProfileStab::initialize_3D(const std::wstring wfname,
 	int n_line=0;
 	int nnodes=0;
 	const int max_lsize = 1000;
-	__wchar_t line[max_lsize];
-	__wchar_t ch;
+	wxChar line[max_lsize];
+	wxChar ch;
 
 	_scales = a_scales;
 
@@ -236,7 +240,7 @@ void t_ProfileStab::initialize_3D(const std::wstring wfname,
 	// read profiles
 	while(ifstr.get(line, max_lsize, '\n')){
 		if (ifstr.get(ch) && ch!='\n'){
-			wxString msg = _("failed to initialize stability profile from file: line exceeded");
+			wxString msg = _T("failed to initialize stability profile from file: line exceeded");
 			wxLogMessage(msg);
 			ssuGENTHROW(msg);
 		}

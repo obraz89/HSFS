@@ -113,7 +113,7 @@ namespace pf{
 		virtual ~t_WavePackLine();
 
 		// io helper
-		void print_to_file(const std::wstring& fname, int write_mode) const;
+		void print_to_file(const std::string& fname, std::ios_base::openmode) const;
 		friend std::wostream& operator<<(std::wostream& str, const t_WavePackLine& line);
 	};
 

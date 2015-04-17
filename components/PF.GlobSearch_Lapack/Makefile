@@ -12,8 +12,8 @@ OUTLIB := PF.GlobSearch_Lapack
 
 #-------------------------
 
-topDIR = ../..
-plugDIR = ../../components
+topDIR = $(realpath ../..)
+plugDIR = $(topDIR)/components
 libDIR = $(topDIR)/lib
 
 include $(topDIR)/build_linux/Make-conf
@@ -22,10 +22,11 @@ INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
 CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I$(plugDIR)/Profile
+CFLAGS += $(MKL_INC_DIR)
 CFLAGS += $(WXFLAGS) -vec_report3
-CFLAGS += $(libDIR)/mkl/include
-LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so -lSmallMat.so -lPhysCommon.so -lProfile.so
-LFLAGS += -L$(libDIR)/mkl/lib/intel64 -lmkl_core.a -lmkl_sequential.a -lmkl_intel_lp64.a 
+#MY_LIBS := shared.so SmallMat.so PhysCommon.so Profile.so
+#MY_LIBS := $(addprefix $(OUTDIR)/, $(MY_LIBS))
+LFLAGS += -L$(OUTDIR) -lhsfs_shared -lhsfs_smallmat -lhsfs_physcommon -lhsfs_profile $(MKL_LFLAGS) $(WXLIBS)
 
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
@@ -36,7 +37,7 @@ VPATH := $(SRCDIRS)
 #-------------------------
 
 $(OUTDIR)/$(OUTLIB).so : $(OBJS) $(OUTDIR)
-	$(CC) -o $@ -shared $(LFLAGS) $(OBJS)
+	$(CC) -o $@ -shared $(OBJS) $(LFLAGS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
 	$(CC) -o $@ -fPIC $(CFLAGS) -c $<

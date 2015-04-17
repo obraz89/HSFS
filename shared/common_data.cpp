@@ -14,6 +14,8 @@ const wxString cmpnts::MF_HSFLOW2D_NAME = _T("MFHSFLOW2D");
 const wxString cmpnts::PF_LOCSRCH_NAME = _T("PF.LocSearch");
 const wxString cmpnts::PF_GLOBSRCH_NAME = _T("PF.GlobSearch");
 
+const wxString cmpnts::WPTRACK_DEFAULT_NAME = _T("WPTrack");
+
 // config domains
 const wxString cmpnts::MF_CONF_DOMAIN = _T("MeanFlow");
 const wxString cmpnts::STABSOLVER_CONF_DOMAIN = _T("LocalSearch");

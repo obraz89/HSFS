@@ -4,23 +4,36 @@
 #include "PluginBase.h"
 #include "WPTrackBase.h"
 
+
+
 namespace pf{
 
 	struct t_WPLineParams{
+	
+	    typedef std::map<wxString,int> t_MapWxStrInt; 
 
-		static hsstab::TPluginParamsGroup default_settings();
-		static void init_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
+    	    static t_MapWxStrInt  RETRACE_MODES_STR;
+	    static t_MapWxStrInt MARCH_OPTS_STR;
 
-		double TimeStep;
-		stab::t_WPRetraceMode RetraceMode;
 
-		enum t_MarchAlong{GROUP_VELO, STREAMLINE};
-		t_MarchAlong RetraceDir;
+	    static hsstab::TPluginParamsGroup default_settings();
+	    static void init_supported_options();
+	    static void init_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
+	    
+	    static void init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
+	    static void wpline_default_settings(hsstab::TPluginParamsGroup& g);
+
+	    double TimeStep;
+	    stab::t_WPRetraceMode RetraceMode;
+
+	    enum t_MarchAlong{GROUP_VELO, STREAMLINE};
+	    t_MarchAlong RetraceDir;
 	};
 
-	void _init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
-	void _wpline_default_settings(hsstab::TPluginParamsGroup& g);
+
 
 }
 
 #endif	// __WP_LINE_PARAMS
+
+

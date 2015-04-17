@@ -25,9 +25,9 @@ public:
 
 	// for testing with AVF code
 	// w=0
-	void initialize_2D(const std::wstring fname, const t_StabScales& a_scales);
+	void initialize_2D(const std::string& fname, const t_StabScales& a_scales);
 	// w!=0
-	void initialize_3D(const std::wstring fname, const t_StabScales& a_scales);
+	void initialize_3D(const std::string& fname, const t_StabScales& a_scales);
 
 	~t_ProfileStab();
 };

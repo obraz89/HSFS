@@ -78,7 +78,7 @@ namespace stab{
 
 		virtual const stab::t_WPLineRec& get_rec(int ind) const=0;
 
-		virtual void print_to_file(const std::wstring& fname, int write_mode) const=0;
+		virtual void print_to_file(const std::string& fname, std::ios_base::openmode) const=0;
 
 		virtual ~t_WPTrackBase();
 	};
@@ -123,7 +123,7 @@ namespace stab{
 		void update(const t_WPTrackBase& wpline);
 
 		void to_cone_ref_frame(double half_angle);
-		void export(const std::wstring& fname) const;
+		void write_to_file(const std::string& fname) const;
 
 	};
 

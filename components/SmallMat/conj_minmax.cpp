@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "conj_minmax.h"
 
-#include "log.h"
+//#include "log.h"
 
 static double ARG_TOL=1.0e-6;
 static double GRAD_TOL=1.0e-7;
@@ -51,9 +51,7 @@ int t_SteepDescSrch::_search_min_desc(t_VecDbl& a_arg){
 		_arg_cur = _arg_nxt;
 
 		// debug
-		std::wstringstream wsstr;
-		wsstr<<"Minimizing{SD} fun="<<std_manip::std_format_sci(fun_nxt);
-		log_my::wxLogMessageStd(wsstr.str());
+		wxLogMessage(_T("Minimizing{SD} fun=%f"), fun_nxt);
 
 	} while (!converged);
 
@@ -106,14 +104,10 @@ int smat::t_ConjGradSrch::_search_min_desc(t_VecDbl& init_guess){
 		if (n_iter++>MAX_ITER_CONJ) return 1;
 
 		// debug
-		std::wstringstream wsstr;
-		wsstr<<"Minimizing{CG} fun="<<std_manip::std_format_sci(_calc_fun_desc(_arg_cur));
-		log_my::wxLogMessageStd(wsstr.str());
+		wxLogMessage(_T("Minimizing{CG} fun=%f"), _calc_fun_desc(_arg_cur));
 	} while (!converged);
 
-	std::wstringstream sstr;
-	sstr<<_T("ConjGrad: converged niter=")<<n_iter;
-	wxLogMessage(&(sstr.str()[0]));
+	wxLogMessage(_T("ConjGrad: converged niter=%d"), n_iter);
 
 	// lazy to rename init_guess
 	init_guess = _arg_cur;
@@ -196,7 +190,7 @@ int t_ConjGradSrch::_lin_bracket_brent(t_VecDbl& a_vec, t_VecDbl& c_vec, const t
 		r=(bx-ax)*(fb - fc);
 		q=(bx-cx)*(fb - fa);
 		u=(bx)-((bx-cx)*q-(bx-ax)*r)/
-			(2.0*SIGN(std::max(abs(q-r),TINY),q-r));
+			(2.0*SIGN(std::max(std::abs(q-r),TINY),q-r));
 		ulim=bx+GLIMIT*(cx-bx);
 
 		if ((bx-u)*(u-cx) > 0.0) {	//Parabolic u is between b and c: try it

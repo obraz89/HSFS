@@ -1,7 +1,16 @@
 #include "Profile.h"
-#include "log.h"
 
-#include "fun_zero_1D.h"
+//#include "log.h"
+
+//#include ""
+
+//#include "fun_zero_1D.h"
+
+#include "wx/log.h"
+
+#include "fstream"
+
+//#include
 
 t_Profile::t_Extractor::t_Extractor
 	(double t_Rec::* write_to, t_DblVec t_Profile::* extract_from)
@@ -233,7 +242,7 @@ t_Profile::~t_Profile(){};
 
 // temp?
 
-void t_Profile::dump(const std::wstring& fname) const{
+void t_Profile::dump(const std::string& fname) const{
 	std::wofstream fstr(&fname[0], std::ios::out);
 	t_Rec rec;
 
@@ -284,7 +293,7 @@ void t_ProfMF::_store_bl_thick_data(){
 	
 };
 
-inline double t_ProfMF::get_bl_thick_scale() const{return _bl_thick_scale;}
+double t_ProfMF::get_bl_thick_scale() const{return _bl_thick_scale;}
 
 double t_ProfMF::get_x_scale() const{
 

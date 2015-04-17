@@ -55,7 +55,7 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
 
-	pf::_init_wpline_base_params(_params, g);
+	t_WPLineParams::init_wpline_base_params(_params, g);
 
 }
 

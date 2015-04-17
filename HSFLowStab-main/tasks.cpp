@@ -8,13 +8,15 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
 
 #include "io_helpers.h"
 
 #include "solvers_glob.h"
 
 #include "mpi.h"
+
+#include "fstream"
 
 using namespace hsstab;
 
@@ -35,6 +37,8 @@ stab::t_StabDBase* g_pStabDB;
 wxString task::TaskNames[TaskNum];
 wxString task::SpatTimeNames[SpatTimeNum];
 
+
+static const int MAX_FNAME_LEN = 100;
 
 void task::init_glob_solvers(){
 
@@ -69,7 +73,7 @@ void task::init_stab_dbs(){
 
 	int NPntsGlob;
 
-	std::wifstream f_cin(g_taskParams.pave_grd_fname.c_str());
+	std::wifstream f_cin(g_taskParams.pave_grd_fname.ToAscii());
 
 	f_cin>>NPntsGlob;
 
@@ -232,9 +236,11 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 
 	wxChar szFname[64];
 
-	swprintf(szFname, _T("%s/%s"),hsstab::OUTPUT_DIR.c_str(), &fname_max_waves[0]);
+	swprintf(szFname, MAX_FNAME_LEN, _T("%s/%s"),hsstab::OUTPUT_DIR.c_str(), &fname_max_waves[0]);
+	
+	wxString szFname_wx(szFname);
 
-	std::wifstream ifstr(szFname);
+	std::wifstream ifstr(szFname_wx.ToAscii());
 
 	if (!ifstr.is_open())
 	{
@@ -284,10 +290,10 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 
 	wxChar szFname[64];
 
-	swprintf(szFname, _T("%s/Wave_pack_lines_wbfixed.dat.dat"),hsstab::OUTPUT_DIR.c_str());
+	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_wbfixed.dat.dat"),hsstab::OUTPUT_DIR.c_str());
 	std::wstring fout_wplines_path(szFname);
 
-	swprintf(szFname, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
+	swprintf(szFname, MAX_FNAME_LEN, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
 	std::wstring fout_maxnfactor_path(szFname);
 
 
@@ -354,7 +360,9 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 				std::wcout<<_T("Init for wpline:")<<w_init; 
 
 				wp_line->retrace(test_xyz, w_init, *g_pStabSolver, *g_pGSSolverSpat, stab::t_WPRetraceMode::WB_FIXED);
-				wp_line->print_to_file(fout_wplines_path, std::ios::app);
+				
+				wxString fout_wplines_path_wx(fout_wplines_path);
+				wp_line->print_to_file(std::string(fout_wplines_path_wx.ToAscii()), std::ios::app);
 
 				g_pStabDB->update(*wp_line);
 
@@ -375,7 +383,9 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 		}
 
 		//StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
-		g_pStabDB->export(fout_maxnfactor_path);
+		
+		wxString fout_maxnfactor_path_wx(fout_maxnfactor_path);
+		g_pStabDB->write_to_file(std::string(fout_maxnfactor_path_wx.ToAscii()));
 
 		delete wp_line;
 		return;
@@ -419,19 +429,25 @@ void task::get_profiles(){
 		data_cfg.ThickCoef = g_pMFDomain->get_prof_extr_cfg().ThickCoefDefault;
 		prof_NS.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
 
-		swprintf(szFname, _T("%s/ProfileNS_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
-		prof_NS.dump(szFname);
+		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileNS_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
+		
+		wxString szFnameNS_wx(szFname);
+		prof_NS.dump(std::string(szFnameNS_wx.ToAscii()));
 
 		// generate profile MF (Glob RF)
 		t_ProfMFGlob prof_MF(*g_pMFDomain);
 		prof_MF.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
 
-		swprintf(szFname, _T("%s/ProfileMFGlob_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
-		prof_MF.dump(szFname);
+		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileMFGlob_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
+		
+		wxString szFnameMF_wx(szFname);
+		prof_MF.dump(std::string(szFnameMF_wx.ToAscii()));
 
 		// generate profile Stab
-		swprintf(szFname, _T("%s/ProfileStab_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
-		g_pStabSolver->dumpProfileStab(szFname);
+		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileStab_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
+		
+		wxString szFnameST_wx(szFname);
+		g_pStabSolver->dumpProfileStab(std::string(szFnameST_wx.ToAscii()));
 
 		g_pMFDomain->dump_full_enthalpy_profile(xyz, j);
 

@@ -109,7 +109,10 @@ void t_StabDBase::to_cone_ref_frame(double half_angle){
 
 }
 
-void t_StabDBase::export(const std::wstring& fname) const{
+void t_StabDBase::write_to_file(const std::string& fname) const{
+
+//wxLogMessage(_T("Error: stab db output to file disabled, restore code![linux build problem]"));
+// TODO: not compiling under linux ?!
 
 	std::wofstream fstr(&fname[0]);
 	fstr<<_T("x[m]\ty[m]\tz[m]\tN[]\n");

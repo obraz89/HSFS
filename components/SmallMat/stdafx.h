@@ -9,4 +9,6 @@
 #include <cmath>
 #include <vector>
 
+#include "wx/log.h"
+
 // TODO: reference additional headers your program requires here

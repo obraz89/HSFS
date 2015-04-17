@@ -1,5 +1,5 @@
 #include "stdafx.h"
-#include "MFDomainBase.h"
+#include "mf_shared.h"
 
 using namespace mf;
 

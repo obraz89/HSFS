@@ -1,19 +1,19 @@
 #
 # HSFlowStab makefile
 
-# Project : HSFLowStab-main
+# Project : HSFlowStab-main
 
 #
 # Author: Andrey V. Novikov
 # Modified : A.Obraz
 #
 
-OUTLIB := HSFLowStab-main
+OUTLIB := HSFlowStab-main
 
 #-------------------------
 
-topDIR = ../..
-plugDIR = ../../components
+topDIR = $(realpath ..)
+plugDIR = $(topDIR)/components
 libDIR = $(topDIR)/lib
 
 include $(topDIR)/build_linux/Make-conf
@@ -22,10 +22,12 @@ INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
 CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I$(plugDIR)/Profile
+CFLAGS += $(MPI_INC_DIR)
 CFLAGS += $(WXFLAGS) -vec_report3
-CFLAGS += -I$(libDIR)/mpi/include
-LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lshared.so -lSmallMat.so -lPhysCommon.so -lProfile.so
-LFLAGS += -L$(libDIR)/mpi/lib -lmpi.a
+#MY_LIBS := shared.so SmallMat.so PhysCommon.so Profile.so
+#MY_LIBS := $(addprefix $(OUTDIR)/, $(MY_LIBS))
+LFLAGS += -L$(OUTDIR) -lhsfs_shared -lhsfs_smallmat -lhsfs_physcommon -lhsfs_profile $(WXLIBS)
+LFLAGS += $(MPI_LFLAGS) 
 
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
@@ -36,7 +38,7 @@ VPATH := $(SRCDIRS)
 #-------------------------
 
 $(OUTDIR)/$(OUTLIB).exe : $(OBJS) $(OUTDIR)
-	$(CC) -o $@ $(LFLAGS) $(OBJS)
+	$(CC) -o $@ $(OBJS) $(LFLAGS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
 	$(CC) -o $@ -fPIC $(CFLAGS) -c $<

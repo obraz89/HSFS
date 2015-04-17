@@ -22,7 +22,7 @@ namespace hsstab{
 
 			hsstab::TPluginCaps* get_caps();
 			void default_settings();
-			void init(const wxString& settingsFN, const wxString& spec) throw(t_GenException);
+			void init(const wxString& settingsFN, const wxString& spec);
 		};
 
 }

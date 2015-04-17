@@ -5,6 +5,8 @@
 // tmp
 #include <fstream>
 
+#include "wx/log.h"
+
 using namespace mf;
 
 t_ProfileNS::t_ProfileNS(const t_DomainBase& a_rDomain):t_ProfMF(a_rDomain){};

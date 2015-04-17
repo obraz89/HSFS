@@ -8,7 +8,8 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
+#include <fstream>
 
 #include "io_helpers.h"
 
@@ -24,10 +25,10 @@ void test::test_fixed_beta_calc(){
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
-	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
-	std::wstring fout_maxnfactor_path(_T("max_N.dat"));
-	std::wofstream ofstr(&out_path[0]);
+	std::string out_path("out_instab_wchars.dat");
+	std::string fout_wplines_path("Wave_pack_lines.dat");
+	std::string fout_maxnfactor_path("max_N.dat");
+	std::ofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
 	try
@@ -141,7 +142,7 @@ void test::test_fixed_beta_calc(){
 		}
 
 		StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
-		StabDB.export(fout_maxnfactor_path);
+		StabDB.write_to_file(fout_maxnfactor_path);
 
 		delete stab_solver, gs_spat, pBlk;
 		return;

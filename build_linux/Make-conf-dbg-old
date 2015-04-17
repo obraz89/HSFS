@@ -16,14 +16,7 @@ CFLAGS := -g -std=c++0x
 WXFLAGS := $(shell wx-config --unicode=yes --static=no --cxxflags)
 WXLIBS := $(shell wx-config --unicode=yes --static=no --libs base)
 
-# try wx 3.0.2 debug
-
-#WXFLAGS := -I/home/obraz/libs/wxWidgets-3.0.2/build_dbg/lib/wx/include/base-unicode-3.0 \
-#-I/home/obraz/libs/wxWidgets-3.0.2/include -pthread
-
-#WXLIBS := -L/home/obraz/apps/lib64 -lwx_baseu-3.0 -pthread
-
-CGNS_ARCH := cgns-3.2.1
+CGNS_ARCH := gcc-rlz-lnx64
 
 MPI_INC := -I/usr/include/openmpi-x86_64
 MPI_LIB_DIR := /usr/lib64/openmpi/lib
@@ -34,5 +27,4 @@ MKL_LIBS := -L$(MKLROOT)/lib/em64t -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
 #-------------------------
 
-LFLAGS := -Wl,-no-undefined
-
+LFLAGS := $(WXLIBS)

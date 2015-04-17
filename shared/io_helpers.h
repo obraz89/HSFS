@@ -38,7 +38,7 @@ namespace std_manip{
 	template<typename T> inline std::wostream& _format_fixed(std::wostream& os, T val){
 		os.width(FIELD_WIDTH_DEFAULT);
 		os.precision(PRECISION_DEFAULT);
-		int old_flags = os.flags(std::ios::left|std::ios::fixed);
+		std::ios_base::fmtflags old_flags = os.flags(std::ios::left|std::ios::fixed);
 		os<<val;
 		os.flags(old_flags);
 		return os;
@@ -47,7 +47,7 @@ namespace std_manip{
 	template<typename T> inline std::wostream& _format_sci(std::wostream& os, T val){
 		os.width(FIELD_WIDTH_DEFAULT);
 		os.precision(PRECISION_DEFAULT);
-		int old_flags = os.flags(std::ios::left|std::ios::scientific);
+		std::ios_base::fmtflags old_flags = os.flags(std::ios::left|std::ios::scientific);
 		os<<val;
 		os.flags(old_flags);
 		return os;

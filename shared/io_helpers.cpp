@@ -27,7 +27,7 @@ std::istream& io_hlp::eat_white(std::istream& istr){
 }
 
 std::wistream& io_hlp::eat_white(std::wistream& istr){
-	__wchar_t ch;
+	wxChar ch;
 	while (istr.get(ch)){
 		if (isspace(ch)==0){
 			istr.putback(ch);

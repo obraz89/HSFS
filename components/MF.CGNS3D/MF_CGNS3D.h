@@ -28,8 +28,6 @@ namespace mf{
 
 	public:
 
-		// t_DomainBase interface realization
-
 		void init(const hsstab::TPlugin& g_plug);
 
 		const mf::t_FldParams& get_mf_params() const;
@@ -46,6 +44,8 @@ namespace mf{
 
 		// from cg::TDomain
 		bool loadGrid(const wxString& gridFN );
+		
+		~t_MFCGNS3D();
 	};
 
 	}		// ~namespace mf

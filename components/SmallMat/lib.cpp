@@ -7,11 +7,11 @@ namespace smat{
 	}
 
 	IMPEXP_SMALLMAT void vec_cart_to_cyl(t_Vec3<double>& vec){
-		wxLogError(_("Vec3D: Transition to cyl rf not implemented!"));
+		wxLogError(_T("Vec3D: Transition to cyl rf not implemented!"));
 	}
 
 	IMPEXP_SMALLMAT void vec_cart_to_cyl(t_Vec3<t_Complex>& vec){
-		wxLogError(_("Vec3D: Transition to cyl rf not implemented!"));
+		wxLogError(_T("Vec3D: Transition to cyl rf not implemented!"));
 	}
 
 	IMPEXP_SMALLMAT void vec_cart_to_cone(t_Vec3<double>& vec, double teta){
@@ -61,10 +61,18 @@ namespace smat{
 	}
 }
 
+namespace vector{
+
+    template<> IMPEXP_SMALLMAT t_Vec3Dbl cross(const t_Vec3Dbl& l, const t_Vec3Dbl& r){
+	return __cross<double, double, double>(l,r);
+    };
+
+}
+
 // instantiate all needed functions here and export them
 
 // try to instantiate needed classes
-/*
+
 template class IMPEXP_SMALLMAT t_Matrix<t_Complex>;
 template class IMPEXP_SMALLMAT t_Matrix<double>;
 
@@ -79,10 +87,8 @@ template class IMPEXP_SMALLMAT t_SqMatrix<double>;
 
 template class IMPEXP_SMALLMAT t_SqMat3<t_Complex>;
 template class IMPEXP_SMALLMAT t_SqMat3<double>;
-*/
 
-// [-]
-// TODO: inlines !!!
+// matrix operators 
 template IMPEXP_SMALLMAT void matrix::base::minus<t_Complex, t_Complex>
 (const t_Matrix<t_Complex>& l, const t_Matrix<t_Complex>& r,
  t_Matrix<TypeDeduce<t_Complex,t_Complex>::type >& ret);
@@ -118,13 +124,23 @@ template IMPEXP_SMALLMAT void matrix::base::div<double, double>
  t_Matrix<TypeDeduce<double, double>::type >& ret);
 
 //[A*B]
-template IMPEXP_SMALLMAT void matrix::base::mat_mul<t_Complex, t_Complex>
+template<> IMPEXP_SMALLMAT void matrix::base::mat_mul<t_Complex, t_Complex>
 (const t_Matrix<t_Complex>& l, const t_Matrix<t_Complex>& r,
- t_Matrix<TypeDeduce<t_Complex,t_Complex>::type >& ret);
+ t_Matrix<TypeDeduce<t_Complex,t_Complex>::type >& ret){
+    __mat_mul<t_Complex, t_Complex, TypeDeduce<t_Complex, t_Complex>::type>(l,r,ret);
+ };
 
-template IMPEXP_SMALLMAT void matrix::base::mat_mul<double, double>
+template<> IMPEXP_SMALLMAT void matrix::base::mat_mul<double, double>
 (const t_Matrix<double>& l, const t_Matrix<double>& r,
- t_Matrix<matrix::TypeDeduce<double,double>::type >& ret);
+ t_Matrix<matrix::TypeDeduce<double,double>::type >& ret){
+    __mat_mul<double, double, TypeDeduce<double, double>::type>(l,r,ret);
+};
+
+// vector operators
+//template IMPEXP_SMALLMAT t_VecDbl operator*<double, double>(double, const t_VecDbl&);
+//template IMPEXP_SMALLMAT t_VecDbl operator-<double, double>(const t_VecDbl&, const t_VecDbl&);
+//template IMPEXP_SMALLMAT t_VecDbl operator+<double, double>(const t_VecDbl&, const t_VecDbl&);
+
 
 // interpolation functions
 

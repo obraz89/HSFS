@@ -8,7 +8,8 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
+#include <fstream>
 
 #include "io_helpers.h"
 
@@ -28,7 +29,7 @@ void test::transhyb_base_wartman(){
 	TCapsGS& caps_gs = G_Plugins.get_caps_gs();
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 
-	std::wstring out_path = _T("out_instab_wchars.dat");
+	std::string out_path("out_instab_wchars.dat");
 	std::wofstream ofstr(&out_path[0]);
 
 	mf::t_DomainBase* pBlk = caps_mf.create_domain();
@@ -54,7 +55,7 @@ void test::transhyb_base_wartman(){
 	//stab_solver->setContext(test_ind);
 
 	int NLines = 5;
-	std::wstring fout_wplines_path(_T("Wave_pack_lines.dat"));
+	std::string fout_wplines_path("Wave_pack_lines.dat");
 
 	for (int i=0; i<NLines; i++){
 
@@ -260,8 +261,9 @@ void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave,
 
 	std::wstringstream sstr;
 	sstr<<_T("sigma_vs_freq")<<xyz<<_T(".dat");
+	wxString wxstr(sstr.str());
 
-	std::wstring out_path = sstr.str();
+	std::string out_path(wxstr.ToAscii());
 	std::wofstream ofstr(&out_path[0]);
 
 	stab_solver->setContext(xyz);
@@ -315,7 +317,7 @@ void print_sigma_vs_freq_dim(mf::t_GeomPoint xyz, t_WCharsLoc max_wave,
 
 			std::wstringstream wstr;
 			wstr<<"Scales:"<<stab_solver->get_stab_scales()<<"Max Spat result:"<<wave_cur;
-			log_my::wxLogMessageStd(wstr.str());
+			wxLogMessage(&wstr.str()[0]);
 
 			wave_cur = wave_cur.make_dim();
 

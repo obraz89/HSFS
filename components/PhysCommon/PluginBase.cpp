@@ -146,7 +146,7 @@ void  TPlugin::default_settings()
 TPlugin::~TPlugin(){ ; }
 
 
-hsstab::TPlugin* hsstab::TPlugin::create_from_dll(const wxString& name)  throw(t_GenException)
+hsstab::TPlugin* hsstab::TPlugin::create_from_dll(const wxString& name)  
 {
 	static std::vector<wxDllType> loadedPlugs;
 
@@ -155,17 +155,20 @@ hsstab::TPlugin* hsstab::TPlugin::create_from_dll(const wxString& name)  throw(t
 		ssuGENTHROW( _("Required environment variable '%s' is not set"), strEXE_ENV_VAR );
 
 	wxFileName plugFN(dir, name, wxDynamicLibrary::GetDllExt()+1/*skip leading dot*/);
+	wxLogMessage(_T("loading %s"), plugFN.GetFullPath());
 //	plugFN.AppendDir(strDIR_EXE_PLUGINS);
 
 	wxDynamicLibrary lib;
 	if( ! lib.Load(plugFN.GetFullPath(), wxDL_VERBATIM|wxDL_NOW|wxDL_GLOBAL) )
 		ssuGENTHROW( _("Can't load plugin '%s'"), name.c_str() );
+		
 
 
 	// Check if the same dyn.library has been previously loaded,
 	// so here it's not really loaded once more (just ref.counter is increased)
 	// Each plugin should have its own address space, they use global variables :(
 	wxDllType hndl = lib.GetLibHandle();
+	
 	for( int i=0; i < loadedPlugs.size(); ++i )
 	{
 		if( loadedPlugs[i] == hndl )
@@ -174,7 +177,6 @@ hsstab::TPlugin* hsstab::TPlugin::create_from_dll(const wxString& name)  throw(t
 		}
 	}
 	loadedPlugs.push_back( hndl );
-
 
 	typedef hsstab::TPlugin* (*TpfunPlgIface)();
 	TpfunPlgIface get_iface = (TpfunPlgIface)lib.GetSymbol( _T("get_plugin_interface") );
@@ -188,7 +190,7 @@ hsstab::TPlugin* hsstab::TPlugin::create_from_dll(const wxString& name)  throw(t
 //-----------------------------------------------------------------------------
 
 
-hsstab::TPluginParamsGroup& hsstab::TPlugin::get_settings_grp(const char* pszGrpName) throw(t_GenException)
+hsstab::TPluginParamsGroup& hsstab::TPlugin::get_settings_grp(const char* pszGrpName) 
 {
 	wxString grpName = wxString::FromAscii(pszGrpName);
 	std::map<wxString, TPluginParamsGroup>::iterator it = _mapParamsGrps.find(grpName);
@@ -199,7 +201,7 @@ hsstab::TPluginParamsGroup& hsstab::TPlugin::get_settings_grp(const char* pszGrp
 }
 
 const hsstab::TPluginParamsGroup& hsstab::TPlugin::get_settings_grp_const(
-	const char* pszGrpName) const throw(t_GenException){
+	const char* pszGrpName) const {
 
 		wxString grpName = wxString::FromAscii(pszGrpName);
 		std::map<wxString, TPluginParamsGroup>::const_iterator it = _mapParamsGrps.find(grpName);
@@ -212,7 +214,7 @@ const hsstab::TPluginParamsGroup& hsstab::TPlugin::get_settings_grp_const(
 //-----------------------------------------------------------------------------
 
 
-void hsstab::TPlugin::load_settings(const wxString& fn) throw(t_GenException)
+void hsstab::TPlugin::load_settings(const wxString& fn) 
 {
 	if( fn.IsEmpty() )  return;
 
@@ -262,7 +264,7 @@ void hsstab::TPlugin::load_settings(const wxString& fn) throw(t_GenException)
 //-----------------------------------------------------------------------------
 
 
-void hsstab::TPlugin::save_settings(const wxString& file) throw(t_GenException)
+void hsstab::TPlugin::save_settings(const wxString& file) 
 {
 	const wxString& fn = (file.IsEmpty()) ?_paramsFileName :file;
 	if( fn.IsEmpty() )
@@ -302,7 +304,7 @@ void hsstab::TPlugin::save_settings(const wxString& file) throw(t_GenException)
 ///////////////////////////////////////////////////////////////////////////////
 
 const hsstab::TPluginParam&
-hsstab::TPluginParamsGroup::get_raw_param(const wxString& parName) const throw(t_GenException)
+hsstab::TPluginParamsGroup::get_raw_param(const wxString& parName) const 
 {
 	std::map<wxString, TPluginParam>::const_iterator it = mapParams.find(parName);
 	if( it == mapParams.end() )
@@ -315,7 +317,7 @@ hsstab::TPluginParamsGroup::get_raw_param(const wxString& parName) const throw(t
 }
 //-----------------------------------------------------------------------------
 
-double hsstab::TPluginParamsGroup::get_real_param(const char* pszName) const throw(t_GenException)
+double hsstab::TPluginParamsGroup::get_real_param(const char* pszName) const 
 {
  	wxString parName = wxString::FromAscii(pszName);
 	const TPluginParam& param = get_raw_param(parName);
@@ -331,7 +333,7 @@ double hsstab::TPluginParamsGroup::get_real_param(const char* pszName) const thr
 }
 //-----------------------------------------------------------------------------
 
-int hsstab::TPluginParamsGroup::get_int_param(const char* pszName) const throw(t_GenException)
+int hsstab::TPluginParamsGroup::get_int_param(const char* pszName) const 
 {
 	wxString parName = wxString::FromAscii(pszName);
 	const TPluginParam& param = get_raw_param(parName);
@@ -347,7 +349,7 @@ int hsstab::TPluginParamsGroup::get_int_param(const char* pszName) const throw(t
 }
 //-----------------------------------------------------------------------------
 
-const wxString& hsstab::TPluginParamsGroup::get_string_param(const char* pszName) const throw(t_GenException)
+const wxString& hsstab::TPluginParamsGroup::get_string_param(const char* pszName) const 
 {
 	wxString parName = wxString::FromAscii(pszName);
 	const TPluginParam& par = get_raw_param(parName);

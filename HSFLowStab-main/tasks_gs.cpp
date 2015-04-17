@@ -8,7 +8,9 @@
 
 #include "ProfileStab.h"
 
-#include "Log.h"
+//#include "Log.h"
+
+#include "wx/log.h"
 
 #include "io_helpers.h"
 
@@ -356,6 +358,11 @@ void task::search_max_instab_fixed_point_time(const task::TTaskParams& task_para
 class t_MsgGSRec : public t_MsgBase{
 
 public:
+
+static const int SerSize;
+    
+	int getSerSize() const{return SerSize;};
+
 	t_MsgGSRec(double* cont);
 	t_MsgGSRec(const t_MsgBase& );
 	void write2file(std::wofstream& ofstr) const;
@@ -643,7 +650,7 @@ void task::mpi_test(){
 
 		MPI_Status status;
 
-		std::wofstream ofstr(_T("output.txt"));
+		std::wofstream ofstr("output.txt");
 
 
 //		calcs are done on master too, write them
@@ -701,6 +708,6 @@ void test::gs_lapack_vs_petsc(){
 
 	std::cout<<n_iters<<"iters: elapsed"<<dt<<"\n";
 
-	gs_solver->writeSpectrum(_T("output/spectrum.dat"));
+	gs_solver->writeSpectrum("output/spectrum.dat");
 
 }
