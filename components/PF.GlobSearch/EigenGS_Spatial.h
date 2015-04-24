@@ -87,9 +87,9 @@ namespace pf{
 
 		int getSpectrum(const t_WCharsLoc& init_wave);
 
-		void writeSpectrum(const std::wstring& a_filename) const;
+		void writeSpectrum(const std::string& a_filename) const;
 
-		void writeSpectrumPhase(const std::wstring& a_filename) const;
+		void writeSpectrumPhase(const std::string& a_filename) const;
 
 		// select unstable discrete modes
 		std::vector<t_WCharsLoc> getInstabModes(const t_WCharsLoc& init_wave);
