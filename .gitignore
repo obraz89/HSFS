@@ -4,6 +4,7 @@ StabSolverUnited/*
 _UpgradeReport_Files/*
 x64/*
 bin_*/
+bin-*/
 # compiler generated & precomp
 *_mod.f90
 *.pchi
