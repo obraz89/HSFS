@@ -245,12 +245,18 @@ std::vector<t_MatCmplx> t_ODES::reconstruct(){
 	t_SqMatCmplx direct(_NSolVecs);
 	direct.setToUnity();
 
+	t_SqMatCmplx tmp(_NSolVecs);
+
 	for (int i=_nnodes-1; i>=0; i--){
 		ret[i] = solution[i]*direct;
 		if (orthStackInd>=0){
 			if (i==_orthStack[orthStackInd].ind){
-				// TODO: WTF??? What's the right order?
-				direct = (_orthStack[orthStackInd].orthMatrix)*direct;
+				const t_SqMatCmplx& l = _orthStack[orthStackInd].orthMatrix;
+				// bug fixed in smallmat lib
+				//direct=l*direct;
+				// better make the same without implicit matrix operations 
+				matrix::base::mat_mul<t_Complex, t_Complex>(_orthStack[orthStackInd].orthMatrix,direct,tmp);
+				direct.set(tmp);
 				orthStackInd--;
 			}
 		}
