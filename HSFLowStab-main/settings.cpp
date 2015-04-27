@@ -125,8 +125,8 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::MaxInstabLine] = _T("MaxInstabLine");
 	task::TaskNames[task::AnalyzeWChars] = _T("AnalyzeWChars");
 	task::TaskNames[task::GetProfiles] = _T("GetProfiles");
-
 	task::TaskNames[task::MPITest] = _T("MPITest");
+	task::TaskNames[task::GetAmplitudeFuncs] = _T("GetAmplitudeFuncs");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
@@ -159,6 +159,10 @@ bool load_Settings_n_Plugins()
 		g_taskParams.N_w = conf->Read(_T("N_w"), 10);
 
 		g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
+	}
+
+	if (g_taskParams.id = task::GetAmplitudeFuncs){
+			g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
 	}
 
 	if (g_taskParams.id==task::Retrace)

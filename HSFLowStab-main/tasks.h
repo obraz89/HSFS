@@ -21,6 +21,8 @@ namespace task{
 
 	void analyze_wchars(const std::string& fname);
 
+	void get_amplitude_funcs();
+
 	void retrace_wplines_wfixed_bfree();
 
 	void retrace_wplines_wfixed_bfixed();

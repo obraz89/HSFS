@@ -379,6 +379,86 @@ void task::retrace_wplines_wfixed_bfree(){
 		retrace_wplines_cond(cond, stab::t_WPRetraceMode::W_FIXED);
 }
 
+void task::get_amplitude_funcs(){
+
+	int npave_pts = g_pStabDB->get_npoints();
+
+	int pave_pnt_ind = g_taskParams.pave_point_id;
+	if ( pave_pnt_ind>=g_pStabDB->get_npoints())
+	{
+		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
+		return;
+	}
+
+	int pid_s, pid_e;
+	if (pave_pnt_ind<0){
+		pid_s = 0;
+		pid_e = g_pStabDB->get_npoints()-1;
+	}else{
+		pid_s = pave_pnt_ind;
+		pid_e = pave_pnt_ind;
+	}
+
+	for (int pid=pid_s; pid<=pid_e; pid++){
+
+		try{
+			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+			g_pStabSolver->setContext(test_xyz);
+
+			t_WCharsLoc w_init;w_init.set_treat(stab::t_TaskTreat::SPAT);
+
+			bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
+
+			if (!read_ok) 
+				ssuGENTHROW(_T("Failed to read max wave chars, skipping wpline"));
+			else
+				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
+
+			wxLogMessage(_T("Warning: using default mode for amplitude funcs reconstruction"));
+
+			stab::t_LSCond cond;
+			stab::t_TaskTreat stab_treat;
+			switch (g_taskParams.spattime)
+			{
+			case task::Spat:
+
+				cond.set(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED, w_init);
+
+				stab_treat = stab::t_TaskTreat::SPAT;
+
+				break;
+			case task::Time:
+
+				cond.set(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED, w_init);
+
+				stab_treat = stab::t_TaskTreat::TIME;
+
+				break;
+			default:
+				return;
+			}
+
+			char strFname[33];
+
+			sprintf(strFname, "output/amp_funcs_%d.dat", pid);
+
+			g_pStabSolver->searchWave(w_init, cond, stab_treat);
+
+			g_pStabSolver->dumpEigenFuctions(strFname);
+
+		}
+		catch(t_GenException e){
+			wxLogMessage(e.what());
+		}
+		catch(...){
+			wxLogMessage(_T("Failed to reconstruct amp funcs for pid=%d"), pid);
+		}
+
+	};
+
+}
+
 void task::get_profiles(){
 
 	int npts = g_pStabDB->get_npoints();

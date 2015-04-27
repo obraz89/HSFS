@@ -146,6 +146,9 @@ int main(int argc, char* argv[]){
 		case task::MPITest:
 			task::mpi_test();
 			break;
+		case task::GetAmplitudeFuncs:
+			task::get_amplitude_funcs();
+			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));
 			wxLogError(errMsg);
