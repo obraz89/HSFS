@@ -226,11 +226,6 @@ void task::analyze_wchars(const std::string& fname){
 
 }
 
-
-void do_retrace_wplines_wfixed_bfree(const task::TTaskParams& params){
-	wxLogMessage(_T("Migrate do_retrace_wplines_wfixed_bfree from tests"));
-}
-
 bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc& wave){
 
 
@@ -285,17 +280,19 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 	return false;
 };
 
-
-void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
+void retrace_wplines_cond(const stab::t_LSCond& a_cond, stab::t_WPRetraceMode a_mode_retrace){
 
 	wxChar szFname[64];
 
-	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_wbfixed.dat.dat"),hsstab::OUTPUT_DIR.c_str());
+	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_mode%d.dat.dat"),
+		hsstab::OUTPUT_DIR.c_str(), g_taskParams.retrace_mode);
+
 	std::wstring fout_wplines_path(szFname);
 
-	swprintf(szFname, MAX_FNAME_LEN, _T("%s/max_N_wbfixed.dat"),hsstab::OUTPUT_DIR.c_str());
-	std::wstring fout_maxnfactor_path(szFname);
+	swprintf(szFname, MAX_FNAME_LEN, _T("%s/max_N_mode%d.dat"),
+		hsstab::OUTPUT_DIR.c_str(), g_taskParams.retrace_mode);
 
+	std::wstring fout_maxnfactor_path(szFname);
 
 	int npave_pts = g_pStabDB->get_npoints();
 
@@ -303,18 +300,7 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*g_pMFDomain);
 	wp_line->init(G_Plugins.get_plugin(plgWPTrack));
 
-	//double bs = g_taskParams.b_ndim_min;
-	//double be = g_taskParams.b_ndim_max;
-	//int Nb = g_taskParams.N_b;
-
-	//double ws = g_taskParams.w_ndim_min;
-	//double we = g_taskParams.w_ndim_max;
-	//int Nw = g_taskParams.N_w;
-
 	for (int pid=0; pid<npave_pts; pid++){
-
-		//for (int i_b=0; i_b<g_taskParams.N_b; i_b++)
-		//for (int i_w=0; i_w<g_taskParams.N_w; i_w++)
 
 		try{
 
@@ -333,23 +319,10 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 			else
 				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
 
-			stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED);
-			g_pStabSolver->searchWave(w_init, cond, stab::t_TaskTreat::SPAT);
+
+			g_pStabSolver->searchWave(w_init, a_cond, stab::t_TaskTreat::SPAT);
 
 			w_init.set_scales(g_pStabSolver->get_stab_scales());
-/*
-			double cur_b = bs + (be-bs)/double(Nb)*i_b;
-			double cur_w = ws + (we-ws)/double(Nw)*i_w;
-
-			w_init.b = cur_b;
-			w_init.w = cur_w;
-
-			std::vector<t_WCharsLoc> gs_waves = g_pGSSolverSpat->getInstabModes(w_init);
-			std::vector<t_WCharsLoc> waves_filtered = g_pStabSolver->filter_gs_waves_spat(gs_waves, 
-				stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED));
-
-			w_init = t_WCharsLoc::find_max_instab_spat(waves_filtered);
-*/
 
 			// TODO: WPLine ids
 			if (w_init.a.imag()<0.0){
@@ -359,7 +332,7 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 
 				std::wcout<<_T("Init for wpline:")<<w_init; 
 
-				wp_line->retrace(test_xyz, w_init, *g_pStabSolver, *g_pGSSolverSpat, stab::t_WPRetraceMode::WB_FIXED);
+				wp_line->retrace(test_xyz, w_init, *g_pStabSolver, *g_pGSSolverSpat, a_mode_retrace);
 				
 				wxString fout_wplines_path_wx(fout_wplines_path);
 				wp_line->print_to_file(std::string(fout_wplines_path_wx.ToAscii()), std::ios::app);
@@ -390,23 +363,21 @@ void do_retrace_wplines_wfixed_bfixed(const task::TTaskParams& params){
 		delete wp_line;
 		return;
 
+
 }
 
-void task::retrace_wplines_wfixed(){
 
-	switch (g_taskParams.retrace_mode)
-	{
-	case 0:
-		do_retrace_wplines_wfixed_bfree(g_taskParams);
-		break;
-	case 1:
-		do_retrace_wplines_wfixed_bfixed(g_taskParams);
-		break;
-	default:
-		wxLogError(_T("Error: Wrong mode for retrace"));
-	}
+void task::retrace_wplines_wfixed_bfixed(){
+	
+	stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED);
+	retrace_wplines_cond(cond, stab::t_WPRetraceMode::WB_FIXED);
+}
 
-};
+void task::retrace_wplines_wfixed_bfree(){
+
+	stab::t_LSCond cond(stab::t_LSCond::W_FIXED);
+		retrace_wplines_cond(cond, stab::t_WPRetraceMode::W_FIXED);
+}
 
 void task::get_profiles(){
 

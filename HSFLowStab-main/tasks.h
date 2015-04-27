@@ -21,7 +21,9 @@ namespace task{
 
 	void analyze_wchars(const std::string& fname);
 
-	void retrace_wplines_wfixed();
+	void retrace_wplines_wfixed_bfree();
+
+	void retrace_wplines_wfixed_bfixed();
 
 	void get_profiles();
 

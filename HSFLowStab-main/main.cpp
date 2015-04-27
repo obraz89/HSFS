@@ -86,24 +86,6 @@ int main(int argc, char* argv[]){
 		
 		task::init_glob_solvers();
 
-		// tmp. debug
-		//mf::t_GeomPoint test_xyz(0.08859,0.022,0.0);
-		//g_pStabSolver->setContext(test_xyz);return 0;
-		//g_pStabSolver->dumpProfileStab(_T("profiles_stab_test.dat"));
-
-		//double ff = g_pMFDomain->calc_bl_thick(test_xyz);
-		//std::cout<<"BL Thick:"<<ff<<"\n";
-
-		//std::cout<<"Dels="<<g_pStabSolver->get_stab_scales().Dels<<";"
-		//	     <<"UeDim="<<g_pStabSolver->get_stab_scales().UeDim
-		//		 <<"Me"<<g_pStabSolver->get_stab_scales().Me<<"\n";
-
-		//g_pStabSolver->setContext(mf::t_GeomPoint(0.458244,0.054810,0.0));
-		//return 0;
-
-		// tmp, debugging
-		//test::gs_lapack_vs_petsc();return 0;
-
 		task::init_stab_dbs();
 
 		switch (g_taskParams.id)
@@ -118,12 +100,45 @@ int main(int argc, char* argv[]){
 				task::search_max_instab_fixed_point_time(g_taskParams);
 				break;
 			default :
-				ssuGENTHROW(_T("Search Max Instab Local: Wrong Mode"));
+				wxString errMsg(_T("Error: Wrong Mode for Search Max Instab Local"));
+				wxLogError(errMsg);
 				break;
 			}
 			break;
 		case task::TTaskType::Retrace:
-			task::retrace_wplines_wfixed();
+			switch (g_taskParams.retrace_mode)
+			{
+			case stab::t_WPRetraceMode::W_FIXED:
+				switch (g_taskParams.spattime)
+				{
+				case task::TSpatTime::Spat:
+					task::retrace_wplines_wfixed_bfree();
+					break;
+				case task::TSpatTime::Time:
+				default :
+					wxString errMsg(_T("Error: Retrace with Time approach not implemented"));
+					wxLogError(errMsg);
+					break;
+				}
+				break;
+			case stab::t_WPRetraceMode::WB_FIXED:
+				switch (g_taskParams.spattime)
+				{
+				case task::TSpatTime::Spat:
+					task::retrace_wplines_wfixed_bfixed();
+					break;
+				case task::TSpatTime::Time:
+				default :
+					wxString errMsg(_T("Error: Retrace with Time approach not implemented"));
+					wxLogError(errMsg);
+					break;
+				}
+				break;
+			default:
+				wxString errMsg(_T("Error: provided retrace mode not implemented"));
+				wxLogError(errMsg);
+				break;
+			}
 			break;
 		case task::TTaskType::GetProfiles:
 			task::get_profiles();
@@ -132,6 +147,8 @@ int main(int argc, char* argv[]){
 			task::mpi_test();
 			break;
 		default:
+			wxString errMsg(_T("Error: provided task not implemented"));
+			wxLogError(errMsg);
 			break;
 		}
 	}
