@@ -136,7 +136,8 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib"
+				AdditionalOptions="/no-undefined"
+				AdditionalDependencies="wxbase28ud.lib wxmsw28ud_core.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(WX_DIR)/lib/$(WX_ARCH);$(OutDir)"
 				GenerateDebugInformation="true"

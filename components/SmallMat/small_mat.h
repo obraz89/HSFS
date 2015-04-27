@@ -26,13 +26,6 @@
 typedef std::complex<double>  t_Complex;
 typedef std::complex<double> t_CompVal;
 
-template<typename T> class t_Matrix;
-
-template<typename T> class t_Vec;
-template<typename T> class t_Vec3;
-
-template<typename T> class t_SqMatrix;
-template<typename T> class t_SqMat3;
 /************************************************************************/
 /* Basic linear algebra operators
 ** used to instantiate vectors of complex or double or smth constructable
@@ -64,9 +57,7 @@ namespace matrix{
 */
 /************************************************************************/
 
-template<typename T> class  t_Matrix;
-
-template<typename T> class t_Vec;
+template<typename T>  class t_Vec;
 
 template<typename T> class t_Matrix{
 protected:
@@ -74,6 +65,7 @@ protected:
 	const int _ncols, _nrows;
 	void _chk_col_ind(const int n) const;
 	void _chk_row_ind(const int n) const; 
+	t_Matrix& _set(const t_Matrix& a_mat);
 public:
 
 	t_Matrix(const int a_nVecs=0, const int a_nElemInVec=0, T val = 0.0);
@@ -89,6 +81,9 @@ public:
 	void set_col(int col, const t_Vec<T>& vec);
 	void setToZero();
 	t_Matrix& mul_by_factor(T val);
+	// set is alias for operator= 
+	// use when operator= can be ambiguous
+	t_Matrix& set(const t_Matrix& a_mat);
 	t_Matrix& operator=(const t_Matrix& a_mat);
 	const T* operator[](int n) const;
 
@@ -174,7 +169,7 @@ template<typename T> t_Matrix<T>& t_Matrix<T>::mul_by_factor(T val){
 	return *this;
 }
 
-template<typename T> t_Matrix<T>& t_Matrix<T>::operator =(const t_Matrix<T>& a_mat){
+template<typename T> inline t_Matrix<T>& t_Matrix<T>::_set(const t_Matrix<T>& a_mat){
 #ifdef _DEBUG
 	matrix::base::chk_size_match_add(*this, a_mat);
 #endif
@@ -184,6 +179,12 @@ template<typename T> t_Matrix<T>& t_Matrix<T>::operator =(const t_Matrix<T>& a_m
 	return *this;
 }
 
+template<typename T> t_Matrix<T>& t_Matrix<T>::set(const t_Matrix<T>& a_mat){
+	return this->_set(a_mat);
+};
+template<typename T> t_Matrix<T>& t_Matrix<T>::operator=(const t_Matrix<T>& a_mat){
+	return this->_set(a_mat);
+};
 /************************************************************************/
 /* Exceptions
 */
@@ -309,7 +310,7 @@ namespace matrix{
 			(const t_Matrix<t1>& l, const t_Matrix<t1>& r,
 			t_Matrix<typename TypeDeduce<t1,t2>::type>& ret){
 #ifdef _DEBUG
-				//typedef TypeDeduce<t1,t2>::type type; 
+				typedef TypeDeduce<t1,t2>::type type; 
 				chk_size_match_add<t1,t2>(l,r);
 				chk_size_match_add<t1,type>(l, ret);
 #endif
@@ -327,7 +328,7 @@ namespace matrix{
 			(const t_Matrix<t1>& l, const t_Matrix<t1>& r,
 			t_Matrix<typename TypeDeduce<t1,t2>::type>& ret){
 #ifdef _DEBUG
-				//typedef TypeDeduce<t1,t2>::type type; 
+				typedef TypeDeduce<t1,t2>::type type; 
 				chk_size_match_add<t1,t2>(l,r);
 				chk_size_match_add<t1,type>(l, ret);
 #endif
@@ -797,13 +798,13 @@ public:
 	t_SqMatrix<T> inverse() const;
 };
 
-template<typename T> t_SqMatrix<T>::t_SqMatrix<T>(const t_Matrix<T>& m){
+template<typename T> t_SqMatrix<T>::t_SqMatrix<T>(const t_Matrix<T>& m):t_Matrix<T>(m){
 #ifdef _DEBUG
 	if (m.nCols()!=m.nRows())		
 		ssuTHROW(matrix::t_NotSquare, 
 		_T("Square matrix error: init by non-square matrix"));
 #endif
-	(t_Matrix<T>&)*this = m;
+	//(t_Matrix<T>&)*this = m;
 }
 
 template<typename T> void t_SqMatrix<T>::_set_minor(t_SqMatrix<T>& ret, int row, int col) const{
