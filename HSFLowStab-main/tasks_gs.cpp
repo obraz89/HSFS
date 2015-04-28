@@ -24,12 +24,13 @@
 #include <time.h>
 
 using namespace hsstab;
+using namespace task;
 
 //******************************************************************************
 // spatial global search subroutines
 //******************************************************************************
 
-bool search_global_initial_wr_fixed_spat(const task::TTaskParams& task_params, double a_wr, t_WCharsLoc& ret_wave){
+bool search_global_initial_wr_fixed_spat(double a_wr, t_WCharsLoc& ret_wave){
 
 	// solvers Contexts must be already set here!
 
@@ -80,7 +81,7 @@ bool search_global_initial_wr_fixed_spat(const task::TTaskParams& task_params, d
 };
 
 
-void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_params){
+void task::search_max_instab_fixed_point_spat(int pid, t_GSWaveInfo& winfo){
 
 	double w_min = g_taskParams.w_ndim_min;
 	double w_max = g_taskParams.w_ndim_max;
@@ -93,21 +94,68 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 
 	t_WCharsLoc cur_max_wave;
 
-	int pave_pnt_ind = g_taskParams.pave_point_id;
-	if ( pave_pnt_ind>=g_pStabDB->get_npoints())
-	{
-		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
-		return;
+	max_waves_spat.resize(0);max_waves_spat.clear();
+
+	mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+	g_pStabSolver->setContext(xyz);
+
+	g_pGSSolverSpat->setContext(xyz);
+
+	for (int j=0; j<Nw; j++){
+
+		int perc_done = double(j)/double(Nw)*100;
+		wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
+
+		double cur_w = w_min + dw*j;
+
+		bool ok = search_global_initial_wr_fixed_spat(cur_w, cur_max_wave);
+
+		if (ok) {
+			max_waves_spat.push_back(cur_max_wave);
+		} else
+		{continue;}
+
+		// debug
+		/*
+		const t_WCharsLoc& lw = cur_max_wave;
+		fostr_all<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
+			<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()
+			<<"\n";
+		fostr_all.flush();
+		*/
+
 	}
 
-	int pid_s, pid_e;
-	if (pave_pnt_ind<0){
-		pid_s = 0;
-		pid_e = g_pStabDB->get_npoints()-1;
+	if (max_waves_spat.size()>0){
+		cur_max_wave = t_WCharsLoc::find_max_instab_spat(max_waves_spat);
+
+		winfo.wave = cur_max_wave;
+		t_WCharsLocDim wave_dim = cur_max_wave.make_dim();
+		winfo.ok = true;
+
+		const t_WCharsLoc& lw = winfo.wave;
+		const t_WCharsLocDim& ld = wave_dim;
+
+		/*
+		// after xyz write flag - is point ok or not
+		// to simplify reading for retrace
+
+		fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"<<ok<<"\t"
+			<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()<<"\t"
+			<<ld.a.real()<<"\t"<<ld.a.imag()<<"\t"<<ld.b.real()<<"\t"<<ld.b.imag()<<"\t"<<ld.w.real()<<"\t"<<ld.w.imag()
+			<<"\n";
+		*/
 	}else{
-		pid_s = pave_pnt_ind;
-		pid_e = pave_pnt_ind;
+		winfo.ok = 0;
+		/*fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<ok<<"\t"<<" --- Failed to find wave"<<"\n";*/
 	}
+
+	return;
+
+};
+
+void write_wave_to_db(const t_GSWaveInfo& info){
 
 	char fname[33];
 
@@ -117,82 +165,14 @@ void task::search_max_instab_fixed_point_spat(const task::TTaskParams& task_para
 	sprintf(fname, "%s/wchars_max_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
 	std::ofstream fostr_max(fname);
 
-	for (int pid=pid_s; pid<=pid_e; pid++){
-
-		if (pid_s!=pid_e){
-
-			int task_perc_done = double(pid-pid_s)/double(pid_e-pid_s)*100;
-			wxLogMessage(_T("\n=============Task : %d perc done =============\n"), task_perc_done);
-
-		}
-
-		max_waves_spat.resize(0);max_waves_spat.clear();
-
-		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
-
-		g_pStabSolver->setContext(xyz);
-
-		g_pGSSolverSpat->setContext(xyz);
-
-		for (int j=0; j<Nw; j++){
-
-			int perc_done = double(j)/double(Nw)*100;
-			wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
-
-			double cur_w = w_min + dw*j;
-
-			bool ok = search_global_initial_wr_fixed_spat(task_params, cur_w, cur_max_wave);
-
-			if (ok) {
-				max_waves_spat.push_back(cur_max_wave);
-			} else
-			{continue;}
-
-			// debug
-			const t_WCharsLoc& lw = cur_max_wave;
-			fostr_all<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
-				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()
-				<<"\n";
-			fostr_all.flush();
-
-		}
-
-		if (max_waves_spat.size()>0){
-			cur_max_wave = t_WCharsLoc::find_max_instab_spat(max_waves_spat);
-
-			t_WCharsLocDim ret_wave = cur_max_wave.make_dim();
-
-			const t_WCharsLoc& lw = cur_max_wave;
-			const t_WCharsLocDim& ld = ret_wave;
-
-			// after xyz write flag - is point ok or not
-			// to simplify reading for retrace
-
-			int ok = 1;
-
-			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"<<ok<<"\t"
-				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()<<"\t"
-				<<ld.a.real()<<"\t"<<ld.a.imag()<<"\t"<<ld.b.real()<<"\t"<<ld.b.imag()<<"\t"<<ld.w.real()<<"\t"<<ld.w.imag()
-				<<"\n";
-		}else{
-			int ok = 0;
-			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<ok<<"\t"<<" --- Failed to find wave"<<"\n";
-
-		}
-
-		fostr_max.flush();
+}
 
 
-	}
-
-	return;
-
-};
 //******************************************************************************
 // temporal global search subroutines
 //******************************************************************************
 
-bool search_global_initial_ar_fixed_time(const task::TTaskParams& task_params, double a_ar, t_WCharsLoc& ret_wave){
+bool search_global_initial_ar_fixed_time(double a_ar, t_WCharsLoc& ret_wave){
 
 	// solvers Contexts must be already set here!
 
@@ -244,7 +224,7 @@ bool search_global_initial_ar_fixed_time(const task::TTaskParams& task_params, d
 
 
 
-void task::search_max_instab_fixed_point_time(const task::TTaskParams& task_params){
+void task::search_max_instab_fixed_point_time(int pid, t_GSWaveInfo& winfo){
 
 	double a_min = g_taskParams.a_ndim_min;
 	double a_max = g_taskParams.a_ndim_max;
@@ -257,96 +237,39 @@ void task::search_max_instab_fixed_point_time(const task::TTaskParams& task_para
 
 	t_WCharsLoc cur_max_wave;
 
-	int pave_pnt_ind = g_taskParams.pave_point_id;
-	if ( pave_pnt_ind>=g_pStabDB->get_npoints())
-	{
-		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
-		return;
+	max_waves_time.resize(0);max_waves_time.clear();
+
+	mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+	g_pStabSolver->setContext(xyz);
+
+	g_pGSSolverTime->setContext(xyz);
+
+	for (int j=0; j<Na; j++){
+
+		int perc_done = double(j)/double(Na)*100;
+		wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
+
+		double cur_a = a_min + da*j;
+
+		bool ok = search_global_initial_ar_fixed_time(cur_a, cur_max_wave);
+
+		if (ok) {
+			max_waves_time.push_back(cur_max_wave);
+		} else
+		{continue;}
+
 	}
 
-	int pid_s, pid_e;
-	if (pave_pnt_ind<0){
-		pid_s = 0;
-		pid_e = g_pStabDB->get_npoints()-1;
+	if (max_waves_time.size()>0){
+
+		cur_max_wave = t_WCharsLoc::find_max_instab_time(max_waves_time);
+
+		winfo.wave = cur_max_wave;
+		winfo.ok = 1;
+
 	}else{
-		pid_s = pave_pnt_ind;
-		pid_e = pave_pnt_ind;
-	}
-
-	char fname[33];
-
-	sprintf(fname, "%s/wchars_all_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
-	std::ofstream fostr_all(fname);
-
-	sprintf(fname, "%s/wchars_max_loc.dat", hsstab::OUTPUT_DIR.ToAscii());
-	std::ofstream fostr_max(fname);
-
-	for (int pid=pid_s; pid<=pid_e; pid++){
-
-		if (pid_s!=pid_e){
-
-			int task_perc_done = double(pid-pid_s)/double(pid_e-pid_s)*100;
-			wxLogMessage(_T("\n=============Task : %d perc done =============\n"), task_perc_done);
-
-		}
-
-		max_waves_time.resize(0);max_waves_time.clear();
-
-		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
-
-		g_pStabSolver->setContext(xyz);
-
-		g_pGSSolverTime->setContext(xyz);
-
-		for (int j=0; j<Na; j++){
-
-			int perc_done = double(j)/double(Na)*100;
-			wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
-
-			double cur_a = a_min + da*j;
-
-			bool ok = search_global_initial_ar_fixed_time(task_params, cur_a, cur_max_wave);
-
-			if (ok) {
-				max_waves_time.push_back(cur_max_wave);
-			} else
-			{continue;}
-
-			// debug
-			const t_WCharsLoc& lw = cur_max_wave;
-			fostr_all<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"
-				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()
-				<<"\n";
-			fostr_all.flush();
-
-		}
-
-		if (max_waves_time.size()>0){
-			cur_max_wave = t_WCharsLoc::find_max_instab_time(max_waves_time);
-
-			t_WCharsLocDim ret_wave = cur_max_wave.make_dim();
-
-			const t_WCharsLoc& lw = cur_max_wave;
-			const t_WCharsLocDim& ld = ret_wave;
-
-			// after xyz write flag - is point ok or not
-			// to simplify reading for retrace
-
-			int ok = 1;
-
-			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"<<ok<<"\t"
-				<<lw.a.real()<<"\t"<<lw.a.imag()<<"\t"<<lw.b.real()<<"\t"<<lw.b.imag()<<"\t"<<lw.w.real()<<"\t"<<lw.w.imag()<<"\t"
-				<<ld.a.real()<<"\t"<<ld.a.imag()<<"\t"<<ld.b.real()<<"\t"<<ld.b.imag()<<"\t"<<ld.w.real()<<"\t"<<ld.w.imag()
-				<<"\n";
-		}else{
-			int ok = 0;
-			fostr_max<<pid<<"\t"<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<ok<<"\t"<<" --- Failed to find wave"<<"\n";
-
-		}
-
-		fostr_max.flush();
-
-
+		winfo.ok = 0;
 	}
 
 	return;
@@ -406,35 +329,93 @@ void t_MsgGSRec::write2file(std::wofstream& ofstr) const{
 
 };
 
+// generate gs message for a given pid and insert it into msg pack
+
+void search_max_instab(int pid, t_GSWaveInfo& winfo){
+
+	switch (g_taskParams.spattime)
+	{
+	case task::Spat:
+		search_max_instab_fixed_point_spat(pid, winfo);
+		break;
+	case task::Time:
+		search_max_instab_fixed_point_time(pid, winfo);
+		break;
+	default:
+		wxLogError(_T("Error: unknown spat-time option in search max instab"));
+		break;
+	}
+
+};
+
+void update_msg_pack(t_MsgPack& msg_pack, int pid){
+
+	t_MsgGSRec a_msg(msg_pack.get_msg(pid));
+
+	mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+	t_GSWaveInfo winfo;
+
+	search_max_instab(pid, winfo);
+
+	if(winfo.ok==1){
+
+		const t_WCharsLoc& lw = winfo.wave;
+		const t_WCharsLocDim ld = lw.make_dim();
+
+		// fill msg_flat, init msg and push to msg pack
+		a_msg[0] = g_pStabDB->get_global_pid(pid);
+		a_msg[1] = xyz.x();
+		a_msg[2] = xyz.y();
+		a_msg[3] = xyz.z();
+		a_msg[4] = winfo.ok;
+		a_msg[5] = lw.a.real();
+		a_msg[6] = lw.a.imag();
+		a_msg[7] = lw.b.real();
+		a_msg[8] = lw.b.imag();
+		a_msg[9] = lw.w.real();
+		a_msg[10]= lw.w.imag();
+		a_msg[11]= ld.a.real();
+		a_msg[12]= ld.a.imag();
+		a_msg[13]= ld.b.real();
+		a_msg[14]= ld.b.imag();
+		a_msg[15]= ld.w.real();
+		a_msg[16]= ld.w.imag();
+
+	}else{
+		double false_val = -1.0;
+		a_msg[0] = g_pStabDB->get_global_pid(pid);
+		a_msg[1] = xyz.x();
+		a_msg[2] = xyz.y();
+		a_msg[3] = xyz.z();
+		a_msg[4] = winfo.ok;
+		a_msg[5] = false_val;
+		a_msg[6] = false_val;
+		a_msg[7] = false_val;
+		a_msg[8] = false_val;
+		a_msg[9] = false_val;
+		a_msg[10]= false_val;
+		a_msg[11]= false_val;
+		a_msg[12]= false_val;
+		a_msg[13]= false_val;
+		a_msg[14]= false_val;
+		a_msg[15]= false_val;
+		a_msg[16]= false_val;
+
+	}
+
+}
+
 // testing mpi send-receive, remove when done
 
 void generate_msg_pack_gs(t_MsgPack & msg_pack){
-
-	// alias
-	const task::TTaskParams& task_params = g_taskParams;
-
-	double a_min = g_taskParams.a_ndim_min;
-	double a_max = g_taskParams.a_ndim_max;
-
-	int Na = g_taskParams.N_a;
-
-	double da = (a_max - a_min)/double(Na);
-
-	std::vector<t_WCharsLoc> max_waves_time;
-
-	t_WCharsLoc cur_max_wave;
 
 	int pave_pnt_ind = g_taskParams.pave_point_id;
 	if ( pave_pnt_ind>=g_pStabDB->get_npoints())
 	{
 		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
 		return;
-	}
-
-	// debug
-	int mpi_rank;
-	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-	wxLogMessage(_T("task params pid on worker %d : %d"), mpi_rank, g_taskParams.pave_point_id);
+	};
 
 	int pid_s, pid_e;
 	if (pave_pnt_ind<0){
@@ -455,82 +436,7 @@ void generate_msg_pack_gs(t_MsgPack & msg_pack){
 
 		}
 
-		max_waves_time.resize(0);max_waves_time.clear();
-
-		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(pid).xyz;
-
-		g_pStabSolver->setContext(xyz);
-
-		g_pGSSolverTime->setContext(xyz);
-
-		for (int j=0; j<Na; j++){
-
-			int perc_done = double(j)/double(Na)*100;
-			wxLogMessage(_T("\n=============SearchMax Loc : %d perc done =============\n"), perc_done);
-
-			double cur_a = a_min + da*j;
-
-			bool ok = search_global_initial_ar_fixed_time(task_params, cur_a, cur_max_wave);
-
-			if (ok) {
-				max_waves_time.push_back(cur_max_wave);
-			} else
-			{continue;}
-
-		}
-
-		t_MsgGSRec a_msg(msg_pack.get_msg(pid));
-
-		if (max_waves_time.size()>0){
-			cur_max_wave = t_WCharsLoc::find_max_instab_time(max_waves_time);
-
-			const int ok = 1;
-
-			t_WCharsLocDim ret_wave = cur_max_wave.make_dim();
-
-			const t_WCharsLoc& lw = cur_max_wave;
-			const t_WCharsLocDim& ld = ret_wave;
-
-			// fill msg_flat, init msg and push to msg pack
-			a_msg[0] = g_pStabDB->get_global_pid(pid);
-			a_msg[1] = xyz.x();
-			a_msg[2] = xyz.y();
-			a_msg[3] = xyz.z();
-			a_msg[4] = ok;
-			a_msg[5] = lw.a.real();
-			a_msg[6] = lw.a.imag();
-			a_msg[7] = lw.b.real();
-			a_msg[8] = lw.b.imag();
-			a_msg[9] = lw.w.real();
-			a_msg[10]= lw.w.imag();
-			a_msg[11]= ld.a.real();
-			a_msg[12]= ld.a.imag();
-			a_msg[13]= ld.b.real();
-			a_msg[14]= ld.b.imag();
-			a_msg[15]= ld.w.real();
-			a_msg[16]= ld.w.imag();
-
-		}else{
-			const int ok = 0; double false_val = -1.0;
-			a_msg[0] = g_pStabDB->get_global_pid(pid);
-			a_msg[1] = xyz.x();
-			a_msg[2] = xyz.y();
-			a_msg[3] = xyz.z();
-			a_msg[4] = ok;
-			a_msg[5] = false_val;
-			a_msg[6] = false_val;
-			a_msg[7] = false_val;
-			a_msg[8] = false_val;
-			a_msg[9] = false_val;
-			a_msg[10]= false_val;
-			a_msg[11]= false_val;
-			a_msg[12]= false_val;
-			a_msg[13]= false_val;
-			a_msg[14]= false_val;
-			a_msg[15]= false_val;
-			a_msg[16]= false_val;
-
-		}
+		update_msg_pack(msg_pack, pid);
 
 	}
 
@@ -555,63 +461,7 @@ void write_msg_pack_gs(const t_MsgPack& msg_pack, std::wofstream& ofstr){
 
 }
 
-void task::mpi_test(){
-
-	/*
-	double w_min = g_taskParams.w_ndim_min;
-	double w_max = g_taskParams.w_ndim_max;
-
-	int Nw = g_taskParams.N_w;
-
-	double dw = (w_max - w_min)/double(Nw);
-
-	std::vector<t_WCharsLoc> max_waves_spat;
-
-	t_WCharsLoc cur_max_wave;
-
-	int mpi_rank, mpi_size;
-
-	MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-
-	int pid_s_glob, pid_e_glob, pid_n_glob;
-	int pid_s_loc, pid_e_loc;
-
-	pid_s_glob = 0;
-	pid_n_glob = g_pStabDB->get_npoints();
-	pid_e_glob = pid_n_glob - 1;
-
-	wxLogMessage(_T("rank=%d, size=%d"), mpi_rank, mpi_size);
-
-	const int nAvg   = pid_n_glob / mpi_size;
-	const int nResdl = pid_n_glob % mpi_size;
-
-	wxLogMessage(_T("avg=%d, resid=%d"), nAvg, nResdl);
-
-	for( int r = 0; r < mpi_size; ++r )
-	{
-		int bs = r * nAvg + ((r<nResdl) ?r :nResdl);
-		int be = bs + nAvg + ((r<nResdl) ?1 :0) - 1;
-
-		pid_s_loc = bs;
-		pid_e_loc = be;
-
-		wxLogMessage( _("* MPI rank %d owns range : %d-%d"), mpi_rank, bs, be );
-
-	}
-	//==========================
-
-	char fname[33];
-
-	for (int pid=pid_s_loc; pid<=pid_e_loc; pid++){
-
-		// do some job, collect on master and output...
-
-
-	}
-
-	return;
-	*/
+void task::do_global_search(){
 
 	int  numtasks, rank, len, rc; 
 	char hostname[MPI_MAX_PROCESSOR_NAME];
@@ -650,7 +500,7 @@ void task::mpi_test(){
 
 		MPI_Status status;
 
-		std::wofstream ofstr("output.txt");
+		std::wofstream ofstr("output/wchars_max_loc.dat");
 
 
 //		calcs are done on master too, write them

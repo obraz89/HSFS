@@ -91,19 +91,7 @@ int main(int argc, char* argv[]){
 		switch (g_taskParams.id)
 		{
 		case task::TTaskType::SearchInstabLoc:
-			switch (g_taskParams.spattime)
-			{
-			case task::TSpatTime::Spat:
-				task::search_max_instab_fixed_point_spat(g_taskParams);
-				break;
-			case task::TSpatTime::Time:
-				task::search_max_instab_fixed_point_time(g_taskParams);
-				break;
-			default :
-				wxString errMsg(_T("Error: Wrong Mode for Search Max Instab Local"));
-				wxLogError(errMsg);
-				break;
-			}
+			task::do_global_search();
 			break;
 		case task::TTaskType::Retrace:
 			switch (g_taskParams.retrace_mode)
@@ -144,7 +132,7 @@ int main(int argc, char* argv[]){
 			task::get_profiles();
 			break;
 		case task::MPITest:
-			task::mpi_test();
+			task::do_global_search();
 			break;
 		case task::GetAmplitudeFuncs:
 			task::get_amplitude_funcs();

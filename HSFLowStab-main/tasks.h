@@ -4,6 +4,7 @@
 #pragma once
 
 #include "settings.h"
+#include "WaveChars.h"
 
 // create global solver and keep them 
 
@@ -14,10 +15,15 @@ namespace task{
 	void destroy_glob_solvers();
 
 	void init_stab_dbs();
-	
-	void search_max_instab_fixed_point_spat(const task::TTaskParams& task_params);
 
-	void search_max_instab_fixed_point_time(const task::TTaskParams& task_params);
+	struct t_GSWaveInfo{
+		t_WCharsLoc wave;
+		int ok;
+	};
+	
+	void search_max_instab_fixed_point_spat(int pid, t_GSWaveInfo& winfo);
+
+	void search_max_instab_fixed_point_time(int pid, t_GSWaveInfo& winfo);
 
 	void analyze_wchars(const std::string& fname);
 
@@ -29,7 +35,7 @@ namespace task{
 
 	void get_profiles();
 
-	void mpi_test();
+	void do_global_search();
 
 
 }
