@@ -161,7 +161,7 @@ bool load_Settings_n_Plugins()
 		g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
 	}
 
-	if (g_taskParams.id = task::GetAmplitudeFuncs){
+	if (g_taskParams.id == task::GetAmplitudeFuncs){
 			g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
 	}
 
