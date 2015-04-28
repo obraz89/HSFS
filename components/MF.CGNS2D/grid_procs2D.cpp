@@ -212,7 +212,7 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 			int n = (i - blk.is) + (j - blk.js)*nx0;
 			node.x = x[n];
 			node.y = y[n];
-			node.Rw = HUGE_VAL;
+			//node.Rw = HUGE_VAL;
 		}
 
 		delete[] x, y;

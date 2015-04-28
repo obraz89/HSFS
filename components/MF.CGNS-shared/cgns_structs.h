@@ -53,14 +53,15 @@ namespace mf{
 			double x, y;
 
 			// Direct 2D metric coefficients d{x,y}/d{ksi,eta}
-			double x_dksi, x_deta;
-			double y_dksi, y_deta;
+			//double x_dksi, x_deta;
+			//double y_dksi, y_deta;
 
-			double jac;  // transformation Jacobian det[d(x,y)/d(ksi,eta)]
+			//double jac;  // transformation Jacobian det[d(x,y)/d(ksi,eta)]
 
-			double Rw;   // distance to the nearest wall
+			//double Rw;   // distance to the nearest wall
 
 			// Inverse 2D metric coefficients d{ksi,eta}/d{x,y}
+			/*
 			struct inv
 			{
 				double ksi_dx, ksi_dy;
@@ -78,15 +79,15 @@ namespace mf{
 					x_dksi / jac   // eta_dy
 				};
 				return D;
-			}
+			}*/
 		};
 
 		// Data for a 2D grid cell
 		struct TgridCell2D
 		{
 			Tmtr2D ij;    //(i    , j    )
-			Tmtr2D i05j;  //(i+1/2, j    )
-			Tmtr2D ij05;  //(i    , j+1/2)
+			//Tmtr2D i05j;  //(i+1/2, j    )
+			//Tmtr2D ij05;  //(i    , j+1/2)
 		};
 		//-----------------------------------------------------------------------------
 
@@ -96,15 +97,16 @@ namespace mf{
 			double x, y, z;
 
 			// Direct 3D metric coefficients d{x,y,z}/d{ksi,eta,zeta}
-			double x_dksi, x_deta, x_dzet;
-			double y_dksi, y_deta, y_dzet;
-			double z_dksi, z_deta, z_dzet;
+			//double x_dksi, x_deta, x_dzet;
+			//double y_dksi, y_deta, y_dzet;
+			//double z_dksi, z_deta, z_dzet;
 
-			double jac;  // transformation Jacobian
+			//double jac;  // transformation Jacobian
 
-			double Rw;   // distance to the nearest wall
+			//double Rw;   // distance to the nearest wall
 
 			// Inverse 3D metric coefficients d{ksi,eta}/d{x,y}
+			/*
 			struct inv
 			{
 				double ksi_dx, ksi_dy, ksi_dz;
@@ -129,16 +131,16 @@ namespace mf{
 					( x_dksi*y_deta - x_deta*y_dksi)/jac   // zet_dz 
 				};
 				return D;
-			}
+			}*/
 		};
 
 		// Data for a 3D grid cell
 		struct TgridCell3D
 		{
 			Tmtr3D ijk;    // (i,     j,     k)
-			Tmtr3D i05jk;  // (i+1/2, j,     k)
-			Tmtr3D ij05k;  // (i,     j+1/2, k)
-			Tmtr3D ijk05;  // (i,     j,     k+1/2)
+			//Tmtr3D i05jk;  // (i+1/2, j,     k)
+			//Tmtr3D ij05k;  // (i,     j+1/2, k)
+			//Tmtr3D ijk05;  // (i,     j,     k+1/2)
 		};
 		//-----------------------------------------------------------------------------
 

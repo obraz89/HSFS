@@ -230,7 +230,7 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 			node.x = x[n];
 			node.y = y[n];
 			node.z = z[n];
-			node.Rw = HUGE_VAL;
+			//node.Rw = HUGE_VAL;
 		}
 
 			delete[] x, y, z;
