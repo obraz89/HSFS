@@ -937,10 +937,11 @@ bool t_StabSolver::searchWave
 		// TODO: maybe in some cases B_MODE, how to switch ?
 		if (task_mode==stab::t_TaskTreat::SPAT){
 			wxString msg(_T("PF.LS: W_FIXED implemented only for TIME approach"));
-			wxLogError(msg);
+			wxLogError(msg); return false;
 		}else{
 			return getEigenWFixed(cond.wchars.w.real(), wchars, t_StabSolver::A_MODE);
 		} ;
+		break;
 
 	case (stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED):
 		return adjustLocal(wchars, W_MODE);
@@ -957,6 +958,8 @@ bool t_StabSolver::searchWave
 	default:
 		throw t_NotImplemented();
 	}
+
+	return false;
 
 };
 

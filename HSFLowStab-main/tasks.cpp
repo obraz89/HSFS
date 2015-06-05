@@ -280,7 +280,7 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 	return false;
 };
 
-void retrace_wplines_cond(const stab::t_LSCond& a_cond, stab::t_WPRetraceMode a_mode_retrace){
+void retrace_wplines_cond(stab::t_WPRetraceMode a_mode_retrace){
 
 	wxChar szFname[64];
 
@@ -294,13 +294,27 @@ void retrace_wplines_cond(const stab::t_LSCond& a_cond, stab::t_WPRetraceMode a_
 
 	std::wstring fout_maxnfactor_path(szFname);
 
-	int npave_pts = g_pStabDB->get_npoints();
-
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*g_pMFDomain);
 	wp_line->init(G_Plugins.get_plugin(plgWPTrack));
 
-	for (int pid=0; pid<npave_pts; pid++){
+	int pid_s, pid_e;
+
+	if (g_taskParams.pave_point_id>=0){
+
+		pid_s=g_taskParams.pave_point_id;
+
+		pid_e=pid_s;
+
+	}else{
+
+		pid_s=0;
+
+		pid_e=g_pStabDB->get_npoints()-1;
+
+	};
+
+	for (int pid=pid_s; pid<=pid_e; pid++){
 
 		try{
 
@@ -310,6 +324,7 @@ void retrace_wplines_cond(const stab::t_LSCond& a_cond, stab::t_WPRetraceMode a_
 
 			g_pStabSolver->setContext(test_xyz);
 
+			// TODO: for now GS is always spat, should be read from gs file later
 			t_WCharsLoc w_init;w_init.set_treat(stab::t_TaskTreat::SPAT);
 
 			bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
@@ -320,14 +335,17 @@ void retrace_wplines_cond(const stab::t_LSCond& a_cond, stab::t_WPRetraceMode a_
 				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
 
 
-			g_pStabSolver->searchWave(w_init, a_cond, stab::t_TaskTreat::SPAT);
+			// TODO: pass w_init as is to retrace!
+			//stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED)
+			//g_pStabSolver->searchWave(w_init, cond, stab::t_TaskTreat::SPAT);
+			//g_pStabSolver->calcGroupVelocity(w_init);
 
 			w_init.set_scales(g_pStabSolver->get_stab_scales());
 
 			// TODO: WPLine ids
 			if (w_init.a.imag()<0.0){
 
-				int perc_complete = double(pid)/double(npave_pts)*100.;
+				int perc_complete = double(pid)/double(pid_e-pid_s+1)*100.;
 				wxLogMessage(_T("start retrace WPLine for point = %d, completed %d perc"), pid, perc_complete);
 
 				std::wcout<<_T("Init for wpline:")<<w_init; 
@@ -369,14 +387,16 @@ void retrace_wplines_cond(const stab::t_LSCond& a_cond, stab::t_WPRetraceMode a_
 
 void task::retrace_wplines_wfixed_bfixed(){
 	
-	stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED);
-	retrace_wplines_cond(cond, stab::t_WPRetraceMode::WB_FIXED);
+	//stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED);
+	//retrace_wplines_cond(cond, stab::t_WPRetraceMode::WB_FIXED);
+	retrace_wplines_cond(stab::t_WPRetraceMode::WB_FIXED);
 }
 
 void task::retrace_wplines_wfixed_bfree(){
 
-	stab::t_LSCond cond(stab::t_LSCond::W_FIXED);
-		retrace_wplines_cond(cond, stab::t_WPRetraceMode::W_FIXED);
+	//stab::t_LSCond cond(stab::t_LSCond::W_FIXED);
+	//retrace_wplines_cond(cond, stab::t_WPRetraceMode::W_FIXED);
+	retrace_wplines_cond(stab::t_WPRetraceMode::W_FIXED);
 }
 
 void task::get_amplitude_funcs(){

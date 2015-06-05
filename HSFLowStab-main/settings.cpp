@@ -131,17 +131,23 @@ bool load_Settings_n_Plugins()
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
 
-	wxString strTaskType = conf->Read(_T("task_type"), task::TaskNames[task::SearchInstabLoc]);
+	wxString strTaskType; 
+
+	conf->Read(_T("task_type"), &strTaskType, task::TaskNames[task::SearchInstabLoc]);
+
 	conf->Flush();
 	
 	g_taskParams.id = get_task_id(strTaskType);
 
-	wxString strSpatTime = conf->Read(_T("SpatOrTimeApproach"), task::SpatTimeNames[task::Spat]);
+	wxString strSpatTime;
+
+	conf->Read(_T("SpatOrTimeApproach"), &strSpatTime, task::SpatTimeNames[task::Spat]);
+
 	g_taskParams.spattime = get_spattime_id(strSpatTime);
 
-	g_taskParams.pave_grd_fname = conf->Read(_T("pave_points_fname"), _T("pave_points.dat"));
+	conf->Read(_T("pave_points_fname"), &g_taskParams.pave_grd_fname, _T("pave_points.dat"));
 
-	int zero=0;
+	const int zero=0;
 
 	if (g_taskParams.id==task::SearchInstabLoc || g_taskParams.id == task::MPITest){
 
@@ -158,24 +164,21 @@ bool load_Settings_n_Plugins()
 		conf->Read(_T("w_ndim_max"), &g_taskParams.w_ndim_max, 1.0e+00);
 		g_taskParams.N_w = conf->Read(_T("N_w"), 10);
 
-		g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
+		conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);
 	}
 
 	if (g_taskParams.id == task::GetAmplitudeFuncs){
-			g_taskParams.pave_point_id = conf->Read(_T("pave_point_id"), zero);
+			conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);
 	}
 
 	if (g_taskParams.id==task::Retrace)
 	{
-		conf->Read(_T("w_ndim_min"), &g_taskParams.w_ndim_min, 2.4);
-		conf->Read(_T("w_ndim_max"), &g_taskParams.w_ndim_max, 2.8);
-		g_taskParams.N_w = conf->Read(_T("N_w"), 10);
+		conf->Read(_T("retrace_mode"), &g_taskParams.retrace_mode, zero);
 
-		conf->Read(_T("b_ndim_min"), &g_taskParams.b_ndim_min, 0.0);
-		conf->Read(_T("b_ndim_max"), &g_taskParams.b_ndim_max, 1.0);
-		g_taskParams.N_b = conf->Read(_T("N_b"), 10);
+		conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);
 
-		g_taskParams.retrace_mode = conf->Read(_T("retrace_mode"), zero);
+		conf->Flush();
+
 	}
 
 	delete conf;
