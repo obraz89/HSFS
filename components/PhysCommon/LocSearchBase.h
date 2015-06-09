@@ -146,6 +146,8 @@ namespace stab{
 
 		virtual t_WCharsLoc searchMaxInstab(const t_WCharsLoc& init_wave)=0;
 
+		virtual const t_StabScales& get_stab_scales() const =0;
+
 	};
 };
 

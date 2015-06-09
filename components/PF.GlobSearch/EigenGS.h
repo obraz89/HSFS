@@ -105,6 +105,8 @@ namespace pf{
 
 		t_WCharsLoc searchMaxInstabFixed(t_Mode mode, double fixed_val);
 
+		const t_StabScales& get_stab_scales() const;
+
 	};
 
 };		// ~namespace pf

@@ -608,6 +608,7 @@ std::vector<t_WCharsLoc> t_EigenGS::getInstabModes(const t_WCharsLoc& init_wave)
 				init_wave.b = _beta;
 				init_wave.w = *it;
 				init_wave.set_treat(stab::t_TaskTreat::TIME);
+				init_wave.set_scales(get_stab_scales());
 				inits.push_back(init_wave);
 			}
 		}
@@ -678,5 +679,9 @@ t_WCharsLoc t_EigenGS::searchMaxInstabFixed(t_Mode mode, double fixed_val){
 
 	return t_WCharsLoc::find_max_instab_time(all_initials);
 
+};
+
+const t_StabScales& t_EigenGS::get_stab_scales() const{
+	return _profStab.scales();
 };
 

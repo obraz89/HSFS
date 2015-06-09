@@ -683,6 +683,7 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 				wave.b = _beta;
 				wave.w = _w;
 				wave.set_treat(stab::t_TaskTreat::SPAT);
+				wave.set_scales(get_stab_scales());
 				inits.push_back(wave);
 			}
 		}
@@ -692,4 +693,8 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 t_WCharsLoc t_GlobSrchSpat::searchMaxInstab(const t_WCharsLoc& init_wave){
 	const std::vector<t_WCharsLoc>& all_initials = getInstabModes(init_wave);
 	return t_WCharsLoc::find_max_instab_spat(all_initials);
+};
+
+const t_StabScales& t_GlobSrchSpat::get_stab_scales() const{
+	return _profStab.scales();
 };

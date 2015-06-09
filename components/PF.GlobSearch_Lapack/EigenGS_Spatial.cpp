@@ -516,6 +516,19 @@ int t_GlobSrchSpat::_solve(){
 		_B_G[i] = getMKLCmplx(0.0,0.0);
 	}
 
+	for (int i=0; i<_LWork_G; i++){
+		_Work_G[i] = getMKLCmplx(0.0,0.0);;
+	}
+
+	for (int i=0; i<3*_LWork_G; i++){
+		_RWork_G[i] = 0.0;
+	}
+
+	for (int i=0; i<_NDIM_G; i++){
+		_Alpha_G[i] = getMKLCmplx(0.0,0.0);;
+		_Beta_G[i] = getMKLCmplx(0.0,0.0);;
+	}
+
 	// fill A~ and B~ by rows
 	// first block - bc,bc,fo,bc,bc
 	int row_num=0;
@@ -680,6 +693,7 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 				wave.b = _beta;
 				wave.w = _w;
 				wave.set_treat(stab::t_TaskTreat::SPAT);
+				wave.set_scales(get_stab_scales());
 				inits.push_back(wave);
 			}
 		}
@@ -689,4 +703,8 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 t_WCharsLoc t_GlobSrchSpat::searchMaxInstab(const t_WCharsLoc& init_wave){
 	const std::vector<t_WCharsLoc>& all_initials = getInstabModes(init_wave);
 	return t_WCharsLoc::find_max_instab_spat(all_initials);
+};
+
+const t_StabScales& t_GlobSrchSpat::get_stab_scales() const{
+	return _profStab.scales();
 };

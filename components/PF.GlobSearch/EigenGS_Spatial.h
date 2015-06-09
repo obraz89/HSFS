@@ -98,6 +98,8 @@ namespace pf{
 
 		// ~AVF profiles section
 
+		const t_StabScales& get_stab_scales() const;
+
 	};
 
 };		// ~namespace pf
