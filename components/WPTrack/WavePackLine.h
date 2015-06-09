@@ -78,8 +78,11 @@ namespace pf{
 		void _add_node(t_RecArray& add_to, const mf::t_Rec& fld_rec, 
 			const t_WCharsGlob& wave_chars);
 
-		void _retrace_dir_w(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+		void _retrace_dir_w_time(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, t_Direction direction);
+
+		void _retrace_dir_w_spat(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, t_Direction direction);
 
 		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
