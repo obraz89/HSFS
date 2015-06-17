@@ -12,6 +12,9 @@ namespace test{
 
 	void king_m35_generate_pave_points();
 
+	void check_wave_spoint();
+	void check_gs_spoint();
+
 	void transhyb_base_08();
 	void transhyb_base_wartman();
 	void profile_compar();

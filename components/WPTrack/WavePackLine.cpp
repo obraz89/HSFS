@@ -160,15 +160,23 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t
 
 }
 
-void calc_ai_db_derivs(const t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
+bool calc_ai_db_derivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
 							 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, double a_darg){
+
+	 bool ok=true;
 
 	 stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED);
 	
 	 std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(wave);
 
 	 std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
-	 t_WCharsLoc base_wave = t_WCharsLoc::find_max_instab_spat(filt_waves);
+
+	 t_WCharsLoc base_wave;
+
+	 if (filt_waves.size()>0){
+		base_wave = t_WCharsLoc::find_max_instab_spat(filt_waves);
+	 }else{return false;};
+
 	 double c_val = base_wave.a.imag();
 
 	 t_WCharsLoc rgt_wave = base_wave;
@@ -186,6 +194,10 @@ void calc_ai_db_derivs(const t_WCharsLoc& wave, double& dai_dbr, double& d2ai_db
 	 d2ai_dbr2 = (r_val - 2.0*c_val + l_val)/(a_darg*a_darg);
 
 	 wxLogMessage(_T("Fun=%f; Deriv=%f"), dai_dbr, d2ai_dbr2);
+
+	 wave = base_wave;
+
+	 return true;
 	
 }
 
@@ -196,7 +208,7 @@ void calc_ai_db_derivs(const t_WCharsLoc& wave, double& dai_dbr, double& d2ai_db
 // use spatial approach to find zero of f(br) = dai/dbr
 bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave, 
 						stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver){
-// try Newton procedure like in adjust local...
+	bool ok = true;
 	const int max_iters = 100;
 
 	// TODO: emprics, move to config when tested
@@ -212,7 +224,9 @@ bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave,
 
 	for (int i=0; i<max_iters; i++){
 		// do gs when making large newton iteration step
-		calc_ai_db_derivs(max_wave, fun, fun_deriv, loc_solver, gs_solver, d_arg);
+		ok = ok && calc_ai_db_derivs(max_wave, fun, fun_deriv, loc_solver, gs_solver, d_arg);
+
+		if (!ok) return false;
 
 		// check if we are converged
 		if (abs(fun)<tol){
@@ -225,8 +239,7 @@ bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave,
 		max_wave.b = base_wave.b - fun/fun_deriv;
 	};
 	wxLogMessage(_T("Error: search max ai vs br - no convergence\n"));
-	// TODO: debug!
-	//ssuGENTHROW(_T("Test"));
+
 	max_wave = backup;
 	return false;
 
@@ -387,7 +400,10 @@ void t_WavePackLine::_retrace_dir_w_spat(t_GeomPoint start_from, t_WCharsLoc ini
 	 init_wave.set_scales(loc_solver.get_stab_scales());
 
 	 t_WCharsLoc start_wave_const = init_wave;
-	 search_max_ai_spat(start_wave_const, init_wave, loc_solver, gs_solver);
+	 if (!search_max_ai_spat(start_wave_const, init_wave, loc_solver, gs_solver)){
+		 wxLogError(_T("Error: search max ai failed, break retrace for wpline"));
+		 return;
+	 };
 	 loc_solver.calcGroupVelocity(init_wave);
 
 	 t_WCharsLoc last_wchars_loc = init_wave;
@@ -436,17 +452,20 @@ void t_WavePackLine::_retrace_dir_w_spat(t_GeomPoint start_from, t_WCharsLoc ini
 		 log_my::wxLogMessageStd(ostr.str());
 		 ostr.str(_T(""));ostr.clear();
 
+		 bool ok;
 		 try
 		 {
 			 //loc_solver.searchMaxWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
 			 t_WCharsLoc start_wave = new_wave_chars;
-			 search_max_ai_spat(start_wave, new_wave_chars, loc_solver, gs_solver);
+			 ok = search_max_ai_spat(start_wave, new_wave_chars, loc_solver, gs_solver);
 		 }
 		 catch (...)
 		 {
 			 wxLogMessage(_T("Error: retrace step failed [w=fixed, treat=spat]"));
 			 break;
 		 }
+
+		 if (!ok) break;
 
 //		 loc_solver.calcGroupVelocity(new_wave_chars);
 //		 new_wave_chars.set_scales(loc_solver.get_stab_scales());

@@ -238,6 +238,7 @@ t_WCharsLoc t_WCharsLoc::find_max_instab_spat(const std::vector<t_WCharsLoc>& ve
 		}
 		return *pmax;
 	}else{
+		wxLogError(_T("Error: find max instab spat - no candidates!"));
 		return t_WCharsLoc();
 	}
 }
