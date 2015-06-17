@@ -19,7 +19,7 @@ struct TgenericSettings
 
 namespace task{
 
-	enum TTaskType { SearchInstabLoc=0, Retrace, MaxInstabLine, AnalyzeWChars, GetProfiles, MPITest, GetAmplitudeFuncs, TaskNum};
+	enum TTaskType { SearchInstabLoc=0, Retrace, MaxInstabLine, AnalyzeWChars, GetProfiles, MPITest, GetAmplitudeFuncs, GetMFChars, TaskNum};
 
 	extern wxString TaskNames[TaskNum];
 

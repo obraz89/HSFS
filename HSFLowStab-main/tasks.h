@@ -37,5 +37,7 @@ namespace task{
 
 	void do_global_search();
 
+	void calc_Cp_etc();
+
 
 }

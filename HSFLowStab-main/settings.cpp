@@ -127,6 +127,7 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::GetProfiles] = _T("GetProfiles");
 	task::TaskNames[task::MPITest] = _T("MPITest");
 	task::TaskNames[task::GetAmplitudeFuncs] = _T("GetAmplitudeFuncs");
+	task::TaskNames[task::GetMFChars] = _T("CalcCp");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");

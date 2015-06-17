@@ -982,6 +982,7 @@ void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab:
 			wchars.w.real(cond.wchars.w.real());
 			wchars = _getStationaryMaxInstabTime(wchars);
 		}else{
+			//_getMaxInstabAlpha_Spat(wchars);
 			throw t_NotImplemented();
 		}
 		return;

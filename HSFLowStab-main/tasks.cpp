@@ -525,3 +525,30 @@ void task::get_profiles(){
 	}
 
 }
+
+void task::calc_Cp_etc(){
+
+	int npts = g_pStabDB->get_npoints();
+
+	if (npts<=0) wxLogError(_T("Err: No points provided to calc mf chars profiles from..."));
+
+	const mf::t_FldParams& prms = g_pMFDomain->get_mf_params();
+
+	double gM2 = prms.Gamma*prms.Mach*prms.Mach;
+
+	std::ofstream ofstr("output/cp.dat");
+
+	for (int j=0; j<npts; j++){
+
+		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
+
+		mf::t_Rec rec = g_pMFDomain->get_rec(xyz);
+
+		double Cp = 2.0*(rec.p - 1./gM2);
+
+		ofstr<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"<<Cp<<"\n";
+		ofstr.flush();
+
+	}
+
+}
