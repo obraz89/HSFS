@@ -386,6 +386,7 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 };
 
 // TODO: works only for grids nearly orthogonal to viscous wall 
+// TODO: inout bl_thick is for y_ref !!!
 void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
 					t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
 
@@ -425,7 +426,16 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 	get_rec(blk, i, j, k, cur_rec);
 	wall_xyz.set(cur_rec);
 
+	// first find max deriv
+	// then find reference point where dudy = eps*dudy_max : y = dd
+	// then find outer record y_out = thick_coef*dd
 	bool searching_max = true;
+	bool searching_ref = true;
+
+	double y_ref;
+
+	t_ZoneNode ref_znode;
+
 	for (int m=0; m<grd_line.nnodes-1; m++) 
 	{
 
@@ -461,8 +471,47 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 		}else{
 
 			double eps = _profile_cfg.DerivThreshold;
+
+			if (searching_ref){
+
+				if (du_dy<eps*du_dy_max){
+					searching_ref = false;
+
+					ref_znode.iZone = surf_znode.iZone;
+					ref_znode.iNode.set(i,j,k);
+
+					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+					y_ref = dr.norm();
+					bl_thick = y_ref;	
+
+					continue;
+				}
+				
+
+			}else{
+
+				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+				double cur_dd = dr.norm();
+				// IMPORTANT TODO: passing thick coef !!!
+				if (cur_dd>=_profile_cfg.ThickCoefDefault*y_ref){
+
+					outer_znode.iZone = surf_znode.iZone;
+					outer_znode.iNode.set(i,j,k);
+
+					return;
+
+				}
+
+			}
+/*
+			double eps = _profile_cfg.DerivThreshold;
 			if (du_dy<eps*du_dy_max){
 
+				// IMPORTANT TODO: 
+				// here we found not "outer" znode but znode at dd away from wall
+				// outer should be at max_bl_thick_coef*dd !!!
 				outer_znode.iZone = surf_znode.iZone;
 				outer_znode.iNode.set(i,j,k);
 
@@ -473,10 +522,13 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 				break;
 
 			};
+*/
 
 		}
 
 	};
+
+	wxLogError(_T("Error: Zone boundary reached while searching BL bound & outer rec"));
 
 };
 
