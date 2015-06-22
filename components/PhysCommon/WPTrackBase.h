@@ -48,6 +48,10 @@ namespace stab{
 		// not a "wave packet" in fact 
 		WB_FIXED,
 
+		// retrace with dimensional w*=fixed and b*~1/r
+		// works only for "conical" configurations
+		WBRAD_FIXED,
+
 		// envelope retrace
 		ENVELOPE
 		

@@ -33,6 +33,8 @@ namespace task{
 
 	void retrace_wplines_wfixed_bfixed();
 
+	void retrace_wplines_wfixed_b_rad_fixed();
+
 	void get_profiles();
 
 	void do_global_search();

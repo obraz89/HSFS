@@ -20,6 +20,9 @@ using namespace std;
 
 bool load_Settings_n_Plugins();
 
+//debug
+
+
 int main(int argc, char* argv[]){
 	int err = 0;
 
@@ -86,6 +89,8 @@ int main(int argc, char* argv[]){
 		
 		task::init_glob_solvers();
 
+		//test::check_gs_spoint(); goto finish;
+
 		task::init_stab_dbs();
 
 		switch (g_taskParams.id)
@@ -117,7 +122,20 @@ int main(int argc, char* argv[]){
 					break;
 				case task::TSpatTime::Time:
 				default :
-					wxString errMsg(_T("Error: Retrace with Time approach not implemented"));
+					wxString errMsg(_T("Error: Current retrace mode with Time approach not implemented"));
+					wxLogError(errMsg);
+					break;
+				}
+				break;
+			case stab::t_WPRetraceMode::WBRAD_FIXED:
+				switch (g_taskParams.spattime)
+				{
+				case task::TSpatTime::Spat:
+					task::retrace_wplines_wfixed_b_rad_fixed();
+					break;
+				case task::TSpatTime::Time:
+				default :
+					wxString errMsg(_T("Error: Current retrace mode with Time approach not implemented"));
 					wxLogError(errMsg);
 					break;
 				}
@@ -136,6 +154,9 @@ int main(int argc, char* argv[]){
 			break;
 		case task::GetAmplitudeFuncs:
 			task::get_amplitude_funcs();
+			break;
+		case task::GetMFChars:
+			task::calc_Cp_etc();
 			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));

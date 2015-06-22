@@ -23,6 +23,7 @@ void t_WPLineParams::init_supported_options(){
 		RETRACE_MODES_STR.clear();
 		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("W_FIXED")), stab::t_WPRetraceMode::W_FIXED));
 		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WB_FIXED")), stab::t_WPRetraceMode::WB_FIXED));
+		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WBRAD_FIXED")), stab::t_WPRetraceMode::WBRAD_FIXED));
 		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("ENVELOPE")), stab::t_WPRetraceMode::ENVELOPE));
 
 		MARCH_OPTS_STR.clear();
@@ -66,6 +67,10 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 
 	case stab::t_WPRetraceMode::WB_FIXED:
 		params.RetraceMode = stab::t_WPRetraceMode::WB_FIXED;
+		break;
+
+	case stab::t_WPRetraceMode::WBRAD_FIXED:
+		params.RetraceMode = stab::t_WPRetraceMode::WBRAD_FIXED;
 		break;
 
 	default:

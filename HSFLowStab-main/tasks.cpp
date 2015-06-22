@@ -399,6 +399,10 @@ void task::retrace_wplines_wfixed_bfree(){
 	retrace_wplines_cond(stab::t_WPRetraceMode::W_FIXED);
 }
 
+void task::retrace_wplines_wfixed_b_rad_fixed(){
+	retrace_wplines_cond(stab::t_WPRetraceMode::WBRAD_FIXED);
+}
+
 void task::get_amplitude_funcs(){
 
 	int npave_pts = g_pStabDB->get_npoints();

@@ -87,6 +87,9 @@ namespace pf{
 		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
 
+		void _retrace_dir_wb_rad(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
+
 		bool _is_unstable(const t_WCharsLoc&) const;
 		bool _near_leading_edge() const;
 		bool _proceed_retrace(const mf::t_GeomPoint& cur_xyz, const t_WCharsLoc& wave) const;
