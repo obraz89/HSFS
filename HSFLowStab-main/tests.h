@@ -15,6 +15,10 @@ namespace test{
 	void check_wave_spoint();
 	void check_gs_spoint();
 
+	// nlf415 tests
+	void check_wave_spoint_nlf415();
+	void check_gs_spoint_nlf415();
+
 	void transhyb_base_08();
 	void transhyb_base_wartman();
 	void profile_compar();
