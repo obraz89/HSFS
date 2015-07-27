@@ -201,8 +201,13 @@ namespace stab{
 			break;
 		}
 
-	// TODO: empiric constant
-	return (coef<0.1);
+	// TODO: empiric constant !
+	if (coef<0.5){
+		return true;
+	}else{
+		wxLogMessage(_T("Checking Wchars: sigma/k is not small - treating unphysical"));
+		return false;
+	}
 
 	}
 }
