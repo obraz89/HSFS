@@ -347,6 +347,10 @@
 				Name="tests"
 				>
 				<File
+					RelativePath=".\test_cf_nlf415.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\test_cf_selfsim.cpp"
 					>
 				</File>
