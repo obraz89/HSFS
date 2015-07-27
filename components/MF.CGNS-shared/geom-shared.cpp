@@ -90,6 +90,8 @@ t_ZoneNode TDomain::_get_nrst_node_surf(const t_GeomPoint& point) const{
 
 	}
 
+	if (min_znode.iZone<0) wxLogError(_T("Failed to find nearest point on viscous wall!"));
+
 	return min_znode;
 }
 
