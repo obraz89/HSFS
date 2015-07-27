@@ -686,10 +686,21 @@ bool t_StabSolver::checkWCharsByGroupV(t_WCharsLoc& wchars){
 
 	double vgr = sqrt(vga_r*vga_r + vgb_r*vgb_r);
 
-	if (vgr<1.0) return true;
+	if (vgr>1.0){
 
-	wxLogMessage(_T("WChars Check: group velo is big - unphysical wave"));
-	return false;
+		wxLogMessage(_T("WChars Check: group velo is big - unphysical wave"));
+		return false;
+
+	} 
+
+	if (vga_r<0.0){
+
+		wxLogMessage(_T("WChars Check: vga<0 - upstream wave"));
+		return false;
+
+	}
+
+	return true;
 
 };
 /************************************************************************/   
@@ -1042,7 +1053,8 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 			if (good_init && cur_wave.a.real()>=0)
 				std::wcout<<_T("Discrete mode found:")<<cur_wave;
 
-			if (good_init && cur_wave.a.real()>0 && cur_wave.a.imag()<0.0){
+			if (good_init && stab::check_wchars_c_phase(cur_wave) && 
+				stab::check_wchars_increment(cur_wave)){
 
 				cur_wave.set_scales(get_stab_scales());
 
