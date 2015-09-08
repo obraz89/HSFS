@@ -132,13 +132,17 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double
 		_t1[i]=_t1[i]*y_scale/t_e;
 		_t2[i]=_t2[i]*pow(y_scale,2)/t_e;
 
-		// TODO: why isn't w nondim by u_e in orig solver?
+		// IMPORTANT TODO: why isn't w nondim by u_e in orig solver?
 		_w[i]=_w[i]/u_e;
 		_w1[i]=_w1[i]*y_scale/u_e;
 	    _w2[i]=_w2[i]*pow(y_scale,2)/u_e;
 
 		// for viscosity we store dmu/dt and d2mu/dt2
 		_mu[i]=_mu[i]/mu_e;
+
+		// _v is not used (assuming 0 in parallel flow assumption)
+		// rescale for verification purpose
+		_v[i] = _v[i]/u_e;
 
 		if (Params.ViscType==mf::t_ViscType::ViscPower){
 

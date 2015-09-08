@@ -127,11 +127,14 @@ void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 		// convention : to make y = O(1)
 		// it mul by factor sqrt(ReINF)
 		// as it is for local parallel task we store only y assuming x=z=0
-		// TODO: (good debug check is to assure that)
+		// TODO: check r_ked[0] and r_ked[2] are small
 		const mf::t_FldParams& Params = _rDomain.get_mf_params();
 		_y[j] = r_ked[1]*sqrt(Params.Re);
-		// again we postulate v==0
+
 		_u[j] = u_ked[0];
+
+		// TODO: check that v is small
+		_v[j] = u_ked[1];
 		_w[j] = u_ked[2];
 
 		_p[j] = mf_rec.p;
