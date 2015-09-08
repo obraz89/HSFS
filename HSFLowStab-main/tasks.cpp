@@ -284,7 +284,7 @@ void retrace_wplines_cond(stab::t_WPRetraceMode a_mode_retrace){
 
 	wxChar szFname[64];
 
-	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_mode%d.dat.dat"),
+	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_mode%d.dat"),
 		hsstab::OUTPUT_DIR.c_str(), g_taskParams.retrace_mode);
 
 	std::wstring fout_wplines_path(szFname);
@@ -546,11 +546,17 @@ void task::calc_Cp_etc(){
 
 		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
 
-		mf::t_Rec rec = g_pMFDomain->get_rec(xyz);
+		mf::t_Rec rec; 
+		
+		//v1, but Cp should be computed on surface
+		//rec = g_pMFDomain->get_rec(xyz);
+
+		// v2, correct for Cp
+		g_pMFDomain->calc_nearest_surf_rec(xyz, rec);
 
 		double Cp = 2.0*(rec.p - 1./gM2);
 
-		ofstr<<xyz.x()<<"\t"<<xyz.y()<<"\t"<<xyz.z()<<"\t"<<Cp<<"\n";
+		ofstr<<rec.x<<"\t"<<rec.y<<"\t"<<rec.z<<"\t"<<Cp<<"\n";
 		ofstr.flush();
 
 	}
