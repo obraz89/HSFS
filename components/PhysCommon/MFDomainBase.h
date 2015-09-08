@@ -122,6 +122,7 @@ namespace mf{
 
 			virtual double calc_c_dim(const t_GeomPoint& xyz) const;
 
+			virtual double calc_mach(const t_Rec& rec) const;
 			virtual double calc_mach(const t_GeomPoint& xyz) const;
 
 			virtual double calc_bl_thick(const t_GeomPoint& xyz) const=0;

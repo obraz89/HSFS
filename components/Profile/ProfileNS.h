@@ -60,5 +60,7 @@ public:
 
 	t_ProfMFLoc(const mf::t_DomainBase& rDomain);
 
+	void dump(const std::string& fname) const;
+
 };
 #endif // __PROF_NS

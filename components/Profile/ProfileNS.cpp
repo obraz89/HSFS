@@ -380,3 +380,49 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 	_calc_derivs();
 
 }
+
+void t_ProfMFLoc::dump(const std::string& fname) const{
+	std::wofstream fstr(&fname[0], std::ios::out);
+	t_Rec rec;
+
+	const t_Rec rec_out = get_bound_rec();
+
+	const double rue_1 = 1.0/(rec_out.r*rec_out.u);
+
+	fstr<<_T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\tv\tMach\tdelta**\n");
+
+	double mach, dd;
+
+	mf::t_Rec mf_rec;
+
+	std::vector<double> dd_v(get_nnodes());
+	std::vector<double> mthick_v(get_nnodes());
+
+	// for momentum thickness calculations
+	for (int i=0; i<get_nnodes(); i++){
+
+		rec = get_rec(i);
+
+		dd_v[i] = rec.r *rec.u*rue_1*(1.0-rec.u/rec_out.u);
+	}
+
+	smat::integrate_over_range(_y, dd_v, mthick_v);
+
+	for (int i=0; i<get_nnodes(); i++){
+
+		rec = get_rec(i);
+
+		mf_rec = rec.make_mf_rec();
+
+		mach = _rDomain.calc_mach(mf_rec);
+
+		fstr<<rec.y<<_T("\t")<<
+			rec.u<<_T("\t")<<rec.u1<<_T("\t")<<rec.u2<<_T("\t")<<
+			rec.t<<_T("\t")<<rec.t1<<_T("\t")<<rec.t2<<_T("\t")<<rec.r<<_T("\t")<<
+			rec.mu<<_T("\t")<<rec.mu1<<_T("\t")<<rec.mu2<<_T("\t")<<
+			rec.w<<_T("\t")<<rec.w1<<_T("\t")<<rec.w2<<_T("\t")<<rec.v<<_T("\t")<<
+			mach<<_T("\t")<<mthick_v[i]<<("\n");
+
+
+	}
+};

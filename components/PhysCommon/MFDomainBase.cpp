@@ -127,15 +127,20 @@ double mf::t_DomainBase::calc_u_inf() const{
 		sqrt(mf_prms.Gamma*mf_prms.R_Gas*mf_prms.T_inf/mf_prms.Mol_weight);
 };
 
-double mf::t_DomainBase::calc_mach(const t_GeomPoint& xyz) const{
-
-	const t_Rec& rRec = get_rec(xyz);
+double mf::t_DomainBase::calc_mach(const mf::t_Rec& rRec) const{
 
 	const t_FldParams& mf_prms = get_mf_params();
 
 	double vAbs = sqrt(pow(rRec.u,2.0)+pow(rRec.v,2.0)+pow(rRec.w,2.0));
 
 	return mf_prms.Mach*vAbs/sqrt(rRec.t);
+
+}
+
+
+inline double mf::t_DomainBase::calc_mach(const t_GeomPoint& xyz) const{
+
+	return calc_mach(get_rec(xyz));
 
 }
 

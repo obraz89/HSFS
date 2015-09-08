@@ -20,7 +20,9 @@ public:
 
 	struct t_Rec{
 
-		double y,u, u1, u2, w, w1, w2, t, t1, t2, mu, mu1, mu2, p, r, v;	
+		double y,u, u1, u2, w, w1, w2, t, t1, t2, mu, mu1, mu2, p, r, v;
+
+		mf::t_Rec make_mf_rec();
 
 	};
 protected:
@@ -81,7 +83,7 @@ public:
 	virtual ~t_Profile();
 
 	// for debug and comparisons
-	void dump(const std::string& fname) const;
+	virtual void dump(const std::string& fname) const;
 };
 
 /************************************************************************/
@@ -127,7 +129,7 @@ public:
 
 	int get_bound_ind() const;
 
-	t_Rec get_bound_rec();
+	t_Rec get_bound_rec() const;
 
 };
 

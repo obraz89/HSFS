@@ -8,6 +8,19 @@
 
 //#include "smooth.h"
 
+mf::t_Rec t_Profile::t_Rec::make_mf_rec(){
+	mf::t_Rec mf_rec;
+
+	mf_rec.u = u;
+	mf_rec.v = v;
+	mf_rec.w = w;
+	mf_rec.p = p;
+	mf_rec.t = t;
+	mf_rec.r = r;
+
+	return mf_rec;
+}
+
 t_Profile::t_Extractor::t_Extractor
 	(double t_Rec::* write_to, t_DblVec t_Profile::* extract_from)
 	:pWriteTo(write_to), pExtractFrom(extract_from){};
@@ -304,7 +317,7 @@ const mf::t_DomainBase& t_ProfMF::getMFDomain() const{return _rDomain;};
 
 int t_ProfMF::get_bound_ind() const{return get_nnodes()-1;};
 
-t_ProfRec t_ProfMF::get_bound_rec(){
+t_ProfRec t_ProfMF::get_bound_rec() const{
 	return get_rec(get_bound_ind());
 }
 
