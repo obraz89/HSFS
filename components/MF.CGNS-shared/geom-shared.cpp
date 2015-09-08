@@ -332,8 +332,8 @@ stop:;
 
 bool TDomain::_is_point_inside(const t_GeomPoint& xyz) const{
 
-	wxLogError(_T("MF.CGNS-shared: _is_point_inside not yet implemented correctly! Treating x only, case dependent!"));
-	return (xyz.x()>0.05 && xyz.x()<=0.9 /*&& xyz.z()>0.0*/);
+	wxLogError(_T("MF.CGNS-shared: is_point_inside not yet implemented correctly, using bounding box!"));
+	return bbox.is_pnt_inside(xyz);
 
 }
 

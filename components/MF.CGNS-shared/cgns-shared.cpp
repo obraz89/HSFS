@@ -72,24 +72,41 @@ t_ZoneGrdLine::t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode)
 
 static int g_time = 0.0;
 
-void mf::cg::TDomain::_read_parse_bc_wall_names(const wxString& strBCWallFamNames){
+void mf::cg::TDomain::_read_parse_str_array(
+	const wxString& raw_str, std::vector<std::string>& dest)
+{
 
-	wxArrayString wxBCNames = wxStringTokenize(strBCWallFamNames, _T(","));
+	wxArrayString wxNames = wxStringTokenize(raw_str, _T(","));
 
-	for (int i=0; i<wxBCNames.Count(); i++) {
+	dest.clear();
 
-		wxString& rStr = wxBCNames[i];
+	for (int i=0; i<wxNames.Count(); i++) {
+
+		wxString& rStr = wxNames[i];
 
 		// trim from both left and right
 		rStr.Trim(true);rStr.Trim(false);
-		char viscBCWallName[33];
+		char strName[64];
 
-		sprintf(viscBCWallName, rStr.ToAscii());
-		_vecBCWallNames.push_back(std::string(viscBCWallName));
+		sprintf(strName, rStr.ToAscii());
+		dest.push_back(std::string(strName));
 
 	}
 
 }
+
+
+void mf::cg::TDomain::_read_parse_bc_wall_names(const wxString& strBCWallFamNames){
+
+	_read_parse_str_array(strBCWallFamNames, _vecBCWallNames);
+
+}
+
+void mf::cg::TDomain::_read_parse_func_names(const wxString& str){
+	_read_parse_str_array(str, G_vecCGNSFuncNames);
+}
+
+
 
 void mf::cg::TDomain::_read_parse_bl_thick_calc_type(const wxString& a_str){
 

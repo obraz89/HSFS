@@ -37,17 +37,27 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 		ssuTHROW(t_GenException, _T("Error: in CGNS2D init, see err log"));
 	}
 
-	// TODO: read from config ?
-	nu = 4;  // unknown functions number
+	bbox.xmin = g.get_real_param("BBox_Xmin");
+	bbox.xmax = g.get_real_param("BBox_Xmax");
+	bbox.ymin = g.get_real_param("BBox_Ymin");
+	bbox.ymax = g.get_real_param("BBox_Ymax");
+	bbox.zmin = g.get_real_param("BBox_Zmin");
+	bbox.zmax = g.get_real_param("BBox_Zmax");
+
+	nu = g.get_int_param("nu");
+	if (nu<=0) wxLogError(_T("MF.CGNS2D error: nu param seems to be uninitialized"));
+
 	nDim = 2;
 
 	//G_strFunctionNames = "u\nv\np\nT";
 
-	G_vecCGNSFuncNames.clear();
-	G_vecCGNSFuncNames.push_back("VelocityX");
-	G_vecCGNSFuncNames.push_back("VelocityY");
-	G_vecCGNSFuncNames.push_back("Pressure");
-	G_vecCGNSFuncNames.push_back("Temperature");
+	//G_vecCGNSFuncNames.clear();
+	//G_vecCGNSFuncNames.push_back("VelocityX");
+	//G_vecCGNSFuncNames.push_back("VelocityY");
+	//G_vecCGNSFuncNames.push_back("Pressure");
+	//G_vecCGNSFuncNames.push_back("Temperature");
+	wxString strCGNSFuncNames = g.get_string_param("FuncNames");
+	_read_parse_func_names(strCGNSFuncNames);
 
 	wxString strBCWallFamNames = g.get_string_param("BCWallFamilyNames");
 

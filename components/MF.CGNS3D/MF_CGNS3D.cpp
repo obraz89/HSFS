@@ -25,18 +25,32 @@ void t_MFCGNS3D::init(const hsstab::TPlugin& g_plug){
 
 	mf::cg::hsf3d::_init_fld_base_params(_base_params, g);
 
-	// TODO: read from config ?
-	nu = 5;  // unknown functions number
+	bbox.xmin = g.get_real_param("BBox_Xmin");
+	bbox.xmax = g.get_real_param("BBox_Xmax");
+	bbox.ymin = g.get_real_param("BBox_Ymin");
+	bbox.ymax = g.get_real_param("BBox_Ymax");
+	bbox.zmin = g.get_real_param("BBox_Zmin");
+	bbox.zmax = g.get_real_param("BBox_Zmax");
+
+	// number of funcs stored in cgns field file
+	// nu = 5 for laminar ideal gas flow
+	// nu >5 for chemistry
+	nu = g.get_int_param("nu");
+	if (nu<=0) wxLogError(_T("MF.CGNS2D error: nu param seems to be uninitialized"));
+
 	nDim = 3;
 
 	//G_strFunctionNames = "u\nv\np\nT";
 
-	G_vecCGNSFuncNames.clear();
-	G_vecCGNSFuncNames.push_back("VelocityX");
-	G_vecCGNSFuncNames.push_back("VelocityY");
-	G_vecCGNSFuncNames.push_back("VelocityZ");
-	G_vecCGNSFuncNames.push_back("Pressure");
-	G_vecCGNSFuncNames.push_back("Temperature");
+	//G_vecCGNSFuncNames.clear();
+	//G_vecCGNSFuncNames.push_back("VelocityX");
+	//G_vecCGNSFuncNames.push_back("VelocityY");
+	//G_vecCGNSFuncNames.push_back("VelocityZ");
+	//G_vecCGNSFuncNames.push_back("Pressure");
+	//G_vecCGNSFuncNames.push_back("Temperature");
+
+	wxString strCGNSFuncNames = g.get_string_param("FuncNames");
+	_read_parse_func_names(strCGNSFuncNames);
 
 	wxString strBCWallFamNames = g.get_string_param("BCWallFamilyNames");
 

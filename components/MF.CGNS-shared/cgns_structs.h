@@ -382,6 +382,18 @@ namespace mf{
 			t_ZoneNode(int _iZone, const t_BlkInd& ind):iZone(_iZone), iNode(ind), iFacePos(-1){}
 		};
 
+
+		// tmp bounding box containing the whole domain
+		struct TBoundBox{
+			double xmin, xmax, ymin, ymax, zmin, zmax;
+
+			bool is_pnt_inside(const t_GeomPoint& xyz) const{
+				return (xyz.x()>xmin && xyz.x()<xmax && 
+					xyz.y()>ymin && xyz.y()<ymax &&
+					xyz.z()>zmin && xyz.z()<zmax);
+			}
+		};
+
 		//
 		// The whole computational domain
 		// 
@@ -399,6 +411,9 @@ namespace mf{
 			int nZones;  // total number of zones
 			int bs, be;  // start & end (inclusive) 0-based zone (aka block) indices in the current MPI rank
 			TZone* Zones;
+
+			// bounding box, set via plugin params 
+			TBoundBox bbox;
 
 			// Gas-dynamic values at infinity
 			//
@@ -418,7 +433,9 @@ namespace mf{
 				TDims& dims, double** grid, double** field);
 
 			// common params readers
+			void _read_parse_str_array(const wxString& raw_str, std::vector<std::string>& dest);
 			void _read_parse_bc_wall_names(const wxString& str);
+			void _read_parse_func_names(const wxString& str);
 			void _read_parse_bl_thick_calc_type(const wxString& str);
 
 			// geom interpolation stuff

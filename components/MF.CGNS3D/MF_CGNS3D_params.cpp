@@ -20,7 +20,11 @@ void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 
 	// TODO: read all these params from cgns db
 
+	g.add("nu", 5, _("Number of funcs written in cgns fld file"));
+
 	g.add("FldBinPath", _(""), _("Path to binary cgns file containing field")); 
+
+	g.add("FuncNames", _("VelocityX, VelocityY, VelocityZ, Pressure, Temperature"));
 
 	g.add("GrdBinPath", _(""), _("Path to binary cgns file containing grid")); 
 
@@ -57,6 +61,13 @@ void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 	g.add("BLThickTol", 0.1, _T("Parameter-tolerance for a specified BLCalcTypeMethod"));
 
 	g.add("BLThickCoefDefault", 3.0, _T("Thick Coef to use in GetProfiles task"));
+
+	g.add("BBox_Xmin", -1.0, _T("Bounding box Xmin"));
+	g.add("BBox_Xmax", 1.0, _T("Bounding box Xmax"));
+	g.add("BBox_Ymin", -1.0, _T("Bounding box Ymin"));
+	g.add("BBox_Ymax", 1.0, _T("Bounding box Ymax"));
+	g.add("BBox_Zmin", -1.0, _T("Bounding box Zmin"));
+	g.add("BBox_Zmax", 1.0, _T("Bounding box Zmax"));
 }
 
 void mf::cg::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
