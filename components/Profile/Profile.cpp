@@ -1,16 +1,12 @@
 #include "Profile.h"
 
-//#include "log.h"
-
-//#include ""
-
-//#include "fun_zero_1D.h"
-
 #include "wx/log.h"
 
 #include "fstream"
 
-//#include
+#include "math_operands.h"
+
+//#include "smooth.h"
 
 t_Profile::t_Extractor::t_Extractor
 	(double t_Rec::* write_to, t_DblVec t_Profile::* extract_from)
@@ -310,5 +306,21 @@ int t_ProfMF::get_bound_ind() const{return get_nnodes()-1;};
 
 t_ProfRec t_ProfMF::get_bound_rec(){
 	return get_rec(get_bound_ind());
+}
+
+void t_ProfMF::_calc_derivs(){
+	// SMOOTHING
+	// FORTRAN CALLING CONVENTION
+	//SMOOTH_3D_PROFILES(&_y[0], &_u[0], &nnodes, &_u1[0], &_u2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_w[0], &nnodes, &_w1[0], &_w2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_t[0], &nnodes, &_t1[0], &_t2[0]);
+	//SMOOTH_3D_PROFILES(&_y[0], &_mu[0], &nnodes, &_mu1[0], &_mu2[0]);
+
+	int nnodes = get_nnodes();
+
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_u[0], nnodes, &_u1[0], &_u2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_w[0], nnodes, &_w1[0], &_w2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
 }
 

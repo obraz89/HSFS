@@ -111,6 +111,8 @@ protected:
 	virtual void _initialize_extract(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg) =0;
 	virtual void _initialize_interpolate(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg) =0;
 
+	virtual void _calc_derivs();
+
 	t_ProfMF(const mf::t_DomainBase& rDomain);
 
 public:

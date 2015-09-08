@@ -498,16 +498,16 @@ void task::get_profiles(){
 		wchar_t szFname[33];
 
 		// generate profile NS
-		t_ProfileNS prof_NS(*g_pMFDomain);
+		t_ProfMFLoc profMFLoc(*g_pMFDomain);
 
 		mf::t_ProfDataCfg data_cfg;
 		data_cfg.ThickCoef = g_pMFDomain->get_prof_extr_cfg().ThickCoefDefault;
-		prof_NS.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
+		profMFLoc.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
 
-		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileNS_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
+		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileMFLoc_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
 		
 		wxString szFnameNS_wx(szFname);
-		prof_NS.dump(std::string(szFnameNS_wx.ToAscii()));
+		profMFLoc.dump(std::string(szFnameNS_wx.ToAscii()));
 
 		// generate profile MF (Glob RF)
 		t_ProfMFGlob prof_MF(*g_pMFDomain);
