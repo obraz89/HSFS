@@ -10,8 +10,8 @@ using namespace hsstab::cmpnts;
 using namespace pf;
 
 t_StabSolver::t_StabSolver(const mf::t_DomainBase& a_rFldNS):
-_rFldNS(a_rFldNS), _profStab(), 
-_math_solver(), _stab_matrix(STAB_MATRIX_DIM), _params(){
+_rFldNS(a_rFldNS), _profStab(), _math_solver(), 
+_stab_matrix(STAB_MATRIX_DIM),_scal_prod_matrix(STAB_MATRIX_DIM), _params(){
 
 	_math_solver._pStab_solver = this;
 

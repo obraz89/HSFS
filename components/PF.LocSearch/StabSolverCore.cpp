@@ -21,8 +21,8 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	const double inv_t = 1.0/rec.t;
 	const double inv_mu = 1.0/rec.mu;
 
-	const double vCoefL = 2.0/3.0*(0.0+2.0); //TODO: second Visc coef instead of 0.0
-	const double vCoefS = 2.0/3.0*(0.0-1.0); // 
+	const double vCoefL = 2.0/3.0*(Params.BulkViscRatio+2.0); 
+	const double vCoefS = 2.0/3.0*(Params.BulkViscRatio-1.0); 
 	const double vCoefM = 1.0+vCoefS;
 
 	const t_CompVal& alpha = _waveChars.a;
@@ -157,6 +157,140 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 	_setStabMatrix3D(rec);
 };
 
+// Matrix Hx for scalar product of 2 amplitude functions
+// 
+// Stability matrix corresponds to Nayfeh A.H., Stability of Three-Dimensional
+// Boundary Layers," AIAA J., Vol. 18, No. 4, pp. 406-416, 1980.
+// In this matrix:
+//     m=MM=(e-1)2/3
+//     r=RM=(e+2)2/3
+//     e=K
+//     e=(3/2)*(bulk viscosity)/(viscosity)
+
+// Mack recommends (bulk viscosity)/(viscosity)=0.8, then parameter K=1.2
+// TODO: cases where bv/v=0.8 ?
+//
+//
+//	N = number of points in Y-grid of constant step (N should be smaller than parameter NY) 
+//	Y1 = upper boundary (real)
+//	Basic flow profiles in COMMON/BASIC1/
+//	Basic flow parameters in COMMON/BASIC2/
+//	DZ(8,N) = vector of conjugate stability problem (complex) (in COMMON/SCAL1/)
+//	A,B,W = wavenumbers and frequency of stability problem (complex) (in COMMON/SCAL2/)
+//	R = Reynolds number (complex) (in COMMON/SCAL2/)
+//	A0(8,N) vector of disturbance (complex) (in COMMON/FIELD/)
+
+void t_StabSolver::_setScalProdMatrix(const t_ProfRec& rec){
+	//void set_stab_h(int i,const t_AmpVec<double>& vec_mf, t_SqMatCmplx& h_mat){
+
+		t_CompVal E(0.0,1.0);
+
+		const mf::t_FldParams& Params = _rFldNS.get_mf_params();
+
+		double MM = 2./3.*(Params.BulkViscRatio-1.0);
+
+		double F = MM+1.0;
+
+		double RM = 2./3.*(Params.BulkViscRatio+2.0);
+
+		const double Gamma = Params.Gamma;
+		const double Mach = Params.Mach;
+
+		const double Pr = Params.Pr;
+
+		double M2 = Gamma*Mach*Mach;
+
+		double MG = (Gamma-1.0)*Mach*Mach;
+
+		_scal_prod_matrix.setToZero();
+
+		const t_CompVal W = _waveChars.w;
+		const t_CompVal A = _waveChars.a;
+		const t_CompVal B = _waveChars.b;
+		const t_CompVal R = _profStab.scales().ReStab;
+
+		const double U = rec.u;
+		const double U1 = rec.u1;
+		const double U2 = rec.u2;
+
+		const double T = rec.t;
+		const double T1 = rec.t1;
+		const double T2 = rec.t2;
+
+		const double MU = rec.mu;
+		const double MU1 = rec.mu1;
+		const double MU2 = rec.mu2;
+
+		const double WS = rec.w;
+		const double WS1 = rec.w1;
+		const double WS2 = rec.w2;
+
+		const t_CompVal WA = W - A*U - B*WS;
+		const double M1 = 1.0/MU;
+		const double MY = MU1*T1;
+		const double MYY = MU2*T1*T1+MU1*T2;
+		const t_CompVal XI = 1.0/(R*M1-E*RM*M2*WA);
+		const t_CompVal TD = 1.0/T;
+		const t_CompVal WB = E*(A*U-W);
+
+		const t_CompVal DXI = -E*RM*M2*U*XI*XI;
+
+		// fill non-zero elements
+
+		_scal_prod_matrix[0][1] = U*R*M1*TD-2.*E*A;
+
+		_scal_prod_matrix[2][1]=-F*T1*TD-MY*M1;
+
+		_scal_prod_matrix[3][1]=R*M1-E*F*M2*(WA-A*U);
+
+		_scal_prod_matrix[4][1]=E*F*TD*(WA-A*U);
+
+		_scal_prod_matrix[0][2]=-1.;
+
+		_scal_prod_matrix[3][2]=-M2*U;
+
+		_scal_prod_matrix[4][2]=U*TD;
+
+		_scal_prod_matrix[0][3]=-(XI+A*DXI)*(RM*T1*TD+2.*MY*M1);
+
+		_scal_prod_matrix[1][3]=-XI-A*DXI;
+
+		_scal_prod_matrix[2][3]=-E*(
+			DXI*(E*WA*R*M1*TD-A*A-B*B+RM*(T2*TD+MY*T1*M1*TD))
+			-XI*(2.*A+E*R*U*M1*TD));
+
+		_scal_prod_matrix[3][3]=-RM*M2*
+			(DXI*(A*U1+B*WS1)+XI*U1+(T1*TD+MY*M1)*(XI*U-DXI*WA));
+
+		_scal_prod_matrix[4][3]=DXI*((A*U1+B*WS1)*(RM*TD+MU1*M1)-RM*WA*MY*M1*TD)
+			+XI*(RM*U1*TD+MU1*U1*M1+RM*U*MY*M1*TD);
+
+		_scal_prod_matrix[5][3]=RM*TD*(U*XI-WA*DXI);
+
+		_scal_prod_matrix[6][3]=-DXI*B*(RM*T1*TD+2.*MY*M1);
+
+		_scal_prod_matrix[7][3]=-B*DXI;
+
+		_scal_prod_matrix[2][5]=-2.*MG*Pr*U1;
+
+		_scal_prod_matrix[3][5]=-MG*Pr*R*U*M1;
+
+		_scal_prod_matrix[4][5]=R*Pr*U*M1*TD-2.*E*A;
+
+		_scal_prod_matrix[3][7]=E*F*M2*B*U;
+
+		_scal_prod_matrix[4][7]=-E*F*B*U*TD;
+
+		_scal_prod_matrix[6][7]=R*U*M1*TD-2.*E*A;
+
+}
+
+void t_StabSolver::_setScalProdMatrix(const double& a_y){
+
+	const t_ProfRec& rec = _profStab.get_rec(a_y);
+	_setScalProdMatrix(rec);
+
+}
 
 // TODO: to speed up - rewrite to "_setAsymptotcs" 
 // and write directly to destination formal param

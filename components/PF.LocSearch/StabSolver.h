@@ -50,6 +50,11 @@ class  t_StabSolver: public stab::t_LSBase{
 	pf::t_StabSolverParams _params;
 	// keep current stability_matrix
 	t_SqMatCmplx _stab_matrix;
+
+	// scalar product of 2 amplitude functions Phi, Psi: 
+	// c = (Hx*Phi, Psi)
+	// keep this matrix Hx
+	t_SqMatCmplx _scal_prod_matrix;
 	const mf::t_DomainBase& _rFldNS; // to get global field params
 	mf::t_GeomPoint _cur_xyz;
 	t_ProfileStab _profStab; // current profile
@@ -63,6 +68,9 @@ class  t_StabSolver: public stab::t_LSBase{
 
 	void _setStabMatrix3D(const double& a_y);
 	void _setStabMatrix3D(const t_ProfRec& rec);
+
+	void _setScalProdMatrix(const t_ProfRec& rec);
+	void _setScalProdMatrix(const double& a_y);
 
 	//t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
 	// rhs function by stab matrix
