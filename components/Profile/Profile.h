@@ -68,6 +68,8 @@ public:
 
 	t_Rec get_rec(int a_j) const;
 
+	t_Rec get_last_rec() const;
+
 	t_Rec get_rec(double a_y) const;
 
 	int get_nnodes() const;

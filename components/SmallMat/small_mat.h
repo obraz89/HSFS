@@ -792,6 +792,7 @@ public:
 	// TODO: better col first
 	t_SqMatrix<T> get_minor(const int raw, const int col) const;
 	void setToUnity();
+	void transpose();
 	void setToHermConj();
 	//void resize(int a_size);
 	T det() const;
@@ -910,6 +911,16 @@ template<typename T> void t_SqMatrix<T>::setToUnity(){
 				this->_cont[i][j]=0.0;
 		};
 	};
+};
+
+template<typename T> void t_SqMatrix<T>::transpose(){
+	T swp_val;
+	for (int i=0; i<_ncols; i++)
+		for (int j=0; j<=i; j++){
+			swp_val = _cont[i][j];
+			_cont[i][j] = _cont[j][i];
+			_cont[j][i] = swp_val;
+		}
 };
 
 template<typename T> void t_SqMatrix<T>::setToHermConj(){

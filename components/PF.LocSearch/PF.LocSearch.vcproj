@@ -370,10 +370,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ODES_stab.h"
-				>
-			</File>
-			<File
 				RelativePath=".\StabSolver.h"
 				>
 			</File>

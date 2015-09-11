@@ -41,10 +41,6 @@ class  t_StabSolver: public stab::t_LSBase{
 
 		void formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& rhs);
 
-		t_VecCmplx calcWallCoefs();
-
-		virtual t_Complex getResidual3D();
-
 		void setInitials(const t_MatCmplx& a_init_vectors);
 		bool needOrtho(const t_MatCmplx& a_cur_sol);
 		void solve();
@@ -81,9 +77,6 @@ class  t_StabSolver: public stab::t_LSBase{
 	t_MatCmplx _getAsymptotics3D(
 		const t_WCharsLoc& a_waveChars, t_ASYM_MODE mode=ASYM_FORCE_SELF_SIM);
 
-	void _verifyAsymptotics3D(
-		const t_MatCmplx& init_vecs, const t_VecCmplx& lambda) const;
-
 	// Max instab search realization
 	// maximize wi with wr fixed
 	t_WCharsLoc _getStationaryMaxInstabTime(const t_WCharsLoc& a_waveChars);
@@ -96,6 +89,10 @@ class  t_StabSolver: public stab::t_LSBase{
 	// use gradient methods
 	t_WCharsLoc _getMaxInstabTime_Grad(const t_WCharsLoc& init_guess);
 	t_WCharsLoc _getMaxInstabSpat_Grad(const t_WCharsLoc& init_guess);
+
+	void _calcWallCoefs(std::vector<t_Complex>& wall_coefs) const;
+	t_Complex _calcResidual(t_Complex* wall_coefs = NULL) const;
+
 public:
 	enum t_MODE {A_MODE, B_MODE, W_MODE}; 
 

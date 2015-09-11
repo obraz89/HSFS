@@ -19,7 +19,6 @@ protected:
 			   _trans_mat_vec_tmp;
 
 	t_MatCmplx _sol_tmp;
-protected:
 	// _NSolVecs - number of solution vectors to solve
 	// _orthMatrix - matrix of transition from initial basis to current 
 	//		(after orthogonalization)
@@ -39,7 +38,6 @@ protected:
 	void ortho(const int& nnode);	
 
 	virtual void formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& rhs) = 0; 	
-	virtual t_Complex getResidual3D() = 0;
 public:
 	// members
 	std::vector<double> varRange;

@@ -115,6 +115,10 @@ t_Profile::t_Rec t_Profile::get_rec(int j) const{
 	return _extract(j);
 };
 
+t_Profile::t_Rec t_Profile::get_last_rec() const{
+	return get_rec(get_nnodes()-1);
+}
+
 t_Profile::t_Rec t_Profile::get_rec(double y) const{
 
 	if (y<0.0) {
