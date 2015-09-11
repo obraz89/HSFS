@@ -86,7 +86,7 @@ public:
 	double  Mach, Re, Alpha,
 		L_ref, T_inf, T_wall, 
 		T_mju, Mju_pow, Gamma, Pr,
-		Mol_weight, R_Gas;
+		Mol_weight, R_Gas, BulkViscRatio;
 };
 
 IMPEXP_PHYSCOMMON t_Rec operator-(const mf::t_Rec& rec1, const mf::t_Rec& rec2);

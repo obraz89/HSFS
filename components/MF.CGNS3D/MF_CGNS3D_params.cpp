@@ -40,6 +40,8 @@ void mf::cg::hsf3d::_plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("ViscType", 0, _T("Viscosity Law")); // pViscLaw
 
+	g.add("BulkViscRatio", 0.0, _T("Ratio of bulk viscosity to viscosity"));
+
 	g.add("LRef", 1.0e+00, _T("Dimensional reference Length")); // pLRef
 
 	g.add("TInf", 1.0e+02, _T("Dimensional freestream static temperature"));  // pTInf
@@ -98,6 +100,8 @@ void mf::cg::hsf3d::_init_fld_base_params(t_FldParams& params, const TPluginPara
 	params.T_wall = g.get_real_param("TWall");
 
 	params.ViscType = g.get_int_param("ViscType");
+
+	params.BulkViscRatio = g.get_real_param("BulkViscRatio");
 
 }
 
