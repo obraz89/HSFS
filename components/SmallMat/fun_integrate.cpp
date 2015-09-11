@@ -22,6 +22,37 @@ IMPEXP_SMALLMAT double smat::fun_integrate(
 	return ret;
 
 }
+
+template<typename T> inline T _integrate_simp4_uniform(const std::vector<double>& x, const std::vector<T>& y){
+	if (x.size()!=y.size()) wxLogError(_T("Error in integration - size mismatch"));
+
+	int n;
+
+	if (x.size() % 2 ==0) {
+		wxLogError(_T("Smat: Fun Integrate: Number of points N should be odd, using N-1"));
+		n = x.size()-1;
+	}else{
+		n = x.size();
+	}
+
+	double d = x[1] - x[0];
+
+	T ret = d/3.0*(y[0]+y[n-1]);
+
+	for (int i=1; i<n-1; i+=2) ret+=4.0/3.0*d*y[i];
+	for (int i=2; i<n-2; i+=2) ret+=2.0/3.0*d*y[i];
+
+	return ret;
+};
+
+double fun_integrate_simp4_uniform(const std::vector<double>& x, const std::vector<double>& y){
+	return _integrate_simp4_uniform<double>(x,y);
+}
+
+t_Complex fun_integrate_simp4_uniform(const std::vector<double>& x, const std::vector<t_Complex>& y){
+	return _integrate_simp4_uniform<t_Complex>(x,y);
+}
+
 // find ff - the antiderivative of ff over x
 // note that ff is calculated on a different grid - in halfnodes i+1/2
 // the overbound value 0-1/2 is set to zero

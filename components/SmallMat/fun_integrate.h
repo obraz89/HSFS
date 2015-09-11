@@ -4,10 +4,21 @@
 #include <vector>
 #include "dll_impexp_smat.h"
 
+#include "small_mat.h"
+
 namespace smat{
+
+	// simple integration with 2-nd order
 
 	IMPEXP_SMALLMAT double fun_integrate(
 		const std::vector<double>& x, const std::vector<double>& y, int nsteps=-1);
+
+	// simpson 4th order, uniform grids only
+	IMPEXP_SMALLMAT double fun_integrate_simp4_uniform(
+		const std::vector<double>& x, const std::vector<double>& y, int nsteps=-1);
+
+	IMPEXP_SMALLMAT double fun_integrate_simp4_uniform(
+		const std::vector<double>& x, const std::vector<t_Complex>& y, int nsteps=-1);
 
 	// find ff - the antiderivative of ff over x
 	IMPEXP_SMALLMAT void integrate_over_range(
