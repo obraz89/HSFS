@@ -465,6 +465,24 @@ namespace vector{
 			dot(const t_Vec<t1>& l, const t_Vec<t2>& r){
 			    return __dot<t1, t2, matrix::TypeDeduce<t1,t2>::type>(l,r);
 			};
+	template<typename t1, typename t2, typename TT> inline
+			TT __plain_prod(const t_Vec<t1>& l, const t_Vec<t2>& r) {
+				//typedef matrix::TypeDeduce<t1,t2>::type type;
+				TT ret = 0;
+#ifdef _DEBUG
+				matrix::base::chk_size_match_add(l, r);
+#endif
+				for (int i=0; i<l.size(); i++){
+					ret+=l[i]*r[i]; 
+				}
+				return ret;
+		}; 
+
+	template<typename t1, typename t2>
+	typename matrix::TypeDeduce<t1,t2>::type 
+		plain_prod(const t_Vec<t1>& l, const t_Vec<t2>& r){
+			return __plain_prod<t1, t2, matrix::TypeDeduce<t1,t2>::type>(l,r);
+	};
 }
 
 template<typename T> class  t_Vec: public t_Matrix<T>{

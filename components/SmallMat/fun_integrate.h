@@ -13,11 +13,14 @@ namespace smat{
 	IMPEXP_SMALLMAT double fun_integrate(
 		const std::vector<double>& x, const std::vector<double>& y, int nsteps=-1);
 
+	IMPEXP_SMALLMAT t_Complex fun_integrate(
+		const std::vector<double>& x, const std::vector<t_Complex>& y, int nsteps=-1);
+
 	// simpson 4th order, uniform grids only
 	IMPEXP_SMALLMAT double fun_integrate_simp4_uniform(
 		const std::vector<double>& x, const std::vector<double>& y, int nsteps=-1);
 
-	IMPEXP_SMALLMAT double fun_integrate_simp4_uniform(
+	IMPEXP_SMALLMAT t_Complex fun_integrate_simp4_uniform(
 		const std::vector<double>& x, const std::vector<t_Complex>& y, int nsteps=-1);
 
 	// find ff - the antiderivative of ff over x

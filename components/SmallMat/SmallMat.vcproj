@@ -349,6 +349,10 @@
 				RelativePath=".\lib.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\lin_sys.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -373,6 +377,10 @@
 			</File>
 			<File
 				RelativePath=".\fun_zero_1D.h"
+				>
+			</File>
+			<File
+				RelativePath=".\lin_sys.h"
 				>
 			</File>
 			<File

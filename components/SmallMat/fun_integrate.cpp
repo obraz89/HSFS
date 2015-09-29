@@ -23,6 +23,29 @@ IMPEXP_SMALLMAT double smat::fun_integrate(
 
 }
 
+IMPEXP_SMALLMAT t_Complex smat::fun_integrate(
+	const std::vector<double>& x, const std::vector<t_Complex>& y, int a_nsteps/* =-1 */){
+
+		int i1 = x.size();
+		int i2 = y.size();
+		if ((i1!=i2)||(a_nsteps>=i1)){
+			wxLogError(_T("smat: Fun Integrate Error")); return 0.0;
+		}
+
+		int n = a_nsteps>0 ? a_nsteps : i1-1;
+
+		t_Complex ret=0.0;
+
+		for (int i=0; i<n; i++){
+
+			ret+=0.5*(y[i]+y[i+1])*(x[i+1]-x[i]);
+
+		}
+
+		return ret;
+
+}
+
 template<typename T> inline T _integrate_simp4_uniform(const std::vector<double>& x, const std::vector<T>& y){
 	if (x.size()!=y.size()) wxLogError(_T("Error in integration - size mismatch"));
 
@@ -45,11 +68,13 @@ template<typename T> inline T _integrate_simp4_uniform(const std::vector<double>
 	return ret;
 };
 
-double fun_integrate_simp4_uniform(const std::vector<double>& x, const std::vector<double>& y){
+IMPEXP_SMALLMAT double smat::fun_integrate_simp4_uniform(const std::vector<double>& x, const std::vector<double>& y, int nsteps){
+	//return 0.0;
 	return _integrate_simp4_uniform<double>(x,y);
 }
 
-t_Complex fun_integrate_simp4_uniform(const std::vector<double>& x, const std::vector<t_Complex>& y){
+IMPEXP_SMALLMAT t_Complex smat::fun_integrate_simp4_uniform(const std::vector<double>& x, const std::vector<t_Complex>& y, int nsteps){
+	//return 0.0;
 	return _integrate_simp4_uniform<t_Complex>(x,y);
 }
 

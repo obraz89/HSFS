@@ -44,4 +44,7 @@ template class IMPEXP_SMALLMAT t_SqMat3<double>;
 // integration of functions
 #include "fun_integrate.h"
 
+// linear algebra routines
+#include "lin_sys.h"
+
 #endif // __SMALL_MAT_OPERANDS
