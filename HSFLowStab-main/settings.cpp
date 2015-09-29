@@ -128,6 +128,7 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::MPITest] = _T("MPITest");
 	task::TaskNames[task::GetAmplitudeFuncs] = _T("GetAmplitudeFuncs");
 	task::TaskNames[task::GetMFChars] = _T("CalcCp");
+	task::TaskNames[task::CalcScalProd] = _T("CalcScalProd");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
@@ -150,7 +151,9 @@ bool load_Settings_n_Plugins()
 
 	const int zero=0;
 
-	if (g_taskParams.id==task::SearchInstabLoc || g_taskParams.id == task::MPITest){
+	// TODO: split params into task-specific groups
+	//if (g_taskParams.id==task::SearchInstabLoc || g_taskParams.id == task::MPITest){
+	if (true){
 
 		conf->Read(_T("a_ndim_min"), &g_taskParams.a_ndim_min, 1.0e-06);
 		conf->Read(_T("a_ndim_max"), &g_taskParams.a_ndim_max ,1.0);
@@ -168,12 +171,13 @@ bool load_Settings_n_Plugins()
 		conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);
 	}
 
-	if (g_taskParams.id == task::GetAmplitudeFuncs){
+	//if (g_taskParams.id == task::GetAmplitudeFuncs){
+	if (true){
 			conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);
 	}
 
-	if (g_taskParams.id==task::Retrace)
-	{
+	//if (g_taskParams.id==task::Retrace)
+	if (true){
 		conf->Read(_T("retrace_mode"), &g_taskParams.retrace_mode, zero);
 
 		conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);

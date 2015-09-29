@@ -218,8 +218,45 @@ const t_StabScales& t_StabSolver::get_stab_scales() const{
 };*/
 
 void t_StabSolver::_formRHS3D(const double& a_y, const t_VecCmplx& a_vars, t_VecCmplx& dest){
+
 	_setStabMatrix3D(a_y);
-	matrix::base::mat_mul<t_Complex, t_Complex>(_stab_matrix, a_vars, dest);
+
+	// direct problem
+	// rhs = H*phi
+	if (_ls_mode.is_flag_on(stab::t_LSMode::DIRECT)){
+
+		matrix::base::mat_mul<t_Complex, t_Complex>(_stab_matrix, a_vars, dest);
+
+		return;
+
+	}
+
+	// conjugate problem
+	// dpsi/dy = H_conj*psi, 
+	// H_conj = -1*(H_dir)_transposed_conjugate, H_dir - matrix of direct problem
+	// we will solve dpsi_conjugate/dy = A*psi_conjugate
+	// then A = -1*H_dir_transposed
+	// the result is psi_conjugate : complex conjugate vetor of explicit conjugate vector psi 
+	// rhs = (-1.0*H_tr)*psi
+
+	if (_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
+
+		for (int i=0; i<STAB_MATRIX_DIM; i++){
+
+			dest[i] = 0.0;
+
+			for (int j=0; j<STAB_MATRIX_DIM; j++) {
+
+				dest[i] = dest[i] - _stab_matrix[i][j]*a_vars[j];
+
+			}
+
+		}
+
+		return;
+
+	}
+
 };
 
 /************************************************************************/   
@@ -581,10 +618,6 @@ bool t_StabSolver::adjustLocal
 	return false;
 };
 
-void t_StabSolver::setInitWaves(const std::vector<t_WCharsLoc>& a_inits){
-	this->_initWaves = a_inits;
-};
-
 std::vector<t_WCharsLoc> t_StabSolver::filterInitWaves
 (const std::vector<t_WCharsLoc>& all_initials){
 	const double close_tol = 0.1;
@@ -731,26 +764,6 @@ void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab:
 	}
 }
 
-
-t_WCharsLoc t_StabSolver::getMaxWave(const std::vector<t_WCharsLoc>& a_inits, int a_nnodesStab){
-    // TODO:to implement somehow "default" parameter
-	// TODO: nnodes_stab not used here?
-	int nnodes_stab = (a_nnodesStab==0) ? _params.NNodes : a_nnodesStab;
-
-	setInitWaves(a_inits);
-	t_WCharsLoc res_wave;
-	//ensure
-	res_wave.w = 0.0;
-	t_WCharsLoc cur_wave;
-	for (int i=0; i<_initWaves.size(); i++){
-		cur_wave = _getMaxInstabTime_Grad(_initWaves[i]);
-		if (cur_wave.w.imag()>res_wave.w.imag()){
-			res_wave = cur_wave;
-		}
-	}
-	return res_wave;
-}
-
 std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond){
 
 	std::vector<t_WCharsLoc> ret_waves;
@@ -852,5 +865,65 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_time(const std::vector<t_
 	}
 
 	return ret_waves;
+
+}
+
+void t_StabSolver::getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs){
+
+	if (amp_funcs.size()!=getNNodes()) wxLogError(_T("GetAmpFuncs: wrong size of input vec"));
+
+	std::vector<t_MatCmplx> solutions = _math_solver.reconstruct();
+
+	int nvecs = getTaskDim();
+	t_VecCmplx wall_coefs(4);
+
+	_calcResidual(&wall_coefs[0]);
+
+	for (int j=0; j<getNNodes(); j++){
+
+		// amp_funcs = solutions[j]*wall_coefs;
+		matrix::base::mat_mul(solutions[j], wall_coefs, amp_funcs[j]);
+
+	}
+}
+
+t_Complex t_StabSolver::calcScalarProd(const std::vector<t_VecCmplx>& sol_dir, const std::vector<t_VecCmplx>& sol_conj){
+
+	int nnodes = _math_solver.getNNodes();
+
+	std::vector<t_Complex> fun(nnodes, 0.0);
+	std::vector<double>arg(nnodes, 0.0);
+
+	t_VecCmplx v1(STAB_MATRIX_DIM), v2(STAB_MATRIX_DIM);
+
+	// use order from wall to outer region !
+	// solution order is from outer region to wall
+
+	for (int i=0; i<nnodes; i++){
+
+		int ind_r = nnodes - 1 - i;
+		arg[i] = _math_solver.varRange[ind_r];
+
+		const t_ProfRec& rec = _profStab.get_rec(i);
+		_setScalProdMatrix(rec);
+		//matrix::base::mat_mul(_scal_prod_matrix, sol_dir[ind_r], v1);
+		// using plain product because sol_conj is already a conjugated vector of conjugate task
+		//fun[i] = vector::plain_prod<t_Complex, t_Complex>(v1, sol_conj[ind_r]);
+
+//		DO 12 I=1,MF
+//			DO 12 J=1,MF
+//			12 GG(II)=GG(II)+H2(I,J)*A0(J,II)*DZ(I,II)
+
+		fun[i]=0.0;
+		for (int j=0; j<STAB_MATRIX_DIM; j++)
+			for (int k=0; k<STAB_MATRIX_DIM; k++)
+				fun[i] = fun[i] + _scal_prod_matrix[k][j]*sol_dir[ind_r][k]*sol_conj[ind_r][j];
+
+
+	}
+
+	//return smat::fun_integrate_simp4_uniform(arg, fun);
+
+	return smat::fun_integrate(arg, fun);
 
 }

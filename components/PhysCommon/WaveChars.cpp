@@ -372,6 +372,13 @@ void t_WaveChars::print(){
 		<<_T("w:")<<this->w<<std::endl;
 };
 
+std::wstring t_WaveChars::to_wstr() const{
+	
+	std::wostringstream wostr;
+	wostr<<*this; return wostr.str();
+
+}
+
 t_WaveChars::t_BadTreat::t_BadTreat(const wxString& what, const wxChar* szFile,  const int line):
 t_GenException(what, szFile, line){};
 

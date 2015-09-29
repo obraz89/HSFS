@@ -41,5 +41,7 @@ namespace task{
 
 	void calc_Cp_etc();
 
+	void calc_scal_prod_self();
+
 
 }

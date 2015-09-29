@@ -158,6 +158,10 @@ int main(int argc, char* argv[]){
 		case task::GetMFChars:
 			task::calc_Cp_etc();
 			break;
+
+		case task::CalcScalProd:
+			task::calc_scal_prod_self();
+			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));
 			wxLogError(errMsg);

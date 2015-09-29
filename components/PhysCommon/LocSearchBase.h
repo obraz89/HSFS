@@ -70,9 +70,11 @@ namespace stab{
 	public:
 		enum t_Mode{
 
-			CONJUGATE = 01,
+			DIRECT = 01,
 
-			ASYM_HOMOGEN = 02
+			CONJUGATE = 02,
+
+			ASYM_HOMOGEN = 04
 		};
 
 		t_LSMode(int mode=0);
@@ -93,6 +95,9 @@ namespace stab{
 	public:
 
 		void setLSMode(const t_LSMode& mode);
+
+		virtual int getTaskDim() const = 0;
+		virtual int getNNodes() const = 0;
 
 		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
 
@@ -119,6 +124,11 @@ namespace stab{
 		virtual void dumpProfileStab(const std::string& fname) const=0;
 
 		virtual ~t_LSBase();
+
+		// testing
+
+		virtual void getAmpFuncs(std::vector<t_VecCmplx>&) = 0;
+		virtual t_Complex calcScalarProd(const std::vector<t_VecCmplx>& sol1, const std::vector<t_VecCmplx>& sol2) = 0;
 
 	};
 

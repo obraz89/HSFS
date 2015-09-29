@@ -32,10 +32,6 @@ bool t_StabSolver::t_StabODES::needOrtho(const t_MatCmplx& a_cur_sol){
 	return max_norm>1000.0;
 };
 
-void t_StabSolver::t_StabODES::setInitials(const t_MatCmplx& a_init_vectors){
-	solution[0] = a_init_vectors;
-}
-
 
 void t_StabSolver::t_StabODES::solve(){
 	t_ODES::solve();

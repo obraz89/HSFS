@@ -22,9 +22,10 @@ t_LSMode::t_LSMode(int mode):_mode(mode){};
 
 int t_LSMode::get_mode() const{return _mode;};
 
-void t_LSMode::set_defaults(){_mode = ASYM_HOMOGEN;};
+// by default, direct problem with forced homogen asymptotics
+void t_LSMode::set_defaults(){_mode = DIRECT|ASYM_HOMOGEN;};
 
-bool t_LSMode::is_flag_on(int flag) const{return _mode&flag;}
+bool t_LSMode::is_flag_on(int flag) const{ return _mode&flag;}
 //---------------------------------------------------------------------t_LSBase
 
 t_LSBase::~t_LSBase(){};

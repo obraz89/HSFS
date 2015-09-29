@@ -41,12 +41,12 @@ class  t_StabSolver: public stab::t_LSBase{
 
 		void formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& rhs);
 
-		void setInitials(const t_MatCmplx& a_init_vectors);
 		bool needOrtho(const t_MatCmplx& a_cur_sol);
 		void solve();
 	};
 	// algebraic solver
 	t_StabODES _math_solver;
+
 	pf::t_StabSolverParams _params;
 	// keep current stability_matrix
 	t_SqMatCmplx _stab_matrix;
@@ -60,8 +60,6 @@ class  t_StabSolver: public stab::t_LSBase{
 	t_ProfileStab _profStab; // current profile
 
 	t_WCharsLoc _waveChars;  // to keep current state of wave 
-	// container for initial guesses at a point
-	std::vector<t_WCharsLoc> _initWaves;
 
 	// prepare calculations
 	void _init();
@@ -76,14 +74,11 @@ class  t_StabSolver: public stab::t_LSBase{
 	// rhs function by stab matrix
 	// input for ODES
 	void _formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& dest);
-	// forms initial vectors for integration from outside down to wall
-	// 2D
-	enum t_ASYM_MODE {ASYM_DIRECT=0, ASYM_FORCE_SELF_SIM};
-	t_MatCmplx _getAsymptotics2D(const t_WCharsLoc& a_waveChars);
-	// 3D
-	// i hate myself, but for now i'll do it FORCE_SELF_SYM...
-	t_MatCmplx _getAsymptotics3D(
-		const t_WCharsLoc& a_waveChars, t_ASYM_MODE mode=ASYM_FORCE_SELF_SIM);
+	// first version, asymptotics fron AVF code
+	void _setAsymptotics(t_MatCmplx& asym_vecs);
+
+	// second version of asymptotics, from Forgoston disser
+	void _setAsymptotics_v2(t_MatCmplx& asym_vecs);
 
 	// Max instab search realization
 	// maximize wi with wr fixed
@@ -107,8 +102,8 @@ public:
 	t_StabSolver(const mf::t_DomainBase& a_rFld);
 	void init(const hsstab::TPlugin& g_plug);
 
-	inline int getTaskDim() const{return _math_solver.getTaskDim();};
-	inline int getNNodes() const{return _math_solver.getNNodes();}; 
+	int getTaskDim() const{return _math_solver.getTaskDim();};
+	int getNNodes() const{return _math_solver.getNNodes();}; 
 
 	inline const t_StabSolverParams& getParams() const{return _params;};
 
@@ -129,14 +124,16 @@ public:
 
 	void calcGroupVelocity(t_WCharsLoc& wchars);
 
+	// testing
+	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
+	// order important
+	t_Complex calcScalarProd(const std::vector<t_VecCmplx>& sol_dir, const std::vector<t_VecCmplx>& sol_conj);
+
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 
 	const t_StabScales& get_stab_scales() const;
 	//========================
 
-	// load initial approaches
-	// from EigenSearch solver
-	void setInitWaves(const std::vector<t_WCharsLoc>&);
 	// search for nearest eigenmode
 	// this is analogue to POISK in FORTRAN code
 	// false if no convergence (bad initial)
@@ -162,7 +159,6 @@ public:
 	void dumpProfileStab(const std::string& fname) const;
 
 	std::vector<t_WCharsLoc> filterInitWaves(const std::vector<t_WCharsLoc>& all_initials);
-	t_WCharsLoc getMaxWave(const std::vector<t_WCharsLoc>& a_inits, int a_nnodesStab=0);
 	// exceptions
 	class t_UnPhysWave{};
 	class t_WrongMode{};

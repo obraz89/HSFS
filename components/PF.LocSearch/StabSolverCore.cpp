@@ -5,7 +5,8 @@
 
 using namespace pf;
 
-
+// set direct matrix of stability eqs H:
+// dphi/dy = H*phi
 void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	t_CompVal imagUnity(0.0, 1.0);
 
@@ -134,20 +135,6 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 		alpha*alpha + beta*beta;
 
 	_stab_matrix[7][7] = -inv_mu*dMu1;
-
-	// option for conjugate problem
-	// dpsi/dy = H_conj*psi, 
-	// H_conj = -1*(H_dir)_transposed_conjugate, H_dir - matrix of direct problem
-	// we will solve dpsi_conjugate/dy = A*psi_conjugate
-	// then A = -1*H_dir_transposed
-	// the result is psi_conjugate : complex conjugate vetor of explicit conjugate vector psi 
-
-	if (_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
-
-		_stab_matrix.transpose();
-		_stab_matrix.mul_by_factor(-1.0);
-
-	}
 
 }
 
@@ -295,10 +282,10 @@ void t_StabSolver::_setScalProdMatrix(const double& a_y){
 // TODO: to speed up - rewrite to "_setAsymptotcs" 
 // and write directly to destination formal param
 
-t_MatCmplx t_StabSolver::_getAsymptotics3D
-(const t_WCharsLoc& a_waveChars, t_ASYM_MODE mode){
+void t_StabSolver::_setAsymptotics(t_MatCmplx& asym_vecs){
+
 	const int dim = getTaskDim();
-	t_MatCmplx initial_vectors(dim,2*dim);
+
 	t_SqMatCmplx b_coef(dim);
 	t_VecCmplx lambda(dim,0.0);
 
@@ -319,8 +306,10 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D
 	// to shorten 
 	t_SqMatCmplx& _sm = _stab_matrix;
 
-	// det(H - lambda*E)=0 <=> lambda1, lambda2...
-	// eigen vectors h1, h2, h3, h4 are used as initials
+	// det(H - lambda*E)=0 <=> lambda1, lambda2... lambda8
+	// choose l1,l3,l5,l7 : Re(l1,l3,l5,l7)<0
+
+	// eigen vectors h1 for l1 eigenvalue, h3 for l3, h5 for l5, h7 for l7 are used as initials
 
 	b_coef[0][0]=_stab_matrix[0][1];
 	b_coef[1][0]=_stab_matrix[3][1];
@@ -377,20 +366,20 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D
 	b_coef[3][3]=1.0;
 
 	for (int i=0; i<4; i++){	
-		initial_vectors[i][0] = b_coef[0][i];
-		initial_vectors[i][1] = lambda[i]*b_coef[0][i];
-		initial_vectors[i][2] = (
+		asym_vecs[i][0] = b_coef[0][i];
+		asym_vecs[i][1] = lambda[i]*b_coef[0][i];
+		asym_vecs[i][2] = (
 			_stab_matrix[0][2]*b_coef[0][i]+
 			_stab_matrix[3][2]*b_coef[1][i]+
 			_stab_matrix[4][2]*b_coef[2][i]+
 			_stab_matrix[6][2]*b_coef[3][i]
 		)/lambda[i];
 
-		initial_vectors[i][3] = b_coef[1][i];
-		initial_vectors[i][4] = b_coef[2][i];
-		initial_vectors[i][5] = lambda[i]*b_coef[2][i];
-		initial_vectors[i][6] = b_coef[3][i];
-		initial_vectors[i][7] = (
+		asym_vecs[i][3] = b_coef[1][i];
+		asym_vecs[i][4] = b_coef[2][i];
+		asym_vecs[i][5] = lambda[i]*b_coef[2][i];
+		asym_vecs[i][6] = b_coef[3][i];
+		asym_vecs[i][7] = (
 			_stab_matrix[3][7]*b_coef[1][i]+
 			_stab_matrix[4][7]*b_coef[2][i]+
 			_stab_matrix[6][7]*b_coef[3][i]
@@ -398,14 +387,14 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D
 	}
 
 	// verification of asymptotics, enable when debug needed
-	/*
+	
 	t_VecCmplx asym_resid_v(2*dim, 0.0), init_vec(2*dim, 0.0);
 	t_VecCmplx v1(2*dim, 0.0), v2(2*dim, 0.0), v3(2*dim, 0.0);
 	double resid=0.0;
 
 	for (int i=0; i<dim; i++){
 
-			initial_vectors.col_to_vec(i, init_vec);
+			asym_vecs.col_to_vec(i, init_vec);
 			//asym_resid_v = _stab_matrix*init_vec - lambda[i]*init_vec;		
 			matrix::base::mat_mul<t_Complex, t_Complex>(_stab_matrix, init_vec, v1);
 			matrix::base::mul<t_Complex, t_Complex>(lambda[i], init_vec, v2);
@@ -414,11 +403,350 @@ t_MatCmplx t_StabSolver::_getAsymptotics3D
 			resid = resid + asym_resid_v.norm().real();
 	}
 
-	wxLogMessage(_T("Verify asymptotics: resid = %f"), resid);
+	wxLogMessage(_T("Verify asymptotics v1: resid = %f"), resid);
 	//if (resid>ASYM_TOL_DEFAULT)
 	//	ssuGENTHROW(_T("StabSolver Error: Verification of Asymptotics failed"));
+	
+	// asym_vecs are set
+}
+
+void t_StabSolver::_setAsymptotics_v2(t_MatCmplx& asym_vecs){
+
+	const int dim = getTaskDim();
+	t_SqMatCmplx b_coef(dim);
+
+	// matrix of fundamental solutions of direct problem
+	// first 4 vecs are initials with Re[lambda]<0
+	// others are with Re[lambda]>0 : lambda[i+4] = -lambda[i], i=0..3
+	t_SqMatCmplx Z(STAB_MATRIX_DIM);
+
+	t_VecCmplx lambda(STAB_MATRIX_DIM,0.0);
+		
+	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
+	t_ProfRec out_rec = _profStab.get_last_rec();
+
+	if (_ls_mode.is_flag_on(stab::t_LSMode::ASYM_HOMOGEN)){
+		// modify ... a little
+		// this is how AVF did it
+		out_rec.t1=0.0;
+		out_rec.t2=0.0;
+		out_rec.u1=0.0;
+		out_rec.u2=0.0;
+		out_rec.w1=0.0;
+		out_rec.w2=0.0;
+	}
+
+	_setStabMatrix3D(out_rec);
+
+	t_SqMatCmplx& _sm = _stab_matrix;
+
+
+	// AVF method of computing Z
+	{
+
+		b_coef[0][0]=_stab_matrix[0][1];
+		b_coef[1][0]=_stab_matrix[3][1];
+		b_coef[2][0]=_stab_matrix[4][1];
+
+		b_coef[1][1]=_sm[3][1]*_sm[1][3]+_sm[3][2]*_sm[2][3]+
+			_sm[3][5]*_sm[5][3]+_sm[3][7]*_sm[7][3];
+
+		b_coef[2][1]=_sm[4][1]*_sm[1][3]+_sm[4][2]*_sm[2][3]+
+			_sm[5][3]*_sm[4][5]+_sm[7][3]*_sm[4][7];
+
+		b_coef[1][2]=_sm[3][5];
+		b_coef[2][2]=_sm[4][5];
+
+		b_coef[1][3]=_sm[3][7];
+		b_coef[2][3]=_sm[4][7];
+
+		b_coef[3][3] = _stab_matrix[0][1];
+		//
+
+		t_CompVal s1 = 0.5*(b_coef[1][1]+b_coef[2][2]);
+		t_CompVal s2 = sqrt(
+			0.25*std::pow(b_coef[1][1]-b_coef[2][2],2)+
+			b_coef[2][1]*b_coef[1][2]
+		);
+		lambda[0] = -sqrt(b_coef[0][0]);
+		lambda[1] = -sqrt(s1+s2);
+		lambda[2] = -sqrt(s1-s2);
+		lambda[3] = lambda[0];
+
+		for (int i=0; i<dim; i++) lambda[i+dim] = -lambda[i];
+
+		b_coef[0][0] = 1.0;
+		b_coef[1][0] = 0.0;
+		b_coef[2][0] = 0.0;
+		b_coef[3][0] = 0.0;
+		for (int i=1; i<3; i++){
+			t_CompVal L2 = std::pow(lambda[i],2);
+			t_CompVal denom = _stab_matrix[0][1] - L2;
+			b_coef[0][i] = (
+				(L2 - _stab_matrix[4][5])*_stab_matrix[3][1]+
+				_stab_matrix[4][1]*_stab_matrix[3][5]
+			)/denom;
+
+			b_coef[1][i] = _stab_matrix[4][5] - L2;
+			b_coef[2][i] = -_stab_matrix[3][5];
+			b_coef[3][i] = (
+				_stab_matrix[3][5]*_stab_matrix[4][7]+
+				(L2 - _stab_matrix[4][5])*_stab_matrix[3][7]
+			)/denom;
+		};
+
+		b_coef[0][3]=0.0;
+		b_coef[1][3]=0.0;
+		b_coef[2][3]=0.0;
+		b_coef[3][3]=1.0;
+
+		for (int k=0; k<2; k++)
+		for (int i=0; i<4; i++){	
+			int ind = k*dim + i;
+			Z[ind][0] = b_coef[0][i];
+			Z[ind][1] = lambda[ind]*b_coef[0][i];
+			Z[ind][2] = (
+				_stab_matrix[0][2]*b_coef[0][i]+
+				_stab_matrix[3][2]*b_coef[1][i]+
+				_stab_matrix[4][2]*b_coef[2][i]+
+				_stab_matrix[6][2]*b_coef[3][i]
+			)/lambda[ind];
+
+			Z[ind][3] = b_coef[1][i];
+			Z[ind][4] = b_coef[2][i];
+			Z[ind][5] = lambda[ind]*b_coef[2][i];
+			Z[ind][6] = b_coef[3][i];
+			Z[ind][7] = (
+				_stab_matrix[3][7]*b_coef[1][i]+
+				_stab_matrix[4][7]*b_coef[2][i]+
+				_stab_matrix[6][7]*b_coef[3][i]
+			)/lambda[ind];
+		}
+	
+	} // Z calcs by AVF done
+
+	// compute Z following Forgoston diss
+	/*
+	{
+
+	b_coef[0][0]=_stab_matrix[0][1];
+
+	b_coef[1][1]=_sm[3][1]*_sm[1][3]+_sm[3][2]*_sm[2][3]+
+			_sm[3][5]*_sm[5][3]+_sm[3][7]*_sm[7][3];
+
+	b_coef[2][1]=_sm[4][1]*_sm[1][3]+_sm[4][2]*_sm[2][3]+
+			_sm[5][3]*_sm[4][5]+_sm[7][3]*_sm[4][7];
+
+	b_coef[1][2]=_sm[3][5];
+
+	b_coef[2][2]=_sm[4][5];
+
+	t_CompVal s1 = 0.5*(b_coef[1][1]+b_coef[2][2]);
+	t_CompVal s2 = sqrt(
+			0.25*std::pow(b_coef[1][1]-b_coef[2][2],2)+
+			b_coef[2][1]*b_coef[1][2]
+		);
+
+	// eigenvalues 
+	lambda[0] = -sqrt(b_coef[0][0]);
+	lambda[1] = -sqrt(s1+s2);
+	lambda[2] = -sqrt(s1-s2);
+	lambda[3] = lambda[0];
+	
+	for (int i=0; i<dim; i++) lambda[i+dim] = -lambda[i];
+
+	{
+
+		// asymptotics for direct problem
+
+		for (int k=0; k<2; k++){
+
+			{
+
+				// z0, z3
+				const int ind = 0+dim*k;
+				Z[ind][0] = 1.0;
+				Z[ind][1] = lambda[ind];
+				Z[ind][2] = _sm[0][2]/lambda[ind];
+				Z[ind][3] = 0.0;
+				Z[ind][4] = 0.0;
+				Z[ind][5] = 0.0;
+				Z[ind][6] = 0.0;
+				Z[ind][7] = 0.0;
+
+			}
+
+			for (int j=1; j<3; j++){
+
+				//z1, z5, z2, z6
+
+				// index of current fundamental vector z_ind
+				const int ind = j+dim*k;
+
+				t_Complex z2j, z3j, z4j, z6j;
+				t_Complex l2 = lambda[ind]*lambda[ind];
+
+				b_coef[1][0] = _sm[3][1]*b_coef[2][1] - _sm[4][1]*(b_coef[1][1]-l2);
+
+				z3j = (l2 - _sm[0][1])*b_coef[2][1]/b_coef[1][0];
+
+				z4j = -(b_coef[1][1] - l2)*(l2 - _sm[0][1])/b_coef[1][0];
+
+				z6j = (_sm[3][7]*z3j + _sm[4][7]*z4j)/(l2 - _sm[6][7]);
+
+				z2j = (_sm[0][2]+_sm[3][2]*z3j + _sm[4][2]*z4j + _sm[6][2]*z6j)/lambda[ind];
+
+				Z[ind][0]= 1.0;
+				Z[ind][1]= lambda[ind];
+				Z[ind][2]= z2j;
+				Z[ind][3] = z3j;
+				Z[ind][4] = z4j;
+				Z[ind][5] = lambda[ind]*z4j;
+				Z[ind][6] = z6j;
+				Z[ind][7] = lambda[ind]*z6j;
+
+			}
+
+			{
+
+				// z3, z7
+				const int ind = 3+dim*k;
+
+				Z[ind][0] = 0.0;
+				Z[ind][1] = 0.0;
+				Z[ind][2] = _sm[6][2]/lambda[ind];
+				Z[ind][3] = 0.0;
+				Z[ind][4] = 0.0;
+				Z[ind][5] = 0.0;
+				Z[ind][6] = 1.0;
+				Z[ind][7] = lambda[ind];
+
+			}
+
+
+		}
+
+	}
+	} */	//~ fundamental matrix Z of direct problem is set
+
+	if (_ls_mode.is_flag_on(stab::t_LSMode::DIRECT)){
+
+		// direct problem, take z1, z2, z3, z4 as initials
+
+		for (int i=0; i<dim; i++)
+			for (int j=0; j<STAB_MATRIX_DIM; j++) asym_vecs[i][j] = Z[i][j];
+
+
+	}
+	if(_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
+
+		// asymptotics for conjugate problem
+
+		t_VecCmplx rhs(STAB_MATRIX_DIM);
+		t_VecCmplx conj_vec(STAB_MATRIX_DIM);
+
+		t_SqMatCmplx Z_tr(STAB_MATRIX_DIM);
+		Z_tr = Z; Z_tr.transpose();
+
+		// use 4 last vecs as initials
+		for (int i=0; i<dim; i++){
+
+			rhs.setToZero();
+			rhs[i+dim] = 1.0;
+
+			smat::solve_lsys_lu(Z_tr, rhs, conj_vec);
+
+			// to solve "honest" conjugate problem
+			//for (int j=0; j<STAB_MATRIX_DIM; j++) asym_vecs[i][j] = std::conj(conj_vec[j]);
+
+			// to solve "conjugated" conjugate problem
+			asym_vecs.set_col(i, conj_vec);
+
+		}
+
+	}
+
+	// attempts of explicit conjugate vectors calcs
+	// z~2
+	/*
+	{
+
+			t_Complex l2 = std::conj(lambda[0])*std::conj(lambda[0]);
+
+		initial_vectors[0][0] = 1.0;
+		initial_vectors[0][1] = std::conj(lambda[0])/_sm[1][0];
+		initial_vectors[0][2] = 0.0;
+		initial_vectors[0][3] = 0.0;
+
+		t_Complex ksi52 = (_sm[1][3]*_sm[7][4] - _sm[1][4]*_sm[7][3])/
+			(_sm[7][3]*(_sm[5][4]+l2)-_sm[5][3]*_sm[7][4]);
+
+		initial_vectors[0][4] = ksi52;
+
+		initial_vectors[0][5] = -ksi52/std::conj(lambda[0]);
+
+		t_Complex ksi72 = (_sm[5][3]*_sm[1][4]-_sm[1][3]*(_sm[5][4]+l2))/
+			(_sm[7][3]*(_sm[5][4]+l2)-_sm[5][3]*_sm[7][4]);
+
+		initial_vectors[0][6] = ksi72;
+		initial_vectors[0][7] = -ksi72/std::conj(lambda[0]);
+		}
+	}
 	*/
-	return initial_vectors;
+
+	
+	// verification of asymptotics, enable when debug needed
+	
+	t_VecCmplx asym_resid_v(STAB_MATRIX_DIM, 0.0), init_vec(STAB_MATRIX_DIM, 0.0);
+	t_VecCmplx v1(STAB_MATRIX_DIM, 0.0), v2(STAB_MATRIX_DIM, 0.0), v3(STAB_MATRIX_DIM, 0.0);
+	double resid=0.0;
+
+	// verify Z
+	for (int i=0; i<STAB_MATRIX_DIM; i++){
+
+			Z.col_to_vec(i, init_vec);
+			//asym_resid_v = _stab_matrix*init_vec - lambda[i]*init_vec;		
+			matrix::base::mat_mul<t_Complex, t_Complex>(_stab_matrix, init_vec, v1);
+			matrix::base::mul<t_Complex, t_Complex>(lambda[i], init_vec, v2);
+			matrix::base::minus<t_Complex, t_Complex>(v1, v2, asym_resid_v);
+
+			resid = resid + asym_resid_v.norm().real();
+	}
+
+	wxLogMessage(_T("Verify asymptotics v2 : resid_direct = %f"), resid);
+
+	if (_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
+
+		t_SqMatCmplx H1(STAB_MATRIX_DIM);
+
+		// H1 = -H_tr
+		H1 = _stab_matrix;
+		H1.mul_by_factor(-1.0);
+		H1.transpose();
+
+		resid = 0.0;
+
+		for (int i=0; i<dim; i++){
+
+			asym_vecs.col_to_vec(i, init_vec);
+
+			//asym_resid_v = -1.0*_stab_matrix_tr*init_vec - lambda[i]*init_vec;		
+			matrix::base::mat_mul<t_Complex, t_Complex>(H1, init_vec, v1);
+
+			matrix::base::mul<t_Complex, t_Complex>(-lambda[i+dim], init_vec, v2);
+			matrix::base::minus<t_Complex, t_Complex>(v1, v2, asym_resid_v);
+
+			double dres = smat::norm(asym_resid_v.norm());
+			resid = resid + dres;
+		}
+
+		wxLogMessage(_T("Verify asymptotics v2 : resid_conjugate = %f"), resid);
+		//std::wcout<<_T("Asym vecs:\n")<<asym_vecs<<_T("\n");
+
+
+	}
+
+
 }
 
 t_Complex t_StabSolver::_calcResidual(t_Complex* out_resid_coefs) const{
@@ -471,6 +799,7 @@ t_Complex t_StabSolver::_calcResidual(t_Complex* out_resid_coefs) const{
 			mat[i][2] = wall_func[i][5];
 			mat[i][3] = wall_func[i][7];
 		}
+
 		matrix::base::mat_mul<t_CompVal, t_CompVal>(mat.inverse(),rhs,resid_coefs);
 
 		for (int i=0; i<4; i++){
@@ -491,7 +820,9 @@ t_Complex t_StabSolver::_calcResidual(t_Complex* out_resid_coefs) const{
 t_Complex t_StabSolver::solve(t_WCharsLoc& stab_point){
 	this->_waveChars = stab_point;
 	this->_math_solver.clean();
-	this->_math_solver.setInitials(_getAsymptotics3D(stab_point));
+
+	_setAsymptotics_v2(_math_solver.solution[0]);
+
 	_math_solver.solve();
 	t_Complex resid = _calcResidual();
 	_waveChars.resid = resid;
@@ -500,59 +831,20 @@ t_Complex t_StabSolver::solve(t_WCharsLoc& stab_point){
 }
 
 void t_StabSolver::dumpEigenFuctions(const std::string& fname){
+
+	std::vector<t_VecCmplx> amp_funcs(getNNodes(), t_VecCmplx(STAB_MATRIX_DIM));
+
 	std::wofstream fstr(&fname[0]);
 	fstr<<_T("u_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tr_re\tr_im\tw_re\tw_im\tw'_re\tw'_im\tY\n");
 
-	std::vector<t_MatCmplx> solutions = _math_solver.reconstruct();
-	int nvecs = getTaskDim();
-	// TODO: ask AVF how to normalize
-/*
-	for (int i=0; i<nvecs;i++){
-		for (int j=0; j<getNNodes(); j++){
-			for (int k=0; k<2*nvecs; k++){
-				if (std::norm(solutions[j][i][k])>std::norm(max_val)){
-					max_val = solutions[j][i][k];
-				};
-
-			}
-		}
-	}
-*/
-
-	/*
-	for (int i=0; i<nvecs;i++){
-		for (int j=0; j<getNNodes(); j++){
-			t_Complex val;
-			for (int k=0; k<2*nvecs; k++){
-				val = solutions[j][i][k];
-				fstr<<std_manip::std_format_sci<double>(val.real())
-					<<_T("\t")
-					<<std_manip::std_format_sci<double>(val.imag())
-					<<_T("\t");
-			}
-			fstr<<_math_solver.varRange[j];
-			fstr<<_T("\n");
-		}
-		// separate solutions to simplify origin export
-		fstr<<_T("\n\n\n\n\n\n");
-	}*/
-
-	// finally write down eigen solution satisfying bc conditions
-	t_VecCmplx wall_coefs(4);
-	_calcResidual(&wall_coefs[0]);
-
-	t_VecCmplx cur_sol(2*nvecs);// ok
+	getAmpFuncs(amp_funcs);
 
 	for (int j=0; j<getNNodes(); j++){
-		const t_VecCmplx* pVecs[4];
 
-		//t_VecCmplx cur_sol = solutions[j]*wall_coefs;;
-		matrix::base::mat_mul(solutions[j], wall_coefs, cur_sol);
-
-		for (int k=0; k<2*nvecs; k++){
-			fstr<<std_manip::std_format_sci<double>(cur_sol[k].real())
+		for (int k=0; k<STAB_MATRIX_DIM; k++){
+			fstr<<std_manip::std_format_sci<double>(amp_funcs[j][k].real())
 				<<_T("\t")
-				<<std_manip::std_format_sci<double>(cur_sol[k].imag())
+				<<std_manip::std_format_sci<double>(amp_funcs[j][k].imag())
 				<<_T("\t");
 		}
 		fstr<<_math_solver.varRange[j];

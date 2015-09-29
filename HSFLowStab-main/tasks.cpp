@@ -562,3 +562,71 @@ void task::calc_Cp_etc(){
 	}
 
 }
+
+void task::calc_scal_prod_self(){
+
+	const mf::t_GeomPoint& xyz = g_pStabDB->get_pave_pt(0).xyz;
+
+	g_pStabSolver->setContext(xyz);
+
+	g_pGSSolverSpat->setContext(xyz);
+
+
+	std::vector<t_WCharsLoc> init_waves_raw;
+	std::vector<t_WCharsLoc> init_waves_filtered;
+
+	t_WCharsLoc init_wave, ret_wave;
+
+	init_wave.b = g_taskParams.b_ndim_min;
+	init_wave.w = g_taskParams.w_ndim_min;
+
+//	init_waves_raw = g_pGSSolverSpat->getInstabModes(init_wave);
+
+//	init_waves_filtered = g_pStabSolver->filter_gs_waves_spat(init_waves_raw, 
+//		stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED));
+
+//	ret_wave = t_WCharsLoc::find_max_instab_spat(init_waves_filtered); 
+
+//	wxLogMessage(_T("wave chars for direct problem:\n%s"), &(ret_wave.to_wstr()[0]) );
+
+	// conjugate problem
+
+	ret_wave.a = t_Complex(0.230475, -0.017350);
+	ret_wave.b = 0.62;
+	ret_wave.w = 0.144;
+
+	ret_wave.resid = 1.0E+06;
+
+	g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::CONJUGATE|stab::t_LSMode::ASYM_HOMOGEN));
+	//g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT|stab::t_LSMode::ASYM_HOMOGEN));
+
+	g_pStabSolver->solve(ret_wave);
+
+	wxLogMessage(_T("Conjugate problem residual:%f"), smat::norm(ret_wave.resid));
+
+	std::vector<t_VecCmplx> sol_conj(g_pStabSolver->getNNodes(), 8);
+
+	g_pStabSolver->getAmpFuncs(sol_conj);
+	g_pStabSolver->dumpEigenFuctions("output/amp_funcs_conj.dat");
+
+	// direct problem
+
+	g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT|stab::t_LSMode::ASYM_HOMOGEN));
+
+	g_pStabSolver->solve(ret_wave);
+
+	wxLogMessage(_T("Direct problem residual:%f"), smat::norm(ret_wave.resid));
+
+	g_pStabSolver->dumpEigenFuctions("output/amp_funcs_dir.dat");
+
+	std::vector<t_VecCmplx> sol_dir(g_pStabSolver->getNNodes(), 8);
+
+	g_pStabSolver->getAmpFuncs(sol_dir);
+
+	t_Complex val = g_pStabSolver->calcScalarProd(sol_dir, sol_conj);
+
+	wxLogMessage(_("Scalar product result:(%f,%f)"), val.real(), val.imag());
+
+	int vvvv = 1;
+
+}
