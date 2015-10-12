@@ -162,6 +162,10 @@ int main(int argc, char* argv[]){
 		case task::CalcScalProd:
 			task::calc_scal_prod_self();
 			break;
+
+		case task::GetBLSpectrum:
+			task::get_bl_spectrum();
+			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));
 			wxLogError(errMsg);

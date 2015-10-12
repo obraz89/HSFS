@@ -129,6 +129,7 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::GetAmplitudeFuncs] = _T("GetAmplitudeFuncs");
 	task::TaskNames[task::GetMFChars] = _T("CalcCp");
 	task::TaskNames[task::CalcScalProd] = _T("CalcScalProd");
+	task::TaskNames[task::GetBLSpectrum] = _T("GetBLSpectrum");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");

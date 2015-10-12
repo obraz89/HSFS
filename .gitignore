@@ -5,6 +5,7 @@ _UpgradeReport_Files/*
 x64/*
 bin_*/
 bin-*/
+lib/*
 # compiler generated & precomp
 *_mod.f90
 *.pchi

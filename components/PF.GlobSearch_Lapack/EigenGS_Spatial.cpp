@@ -662,20 +662,18 @@ void t_GlobSrchSpat::writeSpectrum(const std::string &a_filename) const{
 
 void t_GlobSrchSpat::writeSpectrumPhase(const std::string &a_filename) const{
 
-	wxLogMessage(_T("writeSpectrumPhase not implemented for Spatial GS!\n"));
-	/*
-	double k = sqrt(_alpha*_alpha + _beta*_beta);
-	t_Complex ca, ck;
+	wxLogMessage(_T("writeSpectrumPhase Warning: ci,cr comps are approximate!\n"));
+	
+	//double k = sqrt(_alpha*_alpha + _beta*_beta);
+	t_Complex c;
 	std::wofstream to_f(&a_filename[0]);
 	for (int i=0; i<_spectrum.size(); i++){
+
+		c = _w/_spectrum[i];
 		
-		ca = _spectrum[i]/_alpha;
-		ck = _spectrum[i]/k;
-		
-		to_f<<ca.real()<<_T("\t")<<ca.imag()<<_T("\t")
-			<<ck.real()<<_T("\t")<<ck.imag()<<_T("\t")<<std::endl;
+		to_f<<c.real()<<_T("\t")<<c.imag()<<_T("\n");
 	};
-	*/
+	
 }
 
 std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_wave){

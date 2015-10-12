@@ -19,7 +19,39 @@ struct TgenericSettings
 
 namespace task{
 
-	enum TTaskType { SearchInstabLoc=0, Retrace, MaxInstabLine, AnalyzeWChars, GetProfiles, MPITest, GetAmplitudeFuncs, GetMFChars, CalcScalProd, TaskNum};
+	enum TTaskType { 
+
+		// Global search of instabilities
+		SearchInstabLoc=0, 
+
+		// get amplification rates over wave paths with various closures
+		Retrace, 
+
+		// ?
+		MaxInstabLine, 
+
+		// ?
+		AnalyzeWChars, 
+
+		// Extract mean flow profiles
+		GetProfiles, 
+
+		// 
+		MPITest, 
+
+		// reconstruct amplitude functions for a given wave
+		GetAmplitudeFuncs, 
+
+		// get boundary layer spectrum from global search routine
+		GetBLSpectrum, 
+
+		// calculate Cp and other useful functions in pave points
+		GetMFChars, 
+
+		// calculate scalar product of 2 modes
+		CalcScalProd, 
+
+		TaskNum};
 
 	extern wxString TaskNames[TaskNum];
 

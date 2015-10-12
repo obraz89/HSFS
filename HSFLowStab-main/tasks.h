@@ -43,5 +43,7 @@ namespace task{
 
 	void calc_scal_prod_self();
 
+	void get_bl_spectrum();
+
 
 }
