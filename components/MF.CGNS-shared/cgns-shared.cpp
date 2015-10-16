@@ -3,7 +3,7 @@
 
 #include <cgnslib.h>
 
-#include "wx/tokenzr.h"
+#include "io_helpers.h"
 
 using namespace mf::cg;
 
@@ -72,38 +72,17 @@ t_ZoneGrdLine::t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode)
 
 static int g_time = 0.0;
 
-void mf::cg::TDomain::_read_parse_str_array(
-	const wxString& raw_str, std::vector<std::string>& dest)
-{
-
-	wxArrayString wxNames = wxStringTokenize(raw_str, _T(","));
-
-	dest.clear();
-
-	for (int i=0; i<wxNames.Count(); i++) {
-
-		wxString& rStr = wxNames[i];
-
-		// trim from both left and right
-		rStr.Trim(true);rStr.Trim(false);
-		char strName[64];
-
-		sprintf(strName, rStr.ToAscii());
-		dest.push_back(std::string(strName));
-
-	}
-
-}
-
 
 void mf::cg::TDomain::_read_parse_bc_wall_names(const wxString& strBCWallFamNames){
 
-	_read_parse_str_array(strBCWallFamNames, _vecBCWallNames);
+	io_hlp::read_parse_str_array(strBCWallFamNames, _T(','), _vecBCWallNames);
 
 }
 
 void mf::cg::TDomain::_read_parse_func_names(const wxString& str){
-	_read_parse_str_array(str, G_vecCGNSFuncNames);
+
+	io_hlp::read_parse_str_array(str, _T(','), G_vecCGNSFuncNames);
+
 }
 
 

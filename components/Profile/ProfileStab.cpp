@@ -1,15 +1,10 @@
-#include "io_helpers.h"
-
 #include "ProfileStab.h"
 
 #include <cmath>
 
-//#include "log.h"
-
-#include "wx/log.h"
+#include "io_helpers.h"
 
 #include "fstream"
-#include "sstream"
 
 using namespace mf;
 

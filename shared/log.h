@@ -8,7 +8,8 @@
 #include "wx/log.h"
 #include "wx/string.h"
 
-#include "io_helpers.h"
+#include "dll_impexp_shared.h"
+
 namespace log_my{
 	inline void wxLogMessageStd(const std::wstring& str){
 		const wxChar* pStr = &(str[0]);

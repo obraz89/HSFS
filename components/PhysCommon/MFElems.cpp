@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "mf_shared.h"
 
+#include "io_helpers.h"
+
 using namespace mf;
 
 //-------------------------------------------------------------------------t_Rec

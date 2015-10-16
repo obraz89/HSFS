@@ -8,9 +8,6 @@
 #include "MF_CGNS2D_params.h"
 
 
-#include "io_helpers.h"
-
-
 namespace mf{
 
 	class t_MFCGNS2D: public mf::cg::TDomain{

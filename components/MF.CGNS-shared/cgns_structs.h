@@ -433,7 +433,6 @@ namespace mf{
 				TDims& dims, double** grid, double** field);
 
 			// common params readers
-			void _read_parse_str_array(const wxString& raw_str, std::vector<std::string>& dest);
 			void _read_parse_bc_wall_names(const wxString& str);
 			void _read_parse_func_names(const wxString& str);
 			void _read_parse_bl_thick_calc_type(const wxString& str);

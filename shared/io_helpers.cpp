@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string>
 
+#include "wx/tokenzr.h"
+
 //#include "atlbase.h"
 //#include "atlstr.h"
 //#include "comutil.h"
@@ -55,5 +57,30 @@ std::string wx_to_stdstr(const wxString& wx_str){
 		return ret;
 	*/
 };
+
+void io_hlp::read_parse_str_array(
+				const wxString& raw_str, wxChar Delim, std::vector<std::string>& dest){
+
+	wxArrayString wxNames = wxStringTokenize(raw_str, Delim);
+
+	dest.clear();
+
+	for (int i=0; i<wxNames.Count(); i++) {
+
+		wxString& rStr = wxNames[i];
+
+		// trim from both left and right
+		rStr.Trim(true);rStr.Trim(false);
+		char strName[64];
+
+		sprintf(strName, rStr.ToAscii());
+		dest.push_back(std::string(strName));
+
+	}
+
+
+}
+
+
 
 

@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "log.h"
 
+#include "io_helpers.h"
+
 TLogStream::TLogStream(std::_tostream* ostr/* = NULL*/)
 {
 	if(ostr == NULL)  

@@ -5,6 +5,8 @@
 
 #include <iostream>
 
+#include <vector>
+
 class wxString;
 IMPEXP_SHARED std::string wx_to_stdstr(const wxString& wx_str);
 
@@ -24,6 +26,10 @@ namespace io_hlp{
 		istr>>val;
 		return istr;
 	};
+
+	IMPEXP_SHARED void read_parse_str_array(
+		const wxString& raw_str, wxChar Delim, std::vector<std::string>& dest);
+
 
 }
 

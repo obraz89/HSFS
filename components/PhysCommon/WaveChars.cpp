@@ -9,6 +9,8 @@
 #include "stdafx.h"
 #include "WaveChars.h"
 
+#include "io_helpers.h"
+
 // ----------------------------------------------------------------- t_WaveChars
 
 t_WaveChars::t_WaveChars(stab::t_TaskTreat treat):_task_treat(treat){};
@@ -161,7 +163,7 @@ namespace stab{
 
 		if ((c_min<=c) && (c<=c_max)) return true;
 
-		wxLogMessage(_T("Checking Wchars: Phase speed looks bad, treating unphysical"));
+		//wxLogMessage(_T("Checking Wchars: Phase speed looks bad, treating unphysical"));
 
 		return false;
 
@@ -205,7 +207,7 @@ namespace stab{
 	if (coef<0.5){
 		return true;
 	}else{
-		wxLogMessage(_T("Checking Wchars: sigma/k is not small - treating unphysical"));
+		//wxLogMessage(_T("Checking Wchars: sigma/k is not small - treating unphysical"));
 		return false;
 	}
 
