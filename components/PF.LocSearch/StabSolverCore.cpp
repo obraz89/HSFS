@@ -403,7 +403,7 @@ void t_StabSolver::_setAsymptotics(t_MatCmplx& asym_vecs){
 			resid = resid + asym_resid_v.norm().real();
 	}
 
-	wxLogMessage(_T("Verify asymptotics v1: resid = %f"), resid);
+	//wxLogMessage(_T("Verify asymptotics v1: resid = %f"), resid);
 	//if (resid>ASYM_TOL_DEFAULT)
 	//	ssuGENTHROW(_T("StabSolver Error: Verification of Asymptotics failed"));
 	
@@ -713,7 +713,7 @@ void t_StabSolver::_setAsymptotics_v2(t_MatCmplx& asym_vecs){
 			resid = resid + asym_resid_v.norm().real();
 	}
 
-	wxLogMessage(_T("Verify asymptotics v2 : resid_direct = %f"), resid);
+	//wxLogMessage(_T("Verify asymptotics v2 : resid_direct = %f"), resid);
 
 	if (_ls_mode.is_flag_on(stab::t_LSMode::CONJUGATE)){
 
@@ -740,7 +740,7 @@ void t_StabSolver::_setAsymptotics_v2(t_MatCmplx& asym_vecs){
 			resid = resid + dres;
 		}
 
-		wxLogMessage(_T("Verify asymptotics v2 : resid_conjugate = %f"), resid);
+		//wxLogMessage(_T("Verify asymptotics v2 : resid_conjugate = %f"), resid);
 		//std::wcout<<_T("Asym vecs:\n")<<asym_vecs<<_T("\n");
 
 

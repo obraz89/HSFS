@@ -151,6 +151,13 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t
 
 		break;
 
+	case t_WPLineParams::FIXED_DIRECTION:
+
+		v = _params.RetraceVec;
+
+		matrix::base::mul(dt, v, dr);
+
+		break;
 	default:
 		wxString msg(_T("Unsupported retrace dir option"));
 		wxLogError(msg);

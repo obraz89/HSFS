@@ -6,6 +6,8 @@
 
 using namespace pf;
 
+#include "wx/tokenzr.h"
+
 // ---------------------------------------
 
 static const double TIME_STEP_DEFAULT = 0.01;
@@ -29,6 +31,7 @@ void t_WPLineParams::init_supported_options(){
 		MARCH_OPTS_STR.clear();
 		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("GROUP_VELO")), t_WPLineParams::GROUP_VELO));
 		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("STREAMLINE")), t_WPLineParams::STREAMLINE));
+		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("FIXED_DIRECTION")), t_WPLineParams::FIXED_DIRECTION));
 		
 		
 };
@@ -42,6 +45,33 @@ void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
 	g.add("RetraceMode", RETRACE_MODE_DEFAULT_STR, _T("Retrace Mode"));
 
 	g.add("MarchAlong", MARCH_OPT_DEFAULT_STR, _T("Retrace direction"));
+
+	g.add("RetraceVec", _T("1.000; 0.000; 0.000"), _T("Retrace vector [when FIXED_DIRECTION option chosen]"));
+
+}
+
+void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g){
+
+	wxString rvec_str = g.get_string_param("RetraceVec");
+
+	wxArrayString wxNames = wxStringTokenize(rvec_str , _T(';'));
+
+	if (wxNames.Count()!=3) wxLogError(_T("Retrace vector parse error: type in x;y;z"));
+
+	bool ok = true;
+
+	for (int i=0; i<3; i++) {
+
+		wxString& rStr = wxNames[i];
+
+		// trim from both left and right
+		rStr.Trim(true);rStr.Trim(false);
+
+		ok =  ok && rStr.ToDouble(&(RetraceVec[i]));
+
+	}
+
+	if (!ok) wxLogError(_T("Retrace vector parse error: failed to parse"));
 
 }
 
@@ -94,6 +124,11 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 
 	case t_WPLineParams::STREAMLINE:
 		params.RetraceDir = t_WPLineParams::STREAMLINE;
+		break;
+
+	case t_WPLineParams::FIXED_DIRECTION:
+		params.RetraceDir = t_WPLineParams::FIXED_DIRECTION;
+		params.read_parse_retrace_vec(g);
 		break;
 	default:
 		ssuGENTHROW(_T("Retracing Direction option not supported!"));

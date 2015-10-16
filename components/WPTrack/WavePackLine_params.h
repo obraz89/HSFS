@@ -26,8 +26,12 @@ namespace pf{
 	    double TimeStep;
 	    stab::t_WPRetraceMode RetraceMode;
 
-	    enum t_MarchAlong{GROUP_VELO, STREAMLINE};
+	    enum t_MarchAlong{GROUP_VELO, STREAMLINE, FIXED_DIRECTION};
 	    t_MarchAlong RetraceDir;
+
+		// for a FIXED_DIRECTION option
+		void read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g);
+		t_Vec3Dbl RetraceVec;
 	};
 
 

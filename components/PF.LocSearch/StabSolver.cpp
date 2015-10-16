@@ -773,7 +773,7 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 
 		cur_wave = wcands[i];
 
-		std::wcout<<_T("GS Init:")<<cur_wave;
+		//std::wcout<<_T("GS Init:")<<cur_wave;
 		bool good_init;
 		try
 		{

@@ -45,23 +45,26 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
 
 		// TODO: correct expression for sigma
+		wxLogMessage(_T("sX, sY, sZ:%f;%f;%f"), dim_wave.a.imag(),dim_wave.kn.imag(), dim_wave.b.imag());
 		double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
 
-		double c = dim_wave.w.real()/
+		const double PI = acos(-1.0);
+		double lambda = 2.0*PI/
 			sqrt(pow(dim_wave.a.real(),2)+pow(dim_wave.kn.real(),2)+pow(dim_wave.b.real(),2));
 
-		// TODO: Do not mul by L-Ref for cyl or cone rfs!!!
+		mf::t_GeomPoint xyz= rec.mean_flow.get_xyz();
 
-		// DEbug - printing in cone reference frame, to remove!!!
-		mf::t_GeomPoint cone_xyz= rec.mean_flow.get_xyz();
-		double HALF_ANGLE = 5.0/180.0*acos(-1.0);
-		smat::vec_cart_to_cone(cone_xyz, HALF_ANGLE);
-		fstr<<_T("\t")<<cone_xyz.x()	//Params.L_ref*rec.mean_flow.x
-			<<_T("\t")<<cone_xyz.y()	//Params.L_ref*rec.mean_flow.y
-			<<_T("\t")<<cone_xyz.z()	//Params.L_ref*rec.mean_flow.z
+		fstr<<_T("\t")<<xyz.x()	//Params.L_ref*rec.mean_flow.x
+			<<_T("\t")<<xyz.y()	//Params.L_ref*rec.mean_flow.y
+			<<_T("\t")<<xyz.z()	//Params.L_ref*rec.mean_flow.z
 			<<_T("\t")<<sigma<<_T("\t")<<rec.n_factor
-			<<_T("\t")<<c
-			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)<<_T("\n");	
+			<<_T("\t")<<lambda
+			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)
+			// debug
+			<<_T("\t")<<dim_wave.a.real()
+			<<_T("\t")<<dim_wave.kn.real()
+			<<_T("\t")<<dim_wave.b.real()
+			<<_T("\n");	
 	};
 
 	fstr<<_T("\n\n\n\n");
