@@ -597,72 +597,41 @@ void task::calc_scal_prod_self(){
 	//ret_wave.w = 0.144;
 
 
-	ret_wave.a = t_Complex(2.5635, 0.0);
-	ret_wave.b = 0.0;
-	ret_wave.w = t_Complex(2.3, 0.045582);
+	//ret_wave.a = t_Complex(2.5635, 0.0);
+	//ret_wave.b = 0.0;
+	//ret_wave.w = t_Complex(2.3, 0.045582);
 
-	ret_wave.set_treat(stab::t_TaskTreat::TIME);
+	t_WCharsLoc wchars_A, wchars_B;
 
-	ret_wave.resid = 1.0E+06;
+	// mode "A"
 
-	// direct problem
+	//wchars_A.a = t_Complex(2.5635, -0.045582);
+	//wchars_A.b = 0.0;
+	//wchars_A.w = t_Complex(2.3, 0.0);
 
-	g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT|stab::t_LSMode::ASYM_HOMOGEN));
+	wchars_A.a = t_Complex(2.5635, 0.133449);
+	wchars_A.b = 0.0;
+	wchars_A.w = t_Complex(2.3, 0.0);
 
-	g_pStabSolver->searchWave(ret_wave, stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED), 
-		stab::t_TaskTreat::TIME);
+	wchars_A.set_treat(stab::t_TaskTreat::SPAT);
 
-	//g_pStabSolver->calcGroupVelocity(ret_wave);
+	wchars_A.resid = 1.0E+06;
 
-	//ret_wave.to_time();
+	// mode "B"
 
-	wxLogMessage(_T("Wave chars time for direct task:%s"), &(ret_wave.to_wstr()[0]));
+	//wchars_B.a = t_Complex(2.5635, 0.133449);
+	//wchars_B.b = 0.0;
+	//wchars_B.w = t_Complex(2.3, 0.0);
 
-	wxLogMessage(_T("Direct problem residual:%f"), smat::norm(ret_wave.resid));
+	wchars_B.a = t_Complex(2.5635, -0.045582);
+	wchars_B.b = 0.0;
+	wchars_B.w = t_Complex(2.3, 0.0);
 
-	//g_pGSSolverTime->getSpectrum(ret_wave);
-
-	//g_pGSSolverTime->writeSpectrum("output/w_spectrum_id0_time.dat");
-
-	//g_pGSSolverTime->writeSpectrumPhase("output/c_spectrum_id0_time.dat");
-
-	//return;
-
-	//g_pStabSolver->dumpEigenFuctions("output/amp_funcs_S.dat");
-
-	//return;
-
-	std::vector<t_VecCmplx> sol_dir(g_pStabSolver->getNNodes(), 8);
-
-	g_pStabSolver->getAmpFuncs(sol_dir);
-
-	// conjugate
-
-	ret_wave.a = t_Complex(2.5635, 0.0);
-	ret_wave.b = 0.0;
-	ret_wave.w = t_Complex(2.2953, -0.133449);
-
-	ret_wave.set_treat(stab::t_TaskTreat::TIME);
+	wchars_B.set_treat(stab::t_TaskTreat::SPAT);
 
 	ret_wave.resid = 1.0E+06;
 
-	g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::CONJUGATE|stab::t_LSMode::ASYM_HOMOGEN));
-
-	//g_pStabSolver->solve(ret_wave);
-
-	g_pStabSolver->searchWave(ret_wave, stab::t_LSCond(stab::t_LSCond::A_FIXED|stab::t_LSCond::B_FIXED), 
-		stab::t_TaskTreat::TIME);
-
-	wxLogMessage(_T("Wave chars time for conjugate task:%s"), &(ret_wave.to_wstr()[0]));
-
-	wxLogMessage(_T("Conjugate problem residual:%f"), smat::norm(ret_wave.resid));
-
-	std::vector<t_VecCmplx> sol_conj(g_pStabSolver->getNNodes(), 8);
-
-	g_pStabSolver->getAmpFuncs(sol_conj);
-	//g_pStabSolver->dumpEigenFuctions("output/amp_funcs_conj.dat");
-
-	t_Complex val = g_pStabSolver->calcScalarProd(sol_dir, sol_conj);
+	t_Complex val = g_pStabSolver->calcScalarProd(wchars_A, wchars_B);
 
 	wxLogMessage(_("Scalar product result:(%f,%f)"), val.real(), val.imag());
 

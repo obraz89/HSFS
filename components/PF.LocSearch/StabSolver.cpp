@@ -887,9 +887,57 @@ void t_StabSolver::getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs){
 	}
 }
 
-t_Complex t_StabSolver::calcScalarProd(const std::vector<t_VecCmplx>& sol_dir, const std::vector<t_VecCmplx>& sol_conj){
+t_Complex t_StabSolver::calcScalarProd(
+	const t_WCharsLoc& wchars_A_in, const t_WCharsLoc& wchars_B_in){
+
+	// important - first solve conjugate problem, then direct
+	// because matrix of scalar prod should be computed for a direct task !!! (?)
 
 	int nnodes = _math_solver.getNNodes();
+
+	t_WCharsLoc wchars_A, wchars_B;
+
+	wchars_A = wchars_A_in;
+	wchars_B = wchars_B_in;
+
+	if ((wchars_A.get_treat()!=stab::t_TaskTreat::SPAT)||
+		(wchars_B.get_treat()!=stab::t_TaskTreat::SPAT)){
+		wxLogError(_T("CalcScalProd Error: spat waves only, update needed for time waves!"));
+		return HUGE_VAL;
+	}
+
+	std::vector<t_VecCmplx> sol_dir_A(nnodes, STAB_MATRIX_DIM);
+	std::vector<t_VecCmplx> sol_con_B(nnodes, STAB_MATRIX_DIM);
+
+	// conjugate problem
+
+	setLSMode(stab::t_LSMode(stab::t_LSMode::CONJUGATE|stab::t_LSMode::ASYM_HOMOGEN));
+
+	searchWave(wchars_B, stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED), 
+		stab::t_TaskTreat::SPAT);
+
+
+	wxLogMessage(_T("Wave chars B (conj):%s"), &(wchars_B.to_wstr()[0]));
+
+	wxLogMessage(_T("Conjugate problem residual:%f"), smat::norm(wchars_B.resid));
+
+	getAmpFuncs(sol_con_B);
+
+	// direct problem
+
+	setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT|stab::t_LSMode::ASYM_HOMOGEN));
+
+	searchWave(wchars_A, stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED), 
+		stab::t_TaskTreat::SPAT);
+
+	wxLogMessage(_T("Wave chars A (direct):%s"), &(wchars_A.to_wstr()[0]));
+
+	wxLogMessage(_T("Direct problem residual:%f"), smat::norm(wchars_A.resid));
+
+	getAmpFuncs(sol_dir_A);
+
+	// amp funcs are calculated, compute scalar product
+	// stab context is set for "direct" wave wchars_A
 
 	std::vector<t_Complex> fun(nnodes, 0.0);
 	std::vector<double>arg(nnodes, 0.0);
@@ -917,7 +965,7 @@ t_Complex t_StabSolver::calcScalarProd(const std::vector<t_VecCmplx>& sol_dir, c
 		fun[i]=0.0;
 		for (int j=0; j<STAB_MATRIX_DIM; j++)
 			for (int k=0; k<STAB_MATRIX_DIM; k++)
-				fun[i] = fun[i] + _scal_prod_matrix[k][j]*sol_dir[ind_r][k]*sol_conj[ind_r][j];
+				fun[i] = fun[i] + _scal_prod_matrix[k][j]*sol_dir_A[ind_r][k]*sol_con_B[ind_r][j];
 
 
 	}

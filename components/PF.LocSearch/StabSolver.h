@@ -127,7 +127,8 @@ public:
 	// testing
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
 	// order important
-	t_Complex calcScalarProd(const std::vector<t_VecCmplx>& sol_dir, const std::vector<t_VecCmplx>& sol_conj);
+	t_Complex calcScalarProd(
+		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B);
 
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 
