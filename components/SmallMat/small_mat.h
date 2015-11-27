@@ -933,11 +933,11 @@ template<typename T> void t_SqMatrix<T>::setToUnity(){
 
 template<typename T> void t_SqMatrix<T>::transpose(){
 	T swp_val;
-	for (int i=0; i<_ncols; i++)
+	for (int i=0; i<this->_ncols; i++)
 		for (int j=0; j<=i; j++){
-			swp_val = _cont[i][j];
-			_cont[i][j] = _cont[j][i];
-			_cont[j][i] = swp_val;
+			swp_val = this->_cont[i][j];
+			this->_cont[i][j] = this->_cont[j][i];
+			this->_cont[j][i] = swp_val;
 		}
 };
 
