@@ -445,9 +445,9 @@ bool t_StabSolver::checkWCharsByGroupV(t_WCharsLoc& wchars){
 
 	double vgr = sqrt(vga_r*vga_r + vgb_r*vgb_r);
 
-	if (vgr>1.0){
+	if (vgr>10.0){
 
-		wxLogMessage(_T("WChars Check: group velo is big - unphysical wave"));
+		wxLogMessage(_T("WChars Check: group velo is big (vgr>10.0) - unphysical wave"));
 		return false;
 
 	} 
