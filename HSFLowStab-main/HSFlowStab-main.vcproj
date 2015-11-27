@@ -137,7 +137,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib wxzlibd.lib wxregexud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib mpi.lib"
+				AdditionalDependencies="libifcoremdd.lib libmmdd.lib wxmsw28ud_core.lib wxbase28ud.lib winmm.lib comctl32.lib rpcrt4.lib oleacc.lib shared.lib PhysCommon.lib Profile.lib SmallMat.lib mpi.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(OutDir)&quot;;&quot;$(MPICH2_DIR)/lib&quot;"
 				GenerateDebugInformation="true"
