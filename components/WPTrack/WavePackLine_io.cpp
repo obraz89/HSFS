@@ -45,8 +45,8 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
 
 		// TODO: correct expression for sigma
-		wxLogMessage(_T("sX, sY, sZ:%f;%f;%f"), dim_wave.a.imag(),dim_wave.kn.imag(), dim_wave.b.imag());
-		double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
+		//wxLogMessage(_T("sX, sY, sZ:%f;%f;%f"), dim_wave.a.imag(),dim_wave.kn.imag(), dim_wave.b.imag());
+		//double sigma = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
 
 		const double PI = acos(-1.0);
 		double lambda = 2.0*PI/
@@ -57,7 +57,7 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 		fstr<<_T("\t")<<xyz.x()	//Params.L_ref*rec.mean_flow.x
 			<<_T("\t")<<xyz.y()	//Params.L_ref*rec.mean_flow.y
 			<<_T("\t")<<xyz.z()	//Params.L_ref*rec.mean_flow.z
-			<<_T("\t")<<sigma<<_T("\t")<<rec.n_factor
+			<<_T("\t")<<_sigma[i]<<_T("\t")<<rec.n_factor
 			<<_T("\t")<<lambda
 			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)
 			// debug

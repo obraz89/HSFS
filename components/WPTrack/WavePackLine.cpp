@@ -356,7 +356,7 @@ void t_WavePackLine::_retrace_dir_w_time(t_GeomPoint start_from, t_WCharsLoc ini
 		_add_node(*pLine, new_rec_mf, wchars_glob);
 
 		last_wchars_loc = new_wave_chars;
-		proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars);
+		proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
 
 		ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
 		ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
@@ -483,7 +483,7 @@ void t_WavePackLine::_retrace_dir_w_spat(t_GeomPoint start_from, t_WCharsLoc ini
 		 _add_node(*pLine, new_rec_mf, wchars_glob);
 
 		 last_wchars_loc = new_wave_chars;
-		 proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars);
+		 proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
 
 		 ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
 		 ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
@@ -550,9 +550,12 @@ void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wa
 
 	std::wcout<<_T("Init Dels, StabRe:")<<stab_scales_tmp.Dels<<";"<<stab_scales_tmp.ReStab<<_T("\n");
 
-	// march until neutral point
+	// march until Sigma Truncation Criteria is reached (e.g. sigma becomes negative)
 	// or field boundary is reached
 	bool proceed_cond=true;
+	// make 1 step more to get point where sigma=0
+	bool terminate_next_step=false;
+
 	std::wostringstream ostr;
 
 	t_Vec3Dbl vg, dr;
@@ -602,10 +605,31 @@ void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wa
 
 		try
 		{
+			// first try to use global search
 			std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(new_wave_chars);
-			std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
-			new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
-			//loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+
+			if (raw_waves.size()>0){
+
+				std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+
+				if (filt_waves.size()>0){
+		
+					new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
+
+				} else{
+
+					// gs candidates failed, 
+					// try local search directly
+					loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+
+				}
+
+			}else{
+				// global search doesnt work
+				// try local search directly
+				loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+
+			}
 
 			if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
 				loc_solver.calcGroupVelocity(new_wave_chars);
@@ -645,7 +669,8 @@ void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wa
 		_add_node(*pLine, new_rec_mf, wchars_glob);
 
 		last_wchars_loc = new_wave_chars;
-		proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars);
+		proceed_cond = proceed_cond && !terminate_next_step;
+		terminate_next_step = !_proceed_retrace(new_gpoint, new_wave_chars, direction);
 
 		ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
 		log_my::wxLogMessageStd(ostr.str());
@@ -825,7 +850,7 @@ void t_WavePackLine::_retrace_dir_wb_rad(t_GeomPoint start_from, t_WCharsLoc ini
 		 _add_node(*pLine, new_rec_mf, wchars_glob);
 
 		 last_wchars_loc = new_wave_chars;
-		 proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars);
+		 proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
 
 		 ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
 		 log_my::wxLogMessageStd(ostr.str());
@@ -896,7 +921,8 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 	}
 	{
 		int nldn = _line_down.size();
-		for (int i=0; i<nldn; i++) 	_line.push_back(_line_down[i]);
+		// do not write mid point twice!
+		for (int i=1; i<nldn; i++) 	_line.push_back(_line_down[i]);
 	}
 
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
@@ -914,9 +940,12 @@ void t_WavePackLine::calc_n_factor(){
 	const mf::t_FldParams& MFParams = _rFldMF.get_mf_params();
 	const double LRef = MFParams.L_ref;
 
-	for (int i=1; i<_line.size(); i++){
-		cur_dr = LRef*(_line[i].mean_flow.get_xyz() - _line[i-1].mean_flow.get_xyz());
-		_s[i] = _s[i-1] + cur_dr.norm();
+	// TODO: if sigma truncation mode is "both", last point in line is broken
+	for (int i=0; i<_line.size()-1; i++){
+
+		cur_dr = LRef*(_line[i+1].mean_flow.get_xyz() - _line[i].mean_flow.get_xyz());
+
+		_s[i+1] = _s[i] + cur_dr.norm();
 
 		//IMPORTANT TODO: correct expressions
 
@@ -927,11 +956,39 @@ void t_WavePackLine::calc_n_factor(){
 		if (spat_wave.get_treat()==stab::t_TaskTreat::TIME) spat_wave.to_spat();
 
 		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
+
 		// IMPORTANT TODO: what is correct way to compute sigma ?
-		_sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
+
+		t_Vec3Dbl sig_vec(-dim_wave.a.imag(), -dim_wave.kn.imag(), -dim_wave.b.imag());
+		t_Vec3Dbl dir = cur_dr; dir.normalize();
+		_sigma[i] = vector::dot<double, double>(sig_vec, dir);
+		//_sigma[i] = sqrt(pow(dim_wave.a.imag(),2)+pow(dim_wave.kn.imag(),2)+pow(dim_wave.b.imag(),2));
 
 	}
 
+	if ((_params.SigmaTruncMode==t_WPLineParams::t_SigmaTruncMode::STRUNC_BOTH)||
+		(_params.SigmaTruncMode==t_WPLineParams::t_SigmaTruncMode::STRUNC_DOWNSTREAM)){
+
+		// find point between rec[i] and rec[i+1] where sigma=0
+		// use linear interpolation
+		// replace first records with sigma=0
+
+		for (int i=0; i<_line.size()-1; i++)
+		{
+			if (_sigma[i]<0.0){
+				if (_sigma[i+1]>0.0) {
+
+					// TODO : update here _line[i].mean_flow.xyz ...
+					// not very important (only for nice drawing)
+					_sigma[i]=0.0;
+					_s[i] = (_sigma[i+1]*_s[i]-_sigma[i]*_s[i+1])/(_sigma[i+1]-_sigma[i]);
+					break;
+
+				}
+			}
+		}
+
+	}
 	smat::integrate_over_range(_s, _sigma, _nfact);
 
 	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = _nfact[i];
@@ -958,13 +1015,37 @@ bool t_WavePackLine::_near_leading_edge() const{
 	return false;
 }
 
-bool t_WavePackLine::_proceed_retrace(const mf::t_GeomPoint& cur_xyz, const t_WCharsLoc& wave) const{
+bool t_WavePackLine::_proceed_retrace(const mf::t_GeomPoint& cur_xyz, 
+						const t_WCharsLoc& wave, t_Direction dir) const{
 
 	// IMPORTANT TODO: THINK!!!
 	//return ((cur_ind.i>10)
 	//	&&(cur_ind.i<_rFldMF.get_Nx()-10)
 	//	&&(wave.w.imag()>0.0));
+
+
+	if (_params.SigmaTruncMode==t_WPLineParams::t_SigmaTruncMode::STRUNC_DOWNSTREAM){
+
+		if (dir==t_Direction::DOWNSTREAM)	return _rFldMF.is_point_inside(cur_xyz);
+		
+	}
+
+	if (_params.SigmaTruncMode==t_WPLineParams::t_SigmaTruncMode::STRUNC_UPSTREAM){
+
+		if (dir==t_Direction::UPSTREAM)	return _rFldMF.is_point_inside(cur_xyz);
+
+	}
+
+	if (_params.SigmaTruncMode==t_WPLineParams::t_SigmaTruncMode::STRUNC_NO_TRUNC){
+
+		return _rFldMF.is_point_inside(cur_xyz);
+
+	}
+
+	// default : truncate wpline when it becomes stable
 	return _is_unstable(wave) && _rFldMF.is_point_inside(cur_xyz);
+
+
 };
 
 int t_WavePackLine::get_size() const{

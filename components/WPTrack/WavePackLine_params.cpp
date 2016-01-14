@@ -20,6 +20,9 @@ t_MapWxStrInt  t_WPLineParams::RETRACE_MODES_STR;
 t_MapWxStrInt t_WPLineParams::MARCH_OPTS_STR;
 #define MARCH_OPT_DEFAULT_STR _T("GROUP_VELO")
 
+t_MapWxStrInt t_WPLineParams::SIGMA_TRUNC_MODES_STR;
+#define SIGMA_TRUNC_DEFAULT_STR _T("BOTH")
+
 
 void t_WPLineParams::init_supported_options(){
 		RETRACE_MODES_STR.clear();
@@ -32,7 +35,23 @@ void t_WPLineParams::init_supported_options(){
 		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("GROUP_VELO")), t_WPLineParams::GROUP_VELO));
 		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("STREAMLINE")), t_WPLineParams::STREAMLINE));
 		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("FIXED_DIRECTION")), t_WPLineParams::FIXED_DIRECTION));
+
+		SIGMA_TRUNC_MODES_STR.clear();
+		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+			wxString(SIGMA_TRUNC_DEFAULT_STR), 
+			t_WPLineParams::t_SigmaTruncMode::STRUNC_BOTH));
+
+		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+			wxString(_T("DOWNSTREAM")), 
+			t_WPLineParams::t_SigmaTruncMode::STRUNC_DOWNSTREAM));
+
+		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+			wxString(_T("UPSTREAM")), 
+			t_WPLineParams::t_SigmaTruncMode::STRUNC_UPSTREAM));
 		
+		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+			wxString(_T("NO_TRUNC")), 
+			t_WPLineParams::t_SigmaTruncMode::STRUNC_NO_TRUNC));
 		
 };
 
@@ -47,6 +66,8 @@ void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
 	g.add("MarchAlong", MARCH_OPT_DEFAULT_STR, _T("Retrace direction"));
 
 	g.add("RetraceVec", _T("1.000; 0.000; 0.000"), _T("Retrace vector [when FIXED_DIRECTION option chosen]"));
+
+	g.add("SigmaTruncMode", SIGMA_TRUNC_DEFAULT_STR, _T("sigma <0 stop criteria"));
 
 }
 
@@ -132,6 +153,40 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 		break;
 	default:
 		ssuGENTHROW(_T("Retracing Direction option not supported!"));
+	}
+
+	// read SigmaTruncMode
+
+	rmode_str = g.get_string_param("SigmaTruncMode");
+
+	it = SIGMA_TRUNC_MODES_STR.find(rmode_str);
+
+	if (it==SIGMA_TRUNC_MODES_STR.end()) 
+		ssuGENTHROW(_T("Unknown value provided for option SigmaTruncMode!"));
+
+	rmode = SIGMA_TRUNC_MODES_STR.find(rmode_str)->second;
+
+	switch (rmode)
+	{
+
+	case t_SigmaTruncMode::STRUNC_BOTH:
+		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_BOTH;
+		break;
+
+	case t_SigmaTruncMode::STRUNC_DOWNSTREAM:
+		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_DOWNSTREAM;
+		break;
+
+	case t_SigmaTruncMode::STRUNC_UPSTREAM:
+		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_UPSTREAM;
+		break;
+
+	case t_SigmaTruncMode::STRUNC_NO_TRUNC:
+		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_NO_TRUNC;
+		break;
+
+	default:
+		ssuGENTHROW(_T("Sigma Trunc Mode not supported!"));
 	}
 }
 

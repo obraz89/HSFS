@@ -91,8 +91,11 @@ namespace pf{
 			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
 
 		bool _is_unstable(const t_WCharsLoc&) const;
+
 		bool _near_leading_edge() const;
-		bool _proceed_retrace(const mf::t_GeomPoint& cur_xyz, const t_WCharsLoc& wave) const;
+
+		bool _proceed_retrace(const mf::t_GeomPoint& cur_xyz, 
+			const t_WCharsLoc& wave, t_Direction dir) const;
 
 		std::wostream& _print_line(std::wostream& str) const;
 
