@@ -21,7 +21,7 @@
 ** the function solves system(*) with the input parameters
 ** and returns the determinant of residual
 ** the package order for math solver is ordinary:
-** u, u', v, p, t, r, w, w'
+** u, u', v, p, t, t', w, w'
 */
 /************************************************************************/
 

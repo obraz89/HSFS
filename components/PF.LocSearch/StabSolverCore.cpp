@@ -835,7 +835,7 @@ void t_StabSolver::dumpEigenFuctions(const std::string& fname){
 	std::vector<t_VecCmplx> amp_funcs(getNNodes(), t_VecCmplx(STAB_MATRIX_DIM));
 
 	std::wofstream fstr(&fname[0]);
-	fstr<<_T("u_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tr_re\tr_im\tw_re\tw_im\tw'_re\tw'_im\tY\n");
+	fstr<<_T("u_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tt'_re\tt'_im\tw_re\tw_im\tw'_re\tw'_im\tY\n");
 
 	getAmpFuncs(amp_funcs);
 
