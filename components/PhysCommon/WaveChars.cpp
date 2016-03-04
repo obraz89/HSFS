@@ -148,6 +148,9 @@ namespace stab{
 	// t_WaveChars argument left for better usability
 	bool check_wchars_c_phase(const t_WaveChars& w){
 
+		// TODO: seems to work bad with stable waves
+		//return true;
+
 		const t_StabScales& s = w.scales();
 
 		double ar = w.a.real();
@@ -163,7 +166,7 @@ namespace stab{
 
 		if ((c_min<=c) && (c<=c_max)) return true;
 
-		//wxLogMessage(_T("Checking Wchars: Phase speed looks bad, treating unphysical"));
+		wxLogMessage(_T("Checking Wchars: Phase speed c=%lf looks bad, treating unphysical"), c);
 
 		return false;
 
@@ -207,7 +210,7 @@ namespace stab{
 	if (coef<0.5){
 		return true;
 	}else{
-		//wxLogMessage(_T("Checking Wchars: sigma/k is not small - treating unphysical"));
+		wxLogMessage(_T("Checking Wchars: sigma/k=%lf is not small - treating unphysical"), coef);
 		return false;
 	}
 

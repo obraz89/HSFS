@@ -835,11 +835,14 @@ void t_StabSolver::dumpEigenFuctions(const std::string& fname){
 	std::vector<t_VecCmplx> amp_funcs(getNNodes(), t_VecCmplx(STAB_MATRIX_DIM));
 
 	std::wofstream fstr(&fname[0]);
-	fstr<<_T("u_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tt'_re\tt'_im\tw_re\tw_im\tw'_re\tw'_im\tY\n");
+	fstr<<_T("Y\tu_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tt'_re\tt'_im\tw_re\tw_im\tw'_re\tw'_im\n");
 
 	getAmpFuncs(amp_funcs);
 
-	for (int j=0; j<getNNodes(); j++){
+	// write out in reverse order (from wall to outer)
+	for (int j=getNNodes()-1; j>=0; j--){
+
+		fstr<<_math_solver.varRange[j]<<_T("\t");
 
 		for (int k=0; k<STAB_MATRIX_DIM; k++){
 			fstr<<std_manip::std_format_sci<double>(amp_funcs[j][k].real())
@@ -847,7 +850,6 @@ void t_StabSolver::dumpEigenFuctions(const std::string& fname){
 				<<std_manip::std_format_sci<double>(amp_funcs[j][k].imag())
 				<<_T("\t");
 		}
-		fstr<<_math_solver.varRange[j];
 		fstr<<_T("\n");
 	}
 

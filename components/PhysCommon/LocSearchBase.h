@@ -128,7 +128,10 @@ namespace stab{
 		// testing
 
 		virtual void getAmpFuncs(std::vector<t_VecCmplx>&) = 0;
-		virtual t_Complex calcScalarProd(const t_WCharsLoc& w1, const t_WCharsLoc& w2) = 0;
+
+		virtual t_Complex calcScalarProd(
+			const t_WCharsLoc& w1, const t_WCharsLoc& w2,
+			std::vector<t_VecCmplx>* dns_vec_ptr=NULL) = 0;
 
 	};
 

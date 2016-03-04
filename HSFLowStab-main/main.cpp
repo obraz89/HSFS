@@ -159,8 +159,12 @@ int main(int argc, char* argv[]){
 			task::calc_Cp_etc();
 			break;
 
-		case task::CalcScalProd:
+		case task::CalcScalProd_LST_test:
 			task::calc_scal_prod_self();
+			break;
+
+		case task::CalcScalProd_DNS_test:
+			task::calc_scal_prod_dns_test();
 			break;
 
 		case task::GetBLSpectrum:

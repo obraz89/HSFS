@@ -7,7 +7,9 @@
 
 using namespace mf;
 
-t_ProfileNS::t_ProfileNS(const t_DomainBase& a_rDomain):t_ProfMF(a_rDomain){};
+t_ProfileNS::t_ProfileNS(const t_DomainBase& a_rDomain):t_ProfMF(a_rDomain){
+	_is_disturb_profile = false;
+};
 
 void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg){
 
@@ -141,6 +143,56 @@ void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 	}
 
 	_calc_derivs();
+
+}
+
+// to load DNS disturbance profiles
+void t_ProfileNS::init_from_uvwpt_vec(const std::vector<double>& y_vec, 
+									  const std::vector<std::vector<double>>& v_uvwpt,
+									  double a_bl_thick_scale
+									  ){
+
+	_resize(v_uvwpt.size());
+
+	_is_disturb_profile = true;
+
+	_bl_thick_scale = a_bl_thick_scale;
+
+	const mf::t_FldParams& Params = _rDomain.get_mf_params();
+
+	wxLogMessage(_T("Profile NS: initializing from uvwpt, works only for disturbances!!!"));
+
+	for (int j=0; j<_nnodes; j++){
+
+		_y[j] = y_vec[j]*sqrt(Params.Re);
+
+		_u[j] = v_uvwpt[j][0];
+		_v[j] = v_uvwpt[j][1];
+		_w[j] = v_uvwpt[j][2];
+
+		_p[j] = v_uvwpt[j][3];
+		_t[j] = v_uvwpt[j][4];
+		// rho is non-dim as follows
+		// IMPORTANT TODO: hint for disturbances profiles
+		// not correct in general case
+		double gMaMa = Params.Gamma*pow(Params.Mach, 2);
+		_r[j] = 1.0; //_p[j]/_t[j]*gMaMa;
+		_mu[j]=	1.0; //_rDomain.calc_viscosity(_t[j]);
+
+		if (j==_nnodes-1){
+
+			_u[j] = 1.0;
+			_v[j] = 0.0;
+			_w[j] = 0.0;
+
+			_p[j] = 1.0/gMaMa;
+			_t[j] = 1.0;
+
+		}
+	}
+
+	_calc_derivs();
+
 
 }
 

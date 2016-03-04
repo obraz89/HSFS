@@ -128,7 +128,8 @@ public:
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
 	// order important
 	t_Complex calcScalarProd(
-		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B);
+		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B,
+		std::vector<t_VecCmplx>* dns_vec_ptr = NULL);
 
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 

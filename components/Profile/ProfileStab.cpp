@@ -61,7 +61,25 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, const std::vector<double>
 /************************************************************************/
 void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double>& a_y_distrib){
 
-	const t_Profile::t_Rec& ns_outer_rec = a_rProfNS.get_bound_rec();
+	t_Profile::t_Rec ns_outer_rec;
+
+	if (!a_rProfNS.is_disturbance_profile()){
+
+		ns_outer_rec = a_rProfNS.get_bound_rec();
+
+	}else{
+
+		// tmp, to initialize disturbance "stability profiles" on a flat plate
+		ns_outer_rec.u = 1.0;
+		ns_outer_rec.v = 0.0;
+		ns_outer_rec.w = 0.0;
+
+		ns_outer_rec.r = 1.0;
+		ns_outer_rec.t = 1.0;
+		ns_outer_rec.mu = 1.0;
+
+
+	}
 
 	double mu_e = ns_outer_rec.mu;
 

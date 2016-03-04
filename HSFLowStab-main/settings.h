@@ -48,8 +48,13 @@ namespace task{
 		// calculate Cp and other useful functions in pave points
 		GetMFChars, 
 
-		// calculate scalar product of 2 modes
-		CalcScalProd, 
+		// calculate scalar product of 2 modes, both are taken from LST analysis
+		CalcScalProd_LST_test, 
+
+		// calculate scalar product of 1 mode from LST and spectral component of 
+		// disturbance froom DNS
+
+		CalcScalProd_DNS_test,
 
 		TaskNum};
 

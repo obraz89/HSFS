@@ -128,7 +128,8 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::MPITest] = _T("MPITest");
 	task::TaskNames[task::GetAmplitudeFuncs] = _T("GetAmplitudeFuncs");
 	task::TaskNames[task::GetMFChars] = _T("CalcCp");
-	task::TaskNames[task::CalcScalProd] = _T("CalcScalProd");
+	task::TaskNames[task::CalcScalProd_LST_test] = _T("CalcScalProd_LST_test");
+	task::TaskNames[task::CalcScalProd_DNS_test] = _T("CalcScalProd_DNS_test");
 	task::TaskNames[task::GetBLSpectrum] = _T("GetBLSpectrum");
 
 	task::SpatTimeNames[task::Spat] = _T("Spat");

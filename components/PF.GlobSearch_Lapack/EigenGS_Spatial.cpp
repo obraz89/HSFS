@@ -685,7 +685,7 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 		for (it=_spectrum.begin(); it<_spectrum.end(); it++){
 			// IMPORTANT TODO: fix parasitic solutions, ask AVF
 			// now neglect parasitic branch manually
-			if (it->imag()<-1.0*_params.W_Threshold && it->real()>0.0){
+			if (it->imag()<_params.W_Threshold && it->real()>0.0){
 				t_WCharsLoc wave;
 				wave.a = *it;
 				wave.b = _beta;

@@ -888,7 +888,8 @@ void t_StabSolver::getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs){
 }
 
 t_Complex t_StabSolver::calcScalarProd(
-	const t_WCharsLoc& wchars_A_in, const t_WCharsLoc& wchars_B_in){
+	const t_WCharsLoc& wchars_A_in, const t_WCharsLoc& wchars_B_in,
+	std::vector<t_VecCmplx>* dns_vec_ptr){
 
 	// important - first solve conjugate problem, then direct
 	// because matrix of scalar prod should be computed for a direct task !!! (?)
@@ -934,7 +935,24 @@ t_Complex t_StabSolver::calcScalarProd(
 
 	wxLogMessage(_T("Direct problem residual:%f"), smat::norm(wchars_A.resid));
 
-	getAmpFuncs(sol_dir_A);
+	// if amplitude vector is provided from dns, use it as vector for wchars_A
+	// otherwise use both vectors from LST
+	if (dns_vec_ptr==NULL)
+	{
+		getAmpFuncs(sol_dir_A);
+
+	} 
+	else
+	{
+		if (dns_vec_ptr->size()!=getNNodes()){
+
+			wxLogError(_T("Error: in calc scalar product - DNS vec size doesn't match LST vec size"));
+			return 1.0e+09;
+
+		}
+			
+		sol_dir_A = *dns_vec_ptr;
+	}
 
 	// amp funcs are calculated, compute scalar product
 	// stab context is set for "direct" wave wchars_A
