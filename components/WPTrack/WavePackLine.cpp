@@ -252,6 +252,62 @@ bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave,
 
 }
 
+bool search_wave_wb_fixed(t_WCharsLoc& cur_wave, 
+						  stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver){
+
+	stab::t_LSCond srch_cond;
+
+	srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+
+	try
+	{
+		// first try to use global search
+		std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(cur_wave);
+
+		if (raw_waves.size()>0){
+
+			std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+
+			if (filt_waves.size()>0){
+
+				cur_wave = t_WCharsLoc::find_max_instab_spat(filt_waves);
+
+			} else{
+
+				// gs candidates failed, 
+				// try local search directly
+				loc_solver.searchWave(cur_wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+			}
+
+		}else{
+			// global search doesnt work
+			// try local search directly
+			loc_solver.searchWave(cur_wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+		}
+
+	}
+	catch (...)
+	{
+		wxLogMessage(_T("Retrace: Search Wave Failed[mode=WB_FIXED]"));
+		return false;
+	}
+
+	// check that converged to a physical wave
+	bool ok_wchars = true;
+	ok_wchars = ok_wchars && stab::check_wchars_increment(cur_wave);
+	ok_wchars = ok_wchars && stab::check_wchars_c_phase(cur_wave);
+
+	if (!ok_wchars){
+		wxLogMessage(_T("Warning: converged to unphysical wave, break..."));
+		return false;
+	}
+
+	return true;
+
+}
+
 // retrace with keeping dimensional w constant
 // this is so called "wave packet" retrace approach
 // using time approach
@@ -377,6 +433,153 @@ void t_WavePackLine::_retrace_dir_w_time(t_GeomPoint start_from, t_WCharsLoc ini
 	//======================
 
 };
+
+
+void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_wave, 
+									   stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
+									   t_Direction direction, 
+									   const stab::t_WPRetraceMode& retrace_mode){
+
+	loc_solver.setContext(start_xyz);
+	gs_solver.setContext(start_xyz);
+
+	init_wave.set_scales(loc_solver.get_stab_scales());
+
+	t_WCharsLocDim wchars_dim_cnd = init_wave.make_dim();
+
+	 double time_direction;
+	 t_RecArray* pLine;
+
+	 if (direction==DOWNSTREAM){
+
+		 pLine = &_line_down;
+		 time_direction = 1.0;
+
+	 }else{
+
+		 pLine = &_line_up;
+		 time_direction = -1.0;
+
+	 };
+
+	 // march until proceed condition break
+	 // or field boundary is reached
+
+	 bool proceed_cond=true;
+	 std::wostringstream ostr;
+
+	 t_Vec3Dbl vg, dr;
+
+	 t_WCharsLoc cur_wave, nxt_wave;
+	 t_GeomPoint cur_xyz, nxt_xyz;
+
+	 cur_wave = init_wave;
+	 cur_xyz = start_xyz;
+
+	 double dt = _params.TimeStep*time_direction;
+
+	 do{
+
+		 loc_solver.setContext(cur_xyz);
+		 gs_solver.setContext(cur_xyz);
+
+		 // search wave with condition specified
+
+		 bool srch_cnd_ok = false;
+
+		 if (retrace_mode==t_WPRetraceMode::W_FIXED){
+			 // by default now using spat approach
+
+			 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+			 cur_wave.w = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
+
+			 t_WCharsLoc start_wave_const = cur_wave;
+
+			 if(!search_max_ai_spat(start_wave_const, cur_wave, loc_solver, gs_solver)){
+
+				 wxLogError(_T("Error: search max ai failed, break retrace for wpline"));
+
+				 return;
+			 };
+
+			 srch_cnd_ok = true;
+		 }
+
+		 if (retrace_mode==t_WPRetraceMode::WB_FIXED){
+
+			 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+
+			 cur_wave.w = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
+			 cur_wave.b = wchars_dim_cnd.b.real()*stab_scales.Dels;
+
+			 search_wave_wb_fixed(cur_wave, loc_solver, gs_solver);
+
+			 srch_cnd_ok = true;
+		 }
+
+		 if (retrace_mode==t_WPRetraceMode::WBRAD_FIXED){
+
+			 double R0; 
+			 {
+				 const double y0 = start_xyz.y();
+				 const double z0 = start_xyz.z();
+				 R0 = sqrt(y0*y0+z0*z0);
+			 }
+
+			 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+
+			 double Rcur;
+			 {
+				 const double y1 = cur_xyz.y();
+				 const double z1 = cur_xyz.z();
+				 Rcur = sqrt(y1*y1+z1*z1);
+			 }
+
+			 double wr = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
+			 double br_0 = wchars_dim_cnd.b.real()*stab_scales.Dels;
+			 double br_new = br_0*R0/Rcur;
+
+			 cur_wave.w = wr;
+			 cur_wave.b = br_new;
+
+			 search_wave_wb_fixed(cur_wave, loc_solver, gs_solver);
+
+			 srch_cnd_ok = true;
+
+		 }
+
+		 if (!srch_cnd_ok){
+			 wxLogError(_T("Error: WPTrack: unsupported retrace mode!"));
+		 }
+
+		 // TODO: avoid group velo calcs if not needed ?
+		 loc_solver.calcGroupVelocity(cur_wave);
+
+		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
+			 loc_solver.get_stab_scales());
+
+		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob);
+
+		 // write out current record
+		 ostr<<_T("cur xyz   :")<<cur_xyz<<_T("\n");
+		 ostr<<_T("cur wchars:")<<cur_wave<<_T("\n");
+		 log_my::wxLogMessageStd(ostr.str());
+		 ostr.str(_T(""));ostr.clear();
+
+		 t_WPLineRec& last_rec = pLine->back();
+
+		 _calc_dr(dt, last_rec, vg, dr);
+
+		 // TODO: IMPORTANT! BE ALWAYS ON SURFACE
+		 nxt_xyz = cur_xyz + dr; 
+
+		 proceed_cond = proceed_cond && _proceed_retrace(nxt_xyz, cur_wave, direction);
+
+		 cur_xyz = nxt_xyz;
+
+	 }while (proceed_cond);
+
+}
 
 void t_WavePackLine::_retrace_dir_w_spat(t_GeomPoint start_from, t_WCharsLoc init_wave, 
 										 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
