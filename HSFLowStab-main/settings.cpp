@@ -180,7 +180,6 @@ bool load_Settings_n_Plugins()
 
 	//if (g_taskParams.id==task::Retrace)
 	if (true){
-		conf->Read(_T("retrace_mode"), &g_taskParams.retrace_mode, zero);
 
 		conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);
 

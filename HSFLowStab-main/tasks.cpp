@@ -30,6 +30,8 @@ stab::t_GSBase* g_pGSSolverTime;
 
 stab::t_GSBase* g_pGSSolverSpat;
 
+stab::t_WPTrackBase* g_pWPLine;
+
 stab::t_StabDBase* g_pStabDB;
 
 // configure values
@@ -66,6 +68,9 @@ void task::init_glob_solvers(){
 
 	g_pGSSolverSpat = caps_gs.create_gs_solver(*g_pMFDomain, stab::t_TaskTreat::SPAT);
 	g_pGSSolverSpat->init(G_Plugins.get_plugin(plgGS));
+
+	g_pWPLine = caps_wp.create_wp_track(*g_pMFDomain);
+	g_pWPLine->init(G_Plugins.get_plugin(plgWPTrack));	
 
 }
 
@@ -137,6 +142,8 @@ delete g_pGSSolverSpat;
 delete g_pStabDB;
 
 delete g_pMFDomain;
+
+delete g_pWPLine;
 
 }
 
@@ -280,25 +287,27 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 	return false;
 };
 
-void retrace_wplines_cond(stab::t_WPRetraceMode a_mode_retrace){
+void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 
 	wxChar szFname[64];
 
 	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_mode%d.dat"),
-		hsstab::OUTPUT_DIR.c_str(), g_taskParams.retrace_mode);
+		hsstab::OUTPUT_DIR.c_str(), a_mode_retrace);
 
 	std::wstring fout_wplines_path(szFname);
 
 	swprintf(szFname, MAX_FNAME_LEN, _T("%s/max_N_mode%d.dat"),
-		hsstab::OUTPUT_DIR.c_str(), g_taskParams.retrace_mode);
+		hsstab::OUTPUT_DIR.c_str(), a_mode_retrace);
 
 	std::wstring fout_maxnfactor_path(szFname);
 
-	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
-	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*g_pMFDomain);
-	wp_line->init(G_Plugins.get_plugin(plgWPTrack));
-
 	int pid_s, pid_e;
+
+	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
+
+	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*g_pMFDomain);
+
+	wp_line->init(G_Plugins.get_plugin(plgWPTrack));
 
 	if (g_taskParams.pave_point_id>=0){
 
@@ -382,25 +391,6 @@ void retrace_wplines_cond(stab::t_WPRetraceMode a_mode_retrace){
 		return;
 
 
-}
-
-
-void task::retrace_wplines_wfixed_bfixed(){
-	
-	//stab::t_LSCond cond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED);
-	//retrace_wplines_cond(cond, stab::t_WPRetraceMode::WB_FIXED);
-	retrace_wplines_cond(stab::t_WPRetraceMode::WB_FIXED);
-}
-
-void task::retrace_wplines_wfixed_bfree(){
-
-	//stab::t_LSCond cond(stab::t_LSCond::W_FIXED);
-	//retrace_wplines_cond(cond, stab::t_WPRetraceMode::W_FIXED);
-	retrace_wplines_cond(stab::t_WPRetraceMode::W_FIXED);
-}
-
-void task::retrace_wplines_wfixed_b_rad_fixed(){
-	retrace_wplines_cond(stab::t_WPRetraceMode::WBRAD_FIXED);
 }
 
 void task::get_amplitude_funcs(){

@@ -77,8 +77,6 @@ namespace task{
 		int pave_point_id;
 		int N_a, N_b, N_w;
 
-		int retrace_mode;
-
 	};
 
 }

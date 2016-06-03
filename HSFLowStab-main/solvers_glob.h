@@ -13,3 +13,5 @@ extern stab::t_GSBase* g_pGSSolverTime;
 extern stab::t_GSBase* g_pGSSolverSpat;
 
 extern stab::t_StabDBase* g_pStabDB;
+
+extern stab::t_WPTrackBase* g_pWPLine;

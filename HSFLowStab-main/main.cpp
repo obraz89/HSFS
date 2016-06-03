@@ -89,9 +89,9 @@ int main(int argc, char* argv[]){
 		
 		task::init_glob_solvers();
 
-		//test::check_gs_spoint(); goto finish;
-
 		task::init_stab_dbs();
+
+		stab::t_WPRetraceMode retrace_mode = g_pWPLine->get_retrace_mode();
 
 		switch (g_taskParams.id)
 		{
@@ -99,50 +99,13 @@ int main(int argc, char* argv[]){
 			task::do_global_search();
 			break;
 		case task::TTaskType::Retrace:
-			switch (g_taskParams.retrace_mode)
-			{
-			case stab::t_WPRetraceMode::W_FIXED:
-				switch (g_taskParams.spattime)
-				{
-				case task::TSpatTime::Spat:
-					task::retrace_wplines_wfixed_bfree();
-					break;
-				case task::TSpatTime::Time:
-				default :
-					wxString errMsg(_T("Error: Retrace with Time approach not implemented"));
-					wxLogError(errMsg);
-					break;
-				}
+			switch (g_taskParams.spattime){
+
+			case (task::TSpatTime::Spat):
+				task::retrace_wplines_cond_spat(retrace_mode);
 				break;
-			case stab::t_WPRetraceMode::WB_FIXED:
-				switch (g_taskParams.spattime)
-				{
-				case task::TSpatTime::Spat:
-					task::retrace_wplines_wfixed_bfixed();
-					break;
-				case task::TSpatTime::Time:
-				default :
-					wxString errMsg(_T("Error: Current retrace mode with Time approach not implemented"));
-					wxLogError(errMsg);
-					break;
-				}
-				break;
-			case stab::t_WPRetraceMode::WBRAD_FIXED:
-				switch (g_taskParams.spattime)
-				{
-				case task::TSpatTime::Spat:
-					task::retrace_wplines_wfixed_b_rad_fixed();
-					break;
-				case task::TSpatTime::Time:
-				default :
-					wxString errMsg(_T("Error: Current retrace mode with Time approach not implemented"));
-					wxLogError(errMsg);
-					break;
-				}
-				break;
-			default:
-				wxString errMsg(_T("Error: provided retrace mode not implemented"));
-				wxLogError(errMsg);
+			case (task::TSpatTime::Time):
+				wxLogError(_T("Error: retrace with TIME approach disabled"));
 				break;
 			}
 			break;

@@ -80,7 +80,8 @@ namespace pf{
 
 		void _retrace_dir_cond(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
-			t_Direction direction, const stab::t_WPRetraceMode& retrace_mode);
+			const stab::t_WPRetraceMode& retrace_mode,
+			t_Direction direction);
 
 		void _retrace_dir_w_time(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, t_Direction direction);
@@ -100,6 +101,9 @@ namespace pf{
 
 		bool _proceed_retrace(const mf::t_GeomPoint& cur_xyz, 
 			const t_WCharsLoc& wave, t_Direction dir) const;
+
+		void _calc_d2Ndx2(const t_WCharsLoc& wchars_base, 
+			stab::t_LSBase& loc_solver, stab::t_WPLineRec& rec);
 
 		std::wostream& _print_line(std::wostream& str) const;
 
@@ -122,6 +126,8 @@ namespace pf{
 		void clear();
 
 		const stab::t_WPLineRec& get_rec(int ind) const;
+
+		stab::t_WPRetraceMode get_retrace_mode() const;
 
 		virtual ~t_WavePackLine();
 

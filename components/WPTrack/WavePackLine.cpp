@@ -218,7 +218,7 @@ bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave,
 	bool ok = true;
 	const int max_iters = 100;
 
-	// TODO: emprics, move to config when tested
+	// TODO: emprics with d_rg, move to config when tested
 	// not working with small d_arg (like 1.0e-07)
 	const double d_arg = 1.0e-03;
 	const double tol = 1.0e-06;
@@ -436,9 +436,9 @@ void t_WavePackLine::_retrace_dir_w_time(t_GeomPoint start_from, t_WCharsLoc ini
 
 
 void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_wave, 
-									   stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
-									   t_Direction direction, 
-									   const stab::t_WPRetraceMode& retrace_mode){
+									   stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver , 
+									   const stab::t_WPRetraceMode& retrace_mode, 
+									   t_Direction direction){
 
 	loc_solver.setContext(start_xyz);
 	gs_solver.setContext(start_xyz);
@@ -578,6 +578,89 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 cur_xyz = nxt_xyz;
 
 	 }while (proceed_cond);
+
+}
+
+// calculate first and second derivatives of eikonal vs omega and beta
+// integrals taken from neutral point to some point x
+// dN/dw = Integral(dsigma/dw*dx)
+// dN/db = Integral(dsigma/db*dx)
+// d2N/dw2 = Integral(d2sigma/dw2*dx)
+// d2N/db2 = Integral(d2sigma/db2*dx)
+
+// call during retrace when base wchars are already calculated at a given point
+void t_WavePackLine::_calc_d2Ndx2
+	(const t_WCharsLoc& wchars_base, stab::t_LSBase& loc_solver, t_WPLineRec& rec){
+
+
+	t_WCharsLoc wchars_l, wchars_r;
+
+	// todo: empirics with dw and db
+	const double dw_rel = 0.5e-03;
+	const double dw_min = 1.0e-06;
+
+	const double db_rel = 0.5e-03;
+	const double db_min = 1.0e-06;
+
+	const double dw_aprox = wchars_base.w.real()*dw_rel;
+
+	const double dw = dw_aprox>dw_min ? dw_aprox : dw_min;
+
+	const double db_aprox = wchars_base.b.real()*db_rel;
+
+	const double db = db_aprox>db_min ? db_aprox : db_min;
+
+	stab::t_LSCond srch_cond;
+
+	srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+
+	if (wchars_base.get_treat()!=stab::t_TaskTreat::SPAT)
+		wxLogError(_T("In _calc_d2Ndx2: wrong task treat, only spat supported"));
+
+	// w derivs
+	wchars_l = wchars_base;
+	wchars_l.w = wchars_base.w - dw;
+
+	loc_solver.searchWave(wchars_l, srch_cond, stab::t_TaskTreat::SPAT);
+
+	wchars_r = wchars_base;
+	wchars_r.w = wchars_base.w + dw;
+
+	loc_solver.searchWave(wchars_r, srch_cond, stab::t_TaskTreat::SPAT);
+
+	t_Complex dalpha_dw = 0.5*(wchars_r.a - wchars_l.a)/dw;
+
+	t_Complex d2alpha_dw2 = (wchars_l.a - 2.0*wchars_base.a + wchars_r.a)/(dw*dw);
+
+	// b derivs
+	wchars_l = wchars_base;
+	wchars_l.b = wchars_base.b - db;
+
+	loc_solver.searchWave(wchars_l, srch_cond, stab::t_TaskTreat::SPAT);
+
+	wchars_r = wchars_base;
+	wchars_r.b = wchars_base.b + db;
+
+	loc_solver.searchWave(wchars_r, srch_cond, stab::t_TaskTreat::SPAT);
+
+	t_Complex dalpha_db = 0.5*(wchars_r.a - wchars_l.a)/db;
+
+	t_Complex d2alpha_db2 = (wchars_l.a - 2.0*wchars_base.a + wchars_r.a)/(db*db);
+
+	// store dimensional values (?)
+	const t_StabScales& scales = loc_solver.get_stab_scales();
+
+	const double inv_ue_dim = 1.0/scales.UeDim;
+
+	rec.da_dw_dim = inv_ue_dim * dalpha_dw;
+
+	rec.d2a_dw2_dim = scales.Dels*inv_ue_dim*inv_ue_dim*d2alpha_dw2;
+
+	rec.da_db_dim = dalpha_db;
+
+	rec.d2a_db2_dim = d2alpha_db2;
+
+	return;
 
 }
 
@@ -1068,6 +1151,24 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 
 	clear();
 
+	try{
+		_retrace_dir_cond(a_start_from, a_init_wave, 
+			loc_solver, gs_solver, retrace_mode, DOWNSTREAM);
+
+	}catch(const t_GenException& x){
+		wxLogMessage(x.what());
+	};
+
+	try{
+		//wxLogMessage(_T("upstream retrace disabled"));
+		_retrace_dir_cond(a_start_from, a_init_wave, 
+			loc_solver, gs_solver, retrace_mode, UPSTREAM);
+
+	}catch(const t_GenException& x){
+		wxLogMessage(x.what());
+	};
+
+	/*
 	switch (retrace_mode)
 	{
 	case t_WPRetraceMode::W_FIXED :
@@ -1117,6 +1218,9 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 		wxLogError(_T("Retrace : requested mode is not implemented\n"));
 		break;
 	}
+	*/
+
+	// merge upstream and downstream wplines
 
 	{
 		int nlup = _line_up.size();
@@ -1194,6 +1298,41 @@ void t_WavePackLine::calc_n_factor(){
 	}
 	smat::integrate_over_range(_s, _sigma, _nfact);
 
+	// debug dispersion calculations
+	std::vector<double> dsig_dw(N_LINE_MAX_HSIZE);
+	std::vector<double> dN_dw(N_LINE_MAX_HSIZE);
+
+	std::vector<double> d2sig_dw2(N_LINE_MAX_HSIZE);
+	std::vector<double> d2N_dw2(N_LINE_MAX_HSIZE);
+
+	static int id = 0;
+
+	for (int i=0; i<_line.size(); i++){
+
+		dsig_dw[i] = -1.0*_line[i].da_dw_dim.imag();
+		d2sig_dw2[i] = -1.0*_line[i].d2a_dw2_dim.imag();
+
+	}
+
+	smat::integrate_over_range(_s, dsig_dw, dN_dw);
+	smat::integrate_over_range(_s, d2sig_dw2, d2N_dw2);
+
+	std::wostringstream ostr;
+
+	ostr<<_T("output/dispersion_")<<id<<_T(".dat");
+
+	std::wofstream fstr(&ostr.str()[0]);
+
+	fstr<<_T("x\tdsigma_dw\td2sigma_dw2\n");
+
+	for (int i=0; i<_line.size(); i++){
+
+		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2[i]<<_T("\n");
+
+	}
+
+	// ~debug section
+
 	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = _nfact[i];
 
 
@@ -1265,3 +1404,10 @@ const t_WPLineRec& t_WavePackLine::get_rec(int ind) const{
 	return _line[ind];
 
 };
+
+stab::t_WPRetraceMode t_WavePackLine::get_retrace_mode() const{
+
+	return _params.RetraceMode;
+
+};
+

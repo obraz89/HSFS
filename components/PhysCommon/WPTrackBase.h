@@ -27,6 +27,12 @@ namespace stab{
 		t_WCharsGlob wave_chars;
 		double n_factor;
 
+		// dispersion of wave packet
+		// spatial approach only!
+		// store global dimensional 
+		t_Complex da_dw_dim, da_db_dim;
+		t_Complex d2a_dw2_dim, d2a_db2_dim;
+
 		t_WPLineRec();
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);
 
@@ -81,6 +87,8 @@ namespace stab{
 		virtual void clear() =0; 
 
 		virtual const stab::t_WPLineRec& get_rec(int ind) const=0;
+
+		virtual stab::t_WPRetraceMode get_retrace_mode() const =0;
 
 		virtual void print_to_file(const std::string& fname, std::ios_base::openmode) const=0;
 
