@@ -30,8 +30,14 @@ namespace stab{
 		// dispersion of wave packet
 		// spatial approach only!
 		// store global dimensional 
+
+		// TODO: after debug, no need to store da_d*
+		// only dN_d*, d2N_d*2
 		t_Complex da_dw_dim, da_db_dim;
 		t_Complex d2a_dw2_dim, d2a_db2_dim;
+
+		double dN_dw_dim, dN_db_dim;
+		double d2N_dw2_dim, d2N_db2_dim;
 
 		t_WPLineRec();
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);
@@ -90,7 +96,11 @@ namespace stab{
 
 		virtual stab::t_WPRetraceMode get_retrace_mode() const =0;
 
-		virtual void print_to_file(const std::string& fname, std::ios_base::openmode) const=0;
+		virtual void print_to_file(
+			const std::string& fname, std::ios_base::openmode) const=0;
+
+		virtual void print_dispersion_data_to_file(
+			const std::string& fname, std::ios_base::openmode) const=0;
 
 		virtual ~t_WPTrackBase();
 	};

@@ -289,17 +289,19 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 
 void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 
-	wxChar szFname[64];
+	char szFname[MAX_FNAME_LEN];
+	char fout_maxnfactor_str[MAX_FNAME_LEN];
+	char fout_wplines_str[MAX_FNAME_LEN];
+	char fout_wplines_disp_str[MAX_FNAME_LEN];
 
-	swprintf(szFname, MAX_FNAME_LEN, _T("%s/Wave_pack_lines_mode%d.dat"),
-		hsstab::OUTPUT_DIR.c_str(), a_mode_retrace);
+	sprintf_s(fout_wplines_str, MAX_FNAME_LEN, "%s/wplines_mode%d.dat",
+		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
 
-	std::wstring fout_wplines_path(szFname);
+	sprintf_s(fout_maxnfactor_str, MAX_FNAME_LEN, "%s/max_N_mode%d.dat",
+		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
 
-	swprintf(szFname, MAX_FNAME_LEN, _T("%s/max_N_mode%d.dat"),
-		hsstab::OUTPUT_DIR.c_str(), a_mode_retrace);
-
-	std::wstring fout_maxnfactor_path(szFname);
+	sprintf_s(fout_wplines_disp_str, MAX_FNAME_LEN, "%s/wplines_disp_%d.dat",
+		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
 
 	int pid_s, pid_e;
 
@@ -361,8 +363,9 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 
 				wp_line->retrace(test_xyz, w_init, *g_pStabSolver, *g_pGSSolverSpat, a_mode_retrace);
 				
-				wxString fout_wplines_path_wx(fout_wplines_path);
-				wp_line->print_to_file(std::string(fout_wplines_path_wx.ToAscii()), std::ios::app);
+				wp_line->print_to_file(fout_wplines_str, std::ios::app);
+
+				wp_line->print_dispersion_data_to_file(fout_wplines_disp_str, std::ios::app);
 
 				g_pStabDB->update(*wp_line);
 
@@ -384,8 +387,7 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 
 		//StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
 		
-		wxString fout_maxnfactor_path_wx(fout_maxnfactor_path);
-		g_pStabDB->write_to_file(std::string(fout_maxnfactor_path_wx.ToAscii()));
+		g_pStabDB->write_to_file(fout_maxnfactor_str);
 
 		delete wp_line;
 		return;

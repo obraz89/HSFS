@@ -33,7 +33,6 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 	std::wofstream fstr(&fname[0], write_mode);
 	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tc[]\tNju[Hz]\n");
 
-
 	for (int i=0; i<_line.size(); i++){
 
 		const t_WPLineRec& rec = _line[i];
@@ -68,6 +67,54 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 	};
 
 	fstr<<_T("\n\n\n\n");
+	fstr.flush();
+};
+
+void t_WavePackLine::print_dispersion_data_to_file(
+	const std::string& fname, std::ios_base::openmode write_mode) const{
+
+	const mf::t_FldParams& Params = _rFldMF.get_mf_params();
+
+	std::wofstream fstr(&fname[0], write_mode);
+
+	int N_zeros = 0;
+	int I=-1;
+
+	for (int i=0; i<_line.size()-1; i++){
+
+		const t_WPLineRec& rec_l = _line[i];
+		const t_WPLineRec& rec_r = _line[i+1];
+
+		double dN_dw_l = rec_l.dN_dw_dim;
+		double dN_dw_r = rec_r.dN_dw_dim;
+
+		if (dN_dw_l*dN_dw_r<0){
+			I=i;
+			N_zeros++;
+		}
+		
+	};
+
+	if (I==-1){
+		wxLogError(_T("Error: WP dispersion error: Failed to find dN_dw=0 point"));
+		fstr<<_T("Error\n");
+		return;
+	}
+
+	if (N_zeros!=1) 
+		wxLogError(_T("Error: WP dispersion error: multiple Dn_Dw=0 detected?!"));
+
+	const t_WPLineRec& Rec = _line[I];
+	const mf::t_GeomPoint& gp = Rec.mean_flow.get_xyz();
+
+	double d2N_dw2 = Rec.d2N_dw2_dim;
+	double d2N_db2 = Rec.d2N_db2_dim;
+
+	// TODO: linear interpolation between points, now simply use left point
+	fstr<<gp.x()<<_T("\t")<<gp.y()<<_T("\t")<<gp.z()<<_T("\t")
+		<<d2N_dw2<<_T("\t")<<d2N_db2<<_T("\n");
+	fstr.flush();
+
 };
 
 void t_WavePackLine::to_cyl_ref_frame(){

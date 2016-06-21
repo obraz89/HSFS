@@ -560,6 +560,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob);
 
+		 _calc_d2Ndx2(cur_wave, loc_solver, pLine->back());
+
 		 // write out current record
 		 ostr<<_T("cur xyz   :")<<cur_xyz<<_T("\n");
 		 ostr<<_T("cur wchars:")<<cur_wave<<_T("\n");
@@ -1302,8 +1304,14 @@ void t_WavePackLine::calc_n_factor(){
 	std::vector<double> dsig_dw(N_LINE_MAX_HSIZE);
 	std::vector<double> dN_dw(N_LINE_MAX_HSIZE);
 
+	std::vector<double> dsig_db(N_LINE_MAX_HSIZE);
+	std::vector<double> dN_db(N_LINE_MAX_HSIZE);
+
 	std::vector<double> d2sig_dw2(N_LINE_MAX_HSIZE);
 	std::vector<double> d2N_dw2(N_LINE_MAX_HSIZE);
+
+	std::vector<double> d2sig_db2(N_LINE_MAX_HSIZE);
+	std::vector<double> d2N_db2(N_LINE_MAX_HSIZE);
 
 	static int id = 0;
 
@@ -1312,22 +1320,39 @@ void t_WavePackLine::calc_n_factor(){
 		dsig_dw[i] = -1.0*_line[i].da_dw_dim.imag();
 		d2sig_dw2[i] = -1.0*_line[i].d2a_dw2_dim.imag();
 
+		dsig_db[i] = -1.0*_line[i].da_db_dim.imag();
+		d2sig_db2[i] = -1.0*_line[i].d2a_db2_dim.imag();
+
 	}
 
 	smat::integrate_over_range(_s, dsig_dw, dN_dw);
 	smat::integrate_over_range(_s, d2sig_dw2, d2N_dw2);
 
-	std::wostringstream ostr;
-
-	ostr<<_T("output/dispersion_")<<id<<_T(".dat");
-
-	std::wofstream fstr(&ostr.str()[0]);
-
-	fstr<<_T("x\tdsigma_dw\td2sigma_dw2\n");
+	smat::integrate_over_range(_s, dsig_db, dN_db);
+	smat::integrate_over_range(_s, d2sig_db2, d2N_db2);
 
 	for (int i=0; i<_line.size(); i++){
 
-		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2[i]<<_T("\n");
+		_line[i].dN_dw_dim = dN_dw[i];
+		_line[i].d2N_dw2_dim = d2N_dw2[i];
+
+		_line[i].dN_db_dim = dN_db[i];
+		_line[i].d2N_db2_dim = d2N_db2[i];
+
+	}
+
+	std::wostringstream ostr;
+
+	ostr<<_T("output/dispersion_")<<id<<_T(".dat");id++;
+
+	std::wofstream fstr(&ostr.str()[0]);
+
+	fstr<<_T("x\tdN_dw\td2N_dw2\tdN_db\td2N_db2\n");
+
+	for (int i=0; i<_line.size(); i++){
+
+		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2[i]
+				   <<_T("\t")<<dN_db[i]<<_T("\t")<<d2N_db2[i]<<_T("\n");
 
 	}
 
