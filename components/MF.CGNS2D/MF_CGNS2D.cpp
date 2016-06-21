@@ -21,21 +21,7 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 			ssuTHROW(t_GenException, _T("Error: Failed to initialize MF.CGNS2D, see errlog"));
 	}
 
-	mf::cg::hsf2d::_init_fld_base_params(_base_params, g);
-
-	_base_params.MFSym = g.get_int_param("AxeSym")==mf::t_AxeSym::AxeSym ? 
-		mf::t_AxeSym::AxeSym : mf::t_AxeSym::Plane;
-
-	_base_params.ZSpan = g.get_real_param("ZSpan");
-
-	_base_params.ThetaSpan = g.get_real_param("ThetaSpan");
-
-	_base_params.Nz = g.get_int_param("Nz");
-
-	if (_base_params.Nz<1){
-		wxLogError(_T("Error: Bad Nz value during CGNS2D fld initialization, check ini files"));
-		ssuTHROW(t_GenException, _T("Error: in CGNS2D init, see err log"));
-	}
+	t_CGNS2DParams::init_fld_base_params(_base_params, g);
 
 	bbox.xmin = g.get_real_param("BBox_Xmin");
 	bbox.xmax = g.get_real_param("BBox_Xmax");

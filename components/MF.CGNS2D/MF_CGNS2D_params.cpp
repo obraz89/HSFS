@@ -8,6 +8,13 @@
 using namespace mf;
 using namespace hsstab;
 
+typedef std::map<wxString,int> t_MapWxStrInt; 
+
+t_MapWxStrInt  t_CGNS2DParams::AXESYM_MODES_STR;
+
+#define OPT_AXESYM_STR _T("AxeSym")
+#define OPT_PLANE_STR _T("Plane")
+
 //---------------------------------------------------------------------2D params
 
 const t_CGNS2DParams& t_MFCGNS2D::get_params() const{
@@ -18,9 +25,19 @@ const t_FldParams& t_MFCGNS2D::get_mf_params() const{
 	return _base_params;
 };
 
+void t_CGNS2DParams::init_supported_options(){
+
+	AXESYM_MODES_STR.clear();
+	AXESYM_MODES_STR.insert(std::make_pair(OPT_AXESYM_STR, mf::t_AxeSym::AxeSym));
+	AXESYM_MODES_STR.insert(std::make_pair(OPT_PLANE_STR, mf::t_AxeSym::Plane));
+}
+
+
 //----------------------------------------------------------------shared init
 
-void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
+void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
+
+	init_supported_options();
 
 	// TODO: read all these params from cgns db
 
@@ -61,8 +78,7 @@ void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
 
 	// 2D specific part
-	// TODO: amke plugin groups AxeSym & Plane
-	g.add("AxeSym", 0, _T("Is Flow AxeSym? 0-axesym, 1-plane"));
+	g.add("AxeSym", _T("AxeSym or Plane"), _T("Is Flow AxeSym? 0-axesym, 1-plane"));
 
 	g.add("Nz", 21, _T("Span 2D grid in z-direction with Nz nodes"));
 
@@ -89,7 +105,7 @@ void mf::cg::hsf2d::_plug_default_settings(TPluginParamsGroup& g){
 
 }
 
-void mf::cg::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginParamsGroup& g){
+void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginParamsGroup& g){
 
 	params.Alpha = g.get_real_param("Alpha");
 
@@ -118,5 +134,25 @@ void mf::cg::hsf2d::_init_fld_base_params(t_FldParams& params, const TPluginPara
 	params.ViscType = g.get_int_param("ViscType");
 
 	params.BulkViscRatio = g.get_real_param("BulkViscRatio");
+
+	wxString axesym_str = g.get_string_param("AxeSym");
+
+	t_MapWxStrInt::iterator it = AXESYM_MODES_STR.find(axesym_str);
+
+	if (it==AXESYM_MODES_STR.end()) 
+		ssuGENTHROW(_T("Unknown value provided for option AxeSym!"));
+
+	params.MFSym = it->second;
+
+	params.ZSpan = g.get_real_param("ZSpan");
+
+	params.ThetaSpan = g.get_real_param("ThetaSpan");
+
+	params.Nz = g.get_int_param("Nz");
+
+	if (params.Nz<1){
+		wxLogError(_T("Error: Bad Nz value during CGNS2D fld initialization, check ini files"));
+		ssuTHROW(t_GenException, _T("Error: in CGNS2D init, see err log"));
+	}
 
 }
