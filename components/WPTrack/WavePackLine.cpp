@@ -112,9 +112,15 @@ t_WaveChars t_WavePackLine::_interpolate_next_wchars(const std::vector<t_WPLineR
 
 void t_WavePackLine::_add_node(
 		t_RecArray& add_to, const mf::t_Rec& fld_rec, 
-		const t_WCharsGlob& wave_chars){
+		const t_WCharsGlob& wave_chars, const t_WCharsLoc& wchars_loc){
 
-	add_to.push_back(fld_rec, wave_chars);
+	stab::t_WPLineRec rec;
+
+	rec.mean_flow = fld_rec;
+	rec.wave_chars = wave_chars;
+	rec.wchars_loc = wchars_loc;
+
+	add_to.push_back(rec);
 
 };
 
@@ -357,7 +363,7 @@ void t_WavePackLine::_retrace_dir_w_time(t_GeomPoint start_from, t_WCharsLoc ini
 	t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
 							 loc_solver.get_stab_scales());
 
-	_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob);
+	_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob, init_wave);
 
 	// march until neutral point
 	// or field boundary is reached
@@ -409,7 +415,7 @@ void t_WavePackLine::_retrace_dir_w_time(t_GeomPoint start_from, t_WCharsLoc ini
 		t_WCharsGlob wchars_glob(new_wave_chars, 
 		_rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
 
-		_add_node(*pLine, new_rec_mf, wchars_glob);
+		_add_node(*pLine, new_rec_mf, wchars_glob, new_wave_chars);
 
 		last_wchars_loc = new_wave_chars;
 		proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
@@ -512,7 +518,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 cur_wave.w = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
 			 cur_wave.b = wchars_dim_cnd.b.real()*stab_scales.Dels;
 
-			 search_wave_wb_fixed(cur_wave, loc_solver, gs_solver);
+			 if (!search_wave_wb_fixed(cur_wave, loc_solver, gs_solver))
+				 break;
 
 			 srch_cnd_ok = true;
 		 }
@@ -542,7 +549,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 cur_wave.w = wr;
 			 cur_wave.b = br_new;
 
-			 search_wave_wb_fixed(cur_wave, loc_solver, gs_solver);
+			 if (!search_wave_wb_fixed(cur_wave, loc_solver, gs_solver))
+				 break;
 
 			 srch_cnd_ok = true;
 
@@ -558,9 +566,10 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
 			 loc_solver.get_stab_scales());
 
-		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob);
+		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, cur_wave);
 
-		 _calc_d2Ndx2(cur_wave, loc_solver, pLine->back());
+		 if (_params.CalcWPDispersion)
+			 _calc_d2sig_dx2(cur_wave, loc_solver, pLine->back());
 
 		 // write out current record
 		 ostr<<_T("cur xyz   :")<<cur_xyz<<_T("\n");
@@ -591,7 +600,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 // d2N/db2 = Integral(d2sigma/db2*dx)
 
 // call during retrace when base wchars are already calculated at a given point
-void t_WavePackLine::_calc_d2Ndx2
+void t_WavePackLine::_calc_d2sig_dx2
 	(const t_WCharsLoc& wchars_base, stab::t_LSBase& loc_solver, t_WPLineRec& rec){
 
 
@@ -599,18 +608,20 @@ void t_WavePackLine::_calc_d2Ndx2
 
 	// todo: empirics with dw and db
 	const double dw_rel = 0.5e-03;
-	const double dw_min = 1.0e-06;
+	const double dw_min = 1.0e-04;
 
 	const double db_rel = 0.5e-03;
-	const double db_min = 1.0e-06;
+
+	// TODO: fixme
+	const double db_min = 1.0e-04;
 
 	const double dw_aprox = wchars_base.w.real()*dw_rel;
 
-	const double dw = dw_aprox>dw_min ? dw_aprox : dw_min;
+	const double dw = dw_min;// dw_aprox>dw_min ? dw_aprox : dw_min;
 
 	const double db_aprox = wchars_base.b.real()*db_rel;
 
-	const double db = db_aprox>db_min ? db_aprox : db_min;
+	const double db = db_min; // db_aprox>db_min ? db_aprox : db_min;
 
 	stab::t_LSCond srch_cond;
 
@@ -665,488 +676,6 @@ void t_WavePackLine::_calc_d2Ndx2
 	return;
 
 }
-
-void t_WavePackLine::_retrace_dir_w_spat(t_GeomPoint start_from, t_WCharsLoc init_wave, 
-										 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
-										 t_Direction direction){
-
-
-	 t_WCharsLocDim init_wave_dim = init_wave.make_dim();
-	 double wr_init_dim = init_wave_dim.w.real();
-
-	 double time_direction;
-	 t_RecArray* pLine;
-
-	 if (direction==DOWNSTREAM){
-
-		 pLine = &_line_down;
-		 time_direction = 1.0;
-
-	 }else{
-
-		 pLine = &_line_up;
-		 time_direction = -1.0;
-
-	 };
-
-	 loc_solver.setContext(start_from);
-	 gs_solver.setContext(start_from);
-
-	 init_wave.set_scales(loc_solver.get_stab_scales());
-
-	 t_WCharsLoc start_wave_const = init_wave;
-	 if (!search_max_ai_spat(start_wave_const, init_wave, loc_solver, gs_solver)){
-		 wxLogError(_T("Error: search max ai failed, break retrace for wpline"));
-		 return;
-	 };
-	 loc_solver.calcGroupVelocity(init_wave);
-
-	 t_WCharsLoc last_wchars_loc = init_wave;
-
-	 t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
-		 loc_solver.get_stab_scales());
-
-	 _add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob);
-
-	 // march until neutral point
-	 // or field boundary is reached
-	 bool proceed_cond=true;
-	 std::wostringstream ostr;
-
-	 //std::wofstream f_debug_str(_T("wplines_debug_info.dat"), std::ios::app);
-	 //f_debug_str<<_T("======semiline starts\n");
-
-	 t_Vec3Dbl vg, dr;
-
-	 do{
-
-		 t_WPLineRec& last_rec = pLine->back();
-		 double dt = _params.TimeStep*time_direction;
-
-		 _calc_dr(dt, last_rec, vg, dr);
-
-		 // TODO: IMPORTANT! BE ALWAYS ON SURFACE
-		 t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
-		 mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
-
-		 // IMPORTANT TODO: nice calc of new_wave_chars
-		 // t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
-		 t_WCharsLoc new_wave_chars = last_wchars_loc;
-
-		 loc_solver.setContext(new_gpoint);
-		 gs_solver.setContext(new_gpoint);
-
-		 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
-
-		 double wr = wr_init_dim/stab_scales.FreqScale();
-		 new_wave_chars.w = wr;
-
-		 ostr<<_T("new wr, br")<<wr<<_T(";")<<new_wave_chars.b.real()<<_T("\n");
-		 ostr<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
-		 ostr<<_T("New Me, Ue:")<<stab_scales.Me<<";"<<stab_scales.Ue<<_T("\n");
-		 log_my::wxLogMessageStd(ostr.str());
-		 ostr.str(_T(""));ostr.clear();
-
-		 bool ok;
-		 try
-		 {
-			 //loc_solver.searchMaxWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
-			 t_WCharsLoc start_wave = new_wave_chars;
-			 ok = search_max_ai_spat(start_wave, new_wave_chars, loc_solver, gs_solver);
-		 }
-		 catch (...)
-		 {
-			 wxLogMessage(_T("Error: retrace step failed [w=fixed, treat=spat]"));
-			 break;
-		 }
-
-		 if (!ok) break;
-
-//		 loc_solver.calcGroupVelocity(new_wave_chars);
-//		 new_wave_chars.set_scales(loc_solver.get_stab_scales());
-
-		 t_WCharsGlob wchars_glob(new_wave_chars, 
-			 _rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
-
-		 _add_node(*pLine, new_rec_mf, wchars_glob);
-
-		 last_wchars_loc = new_wave_chars;
-		 proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
-
-		 ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
-		 ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
-		 log_my::wxLogMessageStd(ostr.str());
-		 ostr.str(_T(""));ostr.clear();
-
-	 }while (proceed_cond);
-
-};
-// retrace with keeping constant dimensional w and b
-// this is so called "beta constant" retrace strategy
-void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wave, 
-									 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
-									 t_Direction direction){
-
-	t_WCharsLocDim init_wave_dim = init_wave.make_dim();
-
-	// IMPORTANT TODO: keeping br_dim constant in local rf
-	// implies that along streamline all local reference frames are the same
-	// (true for 2D plane or axesym geometries, NOT TRUE for 3d geometries)
-	double wr_init_dim = init_wave_dim.w.real();
-	double br_init_dim = init_wave_dim.b.real();
-
-	mf::t_Rec surf_rec;
-	_rFldMF.calc_nearest_surf_rec(start_from, surf_rec);
-
-	start_from.set(surf_rec);
-
-	double time_direction;
-	t_RecArray* pLine;
-
-	if (direction==DOWNSTREAM){
-
-		pLine = &_line_down;
-		time_direction = 1.0;
-
-	}else{
-
-		pLine = &_line_up;
-		time_direction = -1.0;
-
-	};
-
-	t_WCharsLoc last_wchars_loc = init_wave;
-
-	gs_solver.setContext(start_from);
-	loc_solver.setContext(start_from);
-
-	stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
-	loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::SPAT);
-
-	if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
-
-		loc_solver.calcGroupVelocity(init_wave);
-
-	}
-
-	t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
-		loc_solver.get_stab_scales());
-
-	_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob);
-
-	const t_StabScales& stab_scales_tmp = loc_solver.get_stab_scales();
-
-	std::wcout<<_T("Init Dels, StabRe:")<<stab_scales_tmp.Dels<<";"<<stab_scales_tmp.ReStab<<_T("\n");
-
-	// march until Sigma Truncation Criteria is reached (e.g. sigma becomes negative)
-	// or field boundary is reached
-	bool proceed_cond=true;
-	// make 1 step more to get point where sigma=0
-	bool terminate_next_step=false;
-
-	std::wostringstream ostr;
-
-	t_Vec3Dbl vg, dr;
-
-	//debug
-	int d_pid=0;
-
-	do{
-
-		t_WPLineRec& last_rec = pLine->back();
-		double dt = _params.TimeStep*time_direction;
-
-		_calc_dr(dt, last_rec, vg, dr);
-
-		// TODO: IMPORTANT! BE ALWAYS ON SURFACE
-		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
-		mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
-
-		//_rFldMF.calc_nearest_inviscid_rec(start_from, out_rec)
-
-		ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
-		log_my::wxLogMessageStd(ostr.str());
-		ostr.str(_T(""));ostr.clear();
-
-		// IMPORTANT TODO: nice calc of new_wave_chars
-		// t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
-		t_WCharsLoc new_wave_chars = last_wchars_loc;
-
-		loc_solver.setContext(new_gpoint);
-		gs_solver.setContext(new_gpoint);
-
-		stab::t_LSCond srch_cond;
-
-		const t_StabScales& stab_scales = loc_solver.get_stab_scales();
-
-		double wr = wr_init_dim/stab_scales.FreqScale();
-		double br = br_init_dim*stab_scales.Dels;
-		ostr<<_T("new wr, br")<<wr<<_T(";")<<br<<_T("\n");
-		ostr<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
-		ostr<<_T("New Me, Ue:")<<stab_scales.Me<<";"<<stab_scales.Ue<<_T("\n");
-		log_my::wxLogMessageStd(ostr.str());
-		ostr.str(_T(""));ostr.clear();
-
-		new_wave_chars.w = wr;
-		new_wave_chars.b = br;
-		srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
-
-		try
-		{
-			// first try to use global search
-			std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(new_wave_chars);
-
-			if (raw_waves.size()>0){
-
-				std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
-
-				if (filt_waves.size()>0){
-		
-					new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
-
-				} else{
-
-					// gs candidates failed, 
-					// try local search directly
-					loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
-
-				}
-
-			}else{
-				// global search doesnt work
-				// try local search directly
-				loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
-
-			}
-
-			if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
-				loc_solver.calcGroupVelocity(new_wave_chars);
-			}
-
-			//debug
-
-			//char fn[33];
-			//sprintf(fn, "output/dbg_prof_%d.dat", d_pid);
-			//loc_solver.dumpProfileStab(fn);
-			//sprintf(fn, "output/dbg_eig_%d.dat", d_pid);
-			//loc_solver.dumpEigenFuctions(fn);
-			//d_pid++;
-		}
-		catch (...)
-		{
-			wxLogMessage(_T("Retrace: Search Wave Failed"));
-			break;
-		}
-
-		// check that converged to a physical wave
-		bool ok_wchars = true;
-		ok_wchars = ok_wchars && stab::check_wchars_increment(new_wave_chars);
-		ok_wchars = ok_wchars && stab::check_wchars_c_phase(new_wave_chars);
-
-		if (!ok_wchars){
-			wxLogMessage(_T("Warning: converged to unphysical wave, break..."));
-			break;
-		}
-
-
-		new_wave_chars.set_scales(stab_scales);
-
-		t_WCharsGlob wchars_glob(new_wave_chars, 
-			_rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
-
-		_add_node(*pLine, new_rec_mf, wchars_glob);
-
-		last_wchars_loc = new_wave_chars;
-		proceed_cond = proceed_cond && !terminate_next_step;
-		terminate_next_step = !_proceed_retrace(new_gpoint, new_wave_chars, direction);
-
-		ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
-		log_my::wxLogMessageStd(ostr.str());
-		ostr.str(_T(""));ostr.clear();
-
-	}while (proceed_cond);
-}
-
-
-// retrace with keeping constant dimensional w and b~1/r
-// this is "beta constant" for conical configurations
-// with n wavelengths lying in half-circle
-void t_WavePackLine::_retrace_dir_wb_rad(t_GeomPoint start_from, t_WCharsLoc init_wave, 
-									 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
-									 t_Direction direction){
-
-	 t_WCharsLocDim init_wave_dim = init_wave.make_dim();
-
-	 // IMPORTANT TODO: keeping br_dim constant in local rf
-	 // implies that along streamline all local reference frames are the same
-	 // (true for 2D plane or axesym geometries, NOT TRUE for 3d geometries)
-	 double wr_init_dim = init_wave_dim.w.real();
-	 double br_init_dim = init_wave_dim.b.real();
-
-	 mf::t_Rec surf_rec;
-	 _rFldMF.calc_nearest_surf_rec(start_from, surf_rec);
-
-	 start_from.set(surf_rec);
-
-	 // TODO: correct way to compute characterisitic radius
-
-	 double R0; 
-	 {
-		 const double y0 = start_from.y();
-		 const double z0 = start_from.z();
-		 R0 = sqrt(y0*y0+z0*z0);
-	 }
-
-	 double time_direction;
-	 t_RecArray* pLine;
-
-	 if (direction==DOWNSTREAM){
-
-		 pLine = &_line_down;
-		 time_direction = 1.0;
-
-	 }else{
-
-		 pLine = &_line_up;
-		 time_direction = -1.0;
-
-	 };
-
-	 t_WCharsLoc last_wchars_loc = init_wave;
-
-	 gs_solver.setContext(start_from);
-	 loc_solver.setContext(start_from);
-
-	 stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
-	 loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::SPAT);
-
-	 if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
-
-		 loc_solver.calcGroupVelocity(init_wave);
-
-	 }
-
-	 t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
-		 loc_solver.get_stab_scales());
-
-	 _add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob);
-
-	 const t_StabScales& stab_scales_tmp = loc_solver.get_stab_scales();
-
-	 std::wcout<<_T("Init Dels, StabRe:")<<stab_scales_tmp.Dels<<";"<<stab_scales_tmp.ReStab<<_T("\n");
-
-	 // march until neutral point
-	 // or field boundary is reached
-	 bool proceed_cond=true;
-	 std::wostringstream ostr;
-
-	 t_Vec3Dbl vg, dr;
-
-	 //debug
-	 int d_pid=0;
-
-	 do{
-
-		 t_WPLineRec& last_rec = pLine->back();
-		 double dt = _params.TimeStep*time_direction;
-
-		 _calc_dr(dt, last_rec, vg, dr);
-
-		 // TODO: IMPORTANT! BE ALWAYS ON SURFACE
-		 t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
-		 mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
-
-		 //_rFldMF.calc_nearest_inviscid_rec(start_from, out_rec)
-
-		 ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
-		 log_my::wxLogMessageStd(ostr.str());
-		 ostr.str(_T(""));ostr.clear();
-
-		 // IMPORTANT TODO: nice calc of new_wave_chars
-		 // t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
-		 t_WCharsLoc new_wave_chars = last_wchars_loc;
-
-		 loc_solver.setContext(new_gpoint);
-		 gs_solver.setContext(new_gpoint);
-
-		 stab::t_LSCond srch_cond;
-
-		 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
-
-		 double Rcur;
-		 {
-			 const double y1 = new_gpoint.y();
-			 const double z1 = new_gpoint.z();
-			 Rcur = sqrt(y1*y1+z1*z1);
-		 }
-
-		 double wr = wr_init_dim/stab_scales.FreqScale();
-		 double br_0 = br_init_dim*stab_scales.Dels;
-		 double br_new = br_0*R0/Rcur;
-		 ostr<<_T("new wr, br")<<wr<<_T(";")<<br_new<<_T("\n");
-		 ostr<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
-		 ostr<<_T("New Me, Ue:")<<stab_scales.Me<<";"<<stab_scales.Ue<<_T("\n");
-		 log_my::wxLogMessageStd(ostr.str());
-		 ostr.str(_T(""));ostr.clear();
-
-		 new_wave_chars.w = wr;
-		 new_wave_chars.b = br_new;
-		 srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
-
-		 try
-		 {
-			 std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(new_wave_chars);
-			 std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
-			 new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
-			 //loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
-
-			 if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
-				 loc_solver.calcGroupVelocity(new_wave_chars);
-			 }
-
-			 //debug
-
-			 //char fn[33];
-			 //sprintf(fn, "output/dbg_prof_%d.dat", d_pid);
-			 //loc_solver.dumpProfileStab(fn);
-			 //sprintf(fn, "output/dbg_eig_%d.dat", d_pid);
-			 //loc_solver.dumpEigenFuctions(fn);
-			 //d_pid++;
-		 }
-		 catch (...)
-		 {
-			 wxLogMessage(_T("Retrace: Search Wave Failed"));
-			 break;
-		 }
-
-		 // check that converged to a physical wave
-		 bool ok_wchars = true;
-		 ok_wchars = ok_wchars && stab::check_wchars_increment(new_wave_chars);
-		 ok_wchars = ok_wchars && stab::check_wchars_c_phase(new_wave_chars);
-
-		 if (!ok_wchars){
-			 wxLogMessage(_T("Warning: converged to unphysical wave, break..."));
-			 break;
-		 }
-
-
-		 new_wave_chars.set_scales(stab_scales);
-
-		 t_WCharsGlob wchars_glob(new_wave_chars, 
-			 _rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
-
-		 _add_node(*pLine, new_rec_mf, wchars_glob);
-
-		 last_wchars_loc = new_wave_chars;
-		 proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
-
-		 ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
-		 log_my::wxLogMessageStd(ostr.str());
-		 ostr.str(_T(""));ostr.clear();
-
-	 }while (proceed_cond);
-}
-
 void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave, 
 							 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
 							 const stab::t_WPRetraceMode& retrace_mode){
@@ -1300,7 +829,14 @@ void t_WavePackLine::calc_n_factor(){
 	}
 	smat::integrate_over_range(_s, _sigma, _nfact);
 
-	// debug dispersion calculations
+	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = _nfact[i];
+
+	if (_params.CalcWPDispersion) calc_d2N_dxx();
+
+}
+
+void t_WavePackLine::calc_d2N_dxx(){
+
 	std::vector<double> dsig_dw(N_LINE_MAX_HSIZE);
 	std::vector<double> dN_dw(N_LINE_MAX_HSIZE);
 
@@ -1352,13 +888,9 @@ void t_WavePackLine::calc_n_factor(){
 	for (int i=0; i<_line.size(); i++){
 
 		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2[i]
-				   <<_T("\t")<<dN_db[i]<<_T("\t")<<d2N_db2[i]<<_T("\n");
+		<<_T("\t")<<dN_db[i]<<_T("\t")<<d2N_db2[i]<<_T("\n");
 
 	}
-
-	// ~debug section
-
-	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = _nfact[i];
 
 
 }
@@ -1436,3 +968,492 @@ stab::t_WPRetraceMode t_WavePackLine::get_retrace_mode() const{
 
 };
 
+// old retrace functions
+// they are now replaced by one _retrace_dir_cond
+// when it is verified
+// all this functions can be removed
+/*
+
+void t_WavePackLine::_retrace_dir_w_spat(t_GeomPoint start_from, t_WCharsLoc init_wave, 
+stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
+t_Direction direction){
+
+
+t_WCharsLocDim init_wave_dim = init_wave.make_dim();
+double wr_init_dim = init_wave_dim.w.real();
+
+double time_direction;
+t_RecArray* pLine;
+
+if (direction==DOWNSTREAM){
+
+pLine = &_line_down;
+time_direction = 1.0;
+
+}else{
+
+pLine = &_line_up;
+time_direction = -1.0;
+
+};
+
+loc_solver.setContext(start_from);
+gs_solver.setContext(start_from);
+
+init_wave.set_scales(loc_solver.get_stab_scales());
+
+t_WCharsLoc start_wave_const = init_wave;
+if (!search_max_ai_spat(start_wave_const, init_wave, loc_solver, gs_solver)){
+wxLogError(_T("Error: search max ai failed, break retrace for wpline"));
+return;
+};
+loc_solver.calcGroupVelocity(init_wave);
+
+t_WCharsLoc last_wchars_loc = init_wave;
+
+t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
+loc_solver.get_stab_scales());
+
+_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob, init_wave);
+
+// march until neutral point
+// or field boundary is reached
+bool proceed_cond=true;
+std::wostringstream ostr;
+
+//std::wofstream f_debug_str(_T("wplines_debug_info.dat"), std::ios::app);
+//f_debug_str<<_T("======semiline starts\n");
+
+t_Vec3Dbl vg, dr;
+
+do{
+
+t_WPLineRec& last_rec = pLine->back();
+double dt = _params.TimeStep*time_direction;
+
+_calc_dr(dt, last_rec, vg, dr);
+
+// TODO: IMPORTANT! BE ALWAYS ON SURFACE
+t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
+mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
+
+// IMPORTANT TODO: nice calc of new_wave_chars
+// t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
+t_WCharsLoc new_wave_chars = last_wchars_loc;
+
+loc_solver.setContext(new_gpoint);
+gs_solver.setContext(new_gpoint);
+
+const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+
+double wr = wr_init_dim/stab_scales.FreqScale();
+new_wave_chars.w = wr;
+
+ostr<<_T("new wr, br")<<wr<<_T(";")<<new_wave_chars.b.real()<<_T("\n");
+ostr<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
+ostr<<_T("New Me, Ue:")<<stab_scales.Me<<";"<<stab_scales.Ue<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+bool ok;
+try
+{
+//loc_solver.searchMaxWave(new_wave_chars, srch_cond, stab::t_TaskTreat::TIME);
+t_WCharsLoc start_wave = new_wave_chars;
+ok = search_max_ai_spat(start_wave, new_wave_chars, loc_solver, gs_solver);
+}
+catch (...)
+{
+wxLogMessage(_T("Error: retrace step failed [w=fixed, treat=spat]"));
+break;
+}
+
+if (!ok) break;
+
+//		 loc_solver.calcGroupVelocity(new_wave_chars);
+//		 new_wave_chars.set_scales(loc_solver.get_stab_scales());
+
+t_WCharsGlob wchars_glob(new_wave_chars, 
+_rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
+
+_add_node(*pLine, new_rec_mf, wchars_glob, new_wave_chars);
+
+last_wchars_loc = new_wave_chars;
+proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
+
+ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
+ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+}while (proceed_cond);
+
+};
+// retrace with keeping constant dimensional w and b
+// this is so called "beta constant" retrace strategy
+void t_WavePackLine::_retrace_dir_wb(t_GeomPoint start_from, t_WCharsLoc init_wave, 
+stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
+t_Direction direction){
+
+t_WCharsLocDim init_wave_dim = init_wave.make_dim();
+
+// IMPORTANT TODO: keeping br_dim constant in local rf
+// implies that along streamline all local reference frames are the same
+// (true for 2D plane or axesym geometries, NOT TRUE for 3d geometries)
+double wr_init_dim = init_wave_dim.w.real();
+double br_init_dim = init_wave_dim.b.real();
+
+mf::t_Rec surf_rec;
+_rFldMF.calc_nearest_surf_rec(start_from, surf_rec);
+
+start_from.set(surf_rec);
+
+double time_direction;
+t_RecArray* pLine;
+
+if (direction==DOWNSTREAM){
+
+pLine = &_line_down;
+time_direction = 1.0;
+
+}else{
+
+pLine = &_line_up;
+time_direction = -1.0;
+
+};
+
+t_WCharsLoc last_wchars_loc = init_wave;
+
+gs_solver.setContext(start_from);
+loc_solver.setContext(start_from);
+
+stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::SPAT);
+
+if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
+
+loc_solver.calcGroupVelocity(init_wave);
+
+}
+
+t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
+loc_solver.get_stab_scales());
+
+_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob, init_wave);
+
+const t_StabScales& stab_scales_tmp = loc_solver.get_stab_scales();
+
+std::wcout<<_T("Init Dels, StabRe:")<<stab_scales_tmp.Dels<<";"<<stab_scales_tmp.ReStab<<_T("\n");
+
+// march until Sigma Truncation Criteria is reached (e.g. sigma becomes negative)
+// or field boundary is reached
+bool proceed_cond=true;
+// make 1 step more to get point where sigma=0
+bool terminate_next_step=false;
+
+std::wostringstream ostr;
+
+t_Vec3Dbl vg, dr;
+
+//debug
+int d_pid=0;
+
+do{
+
+t_WPLineRec& last_rec = pLine->back();
+double dt = _params.TimeStep*time_direction;
+
+_calc_dr(dt, last_rec, vg, dr);
+
+// TODO: IMPORTANT! BE ALWAYS ON SURFACE
+t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
+mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
+
+//_rFldMF.calc_nearest_inviscid_rec(start_from, out_rec)
+
+ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+// IMPORTANT TODO: nice calc of new_wave_chars
+// t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
+t_WCharsLoc new_wave_chars = last_wchars_loc;
+
+loc_solver.setContext(new_gpoint);
+gs_solver.setContext(new_gpoint);
+
+stab::t_LSCond srch_cond;
+
+const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+
+double wr = wr_init_dim/stab_scales.FreqScale();
+double br = br_init_dim*stab_scales.Dels;
+ostr<<_T("new wr, br")<<wr<<_T(";")<<br<<_T("\n");
+ostr<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
+ostr<<_T("New Me, Ue:")<<stab_scales.Me<<";"<<stab_scales.Ue<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+new_wave_chars.w = wr;
+new_wave_chars.b = br;
+srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+
+try
+{
+// first try to use global search
+std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(new_wave_chars);
+
+if (raw_waves.size()>0){
+
+std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+
+if (filt_waves.size()>0){
+
+new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
+
+} else{
+
+// gs candidates failed, 
+// try local search directly
+loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+
+}
+
+}else{
+// global search doesnt work
+// try local search directly
+loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+
+}
+
+if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
+loc_solver.calcGroupVelocity(new_wave_chars);
+}
+
+//debug
+
+//char fn[33];
+//sprintf(fn, "output/dbg_prof_%d.dat", d_pid);
+//loc_solver.dumpProfileStab(fn);
+//sprintf(fn, "output/dbg_eig_%d.dat", d_pid);
+//loc_solver.dumpEigenFuctions(fn);
+//d_pid++;
+}
+catch (...)
+{
+wxLogMessage(_T("Retrace: Search Wave Failed"));
+break;
+}
+
+// check that converged to a physical wave
+bool ok_wchars = true;
+ok_wchars = ok_wchars && stab::check_wchars_increment(new_wave_chars);
+ok_wchars = ok_wchars && stab::check_wchars_c_phase(new_wave_chars);
+
+if (!ok_wchars){
+wxLogMessage(_T("Warning: converged to unphysical wave, break..."));
+break;
+}
+
+
+new_wave_chars.set_scales(stab_scales);
+
+t_WCharsGlob wchars_glob(new_wave_chars, 
+_rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
+
+_add_node(*pLine, new_rec_mf, wchars_glob, new_wave_chars);
+
+last_wchars_loc = new_wave_chars;
+proceed_cond = proceed_cond && !terminate_next_step;
+terminate_next_step = !_proceed_retrace(new_gpoint, new_wave_chars, direction);
+
+ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+}while (proceed_cond);
+}
+
+
+// retrace with keeping constant dimensional w and b~1/r
+// this is "beta constant" for conical configurations
+// with n wavelengths lying in half-circle
+void t_WavePackLine::_retrace_dir_wb_rad(t_GeomPoint start_from, t_WCharsLoc init_wave, 
+stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
+t_Direction direction){
+
+t_WCharsLocDim init_wave_dim = init_wave.make_dim();
+
+// IMPORTANT TODO: keeping br_dim constant in local rf
+// implies that along streamline all local reference frames are the same
+// (true for 2D plane or axesym geometries, NOT TRUE for 3d geometries)
+double wr_init_dim = init_wave_dim.w.real();
+double br_init_dim = init_wave_dim.b.real();
+
+mf::t_Rec surf_rec;
+_rFldMF.calc_nearest_surf_rec(start_from, surf_rec);
+
+start_from.set(surf_rec);
+
+// TODO: correct way to compute characterisitic radius
+
+double R0; 
+{
+const double y0 = start_from.y();
+const double z0 = start_from.z();
+R0 = sqrt(y0*y0+z0*z0);
+}
+
+double time_direction;
+t_RecArray* pLine;
+
+if (direction==DOWNSTREAM){
+
+pLine = &_line_down;
+time_direction = 1.0;
+
+}else{
+
+pLine = &_line_up;
+time_direction = -1.0;
+
+};
+
+t_WCharsLoc last_wchars_loc = init_wave;
+
+gs_solver.setContext(start_from);
+loc_solver.setContext(start_from);
+
+stab::t_LSCond search_cond(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+loc_solver.searchWave(init_wave, search_cond, stab::t_TaskTreat::SPAT);
+
+if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
+
+loc_solver.calcGroupVelocity(init_wave);
+
+}
+
+t_WCharsGlob wchars_glob(init_wave, _rFldMF.calc_jac_to_loc_rf(start_from), 
+loc_solver.get_stab_scales());
+
+_add_node(*pLine, _rFldMF.get_rec(start_from), wchars_glob, init_wave);
+
+const t_StabScales& stab_scales_tmp = loc_solver.get_stab_scales();
+
+std::wcout<<_T("Init Dels, StabRe:")<<stab_scales_tmp.Dels<<";"<<stab_scales_tmp.ReStab<<_T("\n");
+
+// march until neutral point
+// or field boundary is reached
+bool proceed_cond=true;
+std::wostringstream ostr;
+
+t_Vec3Dbl vg, dr;
+
+//debug
+int d_pid=0;
+
+do{
+
+t_WPLineRec& last_rec = pLine->back();
+double dt = _params.TimeStep*time_direction;
+
+_calc_dr(dt, last_rec, vg, dr);
+
+// TODO: IMPORTANT! BE ALWAYS ON SURFACE
+t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
+mf::t_Rec new_rec_mf = 	_rFldMF.interpolate_to_point(new_gpoint);
+
+//_rFldMF.calc_nearest_inviscid_rec(start_from, out_rec)
+
+ostr<<_T("current xyz:")<<new_gpoint<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+// IMPORTANT TODO: nice calc of new_wave_chars
+// t_WCharsLoc new_wave_chars = _interpolate_next_wchars(*pLine, new_gpoint);
+t_WCharsLoc new_wave_chars = last_wchars_loc;
+
+loc_solver.setContext(new_gpoint);
+gs_solver.setContext(new_gpoint);
+
+stab::t_LSCond srch_cond;
+
+const t_StabScales& stab_scales = loc_solver.get_stab_scales();
+
+double Rcur;
+{
+const double y1 = new_gpoint.y();
+const double z1 = new_gpoint.z();
+Rcur = sqrt(y1*y1+z1*z1);
+}
+
+double wr = wr_init_dim/stab_scales.FreqScale();
+double br_0 = br_init_dim*stab_scales.Dels;
+double br_new = br_0*R0/Rcur;
+ostr<<_T("new wr, br")<<wr<<_T(";")<<br_new<<_T("\n");
+ostr<<_T("New Dels, StabRe:")<<stab_scales.Dels<<";"<<stab_scales.ReStab<<_T("\n");
+ostr<<_T("New Me, Ue:")<<stab_scales.Me<<";"<<stab_scales.Ue<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+new_wave_chars.w = wr;
+new_wave_chars.b = br_new;
+srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+
+try
+{
+std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(new_wave_chars);
+std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+new_wave_chars = t_WCharsLoc::find_max_instab_spat(filt_waves);
+//loc_solver.searchWave(new_wave_chars, srch_cond, stab::t_TaskTreat::SPAT);
+
+if (_params.RetraceDir==t_WPLineParams::GROUP_VELO){
+loc_solver.calcGroupVelocity(new_wave_chars);
+}
+
+//debug
+
+//char fn[33];
+//sprintf(fn, "output/dbg_prof_%d.dat", d_pid);
+//loc_solver.dumpProfileStab(fn);
+//sprintf(fn, "output/dbg_eig_%d.dat", d_pid);
+//loc_solver.dumpEigenFuctions(fn);
+//d_pid++;
+}
+catch (...)
+{
+wxLogMessage(_T("Retrace: Search Wave Failed"));
+break;
+}
+
+// check that converged to a physical wave
+bool ok_wchars = true;
+ok_wchars = ok_wchars && stab::check_wchars_increment(new_wave_chars);
+ok_wchars = ok_wchars && stab::check_wchars_c_phase(new_wave_chars);
+
+if (!ok_wchars){
+wxLogMessage(_T("Warning: converged to unphysical wave, break..."));
+break;
+}
+
+
+new_wave_chars.set_scales(stab_scales);
+
+t_WCharsGlob wchars_glob(new_wave_chars, 
+_rFldMF.calc_jac_to_loc_rf(new_gpoint), loc_solver.get_stab_scales());
+
+_add_node(*pLine, new_rec_mf, wchars_glob, new_wave_chars);
+
+last_wchars_loc = new_wave_chars;
+proceed_cond = proceed_cond && _proceed_retrace(new_gpoint, new_wave_chars, direction);
+
+ostr<<_T("wchars loc  :")<<new_wave_chars<<_T("\n");
+log_my::wxLogMessageStd(ostr.str());
+ostr.str(_T(""));ostr.clear();
+
+}while (proceed_cond);
+}
+
+
+*/

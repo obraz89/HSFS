@@ -18,6 +18,8 @@ namespace stab{
 /* Record of a Wave Pack Line in a given point xyz
 // store mean flow data (including xyz);
 // wave chars in global cartesian ref frame;
+// wave chars in local rf;
+// wave packet dispersion data
 // calculated n factor
 /************************************************************************/
 
@@ -25,6 +27,7 @@ namespace stab{
 
 		mf::t_Rec mean_flow;
 		t_WCharsGlob wave_chars;
+		t_WCharsLoc wchars_loc;
 		double n_factor;
 
 		// dispersion of wave packet

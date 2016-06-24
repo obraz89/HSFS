@@ -40,6 +40,8 @@ namespace pf{
 		// for a FIXED_DIRECTION option
 		void read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g);
 		t_Vec3Dbl RetraceVec;
+
+		bool CalcWPDispersion;
 	};
 
 

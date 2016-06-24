@@ -69,6 +69,8 @@ void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("SigmaTruncMode", SIGMA_TRUNC_DEFAULT_STR, _T("sigma <0 stop criteria"));
 
+	g.add("CalcWPDispersion", 0, _T("Calculate dispersion of wave packet d2N_dw2 and d2N_db2 ?"));
+
 }
 
 void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g){
@@ -99,6 +101,8 @@ void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g)
 void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g){
 
 	params.TimeStep = g.get_real_param("TimeStep");
+
+	params.CalcWPDispersion = g.get_int_param("CalcWPDispersion");
 
 	wxString rmode_str = g.get_string_param("RetraceMode");
 

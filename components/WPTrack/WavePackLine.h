@@ -76,7 +76,7 @@ namespace pf{
 		void _calc_dr(double dt, const stab::t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr) const;
 
 		void _add_node(t_RecArray& add_to, const mf::t_Rec& fld_rec, 
-			const t_WCharsGlob& wave_chars);
+			const t_WCharsGlob& wave_chars, const t_WCharsLoc& wchars_loc);
 
 		void _retrace_dir_cond(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, 
@@ -86,15 +86,6 @@ namespace pf{
 		void _retrace_dir_w_time(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
 			stab::t_LSBase& loc_solver, t_Direction direction);
 
-		void _retrace_dir_w_spat(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, t_Direction direction);
-
-		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
-
-		void _retrace_dir_wb_rad(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
-
 		bool _is_unstable(const t_WCharsLoc&) const;
 
 		bool _near_leading_edge() const;
@@ -102,10 +93,24 @@ namespace pf{
 		bool _proceed_retrace(const mf::t_GeomPoint& cur_xyz, 
 			const t_WCharsLoc& wave, t_Direction dir) const;
 
-		void _calc_d2Ndx2(const t_WCharsLoc& wchars_base, 
+		void _calc_d2sig_dx2(const t_WCharsLoc& wchars_base, 
 			stab::t_LSBase& loc_solver, stab::t_WPLineRec& rec);
 
 		std::wostream& _print_line(std::wostream& str) const;
+
+		/*
+
+		void _retrace_dir_w_spat(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+		stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, t_Direction direction);
+
+		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+		stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
+
+		void _retrace_dir_wb_rad(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
+		stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
+
+
+		*/
 
 	public:
 		t_WavePackLine(const mf::t_DomainBase& a_mf);
@@ -116,6 +121,8 @@ namespace pf{
 			const stab::t_WPRetraceMode& retrace_mode);
 
 		void calc_n_factor();
+
+		void calc_d2N_dxx();
 
 		void to_cyl_ref_frame();
 
