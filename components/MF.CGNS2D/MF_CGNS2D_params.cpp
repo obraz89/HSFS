@@ -78,7 +78,7 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
 
 	// 2D specific part
-	g.add("AxeSym", _T("AxeSym or Plane"), _T("Is Flow AxeSym? 0-axesym, 1-plane"));
+	g.add("AxeSym_or_Plane", _T("AxeSym or Plane"), _T("Is Flow AxeSym? 0-axesym, 1-plane"));
 
 	g.add("Nz", 21, _T("Span 2D grid in z-direction with Nz nodes"));
 
@@ -135,7 +135,7 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 
 	params.BulkViscRatio = g.get_real_param("BulkViscRatio");
 
-	wxString axesym_str = g.get_string_param("AxeSym");
+	wxString axesym_str = g.get_string_param("AxeSym_or_Plane");
 
 	t_MapWxStrInt::iterator it = AXESYM_MODES_STR.find(axesym_str);
 
