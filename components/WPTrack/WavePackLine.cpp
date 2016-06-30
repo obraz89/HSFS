@@ -566,6 +566,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
 			 loc_solver.get_stab_scales());
 
+		 cur_wave.set_scales(loc_solver.get_stab_scales());
+
 		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, cur_wave);
 
 		 if (_params.CalcWPDispersion)
@@ -593,12 +595,6 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 }
 
 // calculate first and second derivatives of eikonal vs omega and beta
-// integrals taken from neutral point to some point x
-// dN/dw = Integral(dsigma/dw*dx)
-// dN/db = Integral(dsigma/db*dx)
-// d2N/dw2 = Integral(d2sigma/dw2*dx)
-// d2N/db2 = Integral(d2sigma/db2*dx)
-
 // call during retrace when base wchars are already calculated at a given point
 void t_WavePackLine::_calc_d2sig_dx2
 	(const t_WCharsLoc& wchars_base, stab::t_LSBase& loc_solver, t_WPLineRec& rec){
@@ -663,15 +659,17 @@ void t_WavePackLine::_calc_d2sig_dx2
 	// store dimensional values (?)
 	const t_StabScales& scales = loc_solver.get_stab_scales();
 
-	const double inv_ue_dim = 1.0/scales.UeDim;
+	const double inv_ue = 1.0/scales.Ue;
 
-	rec.da_dw_dim = inv_ue_dim * dalpha_dw;
+	const double L_ref = _rFldMF.get_mf_params().L_ref;
 
-	rec.d2a_dw2_dim = scales.Dels*inv_ue_dim*inv_ue_dim*d2alpha_dw2;
+	rec.da_dw_gndim = inv_ue * dalpha_dw;
 
-	rec.da_db_dim = dalpha_db;
+	rec.d2a_dw2_gndim = scales.Dels/L_ref*inv_ue*inv_ue*d2alpha_dw2;
 
-	rec.d2a_db2_dim = d2alpha_db2;
+	rec.da_db_gndim = dalpha_db;
+
+	rec.d2a_db2_gndim = scales.Dels/L_ref*d2alpha_db2;
 
 	return;
 
@@ -763,9 +761,155 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 		for (int i=1; i<nldn; i++) 	_line.push_back(_line_down[i]);
 	}
 
+	if (_params.CalcWPDispersion)
+		calc_neut_point_derivs(loc_solver);
+
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
 	calc_n_factor();
 };
+
+// search fun zero
+// parabolic interpolation f = a*x*x + b*x + c
+// x_v - argument, increasing order, first value 0.0
+// y_v - function values at x_v points
+// return x where f=0
+double calc_zero_parab(double x_v[3], double y_v[3]){
+
+	double a,b,c;
+
+	double denom = x_v[1]*x_v[2]*(x_v[2]-x_v[1]);
+
+	a = ((y_v[2]-y_v[0])*x_v[1]-(y_v[1]-y_v[0])*x_v[2])/denom;
+
+	b = ((y_v[1]-y_v[0])*x_v[2]*x_v[2] - (y_v[2]-y_v[0])*x_v[1]*x_v[1])/denom;
+
+	c = y_v[0];
+
+	double x1, x2;
+
+	x1 = 0.5*(-b - sqrt(b*b - 4*a*c))/a;
+
+	x2 = 0.5*(-b + sqrt(b*b - 4*a*c))/a;
+
+	double res = x1<x2 ? x1 : x2;
+
+	// debug msg
+	wxLogMessage(_T("PZ Input:x_v=(%lf, %lf, %lf)\n      y_v=(%lf, %lf, %lf)\nPZ Output: %lf"),
+		x_v[0], x_v[1], x_v[2], y_v[0], y_v[1], y_v[2], res);
+
+	return res;
+
+
+}
+
+void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
+
+	// try to use 3 points:
+	// 1-st where sig<0 and next 2 where sig>0
+	// parabolic interpolation to find point sig=0
+
+	// TODO: spatial approach only, assuming now sigma=-ai
+
+	int i0=-1;
+	// we want 2 points to exist to the right of i0
+	for (int i=0; i<_line.size()-2; i++){
+
+		if ((_line[i].wchars_loc.a.imag()>0.0)&&(_line[i+1].wchars_loc.a.imag()<0.0))
+			i0=i;
+
+	}
+
+	if (i0==-1) {
+		wxLogError(_T("Error: Failed to locate neutral point for wpline"));
+		return;
+	}
+
+
+	const t_GeomPoint& xyz_l = _line[i0+0].mean_flow.get_xyz();
+	const t_GeomPoint& xyz_m = _line[i0+1].mean_flow.get_xyz();
+	const t_GeomPoint& xyz_r = _line[i0+2].mean_flow.get_xyz();
+
+	double sig_v[3];
+
+	t_Vec3Dbl ds;
+	double x_v[3];
+
+	x_v[0]=0.0;
+
+	matrix::base::minus<double, double>(xyz_m, xyz_l, ds);
+	x_v[1] = ds.norm();
+
+	matrix::base::minus<double, double>(xyz_r, xyz_m, ds);
+	x_v[2] = x_v[1] + ds.norm();
+
+	stab::t_LSCond srch_cond;
+
+	t_WCharsLoc cur_wave;
+	t_StabScales cur_scales;
+
+	srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
+
+	// assuming W_dim_fixed = const at all 3 points
+	// nondim values can be varied
+
+	// TODO: empirics with dw
+
+	const double dw_rel = 0.5e-03;
+
+	// central point
+	double w_base = _line[i0+1].wchars_loc.w.real();
+
+	const double dw = dw_rel*w_base;
+
+	// +dw and -dw calcs
+
+	double x_dstrb[2];
+
+	for (int k=0; k<2; k++){
+
+		for (int j=0; j<3; j++){
+
+			const t_WPLineRec& cur_rec = _line[i0+j];
+
+			loc_solver.setContext(cur_rec.mean_flow.get_xyz());
+
+			cur_scales = loc_solver.get_stab_scales();
+
+			cur_wave = cur_rec.wchars_loc;
+
+			cur_wave.w+=(2*k-1)*dw;
+
+			loc_solver.searchWave(cur_wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+			cur_wave.set_scales(cur_scales);
+
+			sig_v[j] = -1.0*cur_wave.a.imag()/cur_scales.Dels;
+
+		}
+
+		x_dstrb[k] = calc_zero_parab(x_v, sig_v);
+
+	}
+
+	const t_StabScales& base_scales = _line[i0+0].wchars_loc.scales();
+
+	const double L_ref = _rFldMF.get_mf_params().L_ref;
+
+	double coef = (base_scales.Dels/L_ref)*(1.0/base_scales.Ue);
+
+	_dx0_dw_gndim = coef*(x_dstrb[1] - x_dstrb[0])/(2.0*dw);
+
+	// TODO: use parabolic interpolation for base case
+	// for now just using middle point
+	_da_dw_neut_gndim = _line[i0].da_dw_gndim;
+
+	// debug 
+
+	wxLogMessage(_T("Neut point derivs:%lf, %lf"), 
+		_dx0_dw_gndim, -1.0*_da_dw_neut_gndim.imag());
+
+}
+
 
 
 void t_WavePackLine::calc_n_factor(){
@@ -835,6 +979,13 @@ void t_WavePackLine::calc_n_factor(){
 
 }
 
+// integrals taken from neutral point to some point x
+// dN/dw = Integral(dsigma/dw*dx)
+// dN/db = Integral(dsigma/db*dx)
+// d2N/dw2 = Integral(d2sigma/dw2*dx) + dai_dw_neut*dx0_dw
+// d2N/db2 = Integral(d2sigma/db2*dx) + 0
+// TODO : cases when dbi_dw_neut not zero ?
+
 void t_WavePackLine::calc_d2N_dxx(){
 
 	std::vector<double> dsig_dw(N_LINE_MAX_HSIZE);
@@ -844,7 +995,8 @@ void t_WavePackLine::calc_d2N_dxx(){
 	std::vector<double> dN_db(N_LINE_MAX_HSIZE);
 
 	std::vector<double> d2sig_dw2(N_LINE_MAX_HSIZE);
-	std::vector<double> d2N_dw2(N_LINE_MAX_HSIZE);
+	std::vector<double> d2N_dw2_old(N_LINE_MAX_HSIZE);
+	std::vector<double> d2N_dw2_new(N_LINE_MAX_HSIZE);
 
 	std::vector<double> d2sig_db2(N_LINE_MAX_HSIZE);
 	std::vector<double> d2N_db2(N_LINE_MAX_HSIZE);
@@ -853,27 +1005,29 @@ void t_WavePackLine::calc_d2N_dxx(){
 
 	for (int i=0; i<_line.size(); i++){
 
-		dsig_dw[i] = -1.0*_line[i].da_dw_dim.imag();
-		d2sig_dw2[i] = -1.0*_line[i].d2a_dw2_dim.imag();
+		dsig_dw[i] = -1.0*_line[i].da_dw_gndim.imag();
+		d2sig_dw2[i] = -1.0*_line[i].d2a_dw2_gndim.imag();
 
-		dsig_db[i] = -1.0*_line[i].da_db_dim.imag();
-		d2sig_db2[i] = -1.0*_line[i].d2a_db2_dim.imag();
+		dsig_db[i] = -1.0*_line[i].da_db_gndim.imag();
+		d2sig_db2[i] = -1.0*_line[i].d2a_db2_gndim.imag();
 
 	}
 
 	smat::integrate_over_range(_s, dsig_dw, dN_dw);
-	smat::integrate_over_range(_s, d2sig_dw2, d2N_dw2);
+	smat::integrate_over_range(_s, d2sig_dw2, d2N_dw2_old);
 
 	smat::integrate_over_range(_s, dsig_db, dN_db);
 	smat::integrate_over_range(_s, d2sig_db2, d2N_db2);
 
+	double d2N_dw2_corr = _da_dw_neut_gndim.imag()*_dx0_dw_gndim;
+
 	for (int i=0; i<_line.size(); i++){
 
-		_line[i].dN_dw_dim = dN_dw[i];
-		_line[i].d2N_dw2_dim = d2N_dw2[i];
+		_line[i].dN_dw_gndim = dN_dw[i];
+		_line[i].d2N_dw2_gndim = d2N_dw2_old[i] + d2N_dw2_corr;
 
-		_line[i].dN_db_dim = dN_db[i];
-		_line[i].d2N_db2_dim = d2N_db2[i];
+		_line[i].dN_db_gndim = dN_db[i];
+		_line[i].d2N_db2_gndim = d2N_db2[i];
 
 	}
 
@@ -883,11 +1037,11 @@ void t_WavePackLine::calc_d2N_dxx(){
 
 	std::wofstream fstr(&ostr.str()[0]);
 
-	fstr<<_T("x\tdN_dw\td2N_dw2\tdN_db\td2N_db2\n");
+	fstr<<_T("x\tdN_dw_gndim\td2N_dw2_gndim_old\td2N_dw2_gndim_new\tdN_db_gndim\td2N_db2_gndim\n");
 
 	for (int i=0; i<_line.size(); i++){
 
-		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2[i]
+		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2_old[i]<<_T("\t")<<_line[i].d2N_dw2_gndim
 		<<_T("\t")<<dN_db[i]<<_T("\t")<<d2N_db2[i]<<_T("\n");
 
 	}

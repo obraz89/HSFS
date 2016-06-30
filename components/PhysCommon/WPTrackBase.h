@@ -32,15 +32,18 @@ namespace stab{
 
 		// dispersion of wave packet
 		// spatial approach only!
-		// store global dimensional 
+		// store global nondim values
+		// nondim by L_ref, U_inf etc
+		// that is "global nondim" or *_gndim
 
 		// TODO: after debug, no need to store da_d*
 		// only dN_d*, d2N_d*2
-		t_Complex da_dw_dim, da_db_dim;
-		t_Complex d2a_dw2_dim, d2a_db2_dim;
 
-		double dN_dw_dim, dN_db_dim;
-		double d2N_dw2_dim, d2N_db2_dim;
+		t_Complex da_dw_gndim, da_db_gndim;
+		t_Complex d2a_dw2_gndim, d2a_db2_gndim;
+
+		double dN_dw_gndim, dN_db_gndim;
+		double d2N_dw2_gndim, d2N_db2_gndim;
 
 		t_WPLineRec();
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);

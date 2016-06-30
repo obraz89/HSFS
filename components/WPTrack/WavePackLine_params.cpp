@@ -69,7 +69,7 @@ void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("SigmaTruncMode", SIGMA_TRUNC_DEFAULT_STR, _T("sigma <0 stop criteria"));
 
-	g.add("CalcWPDispersion", 0, _T("Calculate dispersion of wave packet d2N_dw2 and d2N_db2 ?"));
+	g.add("CalcWPDispersion", 1, _T("Calculate dispersion of wave packet d2N_dw2 and d2N_db2 ?"));
 
 }
 

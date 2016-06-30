@@ -73,17 +73,6 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 void t_WavePackLine::print_dispersion_data_to_file(
 	const std::string& fname, std::ios_base::openmode write_mode) const{
 
-	const mf::t_FldParams& Params = _rFldMF.get_mf_params();
-
-	const double U_inf_dim = _rFldMF.calc_u_inf();
-	const double L_ref = Params.L_ref;
-
-	const double c_w1 = U_inf_dim/L_ref;
-	const double c_w2 = c_w1*c_w1;
-
-	const double c_b1 = 1.0/L_ref;
-	const double c_b2 = c_b1*c_b1;
-
 
 	std::wofstream fstr(&fname[0], write_mode);
 
@@ -95,8 +84,8 @@ void t_WavePackLine::print_dispersion_data_to_file(
 		const t_WPLineRec& rec_l = _line[i];
 		const t_WPLineRec& rec_r = _line[i+1];
 
-		double dN_dw_l = rec_l.dN_dw_dim;
-		double dN_dw_r = rec_r.dN_dw_dim;
+		double dN_dw_l = rec_l.dN_dw_gndim;
+		double dN_dw_r = rec_r.dN_dw_gndim;
 
 		if (dN_dw_l*dN_dw_r<0){
 			I=i;
@@ -117,12 +106,9 @@ void t_WavePackLine::print_dispersion_data_to_file(
 	const t_WPLineRec& Rec = _line[I];
 	const mf::t_GeomPoint& gp = Rec.mean_flow.get_xyz();
 
-	double d2N_dw2_ndim = Rec.d2N_dw2_dim*c_w2;
-	double d2N_db2_ndim = Rec.d2N_db2_dim*c_b2;
-
 	// TODO: linear interpolation between points, now simply use left point
 	fstr<<gp.x()<<_T("\t")<<gp.y()<<_T("\t")<<gp.z()<<_T("\t")
-		<<d2N_dw2_ndim<<_T("\t")<<d2N_db2_ndim<<_T("\n");
+		<<Rec.d2N_dw2_gndim<<_T("\t")<<Rec.d2N_db2_gndim<<_T("\n");
 	fstr.flush();
 
 };
