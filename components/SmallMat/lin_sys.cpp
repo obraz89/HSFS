@@ -66,5 +66,7 @@ void smat::solve_lsys_lu(const t_SqMatCmplx& A, const t_VecCmplx& b, t_VecCmplx&
 		x[i] = MKLCmplx2std(b_pl[i]);
 	}
 
+	delete[] a_pl, b_pl, ipiv;
+
 
 }
