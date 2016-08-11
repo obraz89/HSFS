@@ -108,6 +108,7 @@ void t_WavePackLine::print_dispersion_data_to_file(
 
 	// TODO: linear interpolation between points, now simply use left point
 	fstr<<gp.x()<<_T("\t")<<gp.y()<<_T("\t")<<gp.z()<<_T("\t")
+		<<Rec.n_factor<<_T("\t")
 		<<Rec.d2N_dw2_gndim<<_T("\t")<<Rec.d2N_db2_gndim<<_T("\n");
 	fstr.flush();
 
