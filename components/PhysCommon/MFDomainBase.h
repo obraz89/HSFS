@@ -17,7 +17,7 @@ namespace mf{
 		BLTHICK_BY_ENTHALPY, 
 		BLTHICK_BY_VELO, 
 		BLTHICK_BY_DISPTHICK,
-		FULL_DATA
+		BLTHICK_FULL_GRIDLINE
 	};
 
 // Type to configure Raw Profile Data

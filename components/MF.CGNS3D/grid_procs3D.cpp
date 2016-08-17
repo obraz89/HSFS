@@ -86,7 +86,7 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 	int res = CG_OK;
 	char szName[33];  // names in CGNS file
 
-	TcgnsContext ctx;
+	TcgnsContext& ctx = this->cgCtx;
 
 	res = cg_open( gridFN.ToAscii(),CG_MODE_READ, &ctx.fileID );
 	if( res != CG_OK )
@@ -666,6 +666,82 @@ for( int b = 0; b < nZones; ++b )
 
 	return true;
 }
+
+t_ZoneNode t_MFCGNS3D::get_abutted_znode(
+	const t_ZoneNode& a_znode, const int di, const int dj, const int dk) const{
+
+		int b = a_znode.iZone - 1;
+
+		TZone& zne = Zones[b];
+
+		if (a_znode.iFacePos==faceNone) 
+			wxLogError(_T("In get_abutted_znode: ifacepos not specified for input znode param"));
+
+		TZoneFacePos f = a_znode.iFacePos;
+
+		TcgnsZone::TFace& face = cgCtx.cgZones[b].Faces[f];
+
+		TZone& zneDonor = Zones[ face.nDnrZne ];
+
+		// Start indexes of the zone face:
+		int ifs, jfs, kfs;
+
+		switch( f )
+		{
+		case faceXmin:
+			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
+			break;
+		case faceXmax:
+			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
+			break;
+		case faceYmin:
+			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
+			break;
+		case faceYmax:
+			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
+			break;
+		case faceZmin:
+			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
+			break;
+		case faceZmax:
+			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
+			break;
+		}
+
+		const int i = a_znode.iNode.i + di;
+		const int j = a_znode.iNode.j + dj;
+		const int k = a_znode.iNode.k + dk;
+
+		// Donor block face starting index with ghosts
+		int ids = face.dnr_is0 + zneDonor.is - 1;
+		int jds = face.dnr_js0 + zneDonor.js - 1;
+		int kds = face.dnr_ks0 + zneDonor.ks - 1;
+
+		// Donor block indexes
+		int id = (i-ifs)*face.matTrans[0] + (j-jfs)*face.matTrans[1] + (k-kfs)*face.matTrans[2] + ids;
+		int jd = (i-ifs)*face.matTrans[3] + (j-jfs)*face.matTrans[4] + (k-kfs)*face.matTrans[5] + jds;
+		int kd = (i-ifs)*face.matTrans[6] + (j-jfs)*face.matTrans[7] + (k-kfs)*face.matTrans[8] + kds;
+
+		if( id > zneDonor.nx || id < 1 ||
+			jd > zneDonor.ny || jd < 1 ||
+			kd > zneDonor.nz || kd < 1    )
+		{
+			// ghost data unavailable
+			wxLogError(_("Get abutted znode 3D : Failed to get correct abutted znode index"));
+		}
+
+		t_ZoneNode ret;
+
+		// 1-based zone id
+		ret.iZone = face.nDnrZne + 1;
+
+		ret.iNode = t_BlkInd(id, jd, kd);
+
+		// face position unknown after shift
+		ret.iFacePos = faceNone;
+
+		return ret;
+};
 //-----------------------------------------------------------------------------
 
 

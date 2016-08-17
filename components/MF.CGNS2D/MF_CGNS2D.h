@@ -44,6 +44,9 @@ namespace mf{
 		void get_rec(const mf::cg::TZone& blk, int i, int j, int k, mf::t_Rec& rec) const;
 		t_Rec get_rec(const t_GeomPoint& xyz) const;
 
+		mf::cg::t_ZoneNode get_abutted_znode(
+			const mf::cg::t_ZoneNode& a_znode, const int di, const int dj, const int dk) const;
+
 		// from cg::TDomain
 		bool loadGrid(const wxString& gridFN );
 

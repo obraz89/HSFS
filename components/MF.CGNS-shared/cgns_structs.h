@@ -205,6 +205,21 @@ namespace mf{
 				bcType = bcTypeH;
 				funBC = NULL;
 			}
+
+			static TZoneFacePos get_brick_opposite_face(TZoneFacePos f){
+
+				if (f==faceXmin) return faceXmax;
+				if (f==faceXmax) return faceXmin;
+				if (f==faceYmin) return faceYmax;
+				if (f==faceYmax) return faceYmin;
+				if (f==faceZmin) return faceZmax;
+				if (f==faceZmax) return faceZmin;
+
+				wxLogError(_T("Can't get opposite zone face - starting face position is not specified"));
+
+				return faceNone;
+
+			}
 		};
 
 		struct TZone
@@ -375,11 +390,12 @@ namespace mf{
 			int iZone;
 			t_BlkInd iNode;
 
-			int iFacePos;
+			TZoneFacePos iFacePos;
 
-			t_ZoneNode(int _iZone=-1, int i=-1, int j=-1 , int k=-1)
-				:iZone(_iZone), iNode(i,j,k), iFacePos(-1){}
-			t_ZoneNode(int _iZone, const t_BlkInd& ind):iZone(_iZone), iNode(ind), iFacePos(-1){}
+			t_ZoneNode(int _iZone=-1, int i=-1, int j=-1 , int k=-1, TZoneFacePos fpos = faceNone)
+				:iZone(_iZone), iNode(i,j,k), iFacePos(fpos){}
+			t_ZoneNode(int _iZone, const t_BlkInd& ind, TZoneFacePos fpos = faceNone)
+				:iZone(_iZone), iNode(ind), iFacePos(fpos){}
 		};
 
 
@@ -411,6 +427,10 @@ namespace mf{
 			int nZones;  // total number of zones
 			int bs, be;  // start & end (inclusive) 0-based zone (aka block) indices in the current MPI rank
 			TZone* Zones;
+
+			// keep cgns context
+
+			TcgnsContext cgCtx;
 
 			// bounding box, set via plugin params 
 			TBoundBox bbox;
@@ -457,6 +477,11 @@ namespace mf{
 			void _extract_profile_data_full(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
 				std::vector<t_Rec>& data) const;
 
+			// test function to replace all extractors
+			// extract full gridline from multiblock configuration
+			void _extract_profile_data_multiblock(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+				std::vector<t_Rec>& data) const;
+
 			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
 				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
 
@@ -475,6 +500,8 @@ namespace mf{
 			// surface normal vector is calculated as well
 		public:
 
+			const TcgnsContext& get_cg_ctx() const{return cgCtx;};
+
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block
 			// realizations are different for 2D and 3D
@@ -492,6 +519,15 @@ namespace mf{
 			// for the zone iZone
 			virtual void set_face_iters(int iZone, int iFace, int& is, int& ie, 
 				int& js, int& je, int& ks, int& ke) const;
+
+			// get znode of abutted node for a given znode
+			// input: a_znode - base znode
+			// di, dj, dk - shift in local indexes
+			// output: return znode of abutted zone
+			// e.g. zne.(i, jmax+1, k) is zne_abuttted.(i, 2, k)
+			// when transform matrix is unity
+			virtual t_ZoneNode get_abutted_znode(const t_ZoneNode& a_znode, 
+				const int di, const int dj, const int dk) const = 0;
 
 			// zIdx is 1-based index
 			TZone& getZone(const int zIdx){return Zones[zIdx-1];}
@@ -539,6 +575,9 @@ namespace mf{
 		// can set iters for profile methods
 		struct t_ZoneGrdLine{
 
+			// 1-based index of the zone
+			int iZone;
+
 			const TZone* zne; 
 			t_BlkInd ind_s, ind_e;
 			int di, dj, dk;
@@ -550,6 +589,25 @@ namespace mf{
 			t_GrdLineAlong idx_change;
 
 			t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode);
+
+		};
+
+		// "merged" gridline for a whole domain
+		// i.e. start from a specified node (usually wall node) along
+		// specified gridline inside a zone and try to go through all abutting
+		// zones whenever zone boundary is reached;
+		// merged gridline is then a set of znodes 
+		// primary usage - get raw "profile" data along gridline from wall to outer flow 
+		struct t_DomainGrdLine{
+
+			const TDomain& dom;
+			std::vector<t_ZoneNode> znodes;
+
+			t_DomainGrdLine(const TDomain& a_dom):dom(a_dom), znodes(){};
+
+			void init(const t_ZoneNode& face_znode);
+
+			void _add(const t_ZoneGrdLine& grd_line);
 
 		};
 

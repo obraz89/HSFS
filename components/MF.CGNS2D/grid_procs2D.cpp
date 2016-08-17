@@ -79,7 +79,7 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 	int res = CG_OK;
 	char szName[33];  // names in CGNS file
 
-	TcgnsContext ctx;
+	TcgnsContext& ctx = this->cgCtx;
 
 	res = cg_open( gridFN.ToAscii(),CG_MODE_READ, &ctx.fileID );
 	if( res != CG_OK )
@@ -589,6 +589,78 @@ for( int b = 0; b < nZones; ++b )
 	return true;
 }
 //-----------------------------------------------------------------------------
+
+// copy-paste from connectivity part of grid loading
+t_ZoneNode t_MFCGNS2D::get_abutted_znode(
+	const t_ZoneNode& a_znode, const int di, const int dj, const int dk) const{
+
+		if (dk!=0){
+			wxLogError(_T("Get abutted znode 2D: k-shift is not allowed (2D configuration)"));
+		}
+
+		int b = a_znode.iZone - 1;
+
+		TZone& zne = Zones[b];
+
+		if (a_znode.iFacePos==faceNone) 
+			wxLogError(_T("In get_abutted_znode: ifacepos not specified for input znode param"));
+
+		TZoneFacePos f = a_znode.iFacePos;
+
+		TcgnsZone::TFace& face = cgCtx.cgZones[b].Faces[f];
+
+		TZone& zneDonor = Zones[ face.nDnrZne ];
+
+		// Start indexes of the zone face:
+		int ifs, jfs;
+
+		switch( f )
+		{
+		case faceXmin:
+			ifs = zne.is;      jfs = zne.js;
+			break;
+		case faceXmax:
+			ifs = zne.ie;      jfs = zne.js;
+			break;
+		case faceYmin:
+			ifs = zne.is;      jfs = zne.js;
+			break;
+		case faceYmax:
+			ifs = zne.is;      jfs = zne.je;
+			break;
+		}
+
+		const int i = a_znode.iNode.i + di;
+		const int j = a_znode.iNode.j + dj;
+		const int k = a_znode.iNode.k + dk;
+
+		// Donor block face starting index with ghosts
+		int ids = face.dnr_is0 + zneDonor.is - 1;
+		int jds = face.dnr_js0 + zneDonor.js - 1;
+
+		// Donor block indexes
+		int id = (i-ifs)*face.matTrans[0] + (j-jfs)*face.matTrans[1] + ids;
+		int jd = (i-ifs)*face.matTrans[2] + (j-jfs)*face.matTrans[3] + jds;
+
+		if( id > zneDonor.nx || id < 1 ||
+			jd > zneDonor.ny || jd < 1    )
+		{
+			wxLogError(_("Get abutted znode 2D : Failed to get corrrect abutted znode index"));
+		}
+
+		t_ZoneNode ret;
+
+		// 1-based zone id
+		ret.iZone = face.nDnrZne + 1;
+
+		// k is unchanged
+		ret.iNode = t_BlkInd(id, jd, a_znode.iNode.k);
+
+		// face position unknown after shift
+		ret.iFacePos = faceNone;
+
+		return ret;
+};
 
 
 bool t_MFCGNS2D::_parseBCData2DfromCGNS( TcgnsContext& ctx )

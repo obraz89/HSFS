@@ -79,7 +79,7 @@ t_ZoneNode TDomain::_get_nrst_node_surf(const t_GeomPoint& point) const{
 								min_dst = cur_dst;
 								min_znode.iZone = iZone;
 								min_znode.iNode.set(i,j,k);
-								min_znode.iFacePos = iface;
+								min_znode.iFacePos = static_cast<TZoneFacePos>(iface);
 							}
 
 						}
@@ -645,7 +645,7 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
 		_calc_bl_thick_enthalpy(xyz,bl_thick, surf_znode, outer_znode);
 		break;
-	case t_BLThickCalcType::FULL_DATA:
+	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
 		_calc_bl_thick_full_gridline(xyz,bl_thick, surf_znode, outer_znode);
 		break;
 

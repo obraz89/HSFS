@@ -7,9 +7,18 @@
 
 using namespace mf::cg;
 
+// full or truncated (in case surf_znode is internal but carries face_pos of starting face) 
+// grid line from a starting znode to its opposite face position;
+// end node is always on real zone surface
 t_ZoneGrdLine::t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode){
 
-	zne = &a_dom.getZone(surf_znode.iZone);
+	iZone = surf_znode.iZone;
+
+	zne = &a_dom.getZone(iZone);
+
+	assert(surf_znode.iNode.i >= zne->is && surf_znode.iNode.i <=zne->ie);
+	assert(surf_znode.iNode.j >= zne->js && surf_znode.iNode.j <=zne->je);
+	// no assert for k because of 2D fields (we do 2D to 3D pseudo conversion)
 
 	ind_s = surf_znode.iNode;
 
@@ -20,52 +29,142 @@ t_ZoneGrdLine::t_ZoneGrdLine(const TDomain& a_dom, const t_ZoneNode& surf_znode)
 	switch(surf_znode.iFacePos){
 		case(faceXmin):
 			di = 1;
-			ind_s.i = zne->is;
+			ind_s.i = surf_znode.iNode.i;
 			ind_e.i = zne->ie;
 			idx_change = I_LINE;
 			break;
 		case(faceXmax):
 			di = -1;
-			ind_s.i = zne->ie;
+			ind_s.i = surf_znode.iNode.i;
 			ind_e.i = zne->is;
 			idx_change = I_LINE;
 			break;
 		case(faceYmin):
 			dj = 1;
-			ind_s.j = zne->js;
+			ind_s.j = surf_znode.iNode.j;
 			ind_e.j = zne->je;
 			idx_change = J_LINE;
 			break;
 		case(faceYmax):
 			dj = -1;
-			ind_s.j = zne->je;
+			ind_s.j = surf_znode.iNode.j;
 			ind_e.j = zne->js;
 			idx_change = J_LINE;
 			break;
 		case(faceZmin):
 			dk = 1;
 			a_dom.get_k_range(surf_znode.iZone, ind_s.k, ind_e.k);
+			ind_s.k = surf_znode.iNode.k;
 			idx_change = K_LINE;
 			break;
 		case(faceZmax):
 			dk=-1;
 			a_dom.get_k_range(surf_znode.iZone, ind_e.k, ind_s.k);
+			ind_s.k = surf_znode.iNode.k;
 			idx_change = K_LINE;
+			break;
+		default:
+			wxLogError(_T("ZoneGrdLine Error: start point is not on zone surface"));
 			break;
 	}
 
 	switch (idx_change)
 	{
 	case I_LINE:
-		nnodes = zne->nx;
+		nnodes = di*(ind_e.i - ind_s.i) + 1;
 		break;
 	case J_LINE:
-		nnodes = zne->ny;
+		nnodes = dj*(ind_e.j - ind_s.j) + 1;
 		break;
 	case K_LINE:
-		nnodes = zne->nz;
+		nnodes = dk*(ind_e.k - ind_s.k) + 1;
 		break;
 	}
+}
+
+void t_DomainGrdLine::_add(const t_ZoneGrdLine& grd_line ){
+
+	for (int p=0; p<grd_line.nnodes; p++){
+		znodes.push_back(
+			t_ZoneNode(grd_line.iZone, 
+						t_BlkInd(grd_line.ind_s, 
+							p*grd_line.di, p*grd_line.dj, p*grd_line.dk)));
+	}
+
+}
+
+void t_DomainGrdLine::init(const t_ZoneNode& a_face_znode){
+
+	t_ZoneNode start_znode = a_face_znode;
+
+	TZoneFacePos cur_face_pos;
+
+	do 
+	{
+
+		t_ZoneGrdLine grd_line(dom, start_znode);
+
+		_add(grd_line);
+
+		// move on to the abutted zone if final node is on zone interface
+
+		cur_face_pos = TZoneFace::get_brick_opposite_face(start_znode.iFacePos);
+
+		const TZone& zne = dom.getZone(start_znode.iZone);
+
+		if (zne.Faces[cur_face_pos].bcType!=TBlockBCType::bcAbutted)
+			break;
+
+		const TcgnsContext& cgCtx = dom.get_cg_ctx();
+
+		t_ZoneNode znode_face(grd_line.iZone, grd_line.ind_e, cur_face_pos);
+		
+		// donor znode on (f)ace
+		t_ZoneNode znode_dnr_f = dom.get_abutted_znode(znode_face, 0, 0, 0);
+
+		// first (i)nterior donor znode
+		t_ZoneNode znode_dnr_i = 
+			dom.get_abutted_znode(znode_face, grd_line.di, grd_line.dj, grd_line.dk);
+
+		// now we have new di, dj, dk for a donor zone
+
+		int dnr_di = znode_dnr_i.iNode.i - znode_dnr_f.iNode.i;
+		int dnr_dj = znode_dnr_i.iNode.j - znode_dnr_f.iNode.j;
+		int dnr_dk = znode_dnr_i.iNode.k - znode_dnr_f.iNode.k;
+
+		// check that only one of di, dj, dk is nonzero and equals +1 or -1
+
+		int sum = dnr_di*dnr_di + dnr_dj*dnr_dj + dnr_dk*dnr_dk;
+
+		if (sum!=1){
+
+			wxLogError(_T("Domain Grid Line: failed to get donor zne starting indexes"));
+			break;
+
+		};
+
+
+		// get direction of dnr zone gridline:
+
+		TZoneFacePos new_face_pos = faceNone;
+
+		if (dnr_di==1) new_face_pos = faceXmin;
+		if (dnr_di==-1) new_face_pos = faceXmax;
+
+		if (dnr_dj==1) new_face_pos = faceYmin;
+		if (dnr_dj==-1) new_face_pos = faceYmax;
+
+		if (dnr_dk==1) new_face_pos = faceZmin;
+		if (dnr_dk==-1) new_face_pos = faceZmax;
+
+		start_znode.iFacePos = new_face_pos;
+		start_znode.iZone = znode_dnr_i.iZone;
+
+		// to avoid duplication of face nodes start from first interior node
+		start_znode.iNode = znode_dnr_i.iNode;
+
+	} while (true);
+
 }
 
 // Computational domain composed of blocks with own grid and field
@@ -109,7 +208,7 @@ void mf::cg::TDomain::_read_parse_bl_thick_calc_type(const wxString& a_str){
 
 	if (str.CmpNoCase(_T("FULL_GRIDLINE"))==0){
 
-		_profile_cfg.BLThickCalcType = mf::t_BLThickCalcType::FULL_DATA;
+		_profile_cfg.BLThickCalcType = mf::t_BLThickCalcType::BLTHICK_FULL_GRIDLINE;
 		return;
 
 	}
@@ -528,9 +627,9 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz,
 		_extract_profile_data_blbound(xyz, init_cfg, data);
 		break;
 
-	case t_BLThickCalcType::FULL_DATA:
+	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
 
-		_extract_profile_data_full(xyz, init_cfg, data);
+		_extract_profile_data_multiblock(xyz, init_cfg, data);
 		break;
 
 	default:
@@ -714,4 +813,29 @@ void TDomain::_extract_profile_data_full(const mf::t_GeomPoint& xyz,
 			k+=dk;
 
 		}
+}
+
+// Extract full domain gridline as a profile
+void TDomain::_extract_profile_data_multiblock(const mf::t_GeomPoint& xyz, 
+				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
+
+	t_DomainGrdLine grd_line(*this);
+
+	t_ZoneNode surf_znode;
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	grd_line.init(surf_znode);
+
+	const int nnodes = grd_line.znodes.size();
+
+	data.resize(nnodes);
+
+	for (int p=0; p<nnodes; p++){
+
+		t_ZoneNode& znode = grd_line.znodes[p];
+
+		get_rec(znode, data[p]);
+
+	}
 }
