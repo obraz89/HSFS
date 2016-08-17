@@ -388,32 +388,15 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 };
 
 // TODO: works only for grids nearly orthogonal to viscous wall 
-// TODO: inout bl_thick is for y_ref !!!
-void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
-					t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+// input: data_grdline - for now just an extracted domain gridline
+// output: bl_thick & raw_profile (truncated data_grdline)
+void TDomain::_calc_bl_thick_vderiv(
+		const std::vector<t_ZoneNode>& data_grdline, double& bl_thick, 
+		std::vector<t_ZoneNode>& out_raw_profile) const{
 
-	surf_znode = _get_nrst_node_surf(xyz);
+	t_ZoneNode surf_znode, outer_znode;
 
-	t_ZoneGrdLine grd_line(*this, surf_znode);
-
-	int i_s = grd_line.ind_s.i;
-	int i_e = grd_line.ind_e.i;
-
-	int j_s = grd_line.ind_s.j;
-	int j_e = grd_line.ind_e.j;
-
-	int k_s = grd_line.ind_s.k;
-	int k_e = grd_line.ind_e.k;
-
-	const TZone& blk = *grd_line.zne;
-
-	int i = i_s;
-	int j = j_s;
-	int k = k_s;
-
-	int di = grd_line.di;
-	int dj = grd_line.dj;
-	int dk = grd_line.dk;
+	surf_znode = data_grdline[0];
 
 	// if du_dy increases search max
 	// use du_dy wall otherwise
@@ -425,7 +408,7 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 	t_Vec3Dbl cur_uvw, nxt_uvw, du;
 
 	// wall rec is used to calculate bl_thick
-	get_rec(blk, i, j, k, cur_rec);
+	get_rec(surf_znode, cur_rec);
 	wall_xyz.set(cur_rec);
 
 	// first find max deriv
@@ -438,20 +421,16 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 
 	t_ZoneNode ref_znode;
 
-	for (int m=0; m<grd_line.nnodes-1; m++) 
+	for (int m=0; m<data_grdline.size()-2; m++) 
 	{
 
-		get_rec(blk, i, j, k, cur_rec);
+		get_rec(data_grdline[m], cur_rec);
 
 		cur_xyz.set(cur_rec);
 
 		cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
 
-		i+=di;
-		j+=dj;
-		k+=dk;
-
-		get_rec(blk, i, j, k, nxt_rec);
+		get_rec(data_grdline[m+1], nxt_rec);
 
 		nxt_xyz.set(nxt_rec);
 
@@ -477,10 +456,9 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 			if (searching_ref){
 
 				if (du_dy<eps*du_dy_max){
-					searching_ref = false;
 
-					ref_znode.iZone = surf_znode.iZone;
-					ref_znode.iNode.set(i,j,k);
+					ref_znode = data_grdline[m];
+					searching_ref = false;
 
 					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
 
@@ -496,35 +474,20 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
 
 				double cur_dd = dr.norm();
-				// IMPORTANT TODO: passing thick coef !!!
+
 				if (cur_dd>=_profile_cfg.ThickCoefDefault*y_ref){
 
-					outer_znode.iZone = surf_znode.iZone;
-					outer_znode.iNode.set(i,j,k);
+					outer_znode = data_grdline[m];
+
+					out_raw_profile.resize(m+1);
+
+					for (int p=0; p<m+1; p++) out_raw_profile[p] = data_grdline[p];
 
 					return;
 
 				}
 
 			}
-/*
-			double eps = _profile_cfg.DerivThreshold;
-			if (du_dy<eps*du_dy_max){
-
-				// IMPORTANT TODO: 
-				// here we found not "outer" znode but znode at dd away from wall
-				// outer should be at max_bl_thick_coef*dd !!!
-				outer_znode.iZone = surf_znode.iZone;
-				outer_znode.iNode.set(i,j,k);
-
-				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-				bl_thick = dr.norm();
-
-				break;
-
-			};
-*/
 
 		}
 
@@ -535,49 +498,34 @@ void TDomain::_calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick,
 };
 
 // TODO : works only for grids nearly orthogonal to viscous wall
-void TDomain::_calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
-									t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+void TDomain::_calc_bl_thick_enthalpy(
+	const std::vector<t_ZoneNode>& data_grdline, double& bl_thick, 
+	std::vector<t_ZoneNode>& out_profile_data) const{
 
+	t_ZoneNode surf_znode, outer_znode;
 
-	surf_znode = _get_nrst_node_surf(xyz);
+	surf_znode = data_grdline[0];
 
-	t_ZoneGrdLine grd_line(*this, surf_znode);
-
-	int i_s = grd_line.ind_s.i;
-	int i_e = grd_line.ind_e.i;
-
-	int j_s = grd_line.ind_s.j;
-	int j_e = grd_line.ind_e.j;
-
-	int k_s = grd_line.ind_s.k;
-	int k_e = grd_line.ind_e.k;
-
-	const TZone& blk = *grd_line.zne;
+	outer_znode = data_grdline.back();
 
 	mf::t_Rec cur_rec, nxt_rec;
 	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
 	double h_cur, h_inf;
 
 	// wall rec is used to calculate bl_thick
-	get_rec(blk, i_s, j_s, k_s, cur_rec);
+	get_rec(surf_znode, cur_rec);
 	wall_xyz.set(cur_rec);
 
 	h_inf = calc_enthalpy_freestream();
 
 	// march from outside of bl
 
-	int i = i_e;
-	int j = j_e;
-	int k = k_e;
+	int m = data_grdline.size()-1;
 
-	int di = -grd_line.di;
-	int dj = -grd_line.dj;
-	int dk = -grd_line.dk;
-
-	for (int m=0; m<grd_line.nnodes; m++) 
+	for (; m>=0; m--) 
 	{
 
-		get_rec(blk, i, j, k, cur_rec);
+		get_rec(data_grdline[m], cur_rec);
 
 		h_cur = calc_enthalpy(cur_rec);
 
@@ -585,8 +533,7 @@ void TDomain::_calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick,
 
 		if (tol>_profile_cfg.DerivThreshold){
 
-			outer_znode.iZone = surf_znode.iZone;
-			outer_znode.iNode.set(i,j,k);
+			outer_znode = data_grdline[m];
 
 			cur_xyz.set(cur_rec);
 
@@ -597,24 +544,23 @@ void TDomain::_calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick,
 			break;
 		}
 
-		i+=di;
-		j+=dj;
-		k+=dk;
-
-
 	};
+
+	out_profile_data.resize(m+1);
+
+	for (int p=0; p<m+1; p++) out_profile_data[p] = data_grdline[p];
 
 };
 
-void TDomain::_calc_bl_thick_full_gridline(const t_GeomPoint& xyz, double& bl_thick, 
-				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+void TDomain::_calc_bl_thick_full_gridline(
+	const std::vector<t_ZoneNode>& data_grdline,
+	double& bl_thick, std::vector<t_ZoneNode>& out_raw_profile) const{
 
-	surf_znode = _get_nrst_node_surf(xyz);
+	t_ZoneNode surf_znode, outer_znode;
 
-	t_ZoneGrdLine grd_line(*this, surf_znode);
+	surf_znode = data_grdline[0];
 
-	outer_znode.iZone = surf_znode.iZone;
-	outer_znode.iNode = grd_line.ind_e;
+	outer_znode = data_grdline.back();
 
 	mf::t_Rec rec1, rec2;
 
@@ -629,24 +575,29 @@ void TDomain::_calc_bl_thick_full_gridline(const t_GeomPoint& xyz, double& bl_th
 
 	matrix::base::minus<double, double>(r1, r2, dr);
 	bl_thick = dr.norm();
+
+	out_raw_profile = data_grdline;
 	
 }
 
 inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
-									t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const{
+									std::vector<t_ZoneNode>& raw_profile) const{
 
+	std::vector<t_ZoneNode> data_grdline;
+
+	_extract_profile_data_grdline(xyz, data_grdline);
 
 	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
-		_calc_bl_thick_vderiv(xyz,bl_thick, surf_znode, outer_znode);
+		_calc_bl_thick_vderiv(data_grdline, bl_thick, raw_profile);
 		break;
 
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
-		_calc_bl_thick_enthalpy(xyz,bl_thick, surf_znode, outer_znode);
+		_calc_bl_thick_enthalpy(data_grdline, bl_thick, raw_profile);
 		break;
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
-		_calc_bl_thick_full_gridline(xyz,bl_thick, surf_znode, outer_znode);
+		_calc_bl_thick_full_gridline(data_grdline, bl_thick, raw_profile);
 		break;
 
 	default:
@@ -660,10 +611,10 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 
 double TDomain::calc_bl_thick(const t_GeomPoint& xyz) const{
 	
-	t_ZoneNode surf_znode, outer_znode;
+	std::vector<t_ZoneNode> raw_profile;
 	double bl_thick;
 
-	_calc_bl_thick(xyz, bl_thick, surf_znode, outer_znode);
+	_calc_bl_thick(xyz, bl_thick, raw_profile);
 	return bl_thick;
 
 };
@@ -682,44 +633,36 @@ void TDomain::calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) con
 
 void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const{
 
-	t_ZoneNode surf_znode, outer_znode;
+	std::vector<t_ZoneNode> raw_profile;
 	double bl_thick;
 
-	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
-	t_BlkInd& ind = outer_znode.iNode;
+	_calc_bl_thick(xyz, bl_thick, raw_profile);
 
-	get_rec(Zones[outer_znode.iZone-1], ind.i, ind.j, ind.k, outer_rec);
+	get_rec(raw_profile.back(), outer_rec);
 
 };
 
 int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 
-	t_ZoneNode surf_znode, outer_znode;
+	std::vector<t_ZoneNode> raw_profile;
 	double bl_thick;
 
-	_calc_bl_thick(xyz,bl_thick, surf_znode, outer_znode);
-	
-	// TODO; ensure that only 1 index is different for surf_znode
-	// and outer_znode
+	_calc_bl_thick(xyz, bl_thick, raw_profile);
 
-	int N = abs(outer_znode.iNode.i - surf_znode.iNode.i) +
-		    abs(outer_znode.iNode.j - surf_znode.iNode.j) +
-			abs(outer_znode.iNode.k - surf_znode.iNode.k);
-
-	return N;
+	return raw_profile.size();
 }
 
 t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	
-	t_ZoneNode bound_znode, surf_znode;
+	std::vector<t_ZoneNode> raw_profile;
 	double bl_thick;
-	_calc_bl_thick(xyz, bl_thick, surf_znode, bound_znode);
+	_calc_bl_thick(xyz, bl_thick, raw_profile);
 
 	t_SqMat3Dbl jac;
 
 	t_Rec bound_rec, surface_rec;
-	get_rec(bound_znode, bound_rec);
-	get_rec(surf_znode, surface_rec);
+	get_rec(raw_profile.back(), bound_rec);
+	get_rec(raw_profile[0], surface_rec);
 
 	// construct transformation matrix
 	// construct normal to a surface - e2':
@@ -765,53 +708,9 @@ void TDomain::dump_full_enthalpy_profile(const mf::t_GeomPoint& xyz, int pid) co
 
 	t_ZoneNode surf_znode = _get_nrst_node_surf(xyz);
 
-	int i_s = surf_znode.iNode.i;
-	int i_e = i_s;
+	t_DomainGrdLine dom_grdline(*this);
 
-	int j_s = surf_znode.iNode.j;
-	int j_e = j_s;
-
-	int k_s = surf_znode.iNode.k;
-	int k_e = k_s;
-
-	const TZone& blk = Zones[surf_znode.iZone-1];
-
-	int i = i_s;
-	int j = j_s;
-	int k = k_s;
-
-	int di = 0, dj =0 , dk = 0;
-
-	switch(surf_znode.iFacePos){
-		case(faceXmin):
-			di = 1;
-			i_s = blk.is;
-			i_e = blk.ie;
-			break;
-		case(faceXmax):
-			di = -1;
-			i_s = blk.ie;
-			i_e = blk.is;
-			break;
-		case(faceYmin):
-			dj = 1;
-			j_s = blk.js;
-			j_e = blk.je;
-			break;
-		case(faceYmax):
-			dj = -1;
-			j_s = blk.js;
-			j_e = blk.je;
-			break;
-		case(faceZmin):
-			dk = 1;
-			get_k_range(surf_znode.iZone, k_s, k_e);
-			break;
-		case(faceZmax):
-			dk=-1;
-			get_k_range(surf_znode.iZone, k_e, k_s);
-			break;
-	}
+	dom_grdline.init(surf_znode);
 
 	char fname[33];
 	sprintf(fname, "%s/profile_enthalpy_%d.dat", hsstab::OUTPUT_DIR.ToAscii(), pid);
@@ -820,13 +719,11 @@ void TDomain::dump_full_enthalpy_profile(const mf::t_GeomPoint& xyz, int pid) co
 	mf::t_Rec mf_rec;
 	mf::t_GeomPoint cur_xyz,prev_xyz, surf_xyz, dr;
 
-	get_rec(blk, i, j, k, mf_rec);
+	get_rec(dom_grdline.znodes[0], mf_rec);
 	surf_xyz.set(mf_rec);
 
 	// Prints all but 1 points 
-	int M = (i_e==i_s ? 0 : abs(i_e - i_s)+1) + 
-		    (j_e==j_s ? 0 : abs(j_e - j_s)+1) + 
-			(k_e==k_s ? 0 : abs(k_e - k_s)+1);
+	int M = dom_grdline.znodes.size();
 
 	double s = 0.0;
 
@@ -834,7 +731,7 @@ void TDomain::dump_full_enthalpy_profile(const mf::t_GeomPoint& xyz, int pid) co
 
 	for (int m=0; m<M; m++){
 
-		get_rec(blk, i, j, k, mf_rec);
+		get_rec(dom_grdline.znodes[m], mf_rec);
 		cur_xyz.set(mf_rec);
 		matrix::base::minus<double, double>(cur_xyz, prev_xyz, dr);
 		s+= dr.norm();
@@ -842,10 +739,6 @@ void TDomain::dump_full_enthalpy_profile(const mf::t_GeomPoint& xyz, int pid) co
 		ofstr<<s<<"\t"<<enth<<"\n";
 
 		prev_xyz = cur_xyz;
-
-		i+=di; 
-		j+=dj;
-		k+=dk;
 	}
 
 };

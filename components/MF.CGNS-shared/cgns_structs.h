@@ -474,25 +474,25 @@ namespace mf{
 			void _extract_profile_data_blbound(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
 				std::vector<t_Rec>& data) const;
 
-			void _extract_profile_data_full(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+			// get gridline as set of mf::t_Rec
+			void _extract_profile_data_grdline(const t_GeomPoint& xyz, 
 				std::vector<t_Rec>& data) const;
 
-			// test function to replace all extractors
-			// extract full gridline from multiblock configuration
-			void _extract_profile_data_multiblock(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
-				std::vector<t_Rec>& data) const;
+			// get gridline as set of indexes t_ZoneNode
+			void _extract_profile_data_grdline(const t_GeomPoint& xyz, 
+				std::vector<t_ZoneNode>& data) const;
 
 			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
-				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_vderiv(const t_GeomPoint& xyz, double& bl_thick, 
-				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_enthalpy(const t_GeomPoint& xyz, double& bl_thick, 
-				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_full_gridline(const t_GeomPoint& xyz, double& bl_thick, 
-				t_ZoneNode& surf_znode, t_ZoneNode& outer_znode) const;
+			void _calc_bl_thick_full_gridline(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+				std::vector<t_ZoneNode>& raw_profile) const;
 
 			// TDomainBase interface realization
 

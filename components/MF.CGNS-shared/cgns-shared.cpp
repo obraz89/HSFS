@@ -629,7 +629,7 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz,
 
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
 
-		_extract_profile_data_multiblock(xyz, init_cfg, data);
+		_extract_profile_data_grdline(xyz, data);
 		break;
 
 	default:
@@ -645,179 +645,48 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 		double bl_thick;
 		t_ZoneNode surf_znode, outer_znode;
 
-		_calc_bl_thick(xyz, bl_thick, surf_znode, outer_znode);
+		std::vector<t_ZoneNode> raw_profile;
+
+		_calc_bl_thick(xyz, bl_thick, raw_profile);
 
 		double total_thick = bl_thick * init_cfg.ThickCoef;
 
-		t_ZoneGrdLine grd_line(*this, surf_znode);
-		const TZone& blk = *grd_line.zne;
-
-		int i_s = grd_line.ind_s.i;
-		int i_e = grd_line.ind_e.i;
-
-		int j_s = grd_line.ind_s.j;
-		int j_e = grd_line.ind_e.j;
-
-		int k_s = grd_line.ind_s.k;
-		int k_e = grd_line.ind_e.k;
-
-		int i = i_s;
-		int j = j_s;
-		int k = k_s;
-
-		int di = grd_line.di;
-		int dj = grd_line.dj;
-		int dk = grd_line.dk;
-
-		int total_nodes = 0;
-
-		double eta = 0.0;
 		t_GeomPoint cur_xyz, surf_xyz;
 		t_Rec cur_rec;
 		t_Vec3Dbl rvec;
 
-		get_rec(blk, i,j,k, cur_rec);
+		get_rec(raw_profile[0], cur_rec);
 		surf_xyz.set(cur_rec);
 
-		for (int m=0; m<grd_line.nnodes; m++){
+		int total_nodes = 0;
+		double eta = 0.0;
 
-			get_rec(blk, i,j,k, cur_rec);
+		for (int m=0; m<raw_profile.size(); m++){
+
+			get_rec(raw_profile[m], cur_rec);
 			cur_xyz.set(cur_rec);
 			matrix::base::minus<double, double>(cur_xyz, surf_xyz, rvec);
 			eta = rvec.norm();
 
 			if (eta>total_thick) break;
-
-			i+=di; 
-			j+=dj; 
-			k+=dk;
 			total_nodes++;
 
 		}
 
-		if (total_nodes==grd_line.nnodes){
+		if (total_nodes==raw_profile.size()){
 			wxLogError(_T("Profile extract error: Requested thickness \
 						  is greater than computational domain, trying to proceed"));
-			total_nodes = grd_line.nnodes;
 		}
 
 		data.resize(total_nodes);
 
-		i=i_s;
-		j=j_s;
-		k=k_s;
+		for (int p=0; p<total_nodes; p++) get_rec(raw_profile[p], data[p]);
 
-		for (int p=0; p<total_nodes; p++){
-
-			get_rec(blk, i, j, k, data[p]);
-			i+=di; 
-			j+=dj;
-			k+=dk;
-
-		}
-/*
-		t_ZoneNode cur_znode = surf_znode;
-		mf::t_Rec cur_rec;
-		get_rec(surf_znode, cur_rec);
-		surf_xyz.set(cur_rec);
-
-		int*pd = NULL;
-		int dd = 0;
-		switch (surf_znode.iFacePos)
-		{
-			case (faceXmin):
-				pd = &(cur_znode.iNode.i);
-				dd = 1;
-				break;
-			case (faceXmax):
-				pd = &(cur_znode.iNode.i);
-				dd = -1;
-				break;
-			case (faceYmin):
-				pd = &(cur_znode.iNode.j);
-				dd = 1;
-				break;
-			case (faceYmax):
-				pd = &(cur_znode.iNode.j);
-				dd = -1;
-				break;
-			case (faceZmin):
-				pd = &(cur_znode.iNode.k);
-				dd = 1;
-				break;
-			case (faceZmax):
-				pd = &(cur_znode.iNode.k);
-				dd = -1;
-				break;
-
-		}
-		do 
-		{
-			get_rec(cur_znode, cur_rec);
-			cur_xyz.set(cur_rec);
-			matrix::base::minus<double, double>(cur_xyz, surf_xyz, rvec);
-			eta = rvec.norm();
-			*pd+=dd;total_nodes++;
-
-		} while (eta<total_thick);
-
-		data.resize(total_nodes);
-
-		for (int d=0; d<total_nodes; d++){
-			cur_znode = surf_znode;
-			*pd+=d*dd;
-			get_rec(cur_znode, data[d]);
-		}
-*/
-}
-
-// Extract full block gridline as a profile
-// created mainly to read profile data from blwf2cgns converter 
-// init_cfg not used now, but may be used later
-void TDomain::_extract_profile_data_full(const mf::t_GeomPoint& xyz, 
-				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
-
-		double bl_thick;
-		t_ZoneNode surf_znode, outer_znode;
-
-		surf_znode = _get_nrst_node_surf(xyz);
-
-		t_ZoneGrdLine grd_line(*this, surf_znode);
-
-		TZone& blk = Zones[surf_znode.iZone-1];
-
-		int i_s = grd_line.ind_s.i;
-		int i_e = grd_line.ind_e.i;
-
-		int j_s = grd_line.ind_s.j;
-		int j_e = grd_line.ind_e.j;
-
-		int k_s = grd_line.ind_s.k;
-		int k_e = grd_line.ind_e.k;
-
-		int i = i_s;
-		int j = j_s;
-		int k = k_s;
-
-		int di = grd_line.di;
-		int dj = grd_line.dj;
-		int dk = grd_line.dk;
-
-		data.resize(grd_line.nnodes);
-
-		for (int p=0; p<grd_line.nnodes; p++){
-
-			get_rec(blk, i, j, k, data[p]);
-			i+=di; 
-			j+=dj;
-			k+=dk;
-
-		}
 }
 
 // Extract full domain gridline as a profile
-void TDomain::_extract_profile_data_multiblock(const mf::t_GeomPoint& xyz, 
-				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
+void TDomain::_extract_profile_data_grdline(
+	const mf::t_GeomPoint& xyz, std::vector<mf::t_Rec>& data) const{
 
 	t_DomainGrdLine grd_line(*this);
 
@@ -831,11 +700,26 @@ void TDomain::_extract_profile_data_multiblock(const mf::t_GeomPoint& xyz,
 
 	data.resize(nnodes);
 
-	for (int p=0; p<nnodes; p++){
+	for (int p=0; p<nnodes; p++) get_rec(grd_line.znodes[p], data[p]);
 
-		t_ZoneNode& znode = grd_line.znodes[p];
+}
 
-		get_rec(znode, data[p]);
+// Extract full domain gridline as a set of indexes
+void TDomain::_extract_profile_data_grdline(
+	const mf::t_GeomPoint& xyz, std::vector<t_ZoneNode>& data) const{
 
-	}
+	t_DomainGrdLine grd_line(*this);
+
+	t_ZoneNode surf_znode;
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	grd_line.init(surf_znode);
+
+	const int nnodes = grd_line.znodes.size();
+
+	data.resize(nnodes);
+
+	for (int p=0; p<nnodes; p++) data[p] = grd_line.znodes[p];
+
 }
