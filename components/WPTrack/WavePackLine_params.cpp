@@ -71,6 +71,10 @@ void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("CalcWPDispersion", 1, _T("Calculate dispersion of wave packet d2N_dw2 and d2N_db2 ?"));
 
+	g.add("DwDisp", 0.5e-03, _T("Non-dim step to vary w in dispersion calculations"));
+
+	g.add("DbDisp", 0.5e-03, _T("Non-dim step to vary b in dispersion calculations"));
+
 }
 
 void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g){
@@ -103,6 +107,10 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 	params.TimeStep = g.get_real_param("TimeStep");
 
 	params.CalcWPDispersion = g.get_int_param("CalcWPDispersion");
+
+	params.dw_disp = g.get_real_param("DwDisp");
+
+	params.db_disp = g.get_real_param("DbDisp");
 
 	wxString rmode_str = g.get_string_param("RetraceMode");
 

@@ -42,6 +42,10 @@ namespace pf{
 		t_Vec3Dbl RetraceVec;
 
 		bool CalcWPDispersion;
+
+		// empiric constants, steps to vary nondim w and beta in
+		// dispersion calculations
+		double dw_disp, db_disp;
 	};
 
 

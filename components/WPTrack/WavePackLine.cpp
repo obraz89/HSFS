@@ -603,21 +603,21 @@ void t_WavePackLine::_calc_d2sig_dx2
 	t_WCharsLoc wchars_l, wchars_r;
 
 	// todo: empirics with dw and db
-	const double dw_rel = 0.5e-03;
-	const double dw_min = 1.0e-04;
+	//const double dw_rel = 0.5e-03;
+	//const double dw_min = 1.0e-04;
 
-	const double db_rel = 0.5e-03;
+	//const double db_rel = 0.5e-03;
 
 	// TODO: fixme
-	const double db_min = 1.0e-04;
+	//const double db_min = 1.0e-04;
 
-	const double dw_aprox = wchars_base.w.real()*dw_rel;
+	//const double dw_aprox = wchars_base.w.real()*dw_rel;
 
-	const double dw = dw_min;// dw_aprox>dw_min ? dw_aprox : dw_min;
+	const double dw = _params.dw_disp;// dw_aprox>dw_min ? dw_aprox : dw_min;
 
-	const double db_aprox = wchars_base.b.real()*db_rel;
+	//const double db_aprox = wchars_base.b.real()*db_rel;
 
-	const double db = db_min; // db_aprox>db_min ? db_aprox : db_min;
+	const double db = _params.db_disp; // db_aprox>db_min ? db_aprox : db_min;
 
 	stab::t_LSCond srch_cond;
 
