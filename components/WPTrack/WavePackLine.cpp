@@ -1031,7 +1031,7 @@ void t_WavePackLine::calc_d2N_dxx(){
 
 	}
 
-	std::wostringstream ostr;
+	std::ostringstream ostr;
 
 	ostr<<_T("output/dispersion_")<<id<<_T(".dat");id++;
 

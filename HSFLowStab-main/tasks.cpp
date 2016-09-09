@@ -294,13 +294,13 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 	char fout_wplines_str[MAX_FNAME_LEN];
 	char fout_wplines_disp_str[MAX_FNAME_LEN];
 
-	sprintf_s(fout_wplines_str, MAX_FNAME_LEN, "%s/wplines_mode%d.dat",
+	sprintf(fout_wplines_str, "%s/wplines_mode%d.dat",
 		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
 
-	sprintf_s(fout_maxnfactor_str, MAX_FNAME_LEN, "%s/max_N_mode%d.dat",
+	sprintf(fout_maxnfactor_str, "%s/max_N_mode%d.dat",
 		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
 
-	sprintf_s(fout_wplines_disp_str, MAX_FNAME_LEN, "%s/wplines_disp_%d.dat",
+	sprintf(fout_wplines_disp_str, "%s/wplines_disp_%d.dat",
 		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
 
 	int pid_s, pid_e;
@@ -712,10 +712,11 @@ void _get_DNS_amp_vecs_from_file(std::vector<t_VecCmplx>& amp_vec_out, int nnode
 	std::vector<double> y_vec(nnodes_ns);
 
 	// u_re, v_re, w_re, p_re, T_re
-	std::vector<std::vector<double>> vec_re(nnodes_ns, 5);
+	std::vector<double> zero_vec(5);
+	std::vector<std::vector<double>> vec_re(nnodes_ns, zero_vec);
 
 	// u_im, v_im, w_im, p_im, T_im
-	std::vector<std::vector<double>> vec_im(nnodes_ns, 5);
+	std::vector<std::vector<double>> vec_im(nnodes_ns, zero_vec);
 
 	// read profiles
 	while(ifstr.get(line, max_lsize, '\n')){
