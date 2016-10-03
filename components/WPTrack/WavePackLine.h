@@ -148,7 +148,11 @@ namespace pf{
 		// io
 		void print_to_file(const std::string& fname, std::ios_base::openmode) const;
 
+		// single record from wpline to final disp data file
 		void print_dispersion_data_to_file(const std::string& fname, std::ios_base::openmode) const;
+
+		// dump full dispersion data from wpline
+		void print_dispersion_data_full(const std::string& fname) const;
 
 		friend std::wostream& operator<<(std::wostream& str, const t_WavePackLine& line);
 	};

@@ -785,16 +785,35 @@ double calc_zero_parab(double x_v[3], double y_v[3]){
 
 	c = y_v[0];
 
+	//debug
+
+	double res0 = y_v[0] - a*x_v[0]*x_v[0] - b*x_v[0] - c;
+
+	double res1 = y_v[1] - a*x_v[1]*x_v[1] - b*x_v[1] - c;
+	
+	double res2 = y_v[2] - a*x_v[2]*x_v[2] - b*x_v[2] - c;
+
 	double x1, x2;
 
 	x1 = 0.5*(-b - sqrt(b*b - 4*a*c))/a;
 
 	x2 = 0.5*(-b + sqrt(b*b - 4*a*c))/a;
 
-	double res = x1<x2 ? x1 : x2;
+	bool r1_good = (x1>=x_v[0])&&(x1<=x_v[2]);
 
-	// debug msg
-	wxLogMessage(_T("PZ Input:x_v=(%lf, %lf, %lf)\n      y_v=(%lf, %lf, %lf)\nPZ Output: %lf"),
+	bool r2_good = (x2>=x_v[0])&&(x2<=x_v[2]);
+
+	if (r1_good && r2_good) wxLogError(_("In Zero Parab: both roots inside interval!"));
+
+	if (!r1_good && !r2_good) wxLogError(_("In Zero Parab: roots outside of interval!"));
+
+	double res;
+
+	if (r1_good) res = x1;
+
+	if (r2_good) res = x2;
+
+	wxLogMessage(_T("Srch Fun Zero Parab:\n\tInput:x_v=(%lf, %lf, %lf)\n\ty_v=(%lf, %lf, %lf)\n\tOutput: %lf"),
 		x_v[0], x_v[1], x_v[2], y_v[0], y_v[1], y_v[2], res);
 
 	return res;
@@ -803,6 +822,15 @@ double calc_zero_parab(double x_v[3], double y_v[3]){
 }
 
 void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
+	/*{
+		// tmp, disable neut point derivs calcs
+		wxLogError(_T("Neutral point dispersion calcs are disabled, check calc_neut_point_derivs!!!"));
+		_dx0_dw_gndim = 0.0;
+		_da_dw_neut_gndim = 0.0;
+
+		return;
+
+	}*/
 
 	// try to use 3 points:
 	// 1-st where sig<0 and next 2 where sig>0
@@ -821,6 +849,11 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 
 	if (i0==-1) {
 		wxLogError(_T("Error: Failed to locate neutral point for wpline"));
+
+		// proceed calcs as if neut points derivs are zero...
+		_dx0_dw_gndim = 1.0/0.0;
+		_da_dw_neut_gndim = 1.0/0.0;
+
 		return;
 	}
 
@@ -852,20 +885,34 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 	// assuming W_dim_fixed = const at all 3 points
 	// nondim values can be varied
 
-	// TODO: empirics with dw
-
-	const double dw_rel = 0.5e-03;
+	// increments in reference points to match dw_dimensional
+	double dw_v[3];
 
 	// central point
 	double w_base = _line[i0+1].wchars_loc.w.real();
 
-	const double dw = dw_rel*w_base;
+	const double dw_base = _params.dw_disp;
 
-	// +dw and -dw calcs
+	const t_StabScales& scl_b = _line[i0+1].wave_chars.scales();
 
-	double x_dstrb[2];
+	for (int k=0; k<3; k++){
 
-	for (int k=0; k<2; k++){
+		const t_StabScales& scle_c = _line[i0+k].wave_chars.scales();
+
+		dw_v[k] = dw_base*(scl_b.Ue/scle_c.Ue)*(scle_c.Dels/scl_b.Dels);
+
+	}
+
+	wxLogMessage(_("Increments:\n\tdw0=%lf\n\tdw1=%lf\n\tdw2=%lf"), dw_v[0], dw_v[1], dw_v[2]);
+
+	// +dw* and -dw* calcs
+
+	// neut point position for w*-dw*, w* and w*+dw* respectively
+	double x_dstrb[3];
+
+	for (int k=0; k<3; k++){
+
+		wxLogMessage(_T("Neutral point variation: dw=%d"), k-1);
 
 		for (int j=0; j<3; j++){
 
@@ -877,7 +924,7 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 
 			cur_wave = cur_rec.wchars_loc;
 
-			cur_wave.w+=(2*k-1)*dw;
+			cur_wave.w+=(k-1)*dw_v[k];
 
 			loc_solver.searchWave(cur_wave, srch_cond, stab::t_TaskTreat::SPAT);
 
@@ -891,19 +938,19 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 
 	}
 
-	const t_StabScales& base_scales = _line[i0+0].wchars_loc.scales();
-
 	const double L_ref = _rFldMF.get_mf_params().L_ref;
 
-	double coef = (base_scales.Dels/L_ref)*(1.0/base_scales.Ue);
+	double coef = (scl_b.Dels/L_ref)*(1.0/scl_b.Ue);
 
-	_dx0_dw_gndim = coef*(x_dstrb[1] - x_dstrb[0])/(2.0*dw);
+	_dx0_dw_gndim = coef*(x_dstrb[2] - x_dstrb[0])/(2.0*dw_v[1]);
 
 	// TODO: use parabolic interpolation for base case
 	// for now just using middle point
-	_da_dw_neut_gndim = _line[i0].da_dw_gndim;
+	_da_dw_neut_gndim = smat::interpolate_parab<t_Complex>(
+		x_v[0], _line[i0].da_dw_gndim, 
+		x_v[1], _line[i0+1].da_dw_gndim, 
+		x_v[2], _line[i0+2].da_dw_gndim, x_dstrb[1]);
 
-	// debug 
 
 	wxLogMessage(_T("Neut point derivs:%lf, %lf"), 
 		_dx0_dw_gndim, -1.0*_da_dw_neut_gndim.imag());
@@ -1001,8 +1048,6 @@ void t_WavePackLine::calc_d2N_dxx(){
 	std::vector<double> d2sig_db2(N_LINE_MAX_HSIZE);
 	std::vector<double> d2N_db2(N_LINE_MAX_HSIZE);
 
-	static int id = 0;
-
 	for (int i=0; i<_line.size(); i++){
 
 		dsig_dw[i] = -1.0*_line[i].da_dw_gndim.imag();
@@ -1028,21 +1073,6 @@ void t_WavePackLine::calc_d2N_dxx(){
 
 		_line[i].dN_db_gndim = dN_db[i];
 		_line[i].d2N_db2_gndim = d2N_db2[i];
-
-	}
-
-	std::ostringstream ostr;
-
-	ostr<<_T("output/dispersion_")<<id<<_T(".dat");id++;
-
-	std::wofstream fstr(&ostr.str()[0]);
-
-	fstr<<_T("x\tdN_dw_gndim\td2N_dw2_gndim_old\td2N_dw2_gndim_new\tdN_db_gndim\td2N_db2_gndim\n");
-
-	for (int i=0; i<_line.size(); i++){
-
-		fstr<<_s[i]<<_T("\t")<<dN_dw[i]<<_T("\t")<<d2N_dw2_old[i]<<_T("\t")<<_line[i].d2N_dw2_gndim
-		<<_T("\t")<<dN_db[i]<<_T("\t")<<d2N_db2[i]<<_T("\n");
 
 	}
 

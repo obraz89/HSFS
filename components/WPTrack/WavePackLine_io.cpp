@@ -114,6 +114,25 @@ void t_WavePackLine::print_dispersion_data_to_file(
 
 };
 
+void t_WavePackLine::print_dispersion_data_full(const std::string& fname) const{
+
+	std::wofstream fstr(&fname[0]);
+
+	fstr<<_T("x\tdN_dw\td2N_dw2\tdN_db\td2N_db2\n");
+
+	for (int i=0; i<_line.size(); i++){
+
+		const t_WPLineRec& rec = _line[i];
+		const mf::t_GeomPoint& gp = rec.mean_flow.get_xyz();
+
+
+		fstr<<gp.x()<<_T("\t")<<rec.dN_dw_gndim<<_T("\t")<<rec.d2N_dw2_gndim
+		<<_T("\t")<<rec.dN_db_gndim<<_T("\t")<<rec.d2N_db2_gndim<<_T("\n");
+
+	}
+
+}
+
 void t_WavePackLine::to_cyl_ref_frame(){
 	wxLogError(_T("Transition to cyl rf not implemented yet"));
 }

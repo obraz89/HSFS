@@ -108,6 +108,9 @@ namespace stab{
 		virtual void print_dispersion_data_to_file(
 			const std::string& fname, std::ios_base::openmode) const=0;
 
+		virtual void print_dispersion_data_full(
+			const std::string& fname) const=0;
+
 		virtual ~t_WPTrackBase();
 	};
 

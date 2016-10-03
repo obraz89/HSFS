@@ -293,6 +293,7 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 	char fout_maxnfactor_str[MAX_FNAME_LEN];
 	char fout_wplines_str[MAX_FNAME_LEN];
 	char fout_wplines_disp_str[MAX_FNAME_LEN];
+	char fout_wpline_disp_dump[MAX_FNAME_LEN];
 
 	sprintf(fout_wplines_str, "%s/wplines_mode%d.dat",
 		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
@@ -366,6 +367,11 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 				wp_line->print_to_file(fout_wplines_str, std::ios::app);
 
 				wp_line->print_dispersion_data_to_file(fout_wplines_disp_str, std::ios::app);
+
+				sprintf(fout_wpline_disp_dump, "%s/disp_data_%d.dat",
+					hsstab::OUTPUT_DIR.ToAscii(), pid);
+
+				wp_line->print_dispersion_data_full(fout_wpline_disp_dump);
 
 				g_pStabDB->update(*wp_line);
 
