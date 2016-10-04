@@ -21,7 +21,7 @@ void TPluginEigenGS::default_settings(){
 
 	TPluginParamsGroup g;
 
-	pf::gs::_eigen_gs_default_settings(g);
+	pf::t_EigenGSParams::default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 

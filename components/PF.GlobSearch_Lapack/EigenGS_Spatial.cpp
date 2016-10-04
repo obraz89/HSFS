@@ -42,7 +42,7 @@ void t_GlobSrchSpat::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
 
-	gs::_init_eigen_gs_base_params(_params, g);
+	_params.init(g);
 
 	const int& new_nnodes = _params.NNodes;
 
@@ -113,11 +113,11 @@ void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 
 	switch (_params.NSProfInit)
 	{
-	case (blp::t_NSInit::EXTRACT):
-		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::EXTRACT);
+	case (blp::NSINIT_EXTRACT):
+		profNS.initialize(a_xyz, prof_cfg, blp::NSINIT_EXTRACT);
 		break;
-	case (blp::t_NSInit::INTERPOLATE):
-		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::INTERPOLATE);
+	case (blp::NSINIT_INTERPOLATE):
+		profNS.initialize(a_xyz, prof_cfg, blp::NSINIT_INTERPOLATE);
 		break;
 	default:
 		wxString msg(_T("PF.GlobSearch: ProfNS Initialization type not supported"));
@@ -151,7 +151,12 @@ void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 		grid_y_mf[i] = a_coef_mf*_grid[i]/(b_coef_mf - _grid[i]);
 	}
 
-	_profStab.initialize(profNS, grid_y_mf ,_params.NNodes);
+	t_ProfStabCfg pstab_cfg;
+
+	pstab_cfg.NNodes = _params.NNodes;
+	pstab_cfg.NondimScaleType = _params.NondimScaleType;
+
+	_profStab.initialize(profNS, grid_y_mf ,pstab_cfg);
 
 	for (int i=0; i<_params.NNodes; i++) {
 		_grid_y_stab[i] = _profStab.get_rec(i).y;

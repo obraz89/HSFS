@@ -19,7 +19,7 @@ void TPluginStabSolver::default_settings(){
 
 	TPluginParamsGroup g;
 
-	pf::ls::_ortho_ls_default_settings(g);
+	pf::t_StabSolverParams::default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 

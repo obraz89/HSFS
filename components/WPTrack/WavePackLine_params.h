@@ -16,12 +16,10 @@ namespace pf{
 	    static t_MapWxStrInt MARCH_OPTS_STR;
 		static t_MapWxStrInt SIGMA_TRUNC_MODES_STR;
 
-
-	    static hsstab::TPluginParamsGroup default_settings();
 	    static void init_supported_options();
-	    static void init_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
 	    
 	    static void init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
+
 	    static void wpline_default_settings(hsstab::TPluginParamsGroup& g);
 
 	    double TimeStep;

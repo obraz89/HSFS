@@ -19,12 +19,11 @@ const t_StabScales& t_ProfileStab::scales() const{return _scales;};
 /************************************************************************/
 // interpolate to uniform grid
 /************************************************************************/
-void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0 */){
+void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, t_ProfStabCfg cfg){
 
-	if (nnodes>0){
-		_resize(nnodes);
+	if (cfg.NNodes>0){
+		_resize(cfg.NNodes);
 	}else{
-		// TODO: fix : should be stab_params nnodes default. Hmmm...
 		_resize(a_rProfNS.get_nnodes());	
 	};
 
@@ -33,7 +32,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0 */){
 	double dy = a_rProfNS.get_thick()/(_nnodes-1);
 	for (int i=0; i<_nnodes; i++) y_distrib[i] = i*dy;
 
-	_initialize(a_rProfNS, y_distrib);
+	_initialize(a_rProfNS, y_distrib, cfg);
 
 }
 
@@ -41,25 +40,22 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, int nnodes/* =0 */){
 // interpolate to a grid with given distribution of nodes
 // y_distrib is scaled as all mf data (just as all values in t_ProfileNS)
 /************************************************************************/
-void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, const std::vector<double>& y_distrib ,int nnodes/* =0 */){
+void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, 
+			const std::vector<double>& y_distrib ,t_ProfStabCfg cfg){
 
-	if (nnodes>0){
-		_resize(nnodes);
+	if (cfg.NNodes>0){
+		_resize(cfg.NNodes);
 	}else{
-		// TODO: fix : should be stab_params nnodes default. Hmmm...
 		_resize(a_rProfNS.get_nnodes());	
 	};
 
-	_initialize(a_rProfNS, y_distrib);
+	_initialize(a_rProfNS, y_distrib, cfg);
 
 }
 
-// non-dim:
-//to A = sqrt(nu_e*x/u_e) or just bl thickness scale
-// all values in eq. for A are dimensional
-// note: NS profiles are nondim by sqrt(Re)
 /************************************************************************/
-void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double>& a_y_distrib){
+void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, 
+			const std::vector<double>& a_y_distrib, t_ProfStabCfg cfg){
 
 	t_Profile::t_Rec ns_outer_rec;
 
@@ -70,6 +66,7 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double
 	}else{
 
 		// tmp, to initialize disturbance "stability profiles" on a flat plate
+		wxLogMessage(_T("Warning: Initialization for disturbance profiles only!"));
 		ns_outer_rec.u = 1.0;
 		ns_outer_rec.v = 0.0;
 		ns_outer_rec.w = 0.0;
@@ -102,30 +99,29 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, const std::vector<double
 
 	double y_scale;
 	// TODO: make an option when adequate x_scale calculations added
-	if (true)
 	// variant 1
-	// use scaling with bl_thick_scale provided by MF 
+	// use scaling with bl_thick_scale provided by CFD 
+
+	switch (cfg.NondimScaleType)
 	{
+	case t_ProfStabCfg::NONDIM_BY_CFD_SCALE:
 		y_scale = y_scale_bl;
 		_scales.ReStab = rho_e*u_e*bl_thick_scale/mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
-
-	}else
-	//variant 2
-	// use self-similar scale, here x scale should be calculated somehow
-	{
+		break;
+	case t_ProfStabCfg::NONDIM_BY_X_SELFSIM:
 		y_scale = y_scale_selfsim;
 		_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x_scale/mu_e);
 		_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+		break;
+	default:
+		wxLogError(_T("Unsupported option for profile stab non dim!"));
+		break;
 	}
-
-	//_scales.ReStab = rho_e*u_e*bl_thick_scale/mu_e*Params.Re;
 
 	_scales.Me = Params.Mach*u_e/sqrt(t_e);
 
-	//_scales.Dels = Params.L_ref*bl_thick_scale;
-
-	_scales.UeDim = rMF.calc_c_dim(a_rProfNS.get_bound_rec().t)*_scales.Me;
+	_scales.UeDim = rMF.calc_c_dim(t_e)*_scales.Me;
 
 	_scales.Ue = u_e;
 

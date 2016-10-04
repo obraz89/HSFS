@@ -284,10 +284,10 @@ void t_ProfMF::initialize(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& d
 							 blp::t_NSInit init_type){
 	switch (init_type)
 	{
-	case (blp::t_NSInit::INTERPOLATE):
+	case (blp::NSINIT_INTERPOLATE):
 		_initialize_interpolate(xyz, data_cfg);
 		break;
-	case (blp::t_NSInit::EXTRACT):
+	case (blp::NSINIT_EXTRACT):
 		_initialize_extract(xyz, data_cfg);
 		break;
 	default:

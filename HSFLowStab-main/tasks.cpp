@@ -507,7 +507,7 @@ void task::get_profiles(){
 
 		mf::t_ProfDataCfg data_cfg;
 		data_cfg.ThickCoef = g_pMFDomain->get_prof_extr_cfg().ThickCoefDefault;
-		profMFLoc.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
+		profMFLoc.initialize(xyz, data_cfg, blp::NSINIT_EXTRACT);
 
 		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileMFLoc_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
 		
@@ -516,7 +516,7 @@ void task::get_profiles(){
 
 		// generate profile MF (Glob RF)
 		t_ProfMFGlob prof_MF(*g_pMFDomain);
-		prof_MF.initialize(xyz, data_cfg, blp::t_NSInit::EXTRACT);
+		prof_MF.initialize(xyz, data_cfg, blp::NSINIT_EXTRACT);
 
 		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileMFGlob_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);
 		
@@ -754,8 +754,13 @@ void _get_DNS_amp_vecs_from_file(std::vector<t_VecCmplx>& amp_vec_out, int nnode
 
 	t_ProfileStab ps_re, ps_im;
 
-	ps_re.initialize(prof_ns_re, nnodes_stab);
-	ps_im.initialize(prof_ns_im, nnodes_stab);
+	t_ProfStabCfg pstab_cfg;
+
+	pstab_cfg.NNodes = nnodes_stab;
+	pstab_cfg.NondimScaleType = t_ProfStabCfg::NONDIM_BY_CFD_SCALE;
+
+	ps_re.initialize(prof_ns_re, pstab_cfg);
+	ps_im.initialize(prof_ns_im, pstab_cfg);
 
 	if (nnodes_stab!=amp_vec_out.size()) 
 		wxLogError(_T("Error while processing DNS amp funcs from file: size mismatch"));

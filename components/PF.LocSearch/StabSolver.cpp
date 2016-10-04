@@ -23,7 +23,7 @@ void t_StabSolver::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
 
-	ls::_init_ortho_ls_base_params(_params, g);
+	_params.init(g);
 
 	//_init();	// init solver
 
@@ -340,18 +340,23 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 
 	switch (_params.NSProfInit)
 	{
-	case (blp::t_NSInit::EXTRACT):
-		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::EXTRACT);
+	case (blp::NSINIT_EXTRACT):
+		profNS.initialize(a_xyz, prof_cfg, blp::NSINIT_EXTRACT);
 		break;
-	case (blp::t_NSInit::INTERPOLATE):
-		profNS.initialize(a_xyz, prof_cfg, blp::t_NSInit::INTERPOLATE);
+	case (blp::NSINIT_INTERPOLATE):
+		profNS.initialize(a_xyz, prof_cfg, blp::NSINIT_INTERPOLATE);
 		break;
 	default:
 		wxString msg(_T("PF.LocSearch: ProfNS Initialization type not supported"));
 		wxLogError(msg); ssuGENTHROW(msg);
 	}
 
-	_profStab.initialize(profNS, nnodes_stab);
+	t_ProfStabCfg pstb_cfg;
+
+	pstb_cfg.NNodes = nnodes_stab;
+	pstb_cfg.NondimScaleType = _params.NondimScaleType;
+
+	_profStab.initialize(profNS, pstb_cfg);
 
 	if (_stab_matrix.nCols()!=STAB_MATRIX_DIM){
 		ssuTHROW(t_GenException, 

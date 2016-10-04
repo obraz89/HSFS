@@ -96,7 +96,7 @@ public:
 
 // TODO: wrap all profiles in blp namespace {blp = Boundary Layer Profile}
 namespace blp{
-	enum t_NSInit{EXTRACT=0, INTERPOLATE};
+	enum t_NSInit{NSINIT_EXTRACT=0, NSINIT_INTERPOLATE};
 }
 
 class IMPEXP_PROFILE t_ProfMF : public t_Profile{
