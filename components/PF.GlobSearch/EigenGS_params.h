@@ -14,7 +14,7 @@ namespace pf{
 		int NVars, NNodes;
 		double ThickCoef;
 		double ThickHalfNodesCoef;
-		double W_Threshold;
+		double Arg_Threshold;
 		int NSProfInit;
 		double SecondViscRatio;
 	};

@@ -10,7 +10,7 @@ using namespace pf;
 static const int N_VARS_DEFAULT = 5;
 static const int N_NODES_DEFAULT = 51;
 static const double THICK_COEF_DEFAULT = 3.0;
-static const double W_THRESHOLD_DEFAULT = 1.0e-5;
+static const double ARG_THRESHOLD_DEFAULT = 1.0e-5;
 
 static const double THICK_HALFNODES_COEF_DEFAULT = 2.0;
 
@@ -54,8 +54,8 @@ void t_EigenGSParams::default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("ThickHalfNodesCoef", THICK_HALFNODES_COEF_DEFAULT, _T("Halfnodes placed in Y_h=Bl_thick*coef"));
 
-	g.add("FreqThreshold", W_THRESHOLD_DEFAULT, 
-		_T("freq>=threshold means that wave is really candidate to instability mode"));
+	g.add("ArgThreshold", ARG_THRESHOLD_DEFAULT, 
+		_T("Arg<=threshold means that wave is really candidate to instability mode"));
 
 	g.add("SecondViscosityRatio", SECOND_VISC_RATIO_DEFAULT, _T("The ratio of second viscosity to shear viscosity"));
 
@@ -75,7 +75,7 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 
 	ThickHalfNodesCoef = g.get_real_param("ThickHalfNodesCoef");
 
-	W_Threshold = g.get_real_param("FreqThreshold");
+	Arg_Threshold = g.get_real_param("ArgThreshold");
 
 	SecondViscRatio = g.get_real_param("SecondViscosityRatio");
 

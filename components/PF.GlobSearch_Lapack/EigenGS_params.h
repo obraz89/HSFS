@@ -15,7 +15,7 @@ namespace pf{
 		int NVars, NNodes;
 		double ThickCoef;
 		double ThickHalfNodesCoef;
-		double W_Threshold;
+		double Arg_Threshold;
 		double SecondViscRatio;
 
 		static t_MapWxStrInt PROFNS_INIT_TYPES_STR;

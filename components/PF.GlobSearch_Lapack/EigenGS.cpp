@@ -589,7 +589,7 @@ std::vector<t_WCharsLoc> t_EigenGS::getInstabModes(const t_WCharsLoc& init_wave)
 		getSpectrum(init_wave);
 		// TODO: empirics!!!
 		for (it=_spectrum.begin(); it<_spectrum.end(); it++){
-			if (it->imag()>_params.W_Threshold){
+			if (it->imag()>_params.Arg_Threshold){
 				t_WCharsLoc init_wave;
 				init_wave.a = _alpha;
 				init_wave.b = _beta;
