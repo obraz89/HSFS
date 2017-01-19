@@ -602,20 +602,7 @@ void t_WavePackLine::_calc_d2sig_dx2
 
 	t_WCharsLoc wchars_l, wchars_r;
 
-	// todo: empirics with dw and db
-	//const double dw_rel = 0.5e-03;
-	//const double dw_min = 1.0e-04;
-
-	//const double db_rel = 0.5e-03;
-
-	// TODO: fixme
-	//const double db_min = 1.0e-04;
-
-	//const double dw_aprox = wchars_base.w.real()*dw_rel;
-
 	const double dw = _params.dw_disp;// dw_aprox>dw_min ? dw_aprox : dw_min;
-
-	//const double db_aprox = wchars_base.b.real()*db_rel;
 
 	const double db = _params.db_disp; // db_aprox>db_min ? db_aprox : db_min;
 
@@ -656,7 +643,25 @@ void t_WavePackLine::_calc_d2sig_dx2
 
 	t_Complex d2alpha_db2 = (wchars_l.a - 2.0*wchars_base.a + wchars_r.a)/(db*db);
 
-	// store dimensional values (?)
+	// mixed deriv
+	// alpha(w_base+-dw, b_base+-db), 4 values
+	t_Complex apm[2][2];
+
+	for (int i=0; i<2; i++)
+		for (int j=0; j<2; j++){
+
+			wchars_l = wchars_base;
+			wchars_l.w = wchars_base.w + (2*i-1)*dw;
+			wchars_l.b = wchars_base.b + (2*j-1)*db;
+
+			loc_solver.searchWave(wchars_l, srch_cond, stab::t_TaskTreat::SPAT);
+
+			apm[i][j] = wchars_l.a;
+
+	}
+
+	t_Complex d2alpha_dwb = 0.25*(apm[0][0]-apm[0][1]-apm[1][0]+apm[1][1])/(dw*db);
+
 	const t_StabScales& scales = loc_solver.get_stab_scales();
 
 	const double inv_ue = 1.0/scales.Ue;
@@ -670,6 +675,8 @@ void t_WavePackLine::_calc_d2sig_dx2
 	rec.da_db_gndim = dalpha_db;
 
 	rec.d2a_db2_gndim = scales.Dels/L_ref*d2alpha_db2;
+
+	rec.d2a_dwb_gndim = scales.Dels/L_ref*inv_ue*d2alpha_dwb;
 
 	return;
 
@@ -762,7 +769,7 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 	}
 
 	if (_params.CalcWPDispersion)
-		calc_neut_point_derivs(loc_solver);
+		calc_neut_point_derivs_indirect(loc_solver);
 
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
 	calc_n_factor();
@@ -772,8 +779,9 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 // parabolic interpolation f = a*x*x + b*x + c
 // x_v - argument, increasing order, first value 0.0
 // y_v - function values at x_v points
-// return x where f=0
-double calc_zero_parab(double x_v[3], double y_v[3]){
+// return x0 where f=0
+// when needed, return derivative of the function at x0
+double calc_zero_parab(double x_v[3], double y_v[3], double* zero_point_deriv = NULL){
 
 	double a,b,c;
 
@@ -816,12 +824,25 @@ double calc_zero_parab(double x_v[3], double y_v[3]){
 	wxLogMessage(_T("Srch Fun Zero Parab:\n\tInput:x_v=(%lf, %lf, %lf)\n\ty_v=(%lf, %lf, %lf)\n\tOutput: %lf"),
 		x_v[0], x_v[1], x_v[2], y_v[0], y_v[1], y_v[2], res);
 
+	if (zero_point_deriv!=NULL){
+
+		*zero_point_deriv = 2*a*res + b;
+
+	}
+
 	return res;
 
 
 }
 
-void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
+// calculate neut point derivs like dx0_dw and dx0_db directly
+// dx0_dw = (x0(w+dw)-x0(w-dw))/(2*dw)
+// try to use 3 points:
+// 1-st where sig<0 and next 2 where sig>0
+// parabolic interpolation to find neutral point sig=0
+// TODO: spatial approach only, assuming now sigma=-ai
+// TODO: direct computations are very grid sensitive! 
+void t_WavePackLine::calc_neut_point_derivs_direct(stab::t_LSBase& loc_solver){
 	/*{
 		// tmp, disable neut point derivs calcs
 		wxLogError(_T("Neutral point dispersion calcs are disabled, check calc_neut_point_derivs!!!"));
@@ -831,12 +852,6 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 		return;
 
 	}*/
-
-	// try to use 3 points:
-	// 1-st where sig<0 and next 2 where sig>0
-	// parabolic interpolation to find point sig=0
-
-	// TODO: spatial approach only, assuming now sigma=-ai
 
 	int i0=-1;
 	// we want 2 points to exist to the right of i0
@@ -850,12 +865,15 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 	if (i0==-1) {
 		wxLogError(_T("Error: Failed to locate neutral point for wpline"));
 
-		// proceed calcs as if neut points derivs are zero...
-		_dx0_dw_gndim = 1.0/0.0;
-		_da_dw_neut_gndim = 1.0/0.0;
+		_dx0_dw_gndim = HUGE_VAL;
+		_dx0_db_gndim = HUGE_VAL;
+		_da_dw_neut_gndim = HUGE_VAL;
+		_da_db_neut_gndim = HUGE_VAL;
 
 		return;
 	}
+
+	wxLogError(_T("Calc Neut points direct: da_db derivs not implemented!"));
 
 
 	const t_GeomPoint& xyz_l = _line[i0+0].mean_flow.get_xyz();
@@ -957,7 +975,95 @@ void t_WavePackLine::calc_neut_point_derivs(stab::t_LSBase& loc_solver){
 
 }
 
+// calculate neut point derivs like dx0_dw and dx0_db indirectly
+// dx0_dw = - (dai/dw)/(dai/dx), 
+// dx0_db = - (dai/db)/(dai/dx), all derivs at x0 !
+// TODO: spatial approach only, assuming now sigma=-ai
+// TODO: indirect computations should be better in all situations than direct, test it! 
 
+void t_WavePackLine::calc_neut_point_derivs_indirect(stab::t_LSBase& loc_solver){
+
+	int i0=-1;
+	for (int i=0; i<_line.size()-2; i++){
+
+		if ((_line[i].wchars_loc.a.imag()>0.0)&&(_line[i+1].wchars_loc.a.imag()<0.0)){
+
+			i0=i;
+			break;
+
+		}
+
+	}
+
+	if (i0==-1) {
+		wxLogError(_T("Error: Failed to locate neutral point for wpline"));
+
+		_dx0_dw_gndim = HUGE_VAL;
+		_dx0_db_gndim = HUGE_VAL;
+		_da_dw_neut_gndim = HUGE_VAL;
+		_da_db_neut_gndim = HUGE_VAL;
+
+		return;
+	}
+
+	// first calculate da/dx in the neut point:
+
+	const t_GeomPoint& xyz_l = _line[i0+0].mean_flow.get_xyz();
+	const t_GeomPoint& xyz_m = _line[i0+1].mean_flow.get_xyz();
+	const t_GeomPoint& xyz_r = _line[i0+2].mean_flow.get_xyz();
+
+	t_Vec3Dbl ds;
+	double x_v[3];
+
+	x_v[0]=0.0;
+
+	matrix::base::minus<double, double>(xyz_m, xyz_l, ds);
+	x_v[1] = ds.norm();
+
+	matrix::base::minus<double, double>(xyz_r, xyz_m, ds);
+	x_v[2] = x_v[1] + ds.norm();
+
+	const t_StabScales& scales = loc_solver.get_stab_scales();
+
+	const t_FldParams& mf_prms = _rFldMF.get_mf_params();
+
+	const double L_ref = mf_prms.L_ref;
+
+	const double Dels = scales.Dels;
+
+	// f[i] = ai_gndim
+
+	double f_vd[3];
+
+	for (int i=0; i<3; i++) f_vd[i] = _line[i0+i].wave_chars.a.imag()*L_ref/Dels;
+
+	double dai_dx_gn_neut;
+	double x0;
+
+	x0 = calc_zero_parab(x_v, f_vd, &dai_dx_gn_neut);
+
+	t_Complex f_vc[3];
+
+	for (int i=0; i<3; i++) f_vc[i] = _line[i0+i].da_dw_gndim;
+
+	_da_dw_neut_gndim = smat::interpolate_parab(x_v, f_vc, x0);
+
+	_dx0_dw_gndim = -1.0*_da_dw_neut_gndim.imag()/dai_dx_gn_neut;
+
+	for (int i=0; i<3; i++) f_vc[i] = _line[i0+i].da_db_gndim;
+
+	_da_db_neut_gndim = smat::interpolate_parab(x_v, f_vc, x0);
+
+	_dx0_db_gndim = -1.0*_da_db_neut_gndim.imag()/dai_dx_gn_neut;
+
+	// debug check dx0_dw * dai_db_neut == dx0_db * dai_dw_neut
+
+	double v1 = _dx0_dw_gndim*_da_db_neut_gndim.imag();
+	double v2 = _dx0_db_gndim*_da_dw_neut_gndim.imag();
+	wxLogMessage(_T("Neut derivs indirect check v1==v2:v1=%lf, v2=%lf"), v1,v2);
+
+
+}
 
 void t_WavePackLine::calc_n_factor(){
 
@@ -1042,37 +1148,52 @@ void t_WavePackLine::calc_d2N_dxx(){
 	std::vector<double> dN_db(N_LINE_MAX_HSIZE);
 
 	std::vector<double> d2sig_dw2(N_LINE_MAX_HSIZE);
-	std::vector<double> d2N_dw2_old(N_LINE_MAX_HSIZE);
-	std::vector<double> d2N_dw2_new(N_LINE_MAX_HSIZE);
+	std::vector<double> I_d2sig_dw2(N_LINE_MAX_HSIZE);
+	std::vector<double> d2N_dw2(N_LINE_MAX_HSIZE);
 
 	std::vector<double> d2sig_db2(N_LINE_MAX_HSIZE);
+	std::vector<double> I_d2sig_db2(N_LINE_MAX_HSIZE);
 	std::vector<double> d2N_db2(N_LINE_MAX_HSIZE);
+
+	std::vector<double> d2sig_dwb(N_LINE_MAX_HSIZE);
+	std::vector<double> I_d2sig_dwb(N_LINE_MAX_HSIZE);
+	std::vector<double> d2N_dwb(N_LINE_MAX_HSIZE);
 
 	for (int i=0; i<_line.size(); i++){
 
 		dsig_dw[i] = -1.0*_line[i].da_dw_gndim.imag();
-		d2sig_dw2[i] = -1.0*_line[i].d2a_dw2_gndim.imag();
-
 		dsig_db[i] = -1.0*_line[i].da_db_gndim.imag();
+
+		d2sig_dw2[i] = -1.0*_line[i].d2a_dw2_gndim.imag();
 		d2sig_db2[i] = -1.0*_line[i].d2a_db2_gndim.imag();
+		d2sig_dwb[i] = -1.0*_line[i].d2a_dwb_gndim.imag();
 
 	}
 
 	smat::integrate_over_range(_s, dsig_dw, dN_dw);
-	smat::integrate_over_range(_s, d2sig_dw2, d2N_dw2_old);
-
 	smat::integrate_over_range(_s, dsig_db, dN_db);
-	smat::integrate_over_range(_s, d2sig_db2, d2N_db2);
+
+
+	smat::integrate_over_range(_s, d2sig_dw2, I_d2sig_dw2);
+	smat::integrate_over_range(_s, d2sig_dwb, I_d2sig_dwb);
+	smat::integrate_over_range(_s, d2sig_db2, I_d2sig_db2);
 
 	double d2N_dw2_corr = _da_dw_neut_gndim.imag()*_dx0_dw_gndim;
+	double d2N_dwb_corr = _da_db_neut_gndim.imag()*_dx0_dw_gndim;
+	double d2N_db2_corr = _da_db_neut_gndim.imag()*_dx0_db_gndim;
+
+	// debug
+	wxLogMessage(_T("calc_d2N_dxx neut point additions: ww=%lf, wb=%lf, bb=%lf"), 
+		d2N_dw2_corr, d2N_dwb_corr, d2N_db2_corr);
 
 	for (int i=0; i<_line.size(); i++){
 
 		_line[i].dN_dw_gndim = dN_dw[i];
-		_line[i].d2N_dw2_gndim = d2N_dw2_old[i] + d2N_dw2_corr;
-
 		_line[i].dN_db_gndim = dN_db[i];
-		_line[i].d2N_db2_gndim = d2N_db2[i];
+
+		_line[i].d2N_dw2_gndim = I_d2sig_dw2[i] + d2N_dw2_corr;
+		_line[i].d2N_dwb_gndim = I_d2sig_dwb[i] + d2N_dwb_corr;
+		_line[i].d2N_db2_gndim = I_d2sig_db2[i] + d2N_db2_corr;
 
 	}
 

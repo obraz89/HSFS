@@ -14,6 +14,10 @@ namespace smat{
 				f3*(x-x1)*(x-x2)/((x3-x1)*(x3-x2));
 	};
 
+	template<typename T> T interpolate_parab(double x_v[3], T f_v[3], double x){
+		return interpolate_parab<T>(x_v[0], f_v[0], x_v[1], f_v[1], x_v[2], f_v[2], x);
+	}
+
 	IMPEXP_SMALLMAT void interpolate_profile_sm_deriv_cubic(double* x, double* y, const int nnodes, double* y1, double* y2);
 
 }

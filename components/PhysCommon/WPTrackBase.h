@@ -40,10 +40,10 @@ namespace stab{
 		// only dN_d*, d2N_d*2
 
 		t_Complex da_dw_gndim, da_db_gndim;
-		t_Complex d2a_dw2_gndim, d2a_db2_gndim;
+		t_Complex d2a_dw2_gndim, d2a_db2_gndim, d2a_dwb_gndim;
 
 		double dN_dw_gndim, dN_db_gndim;
-		double d2N_dw2_gndim, d2N_db2_gndim;
+		double d2N_dw2_gndim, d2N_db2_gndim, d2N_dwb_gndim;
 
 		t_WPLineRec();
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);

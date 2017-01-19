@@ -72,8 +72,8 @@ namespace pf{
 
 		// neutral point data, needed for dispersion calculations
 		// global nondim (see wptrackbase.h)
-		double _dx0_dw_gndim;
-		t_Complex _da_dw_neut_gndim;
+		double _dx0_dw_gndim, _dx0_db_gndim;
+		t_Complex _da_dw_neut_gndim, _da_db_neut_gndim;
 
 		t_WaveChars _interpolate_next_wchars(const std::vector<stab::t_WPLineRec>& wpline, 
 			const mf::t_GeomPoint& new_xyz) const;
@@ -129,7 +129,8 @@ namespace pf{
 
 		void calc_d2N_dxx();
 
-		void calc_neut_point_derivs(stab::t_LSBase& loc_solver);
+		void calc_neut_point_derivs_direct(stab::t_LSBase& loc_solver);
+		void calc_neut_point_derivs_indirect(stab::t_LSBase& loc_solver);
 
 		void to_cyl_ref_frame();
 
