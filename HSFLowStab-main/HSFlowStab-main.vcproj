@@ -268,7 +268,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(MPICH2_DIR)/include&quot;"
+				AdditionalIncludeDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)/mswu&quot;;&quot;$(WX_DIR)/include&quot;;&quot;$(SolutionDir)/shared&quot;;&quot;$(SolutionDir)/components/Profile&quot;;&quot;$(SolutionDir)/components/SmallMat&quot;;&quot;$(SolutionDir)/components/PhysCommon&quot;;&quot;$(MPICH2_DIR)/include&quot;;&quot;$(HDF5_DIR)/include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -289,7 +289,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="wxmsw28u_core.lib wxbase28u.lib mpi.lib SmallMat.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(OutDir)&quot;;&quot;$(MPICH2_DIR)\lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(WX_DIR)/lib/$(WX_ARCH)&quot;;&quot;$(OutDir)&quot;;&quot;$(MPICH2_DIR)\lib&quot;;&quot;$(HDF5_DIR)\lib&quot;"
 				GenerateDebugInformation="false"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -392,6 +392,10 @@
 				</File>
 				<File
 					RelativePath=".\tasks_gs.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\tasks_wp.cpp"
 					>
 				</File>
 			</Filter>
