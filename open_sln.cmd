@@ -12,12 +12,16 @@
 
 :: set paths to required libs
 
-@set WX_DIR=%HSFSRoot%/lib/wxMSW-2.8.11
-@set WX_ARCH=vc_x64_dll
+::@set WX_DIR=%HSFSRoot%/lib/wxMSW-2.8.11
+::@set WX_ARCH=vc_x64_dll
 
-@set MPICH2_DIR=%HSFSRoot%/lib/MPICH2
+@set WX_DIR=%HSFSRoot%\lib_vc14\wx-vc14-rlz-win64
+@set WX_ARCH=vc140_x64_dll
 
-@set CGNS_DIR=%HSFSRoot%/lib/cgns-3.2/vc-rlz-win64
+@set MPICH2_DIR=%HSFSRoot%/lib_vc14/msmpi-win64
+
+@set HDF5_DIR=E:\science\devel\HSFS\lib_vc14\hdf5_1.1
+@set CGNS_DIR=E:\science\devel\HSFS\lib_vc14\cgns-vc14-rlz-win64
 
 @set MKL_DIR=%HSFSRoot%/lib/mkl-xe-2015
 

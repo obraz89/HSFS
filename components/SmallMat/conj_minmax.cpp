@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "conj_minmax.h"
 
-//#include "log.h"
+#include <algorithm>
 
 static double ARG_TOL=1.0e-6;
 static double GRAD_TOL=1.0e-7;

@@ -14,7 +14,7 @@ int hdf5_examples() {
 
 	herr_t      status; 
 
-	int file_id = H5Fcreate ("output/file.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);     
+	file_id = H5Fcreate ("output/file.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);     
 	status = H5Fclose (file_id);
 
 	/*

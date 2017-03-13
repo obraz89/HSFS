@@ -3,6 +3,7 @@
 
 #include <fstream>
 
+using namespace mf;
 using namespace mf::cg;
 
 void TDomain::set_face_iters(int iZone, int iFace, int& is, int& ie, 

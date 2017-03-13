@@ -252,14 +252,15 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 	}
 
 
-	bool line_read_ok = true; const int MaxBufSize = 256;
+	const int MaxBufSize = 256;
 	wchar_t line[MaxBufSize];
 
 	int cur_pid; double x,y,z,ar,ai,br,bi,wr,wi;
 
-	do 
-	{
-		line_read_ok = ifstr.getline(&line[0], MaxBufSize); 
+	while(!ifstr.eof()){
+		
+		ifstr.getline(&line[0], MaxBufSize);
+
 
 		std::wistringstream istr(line);
 
@@ -282,7 +283,7 @@ bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc
 
 		}
 
-	} while (line_read_ok);
+	};
 
 	return false;
 };

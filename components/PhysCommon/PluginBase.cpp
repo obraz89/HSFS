@@ -106,27 +106,25 @@ void TPluginParamsGroup::add(const char* pszParName, double value,
 							 const wxString& aDescr/* = wxEmptyString*/)
 {
 	wxString parName = wxString::FromAscii(pszParName);
-	wxASSERT_MSG( mapParams.find(parName)==mapParams.end(),
-		_("Parameter '")+parName+_("' already exists in the group '")+m_name+_("'.")
-		);
+
+	if (mapParams.find(parName) != mapParams.end())
+		wxLogError(_("Parameter '") + parName + _("' already exists in the group '") + m_name + _("'."));
 	mapParams.insert( std::make_pair(parName, TPluginParam(value, aDescr)) );
 }
 void TPluginParamsGroup::add(const char* pszParName, int value, 
 							 const wxString& aDescr /* = wxEmptyString*/)
 {
 	wxString parName = wxString::FromAscii(pszParName);
-	wxASSERT_MSG( mapParams.find(parName)==mapParams.end(),
-		_("Parameter '")+parName+_("' already exists in the group '")+m_name+_("'.")
-		);
+	if (mapParams.find(parName) != mapParams.end())
+		wxLogError(_("Parameter '") + parName + _("' already exists in the group '") + m_name + _("'."));
 	mapParams.insert( std::make_pair(parName, TPluginParam(value, aDescr)) );
 }
 void TPluginParamsGroup::add(const char* pszParName, const wxString& value, 
 							 const wxString& aDescr/* = wxEmptyString*/)
 {
 	wxString parName = wxString::FromAscii(pszParName);
-	wxASSERT_MSG( mapParams.find(parName)==mapParams.end(),
-		_("Parameter '")+parName+_("' already exists in the group '")+m_name+_("'.")
-		);
+	if (mapParams.find(parName) != mapParams.end())
+		wxLogError(_("Parameter '") + parName + _("' already exists in the group '") + m_name + _("'."));
 	mapParams.insert( std::make_pair(parName, TPluginParam(value, aDescr)) );
 }
 

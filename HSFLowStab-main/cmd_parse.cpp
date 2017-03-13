@@ -21,9 +21,9 @@ void processCmdLine(int argc, wxChar* wxArgv[])
 
 	static const wxCmdLineEntryDesc cmdLineDesc[] =
 	{
-		{ wxCMD_LINE_SWITCH, _T("h"), _T("help"), _("show this help message"),	wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
-		{ wxCMD_LINE_SWITCH, _T("v"), _T("version"), _("print version and exit") },
-		{ wxCMD_LINE_OPTION, _T("l"), _T("log"), _("log file") },
+		{ wxCMD_LINE_SWITCH, _("h"), _("help"), _("show this help message"),	wxCMD_LINE_VAL_NONE, wxCMD_LINE_OPTION_HELP },
+		{ wxCMD_LINE_SWITCH, _("v"), _("version"), _("print version and exit") },
+		{ wxCMD_LINE_OPTION, _("l"), _("log"), _("log file") },
 		{ wxCMD_LINE_PARAM, NULL, NULL, _("case_directory") },
 		{ wxCMD_LINE_NONE }
 	};
@@ -67,7 +67,4 @@ void processCmdLine(int argc, wxChar* wxArgv[])
 
 		new wxLogChain(logCout);
 	}
-#ifdef __WINDOWS__
-	_set_output_format(_TWO_DIGIT_EXPONENT);
-#endif
 }

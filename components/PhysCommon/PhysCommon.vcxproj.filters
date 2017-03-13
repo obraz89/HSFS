@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\mf">
+      <UniqueIdentifier>{0fa26bd6-7233-40eb-9835-c2ac835e698b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\stab">
+      <UniqueIdentifier>{b1accfc9-4707-405a-942b-ccf7e4377ee4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\plugin">
+      <UniqueIdentifier>{8d72a4de-ad3a-4cbf-8a32-b9cac1f62d48}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Header Files\mf">
+      <UniqueIdentifier>{18af75e4-e3bc-4b05-8244-351b6443934a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\stab">
+      <UniqueIdentifier>{3ac9c4b6-91c5-41d8-9c05-2fe3dbded901}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\plugin">
+      <UniqueIdentifier>{2ca55bbc-f78d-4d90-85e7-d2014d22618f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="mf_shared.cpp">
+      <Filter>Source Files\mf</Filter>
+    </ClCompile>
+    <ClCompile Include="MFDomainBase.cpp">
+      <Filter>Source Files\mf</Filter>
+    </ClCompile>
+    <ClCompile Include="MFElems.cpp">
+      <Filter>Source Files\mf</Filter>
+    </ClCompile>
+    <ClCompile Include="LocSearch.cpp">
+      <Filter>Source Files\stab</Filter>
+    </ClCompile>
+    <ClCompile Include="stab_shared.cpp">
+      <Filter>Source Files\stab</Filter>
+    </ClCompile>
+    <ClCompile Include="WaveChars.cpp">
+      <Filter>Source Files\stab</Filter>
+    </ClCompile>
+    <ClCompile Include="WPTrackBase.cpp">
+      <Filter>Source Files\stab</Filter>
+    </ClCompile>
+    <ClCompile Include="PliginCaps.cpp">
+      <Filter>Source Files\plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginBase.cpp">
+      <Filter>Source Files\plugin</Filter>
+    </ClCompile>
+    <ClCompile Include="PluginsManager.cpp">
+      <Filter>Source Files\plugin</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dll_impexp-phys_common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mf_shared.h">
+      <Filter>Header Files\mf</Filter>
+    </ClInclude>
+    <ClInclude Include="MFDomainBase.h">
+      <Filter>Header Files\mf</Filter>
+    </ClInclude>
+    <ClInclude Include="LocSearchBase.h">
+      <Filter>Header Files\stab</Filter>
+    </ClInclude>
+    <ClInclude Include="stab_shared.h">
+      <Filter>Header Files\stab</Filter>
+    </ClInclude>
+    <ClInclude Include="WaveChars.h">
+      <Filter>Header Files\stab</Filter>
+    </ClInclude>
+    <ClInclude Include="WPTrackBase.h">
+      <Filter>Header Files\stab</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginBase.h">
+      <Filter>Header Files\plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginCaps.h">
+      <Filter>Header Files\plugin</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginsManager.h">
+      <Filter>Header Files\plugin</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

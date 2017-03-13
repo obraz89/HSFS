@@ -123,8 +123,8 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 	//
 	for( int iZone = 1;  iZone <= nZones;  ++iZone )
 	{
-		ZoneType_t type;  cg_zone_type(ctx.fileID,ctx.iBase,iZone, &type);
-		if( type != Structured )
+		CG_ZoneType_t type;  cg_zone_type(ctx.fileID,ctx.iBase,iZone, &type);
+		if( type != CG_Structured )
 		{
 			wxLogError( _("Only structured grids are supported") );
 			return false;
@@ -183,10 +183,10 @@ bool t_MFCGNS2D::_doLoadGrid2D_cgns( const wxString& gridFN )
 		cgsize_t irmax[2] = {nx0, ny0};
 
 		double* x = new double[nx0*ny0];
-		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",RealDouble,irmin,irmax, x);
+		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",CG_RealDouble,irmin,irmax, x);
 
 		double* y = new double[nx0*ny0];
-		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateY",RealDouble,irmin,irmax, y);
+		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateY",CG_RealDouble,irmin,irmax, y);
 
 		if( res != CG_OK )  return false;
 
@@ -680,14 +680,14 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 
 	for( int iBC = 1; iBC <= nBCs; ++iBC )
 	{
-		BCType_t iBCtype;
+		CG_BCType_t iBCtype;
 
-		PointSetType_t pntSet;
+		CG_PointSetType_t pntSet;
 		cgsize_t nPnts = -1; // number of points defining the BC region
 
 		// Normals to the BC patch
 		int iNorm[2]; // normal as index vector (computational coords)
-		cgsize_t normListSize;  DataType_t normDataType; // normals in phys coords
+		cgsize_t normListSize;  CG_DataType_t normDataType; // normals in phys coords
 
 		int nDatasets = 0; // number of datasets with additional info for the BC
 
@@ -699,7 +699,7 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 			iNorm, &normListSize, &normDataType,
 			&nDatasets
 		);
-		if( pntSet != PointRange && nPnts != 2 )
+		if( pntSet != CG_PointRange && nPnts != 2 )
 		{
 			wxLogError(
 				_("Boundary condition patch '%s'(#%d) of zone '%s'(#%d) isn't defined as point range"),

@@ -1,7 +1,6 @@
 #include "stdafx.h"
 
 #include "fun_interpolate.h"
-
 #include "mkl.h"
 
 //#include "errcheck.inc"

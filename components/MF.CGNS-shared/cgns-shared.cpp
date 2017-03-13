@@ -478,7 +478,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 	*grid = new double[nDim * nx*ny*nz];
 	{
 		double* x = new double[nx*ny*nz];
-		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateX",RealDouble,irmin,irmax, x);
+		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateX",CG_RealDouble,irmin,irmax, x);
 		if( r != CG_OK ){
 
 			wxLogError(_T("cg_ccord_read error"));
@@ -487,13 +487,13 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 		}  
 
 		double* y = new double[nx*ny*nz];
-		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateY",RealDouble,irmin,irmax, y);
+		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateY",CG_RealDouble,irmin,irmax, y);
 
 		double* z = NULL;
 		if( nDim == 3 )
 		{
 			z = new double[nx*ny*nz];
-			r |= cg_coord_read(fileID,iBase,iZone,"CoordinateZ",RealDouble,irmin,irmax, z);
+			r |= cg_coord_read(fileID,iBase,iZone,"CoordinateZ",CG_RealDouble,irmin,irmax, z);
 		}
 
 		if( r != CG_OK )
@@ -524,7 +524,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 	// Get solution info
 	// FIXME: flow assumed existing
 	// 
-	int iFlow = 1;  char szFlow[33];  GridLocation_t loc;
+	int iFlow = 1;  char szFlow[33];  CG_GridLocation_t loc;
 	r = cg_sol_info(fileID,iBase,iZone,iFlow,  szFlow,&loc);
 	if( r != CG_OK )
 	{
@@ -534,7 +534,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 		return false;
 	}
 
-	if( loc != Vertex )
+	if( loc != CG_Vertex )
 	{
 		wxLogError(_("CGNS: GridLocation must be Vertex"));
 		return false;
@@ -553,7 +553,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 		{
 			const char* name = G_vecCGNSFuncNames[iFun].c_str();
 
-			r = cg_field_read(fileID,iBase,iZone,iFlow,(char*)name,RealDouble,irmin,irmax, FF);
+			r = cg_field_read(fileID,iBase,iZone,iFlow,(char*)name,CG_RealDouble,irmin,irmax, FF);
 			if( r != CG_OK )
 			{
 				wxLogError(_T("%s"), wxString::FromAscii(cg_get_error()).c_str());
@@ -617,7 +617,7 @@ void TDomain::get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const{
 }
 
 void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz, 
-				const mf::t_ProfDataCfg& init_cfg, std::vector<t_Rec> &data) const{
+				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec> &data) const{
 
 	switch (_profile_cfg.BLThickCalcType)
 	{

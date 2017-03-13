@@ -6,6 +6,7 @@ x64/*
 bin_*/
 bin-*/
 lib/*
+lib_vc14/*
 # compiler generated & precomp
 *_mod.f90
 *.pchi
@@ -15,6 +16,8 @@ lib/*
 *.obj
 *.pchi
 # msvs
+*.VC.db
+*.VC.opendb
 *.suo
 *.res
 *.manifest
