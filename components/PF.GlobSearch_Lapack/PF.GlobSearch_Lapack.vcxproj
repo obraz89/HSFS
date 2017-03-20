@@ -141,7 +141,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)/shared;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/Profile;$(SolutionDir)/components/PhysCommon;$(WX_DIR)/include;$(WX_DIR)/lib/$(WX_ARCH)/mswu;$(MKL_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/shared;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/Profile;$(SolutionDir)/components/PhysCommon;$(WX_DIR)/include;$(MKL_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -149,7 +149,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wxbase28u.lib;wxmsw28u_core.lib;shared.lib;PhysCommon.lib;profile.lib;smallmat.lib;legacy_stdio_definitions.lib;mkl_intel_lp64.lib;mkl_sequential.lib;mkl_core.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;profile.lib;smallmat.lib;legacy_stdio_definitions.lib;mkl_intel_lp64.lib;mkl_sequential.lib;mkl_core.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);$(WX_DIR)/lib/$(WX_ARCH);$(MKL_DIR)\lib\intel64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <OptimizeReferences>true</OptimizeReferences>

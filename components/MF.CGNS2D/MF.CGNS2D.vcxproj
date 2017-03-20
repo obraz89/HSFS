@@ -152,7 +152,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(SolutionDir)/shared;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/PhysCommon;$(SolutionDir)/components/MF.CGNS-shared;$(WX_DIR)/include;$(WX_DIR)/lib/$(WX_ARCH)/mswud;$(CGNS_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)/shared;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/PhysCommon;$(SolutionDir)/components/MF.CGNS-shared;$(WX_DIR)/include;$(CGNS_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;MFCGNS2D_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -161,7 +161,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wxbase28u.lib;wxmsw28u_core.lib;cgns.lib;libhdf5.lib;libszip.lib;libzlib.lib;shared.lib;PhysCommon.lib;smallmat.lib;MF.CGNS-shared.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase28u.lib;cgns.lib;libhdf5.lib;libszip.lib;libzlib.lib;shared.lib;PhysCommon.lib;smallmat.lib;MF.CGNS-shared.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(MPICH2_DIR)/lib;$(CGNS_DIR)/lib;$(OutDir);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>

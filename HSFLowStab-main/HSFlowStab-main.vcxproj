@@ -152,7 +152,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(WX_DIR)/lib/$(WX_ARCH)/mswu;$(WX_DIR)/include;$(SolutionDir)/shared;$(SolutionDir)/components/Profile;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/PhysCommon;$(MPICH2_DIR)/include;$(HDF5_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WX_DIR)/include;$(SolutionDir)/shared;$(SolutionDir)/components/Profile;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/PhysCommon;$(MPICH2_DIR)/include;$(HDF5_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -161,7 +161,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wxmsw28u_core.lib;wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;mpi.lib;hdf5.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;mpi.lib;hdf5.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPICH2_DIR)\lib;$(HDF5_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
