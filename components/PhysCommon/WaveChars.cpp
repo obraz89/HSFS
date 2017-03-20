@@ -259,31 +259,17 @@ t_WCharsLocDim t_WCharsLoc::make_dim() const{
 	return ret;
 };
 
-t_WCharsLoc t_WCharsLocDim::to_nondim(const t_StabScales& a_stab_scales) const{
-	t_WCharsLoc ret;
-	ret.set_scales(a_stab_scales);
-	ret.set_treat(_task_treat);
-
-	double inv_dels = 1.0/ret.scales().Dels;
-	double inv_ue = 1.0/ret.scales().UeDim;
-	double dels = ret.scales().Dels;
-
-	ret.a = a*inv_dels;
-	ret.kn= kn*inv_dels;
-	ret.b = b*inv_dels;
-
-	ret.w = w*dels*inv_ue;
-
-	ret.vga = vga*inv_ue;
-	ret.vgn = vgn*inv_ue;
-	ret.vgb = vgb*inv_ue;
-
-	return ret;
-};
-
 // -------------------------------------------------------------- t_WCharsLocDim
 
 t_WCharsLocDim::t_WCharsLocDim(const t_WCharsLoc& wloc){wloc._to_dim(*this);};
+
+t_WCharsLocDim::t_WCharsLocDim() :t_WaveChars() {};
+
+t_WCharsLoc t_WCharsLocDim::to_nondim(const t_StabScales& a_stab_scales) const {
+	t_WCharsLoc ret;
+	_to_ndim(ret);
+	return ret;
+};
 
 // ---------------------------------------------------------------- ~t_WCharsLoc
 

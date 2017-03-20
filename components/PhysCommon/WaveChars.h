@@ -112,8 +112,8 @@ public:
 // local dimensional
 /************************************************************************/
 class IMPEXP_PHYSCOMMON t_WCharsLocDim : public t_WaveChars{
-	t_WCharsLocDim();
 public:
+	t_WCharsLocDim();
 	t_WCharsLocDim(const t_WCharsLoc& wloc);
 	t_WCharsLoc to_nondim(const t_StabScales& a_stab_scales) const;
 
