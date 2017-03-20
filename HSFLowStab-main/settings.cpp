@@ -121,7 +121,9 @@ bool load_Settings_n_Plugins()
 	conf->SetPath(_T("/task") );
 
 	task::TaskNames[task::SearchInstabLoc] = _T("SearchInstabLoc");
+
 	task::TaskNames[task::Retrace] = _T("Retrace");
+	task::TaskNames[task::RetraceMPI] = _T("RetraceMPI");
 	task::TaskNames[task::MaxInstabLine] = _T("MaxInstabLine");
 	task::TaskNames[task::AnalyzeWChars] = _T("AnalyzeWChars");
 	task::TaskNames[task::GetProfiles] = _T("GetProfiles");
@@ -157,17 +159,23 @@ bool load_Settings_n_Plugins()
 	//if (g_taskParams.id==task::SearchInstabLoc || g_taskParams.id == task::MPITest){
 	if (true){
 
-		conf->Read(_T("a_ndim_min"), &g_taskParams.a_ndim_min, 1.0e-06);
+		conf->Read(_T("a_ndim_min"), &g_taskParams.a_ndim_min, 0.0);
 		conf->Read(_T("a_ndim_max"), &g_taskParams.a_ndim_max ,1.0);
+		conf->Read(_T("a_dim_min"), &g_taskParams.a_dim_min, 0.0);
+		conf->Read(_T("a_dim_max"), &g_taskParams.a_dim_max, 1000.0);
 		g_taskParams.N_a = conf->Read(_T("N_a"), 10);
 
 
 		conf->Read(_T("b_ndim_min"), &g_taskParams.b_ndim_min, 0.0e+00);
 		conf->Read(_T("b_ndim_max"), &g_taskParams.b_ndim_max, 1.0e+00);
+		conf->Read(_T("b_dim_min"), &g_taskParams.b_dim_min, -1000.0e+00);
+		conf->Read(_T("b_dim_max"), &g_taskParams.b_dim_max, 1000.0e+00);
 		g_taskParams.N_b = conf->Read(_T("N_b"), 10);
 
 		conf->Read(_T("w_ndim_min"), &g_taskParams.w_ndim_min, 0.0e+00);
 		conf->Read(_T("w_ndim_max"), &g_taskParams.w_ndim_max, 1.0e+00);
+		conf->Read(_T("w_dim_min"), &g_taskParams.w_dim_min, 0.0e+00);
+		conf->Read(_T("w_dim_max"), &g_taskParams.w_dim_max, 1.0e+06);
 		g_taskParams.N_w = conf->Read(_T("N_w"), 10);
 
 		conf->Read(_T("pave_point_id"), &g_taskParams.pave_point_id, zero);

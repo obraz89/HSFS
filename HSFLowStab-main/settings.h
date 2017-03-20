@@ -27,6 +27,10 @@ namespace task{
 		// get amplification rates over wave paths with various closures
 		Retrace, 
 
+		// experimental - parallel retrace
+		// when tested, replace Retrace 
+		RetraceMPI,
+
 		// ?
 		MaxInstabLine, 
 
@@ -73,6 +77,10 @@ namespace task{
 		double a_ndim_min, a_ndim_max,
 			   b_ndim_min, b_ndim_max,
 			   w_ndim_min, w_ndim_max;
+
+		double a_dim_min, a_dim_max,
+		       b_dim_min, b_dim_max,
+			   w_dim_min, w_dim_max;
 
 		int pave_point_id;
 		int N_a, N_b, N_w;

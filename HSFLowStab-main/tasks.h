@@ -31,6 +31,8 @@ namespace task{
 
 	void retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace);
 
+	void retrace_MPI(stab::t_WPRetraceMode a_mode_retrace);
+
 	void get_amplitude_funcs();
 
 	void get_profiles();
