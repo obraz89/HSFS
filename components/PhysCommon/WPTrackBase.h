@@ -15,13 +15,23 @@
 namespace stab{
 
 /************************************************************************/
-/* Record of a Wave Pack Line in a given point xyz
+/* Record of a Wave Pack Line in a given point xyz : t_WPLineRec
 // store mean flow data (including xyz);
 // wave chars in global cartesian ref frame;
 // wave chars in local rf;
 // wave packet dispersion data
 // calculated n factor
+// Helper functions to convert 2 plain arrays 
+// and use in hdf5 io routines : t_WPRec2H5Arr
 /************************************************************************/
+
+#define N_WPREC_H5_LEN 20
+
+	struct IMPEXP_PHYSCOMMON t_WPRec2H5Arr {
+		double cont[N_WPREC_H5_LEN];
+		double& operator[](int i); 
+		const double& operator[](int i) const; 
+	};
 
 	struct IMPEXP_PHYSCOMMON t_WPLineRec{
 
@@ -49,6 +59,8 @@ namespace stab{
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);
 
 		//friend std::wostream& operator<<(std::wostream& str, t_WPLineRec rec);
+		void pack_to_arr(t_WPRec2H5Arr& arr) const;
+		void unpack_from_arr(const t_WPRec2H5Arr& arr);
 	};
 
 /************************************************************************/
@@ -73,6 +85,17 @@ namespace stab{
 		// envelope retrace
 		ENVELOPE
 		
+	};
+	// TODO: use this in wpline implementations
+	#define NMAX_WPRECS 10000
+
+	struct IMPEXP_PHYSCOMMON t_WPLine2H5Arr {
+
+		int nrecs;
+		t_WPRec2H5Arr cont[NMAX_WPRECS];
+		t_WPRec2H5Arr& operator[](int i);
+		const t_WPRec2H5Arr& operator[](int i) const;
+
 	};
 
 	class IMPEXP_PHYSCOMMON t_WPTrackBase: public hsstab::TPlugPhysPart{
@@ -110,6 +133,8 @@ namespace stab{
 
 		virtual void print_dispersion_data_full(
 			const std::string& fname) const=0;
+
+		virtual void pack_to_arr(t_WPLine2H5Arr& arr) const=0;
 
 		virtual ~t_WPTrackBase();
 	};

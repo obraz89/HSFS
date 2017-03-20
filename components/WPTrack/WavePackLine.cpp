@@ -1273,6 +1273,23 @@ stab::t_WPRetraceMode t_WavePackLine::get_retrace_mode() const{
 
 };
 
+void t_WavePackLine::pack_to_arr(t_WPLine2H5Arr& arr) const {
+
+	int nrecs = get_size();
+
+	arr.nrecs = nrecs;
+
+	t_WPRec2H5Arr buff;
+
+	for (int i = 0; i < nrecs; i++) {
+
+		_line[i].pack_to_arr(buff);
+		arr[i] = buff;
+
+	}
+
+}
+
 // old retrace functions
 // they are now replaced by one _retrace_dir_cond
 // when it is verified

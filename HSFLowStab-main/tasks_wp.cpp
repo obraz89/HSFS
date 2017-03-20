@@ -15,7 +15,19 @@
 using namespace stab;
 using namespace hsstab;
 
-static const int MAX_FNAME_LEN = 100;
+#define NMAX_FNAME_LEN 100
+
+#define NMAX_WPS 100000
+#define NMAX_WPRECS 10000
+
+// size of WPLine Rec when reduced to array of doubles
+#define NWP_REC_DIM 20
+
+struct t_WP2H5{
+
+
+
+};
 
 /************************************************************************/
 /* serializer for a gs record
@@ -74,13 +86,36 @@ void t_MsgGSRec::write2file(std::wofstream& ofstr) const {
 
 };*/
 
+
 void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
-	char szFname[MAX_FNAME_LEN];
-	char fout_maxnfactor_str[MAX_FNAME_LEN];
-	char fout_wplines_str[MAX_FNAME_LEN];
-	char fout_wplines_disp_str[MAX_FNAME_LEN];
-	char fout_wpline_disp_dump[MAX_FNAME_LEN];
+	hid_t       file_id, space_id;
+
+	herr_t      status;
+
+	file_id = H5Fcreate("output/file.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+	// data space rank
+	const int rank_ds = 3;
+
+	hsize_t current_dims[rank_ds] = {0, 0, NWP_REC_DIM};
+	hsize_t max_dims[rank_ds] = { NMAX_WPS, NMAX_WPRECS,  NWP_REC_DIM};
+
+	space_id = H5Screate(H5S_SIMPLE);
+
+	H5Sset_extent_simple(space_id, rank_ds, current_dims, max_dims);
+
+	status = H5Fclose(file_id);
+
+}
+
+void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace) {
+
+	char szFname[NMAX_FNAME_LEN];
+	char fout_maxnfactor_str[NMAX_FNAME_LEN];
+	char fout_wplines_str[NMAX_FNAME_LEN];
+	char fout_wplines_disp_str[NMAX_FNAME_LEN];
+	char fout_wpline_disp_dump[NMAX_FNAME_LEN];
 
 	sprintf(fout_wplines_str, "%s/wplines_mode%d.dat",
 		hsstab::OUTPUT_DIR.ToAscii(), a_mode_retrace);
@@ -175,7 +210,9 @@ void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
 					g_pStabDB->update(*wp_line);
 
-					break;
+					// no need to retrace same WP from different points
+					// correct only for 2D configurations
+					break;	
 
 				}
 				else {

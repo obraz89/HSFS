@@ -156,6 +156,8 @@ namespace pf{
 		void print_dispersion_data_full(const std::string& fname) const;
 
 		friend std::wostream& operator<<(std::wostream& str, const t_WavePackLine& line);
+
+		void pack_to_arr(stab::t_WPLine2H5Arr& arr) const;
 	};
 
 

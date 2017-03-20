@@ -9,17 +9,23 @@ mean_flow(rMF), wave_chars(rWC){};
 
 t_WPLineRec::t_WPLineRec(){};
 
-
-/*std::wostream& operator<<(std::wostream& str, t_WavePackLine::t_WPLineRec rec){
-
-	str<<_T("hi! Implement me, please\n");
-	return str;
-
-};*/
+void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
+	arr[0] = 1;
+	arr[N_WPREC_H5_LEN - 1] = 0.5;
+};
+void t_WPLineRec::unpack_from_arr(const t_WPRec2H5Arr& arr) {
+	
+};
 
 t_WPTrackBase::t_WPTrackBase(){};
 
 t_WPTrackBase::~t_WPTrackBase(){};
+
+double& t_WPRec2H5Arr::operator[](int i){ return cont[i]; }
+const double& t_WPRec2H5Arr::operator[](int i) const { return cont[i]; }
+
+t_WPRec2H5Arr& t_WPLine2H5Arr::operator[](int i) { return cont[i]; };
+const t_WPRec2H5Arr& t_WPLine2H5Arr::operator[](int i) const{ return cont[i]; };
 
 int t_StabDBase::get_npoints() const{return _pave_pts.size();};
 
