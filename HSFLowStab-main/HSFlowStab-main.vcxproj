@@ -119,7 +119,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;mpi.lib;hdf5.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;mpi.lib;libhdf5.lib;szip.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPICH2_DIR)/lib;$(HDF5_DIR)/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -161,7 +161,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;mpi.lib;hdf5.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;mpi.lib;libhdf5.lib;szip.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPICH2_DIR)\lib;$(HDF5_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>

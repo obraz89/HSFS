@@ -1281,10 +1281,13 @@ void t_WavePackLine::pack_to_arr(t_WPLine2H5Arr& arr) const {
 
 	t_WPRec2H5Arr buff;
 
+	int offset = 0;
+
 	for (int i = 0; i < nrecs; i++) {
 
 		_line[i].pack_to_arr(buff);
-		arr[i] = buff;
+		offset = i*N_WPREC_H5_LEN;
+		memcpy(arr.cont + offset, buff.cont, N_WPREC_H5_LEN);
 
 	}
 

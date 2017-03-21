@@ -92,9 +92,14 @@ namespace stab{
 	struct IMPEXP_PHYSCOMMON t_WPLine2H5Arr {
 
 		int nrecs;
-		t_WPRec2H5Arr cont[NMAX_WPRECS];
-		t_WPRec2H5Arr& operator[](int i);
-		const t_WPRec2H5Arr& operator[](int i) const;
+		double* cont;
+
+		t_WPLine2H5Arr();
+		~t_WPLine2H5Arr();
+
+		//debug
+		void dump(const char* fname) const;
+
 
 	};
 

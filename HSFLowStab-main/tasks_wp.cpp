@@ -17,99 +17,22 @@ using namespace hsstab;
 
 #define NMAX_FNAME_LEN 100
 
-#define NMAX_WPS 100000
-#define NMAX_WPRECS 10000
-
-// size of WPLine Rec when reduced to array of doubles
-#define NWP_REC_DIM 20
-
-struct t_WP2H5{
-
-
-
-};
-
-/************************************************************************/
-/* serializer for a gs record
-** used to send info from worker to master
-** then it is unpacked and written to stability db
-*/
-/************************************************************************/
-
-/*class t_MsgWPLine : public t_MsgBase {
-
-public:
-
-	int SerSize;
-
-	int getSerSize() const { return SerSize; };
-
-	t_MsgWPLine(const t_WPTrackBase& wp_line);
-	void write2file(std::wofstream& ofstr) const;
-
-};
-
-t_MsgGSRec::t_MsgGSRec(double *cont) :t_MsgBase(cont) {}
-
-t_MsgGSRec::t_MsgGSRec(const t_MsgBase& bb) : t_MsgBase(bb) {}
-
-const int t_MsgGSRec::SerSize = 17;
-
-void t_MsgGSRec::write2file(std::wofstream& ofstr) const {
-
-	int pid = _pCont[0];
-	double x = _pCont[1];
-	double y = _pCont[2];
-	double z = _pCont[3];
-	int ok = _pCont[4];
-
-	double w_ar = _pCont[5];
-	double w_ai = _pCont[6];
-	double w_br = _pCont[7];
-	double w_bi = _pCont[8];
-	double w_wr = _pCont[9];
-	double w_wi = _pCont[10];
-
-	double d_ar = _pCont[11];
-	double d_ai = _pCont[12];
-	double d_br = _pCont[13];
-	double d_bi = _pCont[14];
-	double d_wr = _pCont[15];
-	double d_wi = _pCont[16];
-
-
-	ofstr << pid << "\t" << x << "\t" << y << "\t" << z << "\t" << ok << "\t"
-		<< w_ar << "\t" << w_ai << "\t" << w_br << "\t" << w_bi << "\t" << w_wr << "\t" << w_wi << "\t"
-		<< d_ar << "\t" << d_ai << "\t" << d_br << "\t" << d_bi << "\t" << d_wr << "\t" << d_wi
-		<< "\n";
-
-
-};*/
-
+void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr);
+int hdf5_example();
 
 void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
-	hid_t       file_id, space_id;
+	t_WPLine2H5Arr arr;
 
-	herr_t      status;
+	retrace_single_WP(a_mode_retrace, arr);
 
-	file_id = H5Fcreate("output/file.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+	arr.dump("output/arr_dump.txt");
 
-	// data space rank
-	const int rank_ds = 3;
-
-	hsize_t current_dims[rank_ds] = {0, 0, NWP_REC_DIM};
-	hsize_t max_dims[rank_ds] = { NMAX_WPS, NMAX_WPRECS,  NWP_REC_DIM};
-
-	space_id = H5Screate(H5S_SIMPLE);
-
-	H5Sset_extent_simple(space_id, rank_ds, current_dims, max_dims);
-
-	status = H5Fclose(file_id);
+	int bla = 1;
 
 }
 
-void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace) {
+void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr) {
 
 	char szFname[NMAX_FNAME_LEN];
 	char fout_maxnfactor_str[NMAX_FNAME_LEN];
@@ -210,6 +133,8 @@ void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace) {
 
 					g_pStabDB->update(*wp_line);
 
+					wp_line->pack_to_arr(a_arr);
+
 					// no need to retrace same WP from different points
 					// correct only for 2D configurations
 					break;	
@@ -242,41 +167,167 @@ void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace) {
 
 }
 
-void hdf5_test() {
-	hid_t       file_id;
+/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* Copyright by The HDF Group.                                               *
+* Copyright by the Board of Trustees of the University of Illinois.         *
+* All rights reserved.                                                      *
+*                                                                           *
+* This file is part of HDF5.  The full HDF5 copyright notice, including     *
+* terms governing use, modification, and redistribution, is contained in    *
+* the files COPYING and Copyright.html.  COPYING can be found at the root   *
+* of the source code distribution tree; Copyright.html can be found at the  *
+* root level of an installed copy of the electronic HDF5 document set and   *
+* is linked from the top-level documents page.  It can also be found at     *
+* http://hdfgroup.org/HDF5/doc/Copyright.html.  If you do not have          *
+* access to either file, you may request a copy from help@hdfgroup.org.     *
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-	herr_t      status;
-
-	file_id = H5Fcreate("output/file.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-	status = H5Fclose(file_id);
-
-	/*
-
-	// Create the dataspace for the dataset.
-	dims[0] = 4;
-	dims[1] = 6;
-	dataspace_id = H5Screate_simple(2, dims, NULL);
-
-
-	// Create the dataset.
-	dataset_id = H5Dcreate (file_id, "/dset", H5T_STD_I32BE,
-	dataspace_id, H5P_DEFAULT, H5P_DEFAULT,
-	H5P_DEFAULT);
-
-	// Close the dataset and dataspace
-	status = H5Dclose(dataset_id);
-	status = H5Sclose(dataspace_id);
-
-	// read - write datasets
-
-	status = H5Dwrite (dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
-	H5P_DEFAULT, dset_data);
-
-	status = H5Dread(dataset_id, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
-	H5P_DEFAULT, dset_data);
+/*
+*  This example how to work with extendible datasets. The dataset
+*  must be chunked in order to be extendible.
+*
+*  It is used in the HDF5 Tutorial.
+*/
 
 
-	*/
+#include "hdf5.h"
 
+#define FILENAME    "output/extend.h5"
+#define DATASETNAME "ExtendibleArray"
+#define RANK         2
+
+int hdf5_example(){
+
+	hid_t        file;                          /* handles */
+	hid_t        dataspace, dataset;
+	hid_t        filespace, memspace;
+	hid_t        prop;
+
+	hsize_t      dims[2] = { 3, 3 };           /* dataset dimensions at creation time */
+	hsize_t      maxdims[2] = { H5S_UNLIMITED, H5S_UNLIMITED };
+	herr_t       status;
+	hsize_t      chunk_dims[2] = { 2, 5 };
+	//int          data[3][3] = { { 1, 1, 1 },    /* data to write */
+	//{ 1, 1, 1 },
+	//{ 1, 1, 1 } };
+
+	//int init_size = 3;
+	//int** data = new int*[init_size];
+
+	//for (int i = 0; i < init_size; i++) data[i] = new int[init_size];
+
+	//for (int i = 0; i < init_size; i++)
+	//	for (int j = 0; j < init_size; j++)
+	//		data[i][j] = i + j;
+
+	int* data = new int[9];
+
+	for (int i = 0; i < 9; i++) data[i] = i;
+
+
+
+	/* Variables used in extending and writing to the extended portion of dataset */
+	hsize_t      size[2];
+	hsize_t      offset[2];
+	hsize_t      dimsext[2] = { 7, 3 };         /* extend dimensions */
+	int          dataext[7][3] = { { 2, 3, 4 },
+	{ 2, 3, 4 },
+	{ 2, 3, 4 },
+	{ 2, 3, 4 },
+	{ 2, 3, 4 },
+	{ 2, 3, 4 },
+	{ 2, 3, 4 } };
+
+	/* Variables used in reading data back */
+	hsize_t      chunk_dimsr[2];
+	hsize_t      dimsr[2];
+	hsize_t      i, j;
+	int          rdata[10][3];
+	herr_t       status_n;
+	int          rank, rank_chunk;
+
+	/* Create the data space with unlimited dimensions. */
+	dataspace = H5Screate_simple(RANK, dims, maxdims);
+
+	/* Create a new file. If file exists its contents will be overwritten. */
+	file = H5Fcreate(FILENAME, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+	/* Modify dataset creation properties, i.e. enable chunking  */
+	prop = H5Pcreate(H5P_DATASET_CREATE);
+	status = H5Pset_chunk(prop, RANK, chunk_dims);
+
+	/* Create a new dataset within the file using chunk
+	creation properties.  */
+	dataset = H5Dcreate2(file, DATASETNAME, H5T_NATIVE_INT, dataspace,
+		H5P_DEFAULT, prop, H5P_DEFAULT);
+
+	/* Write data to dataset */
+	status = H5Dwrite(dataset, H5T_NATIVE_INT, H5S_ALL, H5S_ALL,
+		H5P_DEFAULT, data);
+
+	/* Extend the dataset. Dataset becomes 10 x 3  */
+	size[0] = dims[0] + dimsext[0];
+	size[1] = dims[1];
+	status = H5Dset_extent(dataset, size);
+
+	/* Select a hyperslab in extended portion of dataset  */
+	filespace = H5Dget_space(dataset);
+	offset[0] = 3;
+	offset[1] = 0;
+	status = H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL,
+		dimsext, NULL);
+
+	/* Define memory space */
+	memspace = H5Screate_simple(RANK, dimsext, NULL);
+
+	/* Write the data to the extended portion of dataset  */
+	status = H5Dwrite(dataset, H5T_NATIVE_INT, memspace, filespace,
+		H5P_DEFAULT, dataext);
+
+	/* Close resources */
+	status = H5Dclose(dataset);
+	status = H5Pclose(prop);
+	status = H5Sclose(dataspace);
+	status = H5Sclose(memspace);
+	status = H5Sclose(filespace);
+	status = H5Fclose(file);
+
+	/********************************************
+	* Re-open the file and read the data back. *
+	********************************************/
+
+	file = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
+	dataset = H5Dopen2(file, DATASETNAME, H5P_DEFAULT);
+
+	filespace = H5Dget_space(dataset);
+	rank = H5Sget_simple_extent_ndims(filespace);
+	status_n = H5Sget_simple_extent_dims(filespace, dimsr, NULL);
+
+	prop = H5Dget_create_plist(dataset);
+
+	if (H5D_CHUNKED == H5Pget_layout(prop))
+		rank_chunk = H5Pget_chunk(prop, rank, chunk_dimsr);
+
+	memspace = H5Screate_simple(rank, dimsr, NULL);
+	status = H5Dread(dataset, H5T_NATIVE_INT, memspace, filespace,
+		H5P_DEFAULT, rdata);
+
+	printf("\n");
+	printf("Dataset: \n");
+	for (j = 0; j < dimsr[0]; j++)
+	{
+		for (i = 0; i < dimsr[1]; i++)
+			printf("%d ", rdata[j][i]);
+		printf("\n");
+	}
+
+	status = H5Pclose(prop);
+	status = H5Dclose(dataset);
+	status = H5Sclose(filespace);
+	status = H5Sclose(memspace);
+	status = H5Fclose(file);
+
+	return 0;
 }
+
 

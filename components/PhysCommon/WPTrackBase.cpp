@@ -10,8 +10,22 @@ mean_flow(rMF), wave_chars(rWC){};
 t_WPLineRec::t_WPLineRec(){};
 
 void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
-	arr[0] = 1;
-	arr[N_WPREC_H5_LEN - 1] = 0.5;
+
+	arr[0] = mean_flow.x;
+	arr[1] = mean_flow.y;
+	arr[2] = mean_flow.z;
+
+	arr[3] = wave_chars.a.real();
+	arr[4] = wave_chars.a.imag();
+	arr[5] = wave_chars.kn.real();
+	arr[6] = wave_chars.kn.imag();
+	arr[7] = wave_chars.b.real();
+	arr[8] = wave_chars.b.imag();
+	arr[9] = wave_chars.w.real();
+	arr[10] = wave_chars.w.imag();
+	arr[11] = n_factor;
+
+	
 };
 void t_WPLineRec::unpack_from_arr(const t_WPRec2H5Arr& arr) {
 	
@@ -24,8 +38,25 @@ t_WPTrackBase::~t_WPTrackBase(){};
 double& t_WPRec2H5Arr::operator[](int i){ return cont[i]; }
 const double& t_WPRec2H5Arr::operator[](int i) const { return cont[i]; }
 
-t_WPRec2H5Arr& t_WPLine2H5Arr::operator[](int i) { return cont[i]; };
-const t_WPRec2H5Arr& t_WPLine2H5Arr::operator[](int i) const{ return cont[i]; };
+t_WPLine2H5Arr::t_WPLine2H5Arr() {
+	cont = new double[NMAX_WPRECS*N_WPREC_H5_LEN];
+}
+
+t_WPLine2H5Arr::~t_WPLine2H5Arr() {delete[] cont;}
+
+void t_WPLine2H5Arr::dump(const char* fname) const{
+
+	std::ofstream ofstr(fname);
+	for (int n = 0; n < nrecs; n++) {
+
+		for (int i = 0; i < N_WPREC_H5_LEN; i++) {
+			int offset = n*N_WPREC_H5_LEN;
+			ofstr << cont[offset + i]<<"\t";
+		}
+		ofstr << "\n";
+	}
+
+}
 
 int t_StabDBase::get_npoints() const{return _pave_pts.size();};
 
