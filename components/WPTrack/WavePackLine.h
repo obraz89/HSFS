@@ -20,9 +20,6 @@
 
 #include <vector>
 
-static const int N_BOUND_BUF = 10;
-static const int N_LINE_MAX_HSIZE = 10000;
-
 namespace pf{
 
 	class  t_WavePackLine: public stab::t_WPTrackBase{

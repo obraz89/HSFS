@@ -11,19 +11,19 @@ t_WPLineRec::t_WPLineRec(){};
 
 void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
 
-	arr[0] = mean_flow.x;
-	arr[1] = mean_flow.y;
-	arr[2] = mean_flow.z;
+	arr.cont[0] = mean_flow.x;
+	arr.cont[1] = mean_flow.y;
+	arr.cont[2] = mean_flow.z;
 
-	arr[3] = wave_chars.a.real();
-	arr[4] = wave_chars.a.imag();
-	arr[5] = wave_chars.kn.real();
-	arr[6] = wave_chars.kn.imag();
-	arr[7] = wave_chars.b.real();
-	arr[8] = wave_chars.b.imag();
-	arr[9] = wave_chars.w.real();
-	arr[10] = wave_chars.w.imag();
-	arr[11] = n_factor;
+	arr.cont[3] = wave_chars.a.real();
+	arr.cont[4] = wave_chars.a.imag();
+	arr.cont[5] = wave_chars.kn.real();
+	arr.cont[6] = wave_chars.kn.imag();
+	arr.cont[7] = wave_chars.b.real();
+	arr.cont[8] = wave_chars.b.imag();
+	arr.cont[9] = wave_chars.w.real();
+	arr.cont[10] = wave_chars.w.imag();
+	arr.cont[11] = n_factor;
 
 	
 };
@@ -34,9 +34,6 @@ void t_WPLineRec::unpack_from_arr(const t_WPRec2H5Arr& arr) {
 t_WPTrackBase::t_WPTrackBase(){};
 
 t_WPTrackBase::~t_WPTrackBase(){};
-
-double& t_WPRec2H5Arr::operator[](int i){ return cont[i]; }
-const double& t_WPRec2H5Arr::operator[](int i) const { return cont[i]; }
 
 t_WPLine2H5Arr::t_WPLine2H5Arr() {
 	cont = new double[NMAX_WPRECS*N_WPREC_H5_LEN];

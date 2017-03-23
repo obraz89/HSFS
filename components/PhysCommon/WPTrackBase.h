@@ -9,7 +9,9 @@
 
 #include "dll_impexp-phys_common.h"
 
-
+#define N_WPREC_H5_LEN 20
+#define NMAX_WPRECS 10000
+#define NMAX_WPLINES 100000
 
 
 namespace stab{
@@ -25,12 +27,8 @@ namespace stab{
 // and use in hdf5 io routines : t_WPRec2H5Arr
 /************************************************************************/
 
-#define N_WPREC_H5_LEN 20
-
 	struct IMPEXP_PHYSCOMMON t_WPRec2H5Arr {
 		double cont[N_WPREC_H5_LEN];
-		double& operator[](int i); 
-		const double& operator[](int i) const; 
 	};
 
 	struct IMPEXP_PHYSCOMMON t_WPLineRec{
@@ -86,8 +84,6 @@ namespace stab{
 		ENVELOPE
 		
 	};
-	// TODO: use this in wpline implementations
-	#define NMAX_WPRECS 10000
 
 	struct IMPEXP_PHYSCOMMON t_WPLine2H5Arr {
 

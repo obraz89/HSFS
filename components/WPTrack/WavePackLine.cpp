@@ -9,9 +9,9 @@ using namespace pf;
 using namespace stab;
 
 t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):_rFldMF(a_fld), 
-_s(N_LINE_MAX_HSIZE), _sigma(N_LINE_MAX_HSIZE), _nfact(N_LINE_MAX_HSIZE){};
+_s(NMAX_WPRECS), _sigma(NMAX_WPRECS), _nfact(NMAX_WPRECS){};
 
-t_WavePackLine::t_RecArray::t_RecArray():_cont(N_LINE_MAX_HSIZE), _size(0){}
+t_WavePackLine::t_RecArray::t_RecArray():_cont(NMAX_WPRECS), _size(0){}
 
 int t_WavePackLine::t_RecArray::size() const{return _size;}
 
@@ -26,7 +26,7 @@ t_WPLineRec& t_WavePackLine::t_RecArray::operator [](int ind){
 void t_WavePackLine::t_RecArray::push_back
 (const mf::t_Rec& fld_rec, const t_WCharsGlob& wave_chars){
 
-	if(++_size>=N_LINE_MAX_HSIZE) wxLogError(_T("Too long line in WPTrack")) ;
+	if(++_size>=NMAX_WPRECS) wxLogError(_T("Too long line in WPTrack")) ;
 
 	_cont[_size-1].mean_flow = fld_rec; 
 	_cont[_size-1].wave_chars = wave_chars;
@@ -34,7 +34,7 @@ void t_WavePackLine::t_RecArray::push_back
 
 void t_WavePackLine::t_RecArray::push_back(const stab::t_WPLineRec& rec){
 
-	if(++_size>=N_LINE_MAX_HSIZE) wxLogError(_T("Too long line in WPTrack")) ;
+	if(++_size>=NMAX_WPRECS) wxLogError(_T("Too long line in WPTrack")) ;
 	_cont[_size-1] = rec;
 };
 
@@ -1141,23 +1141,23 @@ void t_WavePackLine::calc_n_factor(){
 
 void t_WavePackLine::calc_d2N_dxx(){
 
-	std::vector<double> dsig_dw(N_LINE_MAX_HSIZE);
-	std::vector<double> dN_dw(N_LINE_MAX_HSIZE);
+	std::vector<double> dsig_dw(NMAX_WPRECS);
+	std::vector<double> dN_dw(NMAX_WPRECS);
 
-	std::vector<double> dsig_db(N_LINE_MAX_HSIZE);
-	std::vector<double> dN_db(N_LINE_MAX_HSIZE);
+	std::vector<double> dsig_db(NMAX_WPRECS);
+	std::vector<double> dN_db(NMAX_WPRECS);
 
-	std::vector<double> d2sig_dw2(N_LINE_MAX_HSIZE);
-	std::vector<double> I_d2sig_dw2(N_LINE_MAX_HSIZE);
-	std::vector<double> d2N_dw2(N_LINE_MAX_HSIZE);
+	std::vector<double> d2sig_dw2(NMAX_WPRECS);
+	std::vector<double> I_d2sig_dw2(NMAX_WPRECS);
+	std::vector<double> d2N_dw2(NMAX_WPRECS);
 
-	std::vector<double> d2sig_db2(N_LINE_MAX_HSIZE);
-	std::vector<double> I_d2sig_db2(N_LINE_MAX_HSIZE);
-	std::vector<double> d2N_db2(N_LINE_MAX_HSIZE);
+	std::vector<double> d2sig_db2(NMAX_WPRECS);
+	std::vector<double> I_d2sig_db2(NMAX_WPRECS);
+	std::vector<double> d2N_db2(NMAX_WPRECS);
 
-	std::vector<double> d2sig_dwb(N_LINE_MAX_HSIZE);
-	std::vector<double> I_d2sig_dwb(N_LINE_MAX_HSIZE);
-	std::vector<double> d2N_dwb(N_LINE_MAX_HSIZE);
+	std::vector<double> d2sig_dwb(NMAX_WPRECS);
+	std::vector<double> I_d2sig_dwb(NMAX_WPRECS);
+	std::vector<double> d2N_dwb(NMAX_WPRECS);
 
 	for (int i=0; i<_line.size(); i++){
 
@@ -1287,7 +1287,7 @@ void t_WavePackLine::pack_to_arr(t_WPLine2H5Arr& arr) const {
 
 		_line[i].pack_to_arr(buff);
 		offset = i*N_WPREC_H5_LEN;
-		memcpy(arr.cont + offset, buff.cont, N_WPREC_H5_LEN);
+		memcpy(arr.cont + offset, buff.cont, N_WPREC_H5_LEN*sizeof(double));
 
 	}
 
