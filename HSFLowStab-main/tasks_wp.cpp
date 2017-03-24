@@ -18,9 +18,10 @@ using namespace hsstab;
 #define NMAX_FNAME_LEN 100
 #define FILENAME_H5    "output/extend.h5"
 
-void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr);
+void retrace_single_WP(int wp_id, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr);
 
 void write_wpdata(hid_t file, hid_t group, char* dsname, const t_WPLine2H5Arr& arr);
+void read_wpdata(hid_t file, char* ds_abs_name, t_WPLine2H5Arr& arr);
 
 void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
@@ -28,28 +29,46 @@ void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 	herr_t status;
 
 	t_WPLine2H5Arr arr;
+	
 
-	retrace_single_WP(a_mode_retrace, arr);
-
-	char dsname[32];
-
-	sprintf(dsname, "%s%d", "Data", 0);
-
-	/* Create a new file. If file exists its contents will be overwritten. */
 	file = H5Fcreate(FILENAME_H5, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
 
-	group = H5Gcreate2(file, "/WPData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	group = H5Gcreate(file, "/WPData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
-	arr.dump("output/arr_dump.txt");
+	// nwp - number of wape pack line
 
-	write_wpdata(file, group, dsname, arr);
+	const task::TTaskParams& gtp = g_taskParams;
+
+	// single-proc variant
+	const int wpid_s = 0;
+	const int wpid_e = gtp.N_b * gtp.N_w - 1;
+
+	for (int wpid = wpid_s; wpid <= wpid_e; wpid++) {
+
+		retrace_single_WP(wpid, a_mode_retrace, arr);
+
+		char dsname[32];
+
+		sprintf(dsname, "%s%d", "Data", wpid);
+
+		write_wpdata(file, group, dsname, arr);
+	}
 
 	status = H5Gclose(group);
+	status = H5Fclose(file);
+	
+	// test - read wpline data
+	file = H5Fopen(FILENAME_H5, H5F_ACC_RDONLY, H5P_DEFAULT);
+
+	read_wpdata(file,  "/WPData/Data0", arr);
+
+	arr.dump("output/arr_read.txt");
+
 	status = H5Fclose(file);
 
 }
 
-void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr) {
+void retrace_single_WP(int wpid, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr) {
 
 	char szFname[NMAX_FNAME_LEN];
 	char fout_maxnfactor_str[NMAX_FNAME_LEN];
@@ -71,27 +90,26 @@ void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_a
 
 	const task::TTaskParams& gtp = g_taskParams;
 
-	// single-proc variant
-	// nwp - number of wape pack line
-	const int nwp_s = 0;
-	const int nwp_e = gtp.N_b * gtp.N_w - 1;
-
 	// npp - number of pave point
 	// move from back to leading edge (assuming x increasing in pave points)
 	const int npp_s = g_pStabDB->get_npoints() - 1;
 	const int npp_e = 0;
 
-	for (int i=0; i<gtp.N_w; i++)
-		for (int j=0; j<gtp.N_b; j++){
+	const int Nw = gtp.N_w;
+	const int Nb = gtp.N_b;
 
-		 int nwp = j*gtp.N_w + i;
+	int i, j;
+
+	i = wpid % Nw;
+	j = wpid / Nw;
+
+	{
 
 		 double db_dim = (gtp.N_b > 1) ? (gtp.b_dim_max - gtp.b_dim_min) / double(gtp.N_b - 1) : 0.0;
 		 double dw_dim = (gtp.N_w > 1) ? (gtp.w_dim_max - gtp.w_dim_min) / double(gtp.N_w - 1) : 0.0;
 
 		 double b_ldim = gtp.b_dim_min + j*db_dim;
- 		 double w_ldim = gtp.w_dim_min + j*dw_dim;
-
+ 		 double w_ldim = gtp.w_dim_min + i*dw_dim;
 
 		 for (int npp = npp_s; npp >= npp_e; npp--) {
 
@@ -139,7 +157,6 @@ void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_a
 				// Init wave found, retrace WP
 				if (gs_success) {
 
-					int perc_complete = double(nwp) / double(nwp_e)*100.;
 					wxLogMessage(_T("\tstart retrace for WPLine"));
 
 					std::wcout << _T("Init for wpline:") << wchars;
@@ -188,15 +205,6 @@ void retrace_single_WP(stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_a
 
 void write_wpdata(hid_t file, hid_t group,char* dsname, const t_WPLine2H5Arr& arr){
 
-	/* Variables used in reading data back */
-	hsize_t      chunk_dimsr[RWP];	//?
-	hsize_t      dimsr[RWP];
-	hsize_t      i, j;
-	int          rdata[10][3];
-	herr_t       status_n;
-	int          rank, rank_chunk;
-
-	/* Create the data space with fixed dimensions. */
 	hsize_t dims[RWP] = { arr.nrecs , N_WPREC_H5_LEN };
 	hid_t dataspace = H5Screate_simple(RWP, dims, NULL);
 
@@ -205,51 +213,49 @@ void write_wpdata(hid_t file, hid_t group,char* dsname, const t_WPLine2H5Arr& ar
 
 	double* data = arr.cont;
 
-	/* Write data to dataset */
 	herr_t status = H5Dwrite(dataset, H5T_NATIVE_DOUBLE, H5S_ALL, H5S_ALL,
 		H5P_DEFAULT, data);
 
-	/* Close resources */
+	// attributes
+
+	const hsize_t dims_attr = 1;
+	hid_t ds_attr_id = H5Screate_simple(1, &dims_attr, NULL);
+
+	/* Create a dataset attribute. */
+	hid_t attr_id = H5Acreate2(dataset, "nrecs", H5T_STD_I32BE, ds_attr_id,
+		H5P_DEFAULT, H5P_DEFAULT);
+
+	/* Write the attribute data. */
+	int attr_data = arr.nrecs;
+	status = H5Awrite(attr_id, H5T_NATIVE_INT, &attr_data);
+
+	/* Close the attribute. */
+	status = H5Aclose(attr_id);
+
+	/* Close the dataspace. */
+	status = H5Sclose(ds_attr_id);
+
+
 	status = H5Dclose(dataset);
 	status = H5Sclose(dataspace);
 
-	/********************************************
-	* Re-open the file and read the data back. *
-	********************************************/
-
-	/*file = H5Fopen(FILENAME, H5F_ACC_RDONLY, H5P_DEFAULT);
-	dataset = H5Dopen2(file, DATASETNAME, H5P_DEFAULT);
-
-	filespace = H5Dget_space(dataset);
-	rank = H5Sget_simple_extent_ndims(filespace);
-	status_n = H5Sget_simple_extent_dims(filespace, dimsr, NULL);
-
-	prop = H5Dget_create_plist(dataset);
-
-	if (H5D_CHUNKED == H5Pget_layout(prop))
-		rank_chunk = H5Pget_chunk(prop, rank, chunk_dimsr);
-
-	memspace = H5Screate_simple(rank, dimsr, NULL);
-	status = H5Dread(dataset, H5T_NATIVE_INT, memspace, filespace,
-		H5P_DEFAULT, rdata);
-
-	printf("\n");
-	printf("Dataset: \n");
-	for (j = 0; j < dimsr[0]; j++)
-	{
-		for (i = 0; i < dimsr[1]; i++)
-			printf("%d ", rdata[j][i]);
-		printf("\n");
-	}
-
-	status = H5Pclose(prop);
-	status = H5Dclose(dataset);
-	status = H5Sclose(filespace);
-	status = H5Sclose(memspace);
-	status = H5Fclose(file);
-	*/
-
 	return;
+}
+
+void read_wpdata(hid_t file, char* ds_abs_name, t_WPLine2H5Arr& arr){
+
+	herr_t       status;
+
+	hid_t dataset = H5Dopen(file, ds_abs_name, H5P_DEFAULT);
+
+	hid_t attr = H5Aopen_by_name(file, ds_abs_name,
+		"nrecs", H5P_DEFAULT, H5P_DEFAULT);
+
+	status = H5Aread(attr, H5T_NATIVE_INT, &arr.nrecs);
+
+	status = H5Dread(dataset, H5T_NATIVE_DOUBLE, H5P_DEFAULT, H5P_DEFAULT,
+		H5P_DEFAULT, arr.cont);
+		
 }
 
 
