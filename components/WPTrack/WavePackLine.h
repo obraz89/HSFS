@@ -35,6 +35,8 @@ namespace pf{
 
 			int size() const;
 
+			void set_size(int size);
+
 			const stab::t_WPLineRec& operator[](int ind) const;
 
 			stab::t_WPLineRec& operator[](int ind);
@@ -155,6 +157,7 @@ namespace pf{
 		friend std::wostream& operator<<(std::wostream& str, const t_WavePackLine& line);
 
 		void pack_to_arr(stab::t_WPLine2H5Arr& arr) const;
+		void unpack_from_arr(const stab::t_WPLine2H5Arr& arr);
 	};
 
 

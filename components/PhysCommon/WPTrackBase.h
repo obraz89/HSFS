@@ -11,6 +11,7 @@
 
 #define N_WPREC_H5_LEN 20
 #define NMAX_WPRECS 10000
+#define NMAX_WPBUFF_DBL N_WPREC_H5_LEN*NMAX_WPRECS
 #define NMAX_WPLINES 100000
 
 
@@ -96,6 +97,11 @@ namespace stab{
 		//debug
 		void dump(const char* fname) const;
 
+		// mpi
+		void pack_to_mpi_msg(double * mpi_buf) const;
+		void unpack_from_mpi_msg(double * mpi_buf);
+
+
 
 	};
 
@@ -136,6 +142,7 @@ namespace stab{
 			const std::string& fname) const=0;
 
 		virtual void pack_to_arr(t_WPLine2H5Arr& arr) const=0;
+		virtual void unpack_from_arr(const t_WPLine2H5Arr& arr) = 0;
 
 		virtual ~t_WPTrackBase();
 	};

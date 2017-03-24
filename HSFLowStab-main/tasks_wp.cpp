@@ -16,7 +16,7 @@ using namespace stab;
 using namespace hsstab;
 
 #define NMAX_FNAME_LEN 100
-#define FILENAME_H5    "output/extend.h5"
+#define FILENAME_H5    "output/stab.h5"
 
 void retrace_single_WP(int wp_id, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2H5Arr& a_arr);
 
@@ -25,46 +25,135 @@ void read_wpdata(hid_t file, char* ds_abs_name, t_WPLine2H5Arr& arr);
 
 void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
-	hid_t        file, group;
-	herr_t status;
+	// rank of worker, total number of workers 
+	int mpi_rank, mpi_size, len;
 
-	t_WPLine2H5Arr arr;
-	
+	char hostname[MPI_MAX_PROCESSOR_NAME];
 
-	file = H5Fcreate(FILENAME_H5, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+	MPI_Get_processor_name(hostname, &len);
 
-	group = H5Gcreate(file, "/WPData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+	const int MASTER = 0;
 
-	// nwp - number of wape pack line
-
+	// distribute wps through workers
 	const task::TTaskParams& gtp = g_taskParams;
 
-	// single-proc variant
-	const int wpid_s = 0;
-	const int wpid_e = gtp.N_b * gtp.N_w - 1;
+	const int NWPGlob = gtp.N_b * gtp.N_w;
+
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+	const int nAvg = NWPGlob / mpi_size;
+	const int nResdl = NWPGlob % mpi_size;
+
+	// interval of global pave points on current worker
+
+	int wpid_s = mpi_rank * nAvg + ((mpi_rank<nResdl) ? mpi_rank : nResdl);
+	int wpid_e = wpid_s + nAvg + ((mpi_rank<nResdl) ? 1 : 0) - 1;
+
+	const int NWPLoc = wpid_e - wpid_s + 1;
+
+	wxLogMessage(_("* MPI rank %d owns range of wp_ids : %d-%d"), mpi_rank, wpid_s, wpid_e);
+
+	// table to map wpid (or "tag" in mpi msg) to mpi rank
+	int* wpid_to_rank_map = new int[NWPGlob];
+
+	for (int i = 0; i < mpi_size; i++) {
+
+		int wpid_s = i * nAvg + ((i<nResdl) ? i : nResdl);
+		int wpid_e = wpid_s + nAvg + ((i<nResdl) ? 1 : 0) - 1;
+
+		for (int j = wpid_s; j <= wpid_e; j++) wpid_to_rank_map[j] = i;
+
+	}
+
+	// retrace & pack
+
+	t_WPLine2H5Arr* arr_pack = new t_WPLine2H5Arr[NWPLoc];
 
 	for (int wpid = wpid_s; wpid <= wpid_e; wpid++) {
 
-		retrace_single_WP(wpid, a_mode_retrace, arr);
+		retrace_single_WP(wpid, a_mode_retrace, arr_pack[wpid-wpid_s]);
 
-		char dsname[32];
-
-		sprintf(dsname, "%s%d", "Data", wpid);
-
-		write_wpdata(file, group, dsname, arr);
 	}
 
-	status = H5Gclose(group);
-	status = H5Fclose(file);
+	MPI_Barrier(MPI_COMM_WORLD);
+
+	// send messages
+
+	if (mpi_rank!=MASTER){
+
+		double* mpi_buff = new double[NMAX_WPBUFF_DBL];
+
+		for (int wpid = wpid_s; wpid <= wpid_e; wpid++) {
+
+			arr_pack[wpid - wpid_s].pack_to_mpi_msg(mpi_buff);
+
+			MPI_Send(mpi_buff, NMAX_WPBUFF_DBL, MPI_DOUBLE, 0, wpid, MPI_COMM_WORLD);			
+
+		}
+	}
+
+	// do io
+	if (mpi_rank==MASTER) {
+
+		hid_t        file, group;
+		herr_t status;
+
+		file = H5Fcreate(FILENAME_H5, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
+		group = H5Gcreate(file, "/WPData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
+
+		// write local data
+
+		for (int wpid = 0; wpid < NWPLoc; wpid++) {
+
+			char dsname[32];
+
+			sprintf(dsname, "%s%d", "Data", wpid);
+
+			write_wpdata(file, group, dsname, arr_pack[wpid]);
+		}
+
+		double* mpi_buff = new double[NMAX_WPBUFF_DBL];
+
+		t_WPLine2H5Arr arr;
+
+		// receive messages for the rest of wpline ids
+		for (int wpid = NWPLoc; wpid < NWPGlob; wpid++) {
+
+			int rcv_from_rank = wpid_to_rank_map[wpid];
+
+			MPI_Status mpi_status;
+
+			MPI_Recv(mpi_buff, NMAX_WPBUFF_DBL, MPI_DOUBLE, rcv_from_rank, wpid, MPI_COMM_WORLD, &mpi_status);
+
+			arr.unpack_from_mpi_msg(mpi_buff);
+
+			char dsname[32];
+
+			sprintf(dsname, "%s%d", "Data", wpid);
+
+			write_wpdata(file, group, dsname, arr);
+		}
+
+
+		status = H5Gclose(group);
+		status = H5Fclose(file);
+
+		
+
+	}
+
+	
 	
 	// test - read wpline data
-	file = H5Fopen(FILENAME_H5, H5F_ACC_RDONLY, H5P_DEFAULT);
+	//file = H5Fopen(FILENAME_H5, H5F_ACC_RDONLY, H5P_DEFAULT);
 
-	read_wpdata(file,  "/WPData/Data0", arr);
+	//read_wpdata(file,  "/WPData/Data0", arr);
 
-	arr.dump("output/arr_read.txt");
+	//arr.dump("output/arr_read.txt");
 
-	status = H5Fclose(file);
+	//status = H5Fclose(file);
 
 }
 

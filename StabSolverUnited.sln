@@ -14,8 +14,15 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "shared", "shared\shared.vcxproj", "{F35AAA02-ACBE-426F-9A1F-D9C121675288}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PhysCommon", "components\PhysCommon\PhysCommon.vcxproj", "{D86C2ACC-CEC8-4F0F-A75F-253971B53E39}"
+	ProjectSection(ProjectDependencies) = postProject
+		{ED9BA700-FBB9-41CF-BA12-6E1411CA7D5F} = {ED9BA700-FBB9-41CF-BA12-6E1411CA7D5F}
+		{F35AAA02-ACBE-426F-9A1F-D9C121675288} = {F35AAA02-ACBE-426F-9A1F-D9C121675288}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SmallMat", "components\SmallMat\SmallMat.vcxproj", "{ED9BA700-FBB9-41CF-BA12-6E1411CA7D5F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F35AAA02-ACBE-426F-9A1F-D9C121675288} = {F35AAA02-ACBE-426F-9A1F-D9C121675288}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Profile", "components\Profile\Profile.vcxproj", "{FD10D892-543E-4AE7-89AC-EFF545E58E49}"
 	ProjectSection(ProjectDependencies) = postProject

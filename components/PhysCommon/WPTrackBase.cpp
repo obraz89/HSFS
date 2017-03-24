@@ -28,6 +28,21 @@ void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
 	
 };
 void t_WPLineRec::unpack_from_arr(const t_WPRec2H5Arr& arr) {
+
+	mean_flow.x = arr.cont[0];
+	mean_flow.y = arr.cont[1];
+	mean_flow.z = arr.cont[2];
+
+	wave_chars.a.real(arr.cont[3]);
+	wave_chars.a.imag(arr.cont[4]);
+	wave_chars.kn.real(arr.cont[5]);
+	wave_chars.kn.imag(arr.cont[6]);
+	wave_chars.b.real(arr.cont[7]);
+	wave_chars.b.imag(arr.cont[8]);
+	wave_chars.w.real(arr.cont[9]);
+	wave_chars.w.imag(arr.cont[10]);
+
+	n_factor = arr.cont[11];
 	
 };
 
@@ -35,8 +50,8 @@ t_WPTrackBase::t_WPTrackBase(){};
 
 t_WPTrackBase::~t_WPTrackBase(){};
 
-t_WPLine2H5Arr::t_WPLine2H5Arr() {
-	cont = new double[NMAX_WPRECS*N_WPREC_H5_LEN];
+t_WPLine2H5Arr::t_WPLine2H5Arr():nrecs(0){
+	cont = new double[NMAX_WPBUFF_DBL];
 }
 
 t_WPLine2H5Arr::~t_WPLine2H5Arr() {delete[] cont;}
@@ -52,6 +67,20 @@ void t_WPLine2H5Arr::dump(const char* fname) const{
 		}
 		ofstr << "\n";
 	}
+
+}
+
+void t_WPLine2H5Arr::pack_to_mpi_msg(double * mpi_msg) const{
+
+	mpi_msg[0] = nrecs;
+	memcpy(mpi_msg+1, cont, nrecs*N_WPREC_H5_LEN*sizeof(double));
+
+}
+
+void t_WPLine2H5Arr::unpack_from_mpi_msg(double * mpi_msg) {
+
+	nrecs = (int)mpi_msg[0];
+	memcpy(cont, mpi_msg + 1, nrecs*N_WPREC_H5_LEN * sizeof(double));
 
 }
 

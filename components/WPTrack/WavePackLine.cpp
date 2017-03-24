@@ -15,6 +15,8 @@ t_WavePackLine::t_RecArray::t_RecArray():_cont(NMAX_WPRECS), _size(0){}
 
 int t_WavePackLine::t_RecArray::size() const{return _size;}
 
+void t_WavePackLine::t_RecArray::set_size(int size) { _size = size; }
+
 const t_WPLineRec& t_WavePackLine::t_RecArray::operator [](int ind) const{
 	return _cont[ind];
 };
@@ -1290,6 +1292,24 @@ void t_WavePackLine::pack_to_arr(t_WPLine2H5Arr& arr) const {
 		memcpy(arr.cont + offset, buff.cont, N_WPREC_H5_LEN*sizeof(double));
 
 	}
+
+}
+
+void t_WavePackLine::unpack_from_arr(const stab::t_WPLine2H5Arr& arr) {
+
+	_line.set_size(arr.nrecs);
+
+	double* pnt;
+	t_WPRec2H5Arr wprec_buf;
+
+	for (int i = 0; i < _line.size(); i++) {
+
+		pnt = arr.cont + i*N_WPREC_H5_LEN;
+		memcpy(&wprec_buf.cont, pnt,N_WPREC_H5_LEN*sizeof(double));
+		_line[i].unpack_from_arr(wprec_buf);
+
+	}
+
 
 }
 
