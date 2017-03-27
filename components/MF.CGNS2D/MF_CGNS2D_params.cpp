@@ -10,10 +10,16 @@ using namespace hsstab;
 
 typedef std::map<wxString,int> t_MapWxStrInt; 
 
-t_MapWxStrInt  t_CGNS2DParams::AXESYM_MODES_STR;
-
 #define OPT_AXESYM_STR _T("AxeSym")
 #define OPT_PLANE_STR _T("Plane")
+
+t_CGNS2DParams::t_CGNS2DParams():t_FldParams() {
+
+	AXESYM_MODES_STR.clear();
+	AXESYM_MODES_STR.insert(std::make_pair(OPT_AXESYM_STR, mf::t_AxeSym::AxeSym));
+	AXESYM_MODES_STR.insert(std::make_pair(OPT_PLANE_STR, mf::t_AxeSym::Plane));
+
+};
 
 //---------------------------------------------------------------------2D params
 
@@ -25,19 +31,9 @@ const t_FldParams& t_MFCGNS2D::get_mf_params() const{
 	return _base_params;
 };
 
-void t_CGNS2DParams::init_supported_options(){
-
-	AXESYM_MODES_STR.clear();
-	AXESYM_MODES_STR.insert(std::make_pair(OPT_AXESYM_STR, mf::t_AxeSym::AxeSym));
-	AXESYM_MODES_STR.insert(std::make_pair(OPT_PLANE_STR, mf::t_AxeSym::Plane));
-}
-
-
 //----------------------------------------------------------------shared init
 
 void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
-
-	init_supported_options();
 
 	// TODO: read all these params from cgns db
 
@@ -137,9 +133,9 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 
 	wxString axesym_str = g.get_string_param("AxeSym_or_Plane");
 
-	t_MapWxStrInt::iterator it = AXESYM_MODES_STR.find(axesym_str);
+	t_MapWxStrInt::iterator it = params.AXESYM_MODES_STR.find(axesym_str);
 
-	if (it==AXESYM_MODES_STR.end()) 
+	if (it==params.AXESYM_MODES_STR.end()) 
 		ssuGENTHROW(_T("Unknown value provided for option AxeSym!"));
 
 	params.MFSym = it->second;

@@ -9,7 +9,7 @@ using namespace pf;
 using namespace stab;
 
 t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):_rFldMF(a_fld), 
-_s(NMAX_WPRECS), _sigma(NMAX_WPRECS), _nfact(NMAX_WPRECS){};
+_s(NMAX_WPRECS), _sigma(NMAX_WPRECS), _nfact(NMAX_WPRECS), _params(){};
 
 t_WavePackLine::t_RecArray::t_RecArray():_cont(NMAX_WPRECS), _size(0){}
 
@@ -57,7 +57,7 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 
 	const hsstab::TPluginParamsGroup& g = g_plug.get_settings_grp_const("");
 
-	t_WPLineParams::init_wpline_base_params(_params, g);
+	_params.init_wpline_base_params(g);
 
 }
 

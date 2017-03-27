@@ -12,15 +12,13 @@ namespace pf{
 	
 	    typedef std::map<wxString,int> t_MapWxStrInt; 
 
-    	static t_MapWxStrInt RETRACE_MODES_STR;
-	    static t_MapWxStrInt MARCH_OPTS_STR;
-		static t_MapWxStrInt SIGMA_TRUNC_MODES_STR;
+    	t_MapWxStrInt RETRACE_MODES_STR;
+	    t_MapWxStrInt MARCH_OPTS_STR;
+		t_MapWxStrInt SIGMA_TRUNC_MODES_STR;
 
-	    static void init_supported_options();
-	    
-	    static void init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g);
+		t_WPLineParams();
 
-	    static void wpline_default_settings(hsstab::TPluginParamsGroup& g);
+	    void init_wpline_base_params(const hsstab::TPluginParamsGroup& g);
 
 	    double TimeStep;
 	    stab::t_WPRetraceMode RetraceMode;
@@ -45,6 +43,8 @@ namespace pf{
 		// dispersion calculations
 		double dw_disp, db_disp;
 	};
+
+	void wpline_default_settings(hsstab::TPluginParamsGroup& g);
 
 
 

@@ -10,56 +10,51 @@ using namespace pf;
 
 // ---------------------------------------
 
-static const double TIME_STEP_DEFAULT = 0.01;
+#define TIME_STEP_DEFAULT 0.01
 
 typedef std::map<wxString,int> t_MapWxStrInt; 
 
-t_MapWxStrInt  t_WPLineParams::RETRACE_MODES_STR;
 #define RETRACE_MODE_DEFAULT_STR _T("W_FIXED")
 
-t_MapWxStrInt t_WPLineParams::MARCH_OPTS_STR;
 #define MARCH_OPT_DEFAULT_STR _T("GROUP_VELO")
 
-t_MapWxStrInt t_WPLineParams::SIGMA_TRUNC_MODES_STR;
 #define SIGMA_TRUNC_DEFAULT_STR _T("BOTH")
 
+t_WPLineParams::t_WPLineParams() {
 
-void t_WPLineParams::init_supported_options(){
-		RETRACE_MODES_STR.clear();
-		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("W_FIXED")), stab::t_WPRetraceMode::W_FIXED));
-		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WB_FIXED")), stab::t_WPRetraceMode::WB_FIXED));
-		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WBRAD_FIXED")), stab::t_WPRetraceMode::WBRAD_FIXED));
-		RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("ENVELOPE")), stab::t_WPRetraceMode::ENVELOPE));
+	RETRACE_MODES_STR.clear();
+	RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("W_FIXED")), stab::t_WPRetraceMode::W_FIXED));
+	RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WB_FIXED")), stab::t_WPRetraceMode::WB_FIXED));
+	RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("WBRAD_FIXED")), stab::t_WPRetraceMode::WBRAD_FIXED));
+	RETRACE_MODES_STR.insert(std::make_pair(wxString(_T("ENVELOPE")), stab::t_WPRetraceMode::ENVELOPE));
 
-		MARCH_OPTS_STR.clear();
-		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("GROUP_VELO")), t_WPLineParams::GROUP_VELO));
-		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("STREAMLINE")), t_WPLineParams::STREAMLINE));
-		MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("FIXED_DIRECTION")), t_WPLineParams::FIXED_DIRECTION));
+	MARCH_OPTS_STR.clear();
+	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("GROUP_VELO")), t_WPLineParams::GROUP_VELO));
+	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("STREAMLINE")), t_WPLineParams::STREAMLINE));
+	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("FIXED_DIRECTION")), t_WPLineParams::FIXED_DIRECTION));
 
-		SIGMA_TRUNC_MODES_STR.clear();
-		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
-			wxString(SIGMA_TRUNC_DEFAULT_STR), 
-			t_WPLineParams::t_SigmaTruncMode::STRUNC_BOTH));
+	SIGMA_TRUNC_MODES_STR.clear();
+	SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+		wxString(SIGMA_TRUNC_DEFAULT_STR),
+		t_WPLineParams::t_SigmaTruncMode::STRUNC_BOTH));
 
-		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
-			wxString(_T("DOWNSTREAM")), 
-			t_WPLineParams::t_SigmaTruncMode::STRUNC_DOWNSTREAM));
+	SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+		wxString(_T("DOWNSTREAM")),
+		t_WPLineParams::t_SigmaTruncMode::STRUNC_DOWNSTREAM));
 
-		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
-			wxString(_T("UPSTREAM")), 
-			t_WPLineParams::t_SigmaTruncMode::STRUNC_UPSTREAM));
-		
-		SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
-			wxString(_T("NO_TRUNC")), 
-			t_WPLineParams::t_SigmaTruncMode::STRUNC_NO_TRUNC));
-		
-};
+	SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+		wxString(_T("UPSTREAM")),
+		t_WPLineParams::t_SigmaTruncMode::STRUNC_UPSTREAM));
 
-void t_WPLineParams::wpline_default_settings(hsstab::TPluginParamsGroup& g){
+	SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
+		wxString(_T("NO_TRUNC")),
+		t_WPLineParams::t_SigmaTruncMode::STRUNC_NO_TRUNC));
 
-	init_supported_options();
+}
 
-	g.add("TimeStep", TIME_STEP_DEFAULT , _T("dr=V*dt, set dt"));
+void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
+
+	g.add("TimeStep", TIME_STEP_DEFAULT, _T("dr=V*dt, set dt"));
 
 	g.add("RetraceMode", RETRACE_MODE_DEFAULT_STR, _T("Retrace Mode"));
 
@@ -102,15 +97,15 @@ void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g)
 
 }
 
-void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hsstab::TPluginParamsGroup& g){
+void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g){
 
-	params.TimeStep = g.get_real_param("TimeStep");
+	TimeStep = g.get_real_param("TimeStep");
 
-	params.CalcWPDispersion = g.get_int_param("CalcWPDispersion");
+	CalcWPDispersion = g.get_int_param("CalcWPDispersion");
 
-	params.dw_disp = g.get_real_param("DwDisp");
+	dw_disp = g.get_real_param("DwDisp");
 
-	params.db_disp = g.get_real_param("DbDisp");
+	db_disp = g.get_real_param("DbDisp");
 
 	wxString rmode_str = g.get_string_param("RetraceMode");
 
@@ -125,15 +120,15 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 	{
 
 	case stab::t_WPRetraceMode::W_FIXED:
-		params.RetraceMode = stab::t_WPRetraceMode::W_FIXED;
+		RetraceMode = stab::t_WPRetraceMode::W_FIXED;
 		break;
 
 	case stab::t_WPRetraceMode::WB_FIXED:
-		params.RetraceMode = stab::t_WPRetraceMode::WB_FIXED;
+		RetraceMode = stab::t_WPRetraceMode::WB_FIXED;
 		break;
 
 	case stab::t_WPRetraceMode::WBRAD_FIXED:
-		params.RetraceMode = stab::t_WPRetraceMode::WBRAD_FIXED;
+		RetraceMode = stab::t_WPRetraceMode::WBRAD_FIXED;
 		break;
 
 	default:
@@ -152,16 +147,16 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 	switch (rdir)
 	{
 	case t_WPLineParams::GROUP_VELO:
-		params.RetraceDir = t_WPLineParams::GROUP_VELO;
+		RetraceDir = t_WPLineParams::GROUP_VELO;
 		break;
 
 	case t_WPLineParams::STREAMLINE:
-		params.RetraceDir = t_WPLineParams::STREAMLINE;
+		RetraceDir = t_WPLineParams::STREAMLINE;
 		break;
 
 	case t_WPLineParams::FIXED_DIRECTION:
-		params.RetraceDir = t_WPLineParams::FIXED_DIRECTION;
-		params.read_parse_retrace_vec(g);
+		RetraceDir = t_WPLineParams::FIXED_DIRECTION;
+		read_parse_retrace_vec(g);
 		break;
 	default:
 		ssuGENTHROW(_T("Retracing Direction option not supported!"));
@@ -182,19 +177,19 @@ void t_WPLineParams::init_wpline_base_params(t_WPLineParams& params, const hssta
 	{
 
 	case t_SigmaTruncMode::STRUNC_BOTH:
-		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_BOTH;
+		SigmaTruncMode = t_SigmaTruncMode::STRUNC_BOTH;
 		break;
 
 	case t_SigmaTruncMode::STRUNC_DOWNSTREAM:
-		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_DOWNSTREAM;
+		SigmaTruncMode = t_SigmaTruncMode::STRUNC_DOWNSTREAM;
 		break;
 
 	case t_SigmaTruncMode::STRUNC_UPSTREAM:
-		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_UPSTREAM;
+		SigmaTruncMode = t_SigmaTruncMode::STRUNC_UPSTREAM;
 		break;
 
 	case t_SigmaTruncMode::STRUNC_NO_TRUNC:
-		params.SigmaTruncMode = t_SigmaTruncMode::STRUNC_NO_TRUNC;
+		SigmaTruncMode = t_SigmaTruncMode::STRUNC_NO_TRUNC;
 		break;
 
 	default:

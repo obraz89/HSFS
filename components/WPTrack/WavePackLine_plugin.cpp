@@ -19,7 +19,7 @@ void TPluginWPLine::default_settings(){
 
 	TPluginParamsGroup g;
 
-	pf::t_WPLineParams::wpline_default_settings(g);
+	pf::wpline_default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 

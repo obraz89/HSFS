@@ -12,11 +12,9 @@ namespace mf{
 
 		typedef std::map<wxString,int> t_MapWxStrInt; 
 
-		static t_MapWxStrInt AXESYM_MODES_STR;
+		t_MapWxStrInt AXESYM_MODES_STR;
 
-		static void init_supported_options();
-
-		t_CGNS2DParams():t_FldParams(){};
+		t_CGNS2DParams();
 		int Nz;
 		t_AxeSym MFSym;
 		double ZSpan;
