@@ -7,6 +7,16 @@
 
 using namespace mf::cg;
 
+#ifdef CG_BUILD_SCOPE
+  #define CG_MY_RealDouble CG_RealDouble
+  #define CG_MY_GridLocation_t CG_GridLocation_t
+  #define CG_MY_Vertex CG_Vertex
+#else
+  #define CG_MY_RealDouble RealDouble
+  #define CG_MY_GridLocation_t GridLocation_t
+  #define CG_MY_Vertex Vertex
+#endif
+
 // full or truncated (in case surf_znode is internal but carries face_pos of starting face) 
 // grid line from a starting znode to its opposite face position;
 // end node is always on real zone surface
@@ -478,7 +488,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 	*grid = new double[nDim * nx*ny*nz];
 	{
 		double* x = new double[nx*ny*nz];
-		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateX",CG_RealDouble,irmin,irmax, x);
+		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateX",CG_MY_RealDouble,irmin,irmax, x);
 		if( r != CG_OK ){
 
 			wxLogError(_T("cg_ccord_read error"));
@@ -487,13 +497,13 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 		}  
 
 		double* y = new double[nx*ny*nz];
-		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateY",CG_RealDouble,irmin,irmax, y);
+		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateY",CG_MY_RealDouble,irmin,irmax, y);
 
 		double* z = NULL;
 		if( nDim == 3 )
 		{
 			z = new double[nx*ny*nz];
-			r |= cg_coord_read(fileID,iBase,iZone,"CoordinateZ",CG_RealDouble,irmin,irmax, z);
+			r |= cg_coord_read(fileID,iBase,iZone,"CoordinateZ",CG_MY_RealDouble,irmin,irmax, z);
 		}
 
 		if( r != CG_OK )
@@ -553,7 +563,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 		{
 			const char* name = G_vecCGNSFuncNames[iFun].c_str();
 
-			r = cg_field_read(fileID,iBase,iZone,iFlow,(char*)name,CG_RealDouble,irmin,irmax, FF);
+			r = cg_field_read(fileID,iBase,iZone,iFlow,(char*)name,CG_MY_RealDouble,irmin,irmax, FF);
 			if( r != CG_OK )
 			{
 				wxLogError(_T("%s"), wxString::FromAscii(cg_get_error()).c_str());

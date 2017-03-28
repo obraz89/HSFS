@@ -1,4 +1,4 @@
-#include "stdafx.h"
+#include "stdafx.h"#define
 
 #include "MF_CGNS3D.h"
 
@@ -7,6 +7,22 @@
 
 using namespace mf;
 using namespace mf::cg;
+
+#ifdef CG_BUILD_SCOPE
+  #define CG_MY_RealDouble CG_RealDouble
+  #define CG_MY_ZoneType_t CG_ZoneType_t
+  #define CG_MY_Structured CG_Structured
+  #define CG_MY_BCType_t CG_BCType_t
+  #define CG_MY_PointSetType_t CG_PointSetType_t
+  #define CG_MY_PointRange CG_PointRange
+#else
+  #define CG_MY_RealDouble RealDouble
+  #define CG_MY_ZoneType_t ZoneType_t
+  #define CG_MY_Structured Structured
+  #define CG_MY_BCType_t BCType_t
+  #define CG_MY_PointSetType_t PointSetType_t
+  #define CG_MY_PointRange PointRange
+#endif
 
 void t_MFCGNS3D::get_k_range(int iZone, int& ks, int& ke) const{
 
@@ -130,8 +146,8 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 	// 
 	for( int iZone = 1;  iZone <= nZones;  ++iZone )
 	{
-		CG_ZoneType_t type;  cg_zone_type(ctx.fileID,ctx.iBase,iZone, &type);
-		if( type != CG_Structured )
+		CG_MY_ZoneType_t type;  cg_zone_type(ctx.fileID,ctx.iBase,iZone, &type);
+		if( type != CG_MY_Structured )
 		{
 			wxLogError( _("Only structured grids are supported") );
 			return false;
@@ -193,16 +209,16 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 		cgsize_t irmax[3] = {nx0, ny0, nz0};
 
 		double* x = new double[nx0*ny0*nz0];
-		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",CG_RealDouble,irmin,irmax, x);
+		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",CG_MY_RealDouble,irmin,irmax, x);
 
 		if( res != CG_OK )
 			wxLogError(_T("cg_ccord_read error:%s"), wxString::FromAscii(cg_get_error()).c_str());
 
 		double* y = new double[nx0*ny0*nz0];
-		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateY",CG_RealDouble,irmin,irmax, y);
+		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateY",CG_MY_RealDouble,irmin,irmax, y);
 
 		double* z = new double[nx0*ny0*nz0];
-		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateZ",CG_RealDouble,irmin,irmax, z);
+		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateZ",CG_MY_RealDouble,irmin,irmax, z);
 
 		if( res != CG_OK )  return false;
 
@@ -763,9 +779,9 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 
 	for( int iBC = 1; iBC <= nBCs; ++iBC )
 	{
-		CG_BCType_t iBCtype;
+		CG_MY_BCType_t iBCtype;
 
-		CG_PointSetType_t pntSet;
+		CG_MY_PointSetType_t pntSet;
 		cgsize_t nPnts = -1; // number of points defining the BC region
 
 		// Normals to the BC patch
@@ -782,7 +798,7 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 			iNorm, &normListSize, &normDataType,
 			&nDatasets
 			);
-		if( pntSet != CG_PointRange && nPnts != 2 )
+		if( pntSet != CG_MY_PointRange && nPnts != 2 )
 		{
 			wxLogError(
 				_("Boundary condition patch '%s'(#%d) of zone '%s'(#%d) isn't defined as point range"),
