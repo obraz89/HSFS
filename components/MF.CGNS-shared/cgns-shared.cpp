@@ -7,7 +7,7 @@
 
 using namespace mf::cg;
 
-#ifdef CG_BUILD_SCOPE
+#if CG_BUILD_SCOPE
   #define CG_MY_RealDouble CG_RealDouble
   #define CG_MY_GridLocation_t CG_GridLocation_t
   #define CG_MY_Vertex CG_Vertex
