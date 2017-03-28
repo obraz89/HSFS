@@ -534,7 +534,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 	// Get solution info
 	// FIXME: flow assumed existing
 	// 
-	int iFlow = 1;  char szFlow[33];  CG_GridLocation_t loc;
+	int iFlow = 1;  char szFlow[33];  CG_MY_GridLocation_t loc;
 	r = cg_sol_info(fileID,iBase,iZone,iFlow,  szFlow,&loc);
 	if( r != CG_OK )
 	{
@@ -544,7 +544,7 @@ bool mf::cg::TDomain::readBlockFromCGNS(
 		return false;
 	}
 
-	if( loc != CG_Vertex )
+	if( loc != CG_MY_Vertex )
 	{
 		wxLogError(_("CGNS: GridLocation must be Vertex"));
 		return false;

@@ -1,4 +1,4 @@
-#include "stdafx.h"#define
+#include "stdafx.h"
 
 #include "MF_CGNS3D.h"
 
@@ -12,6 +12,7 @@ using namespace mf::cg;
   #define CG_MY_RealDouble CG_RealDouble
   #define CG_MY_ZoneType_t CG_ZoneType_t
   #define CG_MY_Structured CG_Structured
+  #define CG_MY_DataType_t CG_DataType_t
   #define CG_MY_BCType_t CG_BCType_t
   #define CG_MY_PointSetType_t CG_PointSetType_t
   #define CG_MY_PointRange CG_PointRange
@@ -19,6 +20,7 @@ using namespace mf::cg;
   #define CG_MY_RealDouble RealDouble
   #define CG_MY_ZoneType_t ZoneType_t
   #define CG_MY_Structured Structured
+  #define CG_MY_DataType_t DataType_t
   #define CG_MY_BCType_t BCType_t
   #define CG_MY_PointSetType_t PointSetType_t
   #define CG_MY_PointRange PointRange
@@ -786,7 +788,7 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 
 		// Normals to the BC patch
 		int iNorm[3]; // normal as index vector (computational coords)
-		cgsize_t normListSize;  CG_DataType_t normDataType; // normals in phys coords
+		cgsize_t normListSize;  CG_MY_DataType_t normDataType; // normals in phys coords
 
 		int nDatasets = 0; // number of datasets with additional info for the BC
 
