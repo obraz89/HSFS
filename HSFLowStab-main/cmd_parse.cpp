@@ -9,6 +9,8 @@
 
 #include "log.h"
 
+#include "mpi.h"
+
 static const wxString strTITLE = _("\n\tHSFlowStab: High Speed Flow Stability solver. (c) 2010-2013 TsAGI, NIO-8\n");
 
 void processCmdLine(int argc, wxChar* wxArgv[])
@@ -58,9 +60,13 @@ void processCmdLine(int argc, wxChar* wxArgv[])
 
 
 	// Logging to file
-	wxString logFN;
-	if( cmdline.Found(_T("l"), &logFN) )
+	wxString logFNBase;
+	if( cmdline.Found(_T("l"), &logFNBase) )
 	{
+		int mpi_rank;
+		wxString logFN;
+		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+		logFN.Printf(_T("%s%d"),logFNBase, mpi_rank);
 		wxLog* logFile = new TLogFile(logFN);
 		wxLog::SetActiveTarget(logFile);
 		wxLogMessage(strTITLE);
