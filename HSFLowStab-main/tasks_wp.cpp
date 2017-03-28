@@ -72,9 +72,13 @@ void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
 	for (int wpid = wpid_s; wpid <= wpid_e; wpid++) {
 
+		wxLogMessage(_T("rank=%d, starting retrace wpid=%d, wpid_s=%d, wpid_e=%d"), mpi_rank, wpid, wpid_s, wpid_e);
+
 		retrace_single_WP(wpid, a_mode_retrace, arr_pack[wpid-wpid_s]);
 
 	}
+
+	wxLogMessage(_T("rank=%d finished retrace, waiting other workers"), mpi_rank);
 
 	MPI_Barrier(MPI_COMM_WORLD);
 
@@ -254,9 +258,9 @@ void retrace_single_WP(int wpid, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2
 
 					wp_line->pack_to_arr(a_arr);
 
-					wp_line->print_to_file(fout_wplines_str, std::ios::app);
+					//wp_line->print_to_file(fout_wplines_str, std::ios::app);
 
-					g_pStabDB->update(*wp_line);
+					//g_pStabDB->update(*wp_line);
 
 					// no need to retrace same WP from different points
 					// correct only for 2D configurations
@@ -280,10 +284,6 @@ void retrace_single_WP(int wpid, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2
 
 		
 	}	// ~WP Lines loop
-
-	//StabDB.to_cone_ref_frame(HALF_CONE_ANGLE);
-
-	g_pStabDB->write_to_file(fout_maxnfactor_str);
 
 	delete wp_line;
 	return;

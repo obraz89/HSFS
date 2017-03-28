@@ -110,21 +110,35 @@ void task::init_stab_dbs(){
 	// rank of worker, total number of workers 
 	int mpi_rank, mpi_size;
 
-	MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
-	MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-	const int nAvg   = NPntsGlob / mpi_size;
-	const int nResdl = NPntsGlob % mpi_size;
+	// If global search, stabDBs are local for workers
+	// for other tasks, we want a full or "global" stabDB
+	// IMPORTANT TODO: rewrite stabDBs to store both global set of points
+	// and local set
 
-	int r = mpi_rank;
+	int n_r, n_s;
+	if (g_taskParams.id == task::TTaskType::SearchInstabLoc) {
+		n_r = mpi_rank;
+		n_s = mpi_size;
+	}
+	else {
+		// even for parallel tasks, just to get full set of points
+		n_r = 0;
+		n_s = 1;
+	}
+
+	const int nAvg   = NPntsGlob / n_s;
+	const int nResdl = NPntsGlob % n_s;
 
 	// interval of global pave points
 	// to work with on current worker
 
-	int bs = r * nAvg + ((r<nResdl) ?r :nResdl);
-	int be = bs + nAvg + ((r<nResdl) ?1 :0) - 1;
+	int bs = n_r * nAvg + ((n_r<nResdl) ?n_r :nResdl);
+	int be = bs + nAvg + ((n_r<nResdl) ?1 :0) - 1;
 
-	wxLogMessage( _("* MPI rank %d owns range : %d-%d"), mpi_rank, bs, be );
+	wxLogMessage( _("* MPI rank %d owns range of pave_points: %d-%d"), mpi_rank, bs, be );
 
 	g_pStabDB = new stab::t_StabDBase();
 	g_pStabDB->init_pave_pts(PaveGrdGlob, bs, be);
