@@ -107,6 +107,17 @@ void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
 		group = H5Gcreate(file, "/WPData", H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 
+		const hsize_t dims_attr = 1;
+		hid_t ds_attr_id = H5Screate_simple(1, &dims_attr, NULL);
+
+		/* Create a group attribute - number of wplines. */
+		hid_t attr_id = H5Acreate2(group, "nwplines", H5T_NATIVE_INT, ds_attr_id,
+			H5P_DEFAULT, H5P_DEFAULT);
+
+		status = H5Awrite(attr_id, H5T_NATIVE_INT, &NWPGlob);
+
+		status = H5Aclose(attr_id);
+
 		// write local data
 
 		for (int wpid = 0; wpid < NWPLoc; wpid++) {
@@ -144,20 +155,7 @@ void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 		status = H5Gclose(group);
 		status = H5Fclose(file);
 
-		
-
 	}
-
-	
-	
-	// test - read wpline data
-	//file = H5Fopen(FILENAME_H5, H5F_ACC_RDONLY, H5P_DEFAULT);
-
-	//read_wpdata(file,  "/WPData/Data0", arr);
-
-	//arr.dump("output/arr_read.txt");
-
-	//status = H5Fclose(file);
 
 }
 
@@ -256,9 +254,9 @@ void retrace_single_WP(int wpid, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2
 
 					wp_line->retrace(test_xyz, wchars, *g_pStabSolver, *g_pGSSolverSpat, a_mode_retrace);
 
-					wp_line->pack_to_arr(a_arr);
+					wp_line->print_to_file(fout_wplines_str, std::ios::app);
 
-					//wp_line->print_to_file(fout_wplines_str, std::ios::app);
+					wp_line->pack_to_arr(a_arr);
 
 					//g_pStabDB->update(*wp_line);
 
@@ -287,6 +285,38 @@ void retrace_single_WP(int wpid, stab::t_WPRetraceMode a_mode_retrace, t_WPLine2
 
 	delete wp_line;
 	return;
+
+}
+
+void task::postproc_retrace() {
+
+	hid_t file = H5Fopen(FILENAME_H5, H5F_ACC_RDONLY, H5P_DEFAULT);
+	hid_t group = H5Gopen(file, "/WPData", H5P_DEFAULT);
+	herr_t status;
+
+	t_WPLine2H5Arr arr;
+
+	hid_t attr_nwp = H5Aopen_name(group,"nwplines");
+	int nwp=0;
+
+	H5Aread(attr_nwp, H5T_NATIVE_INT, &nwp);
+
+	wxLogMessage(_T("Number of WpLines to read:nwplines=%d"), nwp);
+
+	for (int i = 0; i < nwp ; i++) {
+
+		char wp_dset_name[32];
+
+		sprintf(wp_dset_name, "/WPData/Data%d", i);
+
+		read_wpdata(file,  wp_dset_name, arr);
+
+		arr.dump("output/wp_data.txt");
+
+	}
+
+	status = H5Aclose(attr_nwp);
+	status = H5Fclose(file);
 
 }
 // rank of wpline data array in hdf5 file

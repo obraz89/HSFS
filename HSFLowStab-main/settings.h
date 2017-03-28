@@ -31,6 +31,9 @@ namespace task{
 		// when tested, replace Retrace 
 		RetraceMPI,
 
+		// posprocess data obtained in retraceMPI
+		PostProcRetrace,
+
 		// ?
 		MaxInstabLine, 
 

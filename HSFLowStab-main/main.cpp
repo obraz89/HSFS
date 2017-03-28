@@ -111,6 +111,9 @@ int main(int argc, char* argv[]){
 		case task::RetraceMPI:
 			task::retrace_MPI(retrace_mode);
 			break;
+		case task::PostProcRetrace:
+			task::postproc_retrace();
+			break;
 		case task::TTaskType::GetProfiles:
 			task::get_profiles();
 			break;

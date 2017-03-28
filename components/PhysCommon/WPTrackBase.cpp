@@ -58,7 +58,7 @@ t_WPLine2H5Arr::~t_WPLine2H5Arr() {delete[] cont;}
 
 void t_WPLine2H5Arr::dump(const char* fname) const{
 
-	std::ofstream ofstr(fname);
+	std::ofstream ofstr(fname, std::ios::app);
 	for (int n = 0; n < nrecs; n++) {
 
 		for (int i = 0; i < N_WPREC_H5_LEN; i++) {
@@ -67,6 +67,9 @@ void t_WPLine2H5Arr::dump(const char* fname) const{
 		}
 		ofstr << "\n";
 	}
+
+	ofstr << "\n\n\n\n";
+	ofstr.flush();
 
 }
 
