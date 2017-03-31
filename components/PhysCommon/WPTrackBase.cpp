@@ -27,24 +27,28 @@ void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
 
 	
 };
-void t_WPLineRec::unpack_from_arr(const t_WPRec2H5Arr& arr) {
+void t_WPLineRec::unpack_from_arr(const double* cont) {
 
-	mean_flow.x = arr.cont[0];
-	mean_flow.y = arr.cont[1];
-	mean_flow.z = arr.cont[2];
+	mean_flow.x = cont[0];
+	mean_flow.y = cont[1];
+	mean_flow.z = cont[2];
 
-	wave_chars.a.real(arr.cont[3]);
-	wave_chars.a.imag(arr.cont[4]);
-	wave_chars.kn.real(arr.cont[5]);
-	wave_chars.kn.imag(arr.cont[6]);
-	wave_chars.b.real(arr.cont[7]);
-	wave_chars.b.imag(arr.cont[8]);
-	wave_chars.w.real(arr.cont[9]);
-	wave_chars.w.imag(arr.cont[10]);
+	wave_chars.a.real(cont[3]);
+	wave_chars.a.imag(cont[4]);
+	wave_chars.kn.real(cont[5]);
+	wave_chars.kn.imag(cont[6]);
+	wave_chars.b.real(cont[7]);
+	wave_chars.b.imag(cont[8]);
+	wave_chars.w.real(cont[9]);
+	wave_chars.w.imag(cont[10]);
 
-	n_factor = arr.cont[11];
+	n_factor = cont[11];
 	
 };
+
+void t_WPLineRec::unpack_from_arr(const t_WPRec2H5Arr& arr) {
+	unpack_from_arr(arr.cont);
+}
 
 t_WPTrackBase::t_WPTrackBase(){};
 
@@ -84,6 +88,62 @@ void t_WPLine2H5Arr::unpack_from_mpi_msg(double * mpi_msg) {
 
 	nrecs = (int)mpi_msg[0];
 	memcpy(cont, mpi_msg + 1, nrecs*N_WPREC_H5_LEN * sizeof(double));
+
+}
+
+void t_WPLine2H5Arr::get_rec(int nrec, t_WPLineRec& rec) const{
+	double* pnt = cont + nrec*N_WPREC_H5_LEN;
+	rec.unpack_from_arr(pnt);
+}
+
+// TODO: 2D configurations only, use only x coord to interpolate
+void t_WPLine2H5Arr::interpolate_to_point(const mf::t_GeomPoint& xyz, t_EnvelopeRec& env_rec, const t_StabScales& stab_scales) const {
+
+	env_rec.N = -1;
+
+	if (nrecs <= 1) return;
+
+	t_WPLineRec rec_start, rec_end;
+	get_rec(0, rec_start);
+	get_rec(nrecs - 1, rec_end);
+	double x_start = rec_start.mean_flow.x;
+	double x_end = rec_end.mean_flow.x;
+
+	double x_int = xyz.x();
+
+	if ((x_int < x_start) || (x_int > x_end)) {
+		return;
+	}
+
+	double x_l, x_r;
+	t_WPLineRec rec_l, rec_r;
+
+	// TODO: no need to be fast here?
+	for (int i = 0; i < nrecs - 2; i++) {
+
+		get_rec(i + 0, rec_l);
+		get_rec(i + 1, rec_r);
+
+		x_l = rec_l.mean_flow.x;
+		x_r = rec_r.mean_flow.x;
+
+		if ((x_int >= x_l) && (x_int <= x_r)) {
+
+			// linear interpolation
+			double N_l = rec_l.n_factor;
+			double N_r = rec_r.n_factor;
+
+			env_rec.N = N_l + (N_r - N_l) / (x_r - x_l)*(x_int - x_l);
+
+			// no interpolation )
+			rec_l.wave_chars.set_scales(stab_scales);
+			env_rec.wchars = rec_l.wave_chars.to_dim();
+
+			return;
+
+		}
+
+	}
 
 }
 

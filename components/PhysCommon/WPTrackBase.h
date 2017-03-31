@@ -59,6 +59,7 @@ namespace stab{
 
 		//friend std::wostream& operator<<(std::wostream& str, t_WPLineRec rec);
 		void pack_to_arr(t_WPRec2H5Arr& arr) const;
+		void unpack_from_arr(const double* cont);
 		void unpack_from_arr(const t_WPRec2H5Arr& arr);
 	};
 
@@ -86,6 +87,12 @@ namespace stab{
 		
 	};
 
+	struct t_EnvelopeRec {
+		double N;
+		t_WCharsGlobDim wchars;
+		t_EnvelopeRec() :N(-1.0), wchars() {}
+	};
+
 	struct IMPEXP_PHYSCOMMON t_WPLine2H5Arr {
 
 		int nrecs;
@@ -94,12 +101,17 @@ namespace stab{
 		t_WPLine2H5Arr();
 		~t_WPLine2H5Arr();
 
+		void get_rec(int nrec, t_WPLineRec& rec) const;
+
 		//debug
 		void dump(const char* fname) const;
 
 		// mpi
 		void pack_to_mpi_msg(double * mpi_buf) const;
 		void unpack_from_mpi_msg(double * mpi_buf);
+
+		// post-proc
+		void interpolate_to_point(const mf::t_GeomPoint& xyz, t_EnvelopeRec& env_rec, const t_StabScales& scales) const;
 
 
 

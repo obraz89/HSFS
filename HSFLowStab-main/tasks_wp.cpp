@@ -303,20 +303,58 @@ void task::postproc_retrace() {
 
 	wxLogMessage(_T("Number of WpLines to read:nwplines=%d"), nwp);
 
-	for (int i = 0; i < nwp ; i++) {
+	int npnts = g_pStabDB->get_npoints();
 
-		char wp_dset_name[32];
+	t_EnvelopeRec* env_data = new t_EnvelopeRec[npnts];
 
-		sprintf(wp_dset_name, "/WPData/Data%d", i);
+	for (int n = 0; n < npnts; n++) {
 
-		read_wpdata(file,  wp_dset_name, arr);
+		wxLogMessage(_T("Search N_max for ppid=%d"), n);
 
-		arr.dump("output/wp_data.txt");
+		const stab::t_PavePoint& pnt = g_pStabDB->get_pave_pt(n);
 
+		t_EnvelopeRec& env_data_rec = env_data[n];
+
+		g_pStabSolver->setContext(pnt.xyz);
+
+		t_EnvelopeRec cur_env_rec;
+
+		for (int i = 0; i < nwp ; i++) {
+
+			char wp_dset_name[32];
+
+			sprintf(wp_dset_name, "/WPData/Data%d", i);
+
+			read_wpdata(file,  wp_dset_name, arr);
+
+			arr.interpolate_to_point(pnt.xyz, cur_env_rec, g_pStabSolver->get_stab_scales());
+
+			if (cur_env_rec.N > env_data_rec.N) env_data_rec = cur_env_rec;
+
+			//arr.dump("output/wp_data.txt");
+
+		}
+	}
+
+	// output envelope data
+	{
+		std::ofstream ofstr_env("output/N_fact_envelope.dat");
+
+		for (int i = 0; i < npnts; i++) {
+			const t_EnvelopeRec& env_rec = env_data[i];
+			const mf::t_GeomPoint& xyz = g_pStabDB->get_pave_pt(i).xyz;
+			const t_WCharsGlobDim& wc = env_rec.wchars;
+			ofstr_env << xyz.x() << "\t" << xyz.y() << "\t" << xyz.z() << "\t"
+				<< env_rec.N << "\t"
+				<< wc.a.real() << "\t" << wc.kn.real() << "\t" << wc.b.real() << "\t"
+				<< wc.w.real() << "\n";
+		}
 	}
 
 	status = H5Aclose(attr_nwp);
 	status = H5Fclose(file);
+
+	delete[] env_data;
 
 }
 // rank of wpline data array in hdf5 file
