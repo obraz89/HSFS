@@ -17,15 +17,17 @@ static const double ADJUST_TOL_DEFAULT  = 1.0e-4;
 static const double ASYM_TOL_DEFAULT = 1.0e-6;
 static const int ADJUST_MAX_ITER_DEFAULT= 50;
 
-t_MapWxStrInt t_StabSolverParams::PROFNS_INIT_TYPES_STR;
 #define PROFNS_INIT_DEFAULT_STR _("EXTRACT")
 
-t_MapWxStrInt t_StabSolverParams::PROFSTAB_NONDIM_TYPES_STR;
 #define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_CFD_SCALE")
 
 // small increment to compute smth like
 // dw/da : (w(a+DELTA) - w(a))/DELTA
 static const double DELTA_SMALL = 1.0e-6;
+
+t_StabSolverParams::t_StabSolverParams() {
+	init_supported_options();
+}
 
 void t_StabSolverParams::init_supported_options(){
 
@@ -48,8 +50,6 @@ void t_StabSolverParams::init_supported_options(){
 }
 
 void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
-
-	init_supported_options();
 
 	g.add("NVars", N_VARS_DEFAULT, _T("Number of variables: internal param"));
 

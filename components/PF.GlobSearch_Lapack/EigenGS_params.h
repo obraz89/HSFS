@@ -18,13 +18,15 @@ namespace pf{
 		double Arg_Threshold;
 		double SecondViscRatio;
 
-		static t_MapWxStrInt PROFNS_INIT_TYPES_STR;
+		t_MapWxStrInt PROFNS_INIT_TYPES_STR;
 		blp::t_NSInit NSProfInit;
 
-		static t_MapWxStrInt PROFSTAB_NONDIM_TYPES_STR;
+		t_MapWxStrInt PROFSTAB_NONDIM_TYPES_STR;
 		t_ProfStabCfg::t_Nondim NondimScaleType;
 
-		static void init_supported_options();
+		t_EigenGSParams();
+
+		void init_supported_options();
 
 		void init(const hsstab::TPluginParamsGroup& g);
 

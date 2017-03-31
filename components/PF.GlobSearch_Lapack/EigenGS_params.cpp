@@ -16,11 +16,11 @@ static const double THICK_HALFNODES_COEF_DEFAULT = 2.0;
 
 static const double SECOND_VISC_RATIO_DEFAULT = -2./3.;
 
-t_MapWxStrInt t_EigenGSParams::PROFNS_INIT_TYPES_STR;
 #define PROFNS_INIT_DEFAULT_STR _("EXTRACT")
 
-t_MapWxStrInt t_EigenGSParams::PROFSTAB_NONDIM_TYPES_STR;
 #define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_CFD_SCALE")
+
+t_EigenGSParams::t_EigenGSParams(){	init_supported_options();}
 
 void t_EigenGSParams::init_supported_options(){
 
@@ -43,8 +43,6 @@ void t_EigenGSParams::init_supported_options(){
 }
 
 void t_EigenGSParams::default_settings(hsstab::TPluginParamsGroup& g){
-
-	init_supported_options();
 
 	g.add("NVars", N_VARS_DEFAULT, _T("Number of variables: internal param"));
 

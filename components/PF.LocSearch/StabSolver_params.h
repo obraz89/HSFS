@@ -16,13 +16,14 @@ namespace pf{
 		double AdjustTol, AdjustStep;
 		int AdjustMaxIter;
 
-		static t_MapWxStrInt PROFNS_INIT_TYPES_STR;
+		t_MapWxStrInt PROFNS_INIT_TYPES_STR;
 		blp::t_NSInit NSProfInit;
 
-		static t_MapWxStrInt PROFSTAB_NONDIM_TYPES_STR;
+		t_MapWxStrInt PROFSTAB_NONDIM_TYPES_STR;
 		t_ProfStabCfg::t_Nondim NondimScaleType;
 
-		static void init_supported_options();
+		t_StabSolverParams();
+		void init_supported_options();
 
 		void init(const hsstab::TPluginParamsGroup& g);
 
