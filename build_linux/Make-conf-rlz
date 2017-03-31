@@ -23,10 +23,11 @@ WXLIBS := $(shell wx-config --unicode=yes --static=no --libs base)
 #-I/home/obraz/libs/wxWidgets-3.0.2/include -pthread
 #WXLIBS := -lwx_baseu-3.0 -pthread
 
-CGNS_DIR := /home/obraz/lib/cgnslib-3.2.0-rlz-x64-seq
+CGNS_DIR := /home/obraz/lib/cgns-3.2.1-hdf18-so
 CGNS_INC_DIR := $(CGNS_DIR)/include
 CGNS_LIB_DIR := $(CGNS_DIR)/lib
-CGNS_LFLAGS := -L$(CGNS_LIB_DIR) -lcgns
+CGNS_LFLAGS := -L$(CGNS_LIB_DIR) -lcgns -lhdf5 -lz
+HDF5_LFLAGS := -L$(CGNS_LIB_DIR) -lhdf5 -lz
 
 MPI_INC_DIR := -I/usr/include/openmpi-x86_64
 MPI_LIB_DIR := /usr/lib64/openmpi/lib
@@ -35,6 +36,8 @@ MPI_LFLAGS := -L$(MPI_LIB_DIR) -lmpi -lopen-rte -lopen-pal
 MKL_INC_DIR := $(MKLROOT)/include
 MKL_LIB_DIR := $(MKLROOT)/lib/em64t
 MKL_LFLAGS := -L$(MKL_LIB_DIR) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+#HDF5_DIR := /home/obraz/lib/hdf5-1.0
 
 #-------------------------
 

@@ -21,13 +21,13 @@ include $(topDIR)/build_linux/Make-conf
 INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
-CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I$(plugDIR)/Profile
+CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I$(plugDIR)/Profile -I$(CGNS_DIR)/include_hdf5
 CFLAGS += $(MPI_INC_DIR)
 CFLAGS += $(WXFLAGS) -vec_report3
 #MY_LIBS := shared.so SmallMat.so PhysCommon.so Profile.so
 #MY_LIBS := $(addprefix $(OUTDIR)/, $(MY_LIBS))
 LFLAGS += -L$(OUTDIR) -lhsfs_shared -lhsfs_smallmat -lhsfs_physcommon -lhsfs_profile $(WXLIBS)
-LFLAGS += $(MPI_LFLAGS) 
+LFLAGS += $(MPI_LFLAGS) $(HDF5_LFLAGS)
 
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
