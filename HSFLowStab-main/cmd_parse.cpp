@@ -65,8 +65,15 @@ void processCmdLine(int argc, wxChar* wxArgv[])
 	{
 		int mpi_rank;
 		wxString logFN;
+		wxString LogDirStr = _T("Log");
 		MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-		logFN.Printf(_T("%s%d"),logFNBase, mpi_rank);
+		if (!wxFileName::DirExists(LogDirStr))
+			if (!wxFileName::Mkdir(LogDirStr, 0755))
+			{
+				wxLogError(_("Can't create Log dir "));
+				exit(EXIT_FAILURE);
+			}
+		logFN.Printf(_T("%s/%s%d"), LogDirStr,logFNBase, mpi_rank);
 		wxLog* logFile = new TLogFile(logFN);
 		wxLog::SetActiveTarget(logFile);
 		wxLogMessage(strTITLE);
