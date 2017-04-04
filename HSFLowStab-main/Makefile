@@ -38,10 +38,10 @@ VPATH := $(SRCDIRS)
 #-------------------------
 
 $(OUTDIR)/$(OUTLIB).exe : $(OBJS) $(OUTDIR)
-	$(CC) -o $@ $(OBJS) $(LFLAGS)
+	$(MPICC) -o $@ $(OBJS) $(LFLAGS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
-	$(CC) -o $@ -fPIC $(CFLAGS) -c $<
+	$(MPICC) -o $@ -fPIC $(CFLAGS) -c $<
 
 
 # Create output and intermed dirs
