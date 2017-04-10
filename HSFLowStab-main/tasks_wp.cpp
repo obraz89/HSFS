@@ -307,31 +307,29 @@ void task::postproc_retrace() {
 
 	t_EnvelopeRec* env_data = new t_EnvelopeRec[npnts];
 
-	for (int n = 0; n < npnts; n++) {
+	for (int i = 0; i < nwp; i++) {
 
-		wxLogMessage(_T("Search N_max for ppid=%d"), n);
+		char wp_dset_name[32];
 
-		const stab::t_PavePoint& pnt = g_pStabDB->get_pave_pt(n);
+		sprintf(wp_dset_name, "/WPData/Data%d", i);
 
-		t_EnvelopeRec& env_data_rec = env_data[n];
+		wxLogMessage(_T("\t Parsing %s"), wxStrdup(wxConvertMB2WX(wp_dset_name)));
 
-		g_pStabSolver->setContext(pnt.xyz);
+		read_wpdata(file, wp_dset_name, arr);
 
 		t_EnvelopeRec cur_env_rec;
 
-		for (int i = 0; i < nwp ; i++) {
+		for (int n = 0; n < npnts; n++) {
 
-			char wp_dset_name[32];
+			const stab::t_PavePoint& pnt = g_pStabDB->get_pave_pt(n);
 
-			sprintf(wp_dset_name, "/WPData/Data%d", i);
+			t_EnvelopeRec& env_data_rec = env_data[n];
 
-			read_wpdata(file,  wp_dset_name, arr);
+			g_pStabSolver->setContext(pnt.xyz);
 
 			arr.interpolate_to_point(pnt.xyz, cur_env_rec, g_pStabSolver->get_stab_scales());
 
 			if (cur_env_rec.N > env_data_rec.N) env_data_rec = cur_env_rec;
-
-			//arr.dump("output/wp_data.txt");
 
 		}
 	}
