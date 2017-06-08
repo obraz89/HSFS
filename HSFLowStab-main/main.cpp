@@ -97,6 +97,8 @@ int main(int argc, char* argv[]){
 		case task::TTaskType::SearchInstabLoc:
 			task::do_global_search();
 			break;
+		case task::TTaskType::SearchMaxInstabLoc:
+			task::do_global_search_find_max();
 		case task::TTaskType::Retrace:
 			switch (g_taskParams.spattime){
 

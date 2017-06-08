@@ -41,6 +41,8 @@ namespace task{
 
 	void do_global_search();
 
+	void do_global_search_find_max();
+
 	void calc_Cp_etc();
 
 	void calc_scal_prod_self();

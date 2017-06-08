@@ -121,6 +121,7 @@ bool load_Settings_n_Plugins()
 	conf->SetPath(_T("/task") );
 
 	task::TaskNames[task::SearchInstabLoc] = _T("SearchInstabLoc");
+	task::TaskNames[task::SearchMaxInstabLoc] = _T("SearchMaxInstabLoc");
 
 	task::TaskNames[task::Retrace] = _T("Retrace");
 	task::TaskNames[task::RetraceMPI] = _T("RetraceMPI");

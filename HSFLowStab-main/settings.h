@@ -24,6 +24,9 @@ namespace task{
 		// Global search of instabilities
 		SearchInstabLoc=0, 
 
+		// Test: do global search and find max with local search
+		SearchMaxInstabLoc,
+
 		// get amplification rates over wave paths with various closures
 		Retrace, 
 

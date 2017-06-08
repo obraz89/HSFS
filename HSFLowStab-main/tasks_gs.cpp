@@ -522,6 +522,14 @@ void task::do_global_search(){
 
 }
 
+// single point test
+// to compare with AVF data
+void task::do_global_search_find_max(){
+
+
+
+}
+
 // tmp, debugging...
 
 void test::gs_lapack_vs_petsc(){
