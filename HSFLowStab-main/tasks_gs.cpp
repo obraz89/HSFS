@@ -522,10 +522,112 @@ void task::do_global_search(){
 
 }
 
+bool calc_ai_db_derivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
+	stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, double a_darg) {
+
+	bool ok = true;
+
+	stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
+
+	t_WCharsLoc base_wave;
+
+	//std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(wave);
+
+	//std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+
+	//if (filt_waves.size()>0) {
+	//		base_wave = t_WCharsLoc::find_max_instab_spat(filt_waves);
+	//}
+	//else { return false; };
+
+	loc_solver.searchWave(base_wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+	double c_val = base_wave.a.imag();
+
+	t_WCharsLoc rgt_wave = base_wave;
+	rgt_wave.b = base_wave.b.real() + a_darg; rgt_wave.resid = 1.0;
+	loc_solver.searchWave(rgt_wave, srch_cond, stab::t_TaskTreat::SPAT);
+	double r_val = rgt_wave.a.imag();
+
+	t_WCharsLoc lft_wave = base_wave;
+	lft_wave.b = base_wave.b.real() - a_darg; rgt_wave.resid = 1.0;
+	loc_solver.searchWave(lft_wave, srch_cond, stab::t_TaskTreat::SPAT);
+	double l_val = lft_wave.a.imag();
+
+	dai_dbr = (r_val - l_val) / (2.0*a_darg);
+
+	d2ai_dbr2 = (r_val - 2.0*c_val + l_val) / (a_darg*a_darg);
+
+	wxLogMessage(_T("Fun=%f; Deriv=%f"), dai_dbr, d2ai_dbr2);
+
+	wave = base_wave;
+
+	return true;
+
+}
+
 // single point test
 // to compare with AVF data
-void task::do_global_search_find_max(){
 
+// lst closure of saddle point
+// dai/dbr=0
+// implies that bi=0, i.e.
+// growth of instability along inviscid streamline (see definition of local rf)
+// use spatial approach to find zero of f(br) = dai/dbr
+bool task::do_global_search_find_max(const int pid){
+
+	const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+	g_pGSSolverSpat->setContext(test_xyz);
+
+	g_pStabSolver->setContext(test_xyz);
+
+	// TODO: for now GS is always spat, should be read from gs file later
+	t_WCharsLoc w_init; w_init.set_treat(stab::t_TaskTreat::SPAT);
+
+	bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
+
+	bool ok = true;
+	const int max_iters = 100;
+
+	// TODO: emprics with d_rg, move to config when tested
+	// not working with small d_arg (like 1.0e-07)
+	const double d_arg = 1.0e-03;
+	const double tol = 1.0e-06;
+
+	t_WCharsLoc w_backup = w_init;
+
+	t_WCharsLoc w_max = w_init;
+
+	w_max = w_init;
+
+	double fun, fun_deriv;
+
+	for (int i = 0; i<max_iters; i++) {
+
+		// do gs when making large newton iteration step
+		ok = ok && calc_ai_db_derivs(w_max, fun, fun_deriv, *g_pStabSolver, *g_pGSSolverSpat, d_arg);
+
+		if (!ok) { 
+		wxLogMessage(_T("ai_db deriv calc failed!"));
+		return false;
+		}
+
+		// check if we are converged
+		if (abs(fun)<tol) {
+			//std::wcout<<_T("Adjust Converged")<<res_base<<std::endl;
+			return true;
+		};
+
+		t_WCharsLoc base_wave = w_max;
+
+		w_max.b = base_wave.b - fun / fun_deriv;
+	};
+
+	wxLogMessage(_T("Error: search max ai vs br - no convergence\n"));
+
+	w_max = w_backup;
+	return false;
 
 
 }

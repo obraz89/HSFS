@@ -41,7 +41,7 @@ namespace task{
 
 	void do_global_search();
 
-	void do_global_search_find_max();
+	bool do_global_search_find_max(const int pid);
 
 	void calc_Cp_etc();
 
@@ -53,3 +53,5 @@ namespace task{
 
 
 }
+
+bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc& wave);

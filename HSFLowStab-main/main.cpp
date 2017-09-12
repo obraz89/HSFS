@@ -98,7 +98,8 @@ int main(int argc, char* argv[]){
 			task::do_global_search();
 			break;
 		case task::TTaskType::SearchMaxInstabLoc:
-			task::do_global_search_find_max();
+			// using fixed debug value of pid
+			task::do_global_search_find_max(9);
 		case task::TTaskType::Retrace:
 			switch (g_taskParams.spattime){
 
