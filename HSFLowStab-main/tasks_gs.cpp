@@ -529,7 +529,7 @@ bool calc_ai_db_derivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
 
 	stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
 
-	t_WCharsLoc base_wave;
+	t_WCharsLoc base_wave = wave;
 
 	//std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(wave);
 
@@ -615,7 +615,7 @@ bool task::do_global_search_find_max(const int pid){
 
 		// check if we are converged
 		if (abs(fun)<tol) {
-			//std::wcout<<_T("Adjust Converged")<<res_base<<std::endl;
+			std::wcout<<_T("search dai_db=0 Converged\n")<<w_max<<std::endl;
 			return true;
 		};
 
