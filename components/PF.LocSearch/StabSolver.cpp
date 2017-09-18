@@ -769,6 +769,73 @@ void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab:
 	}
 }
 
+void t_StabSolver::calcAiDbDerivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2, double a_darg) {
+
+	stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
+
+	t_WCharsLoc base_wave = wave;
+
+	searchWave(base_wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+	double c_val = base_wave.a.imag();
+
+	t_WCharsLoc rgt_wave = base_wave;
+	rgt_wave.b = base_wave.b.real() + a_darg; rgt_wave.resid = 1.0;
+	searchWave(rgt_wave, srch_cond, stab::t_TaskTreat::SPAT);
+	double r_val = rgt_wave.a.imag();
+
+	t_WCharsLoc lft_wave = base_wave;
+	lft_wave.b = base_wave.b.real() - a_darg; rgt_wave.resid = 1.0;
+	searchWave(lft_wave, srch_cond, stab::t_TaskTreat::SPAT);
+	double l_val = lft_wave.a.imag();
+
+	dai_dbr = (r_val - l_val) / (2.0*a_darg);
+
+	d2ai_dbr2 = (r_val - 2.0*c_val + l_val) / (a_darg*a_darg);
+
+	wxLogMessage(_T("Fun=%f; Deriv=%f"), dai_dbr, d2ai_dbr2);
+
+	wave = base_wave;
+
+};
+
+bool t_StabSolver::searchMaxAiSpat(const t_WCharsLoc& w_init, t_WCharsLoc& w_max) {
+
+	bool ok = true;
+	const int max_iters = 100;
+
+	// TODO: emprics with d_rg, move to config when tested
+	// not working with small d_arg (like 1.0e-07)
+	const double d_arg = 1.0e-03;
+	const double tol = 1.0e-06;
+
+	w_max = w_init;
+
+	double fun, fun_deriv;
+
+	for (int i = 0; i<max_iters; i++) {
+
+		calcAiDbDerivs(w_max, fun, fun_deriv, d_arg);
+
+		// check if we are converged
+		if (abs(fun)<tol) {
+			std::wcout << _T("search dai_db=0 Converged\n") << w_max << std::endl;
+			return true;
+		};
+
+		t_WCharsLoc base_wave = w_max;
+
+		w_max.b = base_wave.b - fun / fun_deriv;
+	};
+
+	wxLogMessage(_T("Error: search max ai vs br - no convergence\n"));
+
+	w_max = w_init;
+	return false;
+
+
+};
+
 std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond){
 
 	std::vector<t_WCharsLoc> ret_waves;

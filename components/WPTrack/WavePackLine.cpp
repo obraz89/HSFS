@@ -175,7 +175,7 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t
 
 }
 
-bool calc_ai_db_derivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
+bool calc_ai_db_derivs_OBSOLETE(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
 							 stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, double a_darg){
 
 	 bool ok=true;
@@ -221,7 +221,7 @@ bool calc_ai_db_derivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
 // implies that bi=0, i.e.
 // growth of instability along inviscid streamline (see definition of local rf)
 // use spatial approach to find zero of f(br) = dai/dbr
-bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave, 
+bool search_max_ai_spat_OBSOLETE(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave, 
 						stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver){
 	bool ok = true;
 	const int max_iters = 100;
@@ -239,7 +239,7 @@ bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave,
 
 	for (int i=0; i<max_iters; i++){
 		// do gs when making large newton iteration step
-		ok = ok && calc_ai_db_derivs(max_wave, fun, fun_deriv, loc_solver, gs_solver, d_arg);
+		ok = ok && calc_ai_db_derivs_OBSOLETE(max_wave, fun, fun_deriv, loc_solver, gs_solver, d_arg);
 
 		if (!ok) return false;
 
@@ -260,7 +260,69 @@ bool search_max_ai_spat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave,
 
 }
 
-bool search_wave_wb_fixed(t_WCharsLoc& cur_wave, 
+
+// when we have initial approach w_init at a given point
+// first try to do ls on it, if converged - ok
+// if failed, try gs, if converged -ok
+// if both failed , it is a bad initial approach
+bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact, 
+	stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver) {
+
+	stab::t_LSCond srch_cond;
+
+	srch_cond.set(stab::t_LSCond::W_FIXED | stab::t_LSCond::B_FIXED);
+
+	t_WCharsLoc w_cur = w_init;
+
+	// first try local search
+	loc_solver.searchWave(w_cur, srch_cond, stab::t_TaskTreat::SPAT);
+
+	//std::wcout << _T("Loc search ls-gs:") << w_cur;
+
+	bool ok_wchars = true;
+
+	// loc search can easily converge to stable modes, e.g. near leading edge
+	// we want only instabilities here
+	ok_wchars = ok_wchars && stab::check_wchars_increment(w_cur) && (w_cur.a.imag()<0.0);
+	ok_wchars = ok_wchars && stab::check_wchars_c_phase(w_cur);
+
+	if (ok_wchars) {
+		w_exact = w_cur;
+		return true;
+	}
+
+	// try gs if ls failed
+	std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(w_init);
+
+	if (raw_waves.size()>0) {
+
+		std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
+
+		if (filt_waves.size()>0) {
+
+			w_cur = t_WCharsLoc::find_max_instab_spat(filt_waves);
+
+			bool ok_wchars = true;
+			ok_wchars = ok_wchars && stab::check_wchars_increment(w_cur);
+			ok_wchars = ok_wchars && stab::check_wchars_c_phase(w_cur);
+
+			if (ok_wchars) {
+				//std::wcout << _T("Glob search ls-gs:") << w_cur;
+				w_exact = w_cur;
+				return true;
+			}
+
+
+		}
+	}
+
+	wxLogMessage(_T("Retrace: Search Wave : ls-gs failed"));
+	return false;
+
+};
+
+// obsolete, use search_instab_ls_gs
+bool search_wave_wb_fixed_OBSOLETE(t_WCharsLoc& cur_wave, 
 						  stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver){
 
 	stab::t_LSCond srch_cond;
@@ -501,9 +563,15 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
 			 cur_wave.w = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
 
-			 t_WCharsLoc start_wave_const = cur_wave;
+			 t_WCharsLoc w_exact = cur_wave;
 
-			 if(!search_max_ai_spat(start_wave_const, cur_wave, loc_solver, gs_solver)){
+			 // do gs if ls failed
+
+			 bool ok_wave = search_instab_ls_gs(cur_wave, w_exact, loc_solver, gs_solver);
+
+			 if (!ok_wave) break;
+
+			 if(!loc_solver.searchMaxAiSpat(w_exact, cur_wave)){
 
 				 wxLogError(_T("Error: search max ai failed, break retrace for wpline"));
 
@@ -520,8 +588,13 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 cur_wave.w = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
 			 cur_wave.b = wchars_dim_cnd.b.real()*stab_scales.Dels;
 
-			 if (!search_wave_wb_fixed(cur_wave, loc_solver, gs_solver))
-				 break;
+			 t_WCharsLoc w_init = cur_wave;
+
+			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver);
+
+			 if (!ok_wave) break;
+
+			 //if (!search_wave_wb_fixed(cur_wave, loc_solver, gs_solver))  break;
 
 			 srch_cnd_ok = true;
 		 }
@@ -551,8 +624,11 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 cur_wave.w = wr;
 			 cur_wave.b = br_new;
 
-			 if (!search_wave_wb_fixed(cur_wave, loc_solver, gs_solver))
-				 break;
+			 t_WCharsLoc w_init = cur_wave;
+
+			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver);
+
+			 if (!ok_wave) break;
 
 			 srch_cnd_ok = true;
 

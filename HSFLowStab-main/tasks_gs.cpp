@@ -522,50 +522,6 @@ void task::do_global_search(){
 
 }
 
-bool calc_ai_db_derivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2,
-	stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, double a_darg) {
-
-	bool ok = true;
-
-	stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
-
-	t_WCharsLoc base_wave = wave;
-
-	//std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(wave);
-
-	//std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
-
-	//if (filt_waves.size()>0) {
-	//		base_wave = t_WCharsLoc::find_max_instab_spat(filt_waves);
-	//}
-	//else { return false; };
-
-	loc_solver.searchWave(base_wave, srch_cond, stab::t_TaskTreat::SPAT);
-
-	double c_val = base_wave.a.imag();
-
-	t_WCharsLoc rgt_wave = base_wave;
-	rgt_wave.b = base_wave.b.real() + a_darg; rgt_wave.resid = 1.0;
-	loc_solver.searchWave(rgt_wave, srch_cond, stab::t_TaskTreat::SPAT);
-	double r_val = rgt_wave.a.imag();
-
-	t_WCharsLoc lft_wave = base_wave;
-	lft_wave.b = base_wave.b.real() - a_darg; rgt_wave.resid = 1.0;
-	loc_solver.searchWave(lft_wave, srch_cond, stab::t_TaskTreat::SPAT);
-	double l_val = lft_wave.a.imag();
-
-	dai_dbr = (r_val - l_val) / (2.0*a_darg);
-
-	d2ai_dbr2 = (r_val - 2.0*c_val + l_val) / (a_darg*a_darg);
-
-	wxLogMessage(_T("Fun=%f; Deriv=%f"), dai_dbr, d2ai_dbr2);
-
-	wave = base_wave;
-
-	return true;
-
-}
-
 // single point test
 // to compare with AVF data
 
@@ -595,23 +551,14 @@ bool task::do_global_search_find_max(const int pid){
 	const double d_arg = 1.0e-03;
 	const double tol = 1.0e-06;
 
-	t_WCharsLoc w_backup = w_init;
-
 	t_WCharsLoc w_max = w_init;
-
-	w_max = w_init;
 
 	double fun, fun_deriv;
 
 	for (int i = 0; i<max_iters; i++) {
 
 		// do gs when making large newton iteration step
-		ok = ok && calc_ai_db_derivs(w_max, fun, fun_deriv, *g_pStabSolver, *g_pGSSolverSpat, d_arg);
-
-		if (!ok) { 
-		wxLogMessage(_T("ai_db deriv calc failed!"));
-		return false;
-		}
+		g_pStabSolver->calcAiDbDerivs(w_max, fun, fun_deriv, d_arg);
 
 		// check if we are converged
 		if (abs(fun)<tol) {
@@ -626,7 +573,7 @@ bool task::do_global_search_find_max(const int pid){
 
 	wxLogMessage(_T("Error: search max ai vs br - no convergence\n"));
 
-	w_max = w_backup;
+	w_max = w_init;
 	return false;
 
 

@@ -113,6 +113,10 @@ namespace stab{
 
 		virtual void searchMaxWave(t_WCharsLoc&, t_LSCond cond, t_TaskTreat task_mode)=0;
 
+		virtual bool searchMaxAiSpat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave) = 0;
+
+		virtual void calcAiDbDerivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2, double a_darg) = 0;
+
 		virtual void calcGroupVelocity(t_WCharsLoc& wchars)=0;
 
 		virtual bool checkWCharsByGroupV(t_WCharsLoc& wchars)=0;

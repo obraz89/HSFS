@@ -118,6 +118,10 @@ public:
 
 	void searchMaxWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
 
+	bool searchMaxAiSpat(const t_WCharsLoc& init_wave, t_WCharsLoc& max_wave);
+
+	void calcAiDbDerivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2, double a_darg);
+
 	void setContext(const mf::t_GeomPoint a_xyz);
 
 	void setContext(const t_ProfileStab* prof_stab);
