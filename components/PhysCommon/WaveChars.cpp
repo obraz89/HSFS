@@ -329,7 +329,7 @@ t_WCharsLoc t_WCharsGlobDim::to_loc(const t_SqMat3Dbl &jac, const t_StabScales &
 	vg_glob[2] = wglob_ndim.vgb;
 
 	k_ked = inv_jac*k_glob;
-	vg_ked = inv_jac*k_glob;
+	vg_ked = inv_jac*vg_glob;
 
 	t_WCharsLoc ret;
 
