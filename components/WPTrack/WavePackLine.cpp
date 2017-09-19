@@ -63,15 +63,15 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 
 t_WavePackLine::~t_WavePackLine(){};
 
-t_WaveChars t_WavePackLine::_interpolate_next_wchars(const std::vector<t_WPLineRec>& wpline, 
-								const mf::t_GeomPoint& new_xyz) const{
+t_WCharsLoc t_WavePackLine::_interpolate_next_wchars(const t_RecArray& wpline,
+								const mf::t_GeomPoint& new_xyz, const t_StabScales& scales) const{
 
 	t_Vec3Dbl ds;
 	t_GeomPoint l_xyz, r_xyz;
 
 	const int N = wpline.size();
 	if (N<3){
-		return wpline.back().wave_chars;
+		return wpline.back().wchars_loc;
 	}else{
 		const t_WPLineRec& p1 = wpline[N-3];
 		const t_WPLineRec& p2 = wpline[N-2];
@@ -91,21 +91,56 @@ t_WaveChars t_WavePackLine::_interpolate_next_wchars(const std::vector<t_WPLineR
 		matrix::base::minus<double, double>(new_xyz, l_xyz, ds);
 		double X = ds.norm();
 
-		t_WaveChars ret;
+		t_WCharsGlobDim wg1 = p1.wave_chars.to_dim();
+		t_WCharsGlobDim wg2 = p2.wave_chars.to_dim();
+		t_WCharsGlobDim wg3 = p3.wave_chars.to_dim();
 
-		ret.a = smat::interpolate_parab(
-			                            x1, p1.wave_chars.a, 
-			                            x2, p2.wave_chars.a, 
-										x3, p3.wave_chars.a, X);
+		//wxLogMessage(_T("wg1:%s"), &wg1.to_wstr()[0]);
+		//wxLogMessage(_T("wg2:%s"), &wg2.to_wstr()[0]);
+		//wxLogMessage(_T("wg3:%s"), &wg3.to_wstr()[0]);
 
-		ret.b = smat::interpolate_parab(
-			                            x1, p1.wave_chars.b, 
-										x2, p2.wave_chars.b, 
-										x3, p3.wave_chars.b, X);
+		t_WCharsGlobDim wgX;
 
-		ret.w = smat::interpolate_parab(x1, p1.wave_chars.w, 
-										x2, p2.wave_chars.w, 
-										x3, p3.wave_chars.w, X);
+		wgX.a = smat::interpolate_parab(
+			                            x1, wg1.a, 
+			                            x2, wg2.a, 
+										x3, wg3.a, X);
+
+		wgX.b = smat::interpolate_parab(
+			                            x1, wg1.b, 
+										x2, wg2.b, 
+										x3, wg3.b, X);
+
+		wgX.kn = smat::interpolate_parab(x1, wg1.kn,
+			x2, wg2.kn,
+			x3, wg3.kn, X);
+
+		wgX.w = smat::interpolate_parab(x1, wg1.w, 
+										x2, wg2.w, 
+										x3, wg3.w, X);
+		
+		wgX.vga = smat::interpolate_parab(x1, wg1.vga,
+			x2, wg2.vga,
+			x3, wg3.vga, X);
+
+		wgX.vgb = smat::interpolate_parab(x1, wg1.vgb,
+			x2, wg2.vgb,
+			x3, wg3.vgb, X);
+
+		wgX.vgn = smat::interpolate_parab(x1, wg1.vgn,
+			x2, wg2.vgn,
+			x3, wg3.vgn, X);
+
+		wgX.set_scales(scales);
+		wgX.set_treat(wpline.back().wchars_loc.get_treat());
+
+		//wxLogMessage(_T("wgX:%s"), &wgX.to_wstr()[0]);
+
+		t_SqMat3Dbl jac = _rFldMF.calc_jac_to_loc_rf(new_xyz);
+
+		t_WCharsLoc ret = wgX.to_loc(jac, scales);
+
+		//wxLogMessage(_T("wgX_loc:%s"), &ret.to_wstr()[0]);
 
 		return ret;
 	}
@@ -272,26 +307,31 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 	srch_cond.set(stab::t_LSCond::W_FIXED | stab::t_LSCond::B_FIXED);
 
-	t_WCharsLoc w_cur = w_init;
+	t_WCharsLoc w_ls = w_init;
+	bool ok_ls = true;
 
 	// first try local search
-	loc_solver.searchWave(w_cur, srch_cond, stab::t_TaskTreat::SPAT);
+	try {
+		loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT);
+	}
+	catch (...) { ok_ls = false; }
 
 	//std::wcout << _T("Loc search ls-gs:") << w_cur;
 
-	bool ok_wchars = true;
-
 	// loc search can easily converge to stable modes, e.g. near leading edge
 	// we want only instabilities here
-	ok_wchars = ok_wchars && stab::check_wchars_increment(w_cur) && (w_cur.a.imag()<0.0);
-	ok_wchars = ok_wchars && stab::check_wchars_c_phase(w_cur);
+	ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
+	ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
 
-	if (ok_wchars) {
-		w_exact = w_cur;
+	if (ok_ls && (w_ls.a.imag()<0.0)) {
+		w_exact = w_ls;
 		return true;
 	}
 
 	// try gs if ls failed
+
+	t_WCharsLoc w_gs;
+
 	std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(w_init);
 
 	if (raw_waves.size()>0) {
@@ -300,20 +340,27 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 		if (filt_waves.size()>0) {
 
-			w_cur = t_WCharsLoc::find_max_instab_spat(filt_waves);
+			w_gs = t_WCharsLoc::find_max_instab_spat(filt_waves);
 
-			bool ok_wchars = true;
-			ok_wchars = ok_wchars && stab::check_wchars_increment(w_cur);
-			ok_wchars = ok_wchars && stab::check_wchars_c_phase(w_cur);
+			bool ok_gs = true;
+			ok_gs = ok_gs && stab::check_wchars_increment(w_gs);
+			ok_gs = ok_gs && stab::check_wchars_c_phase(w_gs);
 
-			if (ok_wchars) {
+			if (ok_gs) {
 				//std::wcout << _T("Glob search ls-gs:") << w_cur;
-				w_exact = w_cur;
+				w_exact = w_gs;
 				return true;
 			}
 
 
 		}
+	}
+
+	// if gs failed, maybe we are near neut point and ls was ok but stable
+
+	if (ok_ls) {
+		w_exact = w_ls;
+		return true;
 	}
 
 	wxLogMessage(_T("Retrace: Search Wave : ls-gs failed"));
@@ -553,6 +600,31 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 loc_solver.setContext(cur_xyz);
 		 gs_solver.setContext(cur_xyz);
 
+		 // try to interpolate wchars from previous values
+
+		 
+		 t_WCharsLoc w_intpol = cur_wave;
+
+		 if (pLine->size() > 2) {
+
+			 w_intpol = _interpolate_next_wchars(*pLine, nxt_xyz, loc_solver.get_stab_scales());
+
+			 wxLogMessage(_T("interpolated wchars:\n%s"), &w_intpol.to_wstr()[0]);
+
+			 // check interpolation
+
+			 double err_ipol = abs(1.0 - w_intpol.a.real() / cur_wave.a.real()) +
+				 abs(1.0 - w_intpol.w.real() / cur_wave.w.real());
+
+			 if (err_ipol < 2.0) {
+				 cur_wave = w_intpol;
+			 }
+			 else {
+				 wxLogMessage(_T("Warning: Interpolation of wave chars failed (change not small)"));
+			 }
+
+		 }
+
 		 // search wave with condition specified
 
 		 bool srch_cnd_ok = false;
@@ -571,11 +643,16 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 			 if (!ok_wave) break;
 
-			 if(!loc_solver.searchMaxAiSpat(w_exact, cur_wave)){
+			 bool ok_ai_db = loc_solver.searchMaxAiSpat(w_exact, cur_wave);
 
-				 wxLogError(_T("Error: search max ai failed, break retrace for wpline"));
+			 bool ok_wave_ai_db = stab::check_wchars_increment(cur_wave) && stab::check_wchars_c_phase(cur_wave);
 
-				 return;
+			 if(!ok_wave_ai_db){
+
+				 cur_wave = w_exact;
+
+				 wxLogError(_T("Error: search max ai failed, rescue with init wave"));
+
 			 };
 
 			 srch_cnd_ok = true;
@@ -638,13 +715,13 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 wxLogError(_T("Error: WPTrack: unsupported retrace mode!"));
 		 }
 
+		 cur_wave.set_scales(loc_solver.get_stab_scales());
+
 		 // TODO: avoid group velo calcs if not needed ?
 		 loc_solver.calcGroupVelocity(cur_wave);
 
 		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
 			 loc_solver.get_stab_scales());
-
-		 cur_wave.set_scales(loc_solver.get_stab_scales());
 
 		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, cur_wave);
 
@@ -654,6 +731,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 // write out current record
 		 ostr<<_T("cur xyz   :")<<cur_xyz<<_T("\n");
 		 ostr<<_T("cur wchars:")<<cur_wave<<_T("\n");
+		 ostr << _T("cur wchars glob:") << wchars_glob << _T("\n");
 		 log_my::wxLogMessageStd(ostr.str());
 		 ostr.str(_T(""));ostr.clear();
 

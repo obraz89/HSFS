@@ -74,8 +74,8 @@ namespace pf{
 		double _dx0_dw_gndim, _dx0_db_gndim;
 		t_Complex _da_dw_neut_gndim, _da_db_neut_gndim;
 
-		t_WaveChars _interpolate_next_wchars(const std::vector<stab::t_WPLineRec>& wpline, 
-			const mf::t_GeomPoint& new_xyz) const;
+		t_WCharsLoc _interpolate_next_wchars(const t_RecArray& wpline,
+			const mf::t_GeomPoint& new_xyz, const t_StabScales& new_scales) const;
 
 		void _calc_dr(double dt, const stab::t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr) const;
 
