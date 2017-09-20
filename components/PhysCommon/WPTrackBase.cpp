@@ -25,6 +25,10 @@ void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
 	arr.cont[10] = wave_chars.w.imag();
 	arr.cont[11] = n_factor;
 
+	arr.cont[12] = wave_chars.scales().Dels;
+	arr.cont[13] = wave_chars.scales().ReStab;
+	arr.cont[14] = wave_chars.scales().UeDim;
+
 	
 };
 void t_WPLineRec::unpack_from_arr(const double* cont) {
@@ -43,6 +47,14 @@ void t_WPLineRec::unpack_from_arr(const double* cont) {
 	wave_chars.w.imag(cont[10]);
 
 	n_factor = cont[11];
+
+	t_StabScales scales;
+
+	scales.Dels = cont[12];
+	scales.ReStab = cont[13];
+	scales.UeDim = cont[14];
+
+	wave_chars.set_scales(scales);
 	
 };
 
@@ -97,9 +109,9 @@ void t_WPLine2H5Arr::get_rec(int nrec, t_WPLineRec& rec) const{
 }
 
 // TODO: 2D configurations only, use only x coord to interpolate
-void t_WPLine2H5Arr::interpolate_to_point(const mf::t_GeomPoint& xyz, t_EnvelopeRec& env_rec, const t_StabScales& stab_scales) const {
+void t_WPLine2H5Arr::interpolate_to_point(const mf::t_GeomPoint& xyz, t_WPLineRec& env_rec) const {
 
-	env_rec.N = -1;
+	env_rec.n_factor = -1;
 
 	if (nrecs <= 1) return;
 
@@ -129,15 +141,15 @@ void t_WPLine2H5Arr::interpolate_to_point(const mf::t_GeomPoint& xyz, t_Envelope
 
 		if ((x_int >= x_l) && (x_int <= x_r)) {
 
+			// TODO: interpolate other values here
+			// for now just use left value
+			env_rec = rec_l;
+
 			// linear interpolation
 			double N_l = rec_l.n_factor;
 			double N_r = rec_r.n_factor;
 
-			env_rec.N = N_l + (N_r - N_l) / (x_r - x_l)*(x_int - x_l);
-
-			// no interpolation )
-			rec_l.wave_chars.set_scales(stab_scales);
-			env_rec.wchars = rec_l.wave_chars.to_dim();
+			env_rec.n_factor = N_l + (N_r - N_l) / (x_r - x_l)*(x_int - x_l);
 
 			return;
 

@@ -87,12 +87,6 @@ namespace stab{
 		
 	};
 
-	struct t_EnvelopeRec {
-		double N;
-		t_WCharsGlobDim wchars;
-		t_EnvelopeRec() :N(-1.0), wchars() {}
-	};
-
 	struct IMPEXP_PHYSCOMMON t_WPLine2H5Arr {
 
 		int nrecs;
@@ -111,7 +105,7 @@ namespace stab{
 		void unpack_from_mpi_msg(double * mpi_buf);
 
 		// post-proc
-		void interpolate_to_point(const mf::t_GeomPoint& xyz, t_EnvelopeRec& env_rec, const t_StabScales& scales) const;
+		void interpolate_to_point(const mf::t_GeomPoint& xyz, t_WPLineRec& env_rec) const;
 
 
 

@@ -305,7 +305,7 @@ void task::postproc_retrace() {
 
 	int npnts = g_pStabDB->get_npoints();
 
-	t_EnvelopeRec* env_data = new t_EnvelopeRec[npnts];
+	t_WPLineRec* env_data = new t_WPLineRec[npnts];
 
 	for (int i = 0; i < nwp; i++) {
 
@@ -317,19 +317,17 @@ void task::postproc_retrace() {
 
 		read_wpdata(file, wp_dset_name, arr);
 
-		t_EnvelopeRec cur_env_rec;
+		t_WPLineRec cur_env_rec;
 
 		for (int n = 0; n < npnts; n++) {
 
 			const stab::t_PavePoint& pnt = g_pStabDB->get_pave_pt(n);
 
-			t_EnvelopeRec& env_data_rec = env_data[n];
+			t_WPLineRec& env_data_rec = env_data[n];
 
-			g_pStabSolver->setContext(pnt.xyz);
+			arr.interpolate_to_point(pnt.xyz, cur_env_rec);
 
-			arr.interpolate_to_point(pnt.xyz, cur_env_rec, g_pStabSolver->get_stab_scales());
-
-			if (cur_env_rec.N > env_data_rec.N) env_data_rec = cur_env_rec;
+			if (cur_env_rec.n_factor > env_data_rec.n_factor) env_data_rec = cur_env_rec;
 
 		}
 	}
@@ -339,11 +337,11 @@ void task::postproc_retrace() {
 		std::ofstream ofstr_env("output/N_fact_envelope.dat");
 
 		for (int i = 0; i < npnts; i++) {
-			const t_EnvelopeRec& env_rec = env_data[i];
+			const t_WPLineRec& env_rec = env_data[i];
 			const mf::t_GeomPoint& xyz = g_pStabDB->get_pave_pt(i).xyz;
-			const t_WCharsGlobDim& wc = env_rec.wchars;
+			const t_WCharsGlobDim& wc = env_rec.wave_chars.to_dim();
 			ofstr_env << xyz.x() << "\t" << xyz.y() << "\t" << xyz.z() << "\t"
-				<< env_rec.N << "\t"
+				<< env_rec.n_factor << "\t"
 				<< wc.a.real() << "\t" << wc.kn.real() << "\t" << wc.b.real() << "\t"
 				<< wc.w.real() << "\n";
 		}
