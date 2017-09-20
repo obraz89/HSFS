@@ -924,7 +924,7 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 		for (int i=1; i<nldn; i++) 	_line.push_back(_line_down[i]);
 	}
 
-	if (_params.CalcWPDispersion)
+	if (_params.CalcWPDispersion && _params.CalcDispTermsNeutPoint)
 		calc_neut_point_derivs_indirect(loc_solver);
 
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
@@ -1334,9 +1334,11 @@ void t_WavePackLine::calc_d2N_dxx(){
 	smat::integrate_over_range(_s, d2sig_dwb, I_d2sig_dwb);
 	smat::integrate_over_range(_s, d2sig_db2, I_d2sig_db2);
 
-	double d2N_dw2_corr = _da_dw_neut_gndim.imag()*_dx0_dw_gndim;
-	double d2N_dwb_corr = _da_db_neut_gndim.imag()*_dx0_dw_gndim;
-	double d2N_db2_corr = _da_db_neut_gndim.imag()*_dx0_db_gndim;
+	bool do_np = _params.CalcDispTermsNeutPoint;
+
+	double d2N_dw2_corr = do_np ? _da_dw_neut_gndim.imag()*_dx0_dw_gndim : 0.0;
+	double d2N_dwb_corr = do_np ? _da_db_neut_gndim.imag()*_dx0_dw_gndim : 0.0;
+	double d2N_db2_corr = do_np ? _da_db_neut_gndim.imag()*_dx0_db_gndim : 0.0;
 
 	// debug
 	wxLogMessage(_T("calc_d2N_dxx neut point additions: ww=%lf, wb=%lf, bb=%lf"), 

@@ -64,7 +64,9 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 	g.add("SigmaTruncMode", SIGMA_TRUNC_DEFAULT_STR, _T("sigma <0 stop criteria"));
 
-	g.add("CalcWPDispersion", 1, _T("Calculate dispersion of wave packet d2N_dw2 and d2N_db2 ?"));
+	g.add("CalcWPDispersion", 0, _T("Calculate dispersion of wave packet d2N_dw2 and d2N_db2 ?"));
+
+	g.add("CalcDispTermsNeutPoint", 0, _T("Calculate additions for dispersions at neutral point?"));
 
 	g.add("DwDisp", 0.5e-03, _T("Non-dim step to vary w in dispersion calculations"));
 
@@ -102,6 +104,8 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	TimeStep = g.get_real_param("TimeStep");
 
 	CalcWPDispersion = g.get_int_param("CalcWPDispersion");
+
+	CalcDispTermsNeutPoint = g.get_int_param("CalcDispTermsNeutPoint");
 
 	dw_disp = g.get_real_param("DwDisp");
 
