@@ -29,6 +29,12 @@ void t_WPLineRec::pack_to_arr(t_WPRec2H5Arr& arr) const {
 	arr.cont[13] = wave_chars.scales().ReStab;
 	arr.cont[14] = wave_chars.scales().UeDim;
 
+	arr.cont[15] = dN_dw_gndim;
+	arr.cont[16] = dN_db_gndim;
+
+	arr.cont[17] = d2N_dw2_gndim;
+	arr.cont[18] = d2N_dwb_gndim;
+	arr.cont[19] = d2N_db2_gndim;
 	
 };
 void t_WPLineRec::unpack_from_arr(const double* cont) {
@@ -53,6 +59,13 @@ void t_WPLineRec::unpack_from_arr(const double* cont) {
 	scales.Dels = cont[12];
 	scales.ReStab = cont[13];
 	scales.UeDim = cont[14];
+
+	dN_dw_gndim = cont[15];
+	dN_db_gndim = cont[16];
+
+	d2N_dw2_gndim = cont[17];
+	d2N_dwb_gndim = cont[18];
+	d2N_db2_gndim = cont[19];
 
 	wave_chars.set_scales(scales);
 	

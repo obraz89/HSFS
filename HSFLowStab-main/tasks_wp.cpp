@@ -307,6 +307,8 @@ void task::postproc_retrace() {
 
 	t_WPLineRec* env_data = new t_WPLineRec[npnts];
 
+	int* env_wpids = new int[npnts];
+
 	for (int i = 0; i < nwp; i++) {
 
 		char wp_dset_name[32];
@@ -327,7 +329,12 @@ void task::postproc_retrace() {
 
 			arr.interpolate_to_point(pnt.xyz, cur_env_rec);
 
-			if (cur_env_rec.n_factor > env_data_rec.n_factor) env_data_rec = cur_env_rec;
+			if (cur_env_rec.n_factor > env_data_rec.n_factor) {
+
+				env_data_rec = cur_env_rec;
+
+				env_wpids[n] = i;
+			}
 
 		}
 	}
@@ -336,6 +343,9 @@ void task::postproc_retrace() {
 	{
 		std::ofstream ofstr_env("output/N_fact_envelope.dat");
 
+		ofstr_env <<"x\ty\tz\tN_fact\talpha_dim\tkn_dim\tbeta_dim\tfreq_dim\t";
+		ofstr_env <<"dN_dw_gndim\tdN_db_gndim\td2N_dw2_gndim\td2N_dwb_gndim\td2N_db2_gndim\n";
+
 		for (int i = 0; i < npnts; i++) {
 			const t_WPLineRec& env_rec = env_data[i];
 			const mf::t_GeomPoint& xyz = g_pStabDB->get_pave_pt(i).xyz;
@@ -343,8 +353,36 @@ void task::postproc_retrace() {
 			ofstr_env << xyz.x() << "\t" << xyz.y() << "\t" << xyz.z() << "\t"
 				<< env_rec.n_factor << "\t"
 				<< wc.a.real() << "\t" << wc.kn.real() << "\t" << wc.b.real() << "\t"
-				<< wc.w.real() << "\n";
+				<< wc.w.real() << "\t"
+				<< env_rec.dN_db_gndim << "\t" << env_rec.dN_db_gndim << "\t"
+				<< env_rec.d2N_dw2_gndim << "\t" << env_rec.d2N_dwb_gndim << "\t" << env_rec.d2N_db2_gndim << "\n";
 		}
+	}
+
+	// output dispersion data for wplines that produce envelope
+
+	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
+
+	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*g_pMFDomain);
+
+	for (int i = 0; i < npnts; i++) {
+
+		char wp_dset_name[32];
+
+		sprintf(wp_dset_name, "/WPData/Data%d", env_wpids[i]);
+
+		wxLogMessage(_T("\t Reading envelope wpline : %s"), wxStrdup(wxConvertMB2WX(wp_dset_name)));
+
+		read_wpdata(file, wp_dset_name, arr);
+
+		wp_line->unpack_from_arr(arr);
+
+		char wp_disp_fname[32];
+
+		sprintf(wp_disp_fname, "output/disp_data_env_%d.dat", env_wpids[i]);
+
+		wp_line->print_dispersion_data_full(wp_disp_fname);
+
 	}
 
 	status = H5Aclose(attr_nwp);
