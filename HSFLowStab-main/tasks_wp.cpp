@@ -354,7 +354,7 @@ void task::postproc_retrace() {
 				<< env_rec.n_factor << "\t"
 				<< wc.a.real() << "\t" << wc.kn.real() << "\t" << wc.b.real() << "\t"
 				<< wc.w.real() << "\t"
-				<< env_rec.dN_db_gndim << "\t" << env_rec.dN_db_gndim << "\t"
+				<< env_rec.dN_dw_gndim << "\t" << env_rec.dN_db_gndim << "\t"
 				<< env_rec.d2N_dw2_gndim << "\t" << env_rec.d2N_dwb_gndim << "\t" << env_rec.d2N_db2_gndim << "\n";
 		}
 	}
