@@ -45,7 +45,7 @@ bool search_global_initial_wr_fixed_spat(double a_wr, t_WCharsLoc& ret_wave){
 	double bt_min = g_taskParams.b_ndim_min;
 	double bt_max = g_taskParams.b_ndim_max;
 
-	double dbt = (bt_max - bt_min)/double(n_bt);
+	double dbt = (n_bt>1) ? (bt_max - bt_min)/double(n_bt-1) : 0.0;
 
 	const double w = a_wr;
 
@@ -88,7 +88,7 @@ void task::search_max_instab_fixed_point_spat(int pid, t_GSWaveInfo& winfo){
 
 	int Nw = g_taskParams.N_w;
 
-	double dw = (w_max - w_min)/double(Nw);
+	double dw = (Nw>1) ? (w_max - w_min)/double(Nw-1) : 0.0;
 
 	std::vector<t_WCharsLoc> max_waves_spat;
 
@@ -187,7 +187,7 @@ bool search_global_initial_ar_fixed_time(double a_ar, t_WCharsLoc& ret_wave){
 	double bt_min = g_taskParams.b_ndim_min;
 	double bt_max = g_taskParams.b_ndim_max;
 
-	double dbt = (bt_max - bt_min)/double(n_bt);
+	double dbt = (n_bt>1) ? (bt_max - bt_min)/double(n_bt-1) : 0.0;
 
 	const double a = a_ar;
 
@@ -231,7 +231,7 @@ void task::search_max_instab_fixed_point_time(int pid, t_GSWaveInfo& winfo){
 
 	int Na = g_taskParams.N_a;
 
-	double da = (a_max - a_min)/double(Na);
+	double da = (Na>1) ? (a_max - a_min)/double(Na) : 0.0;
 
 	std::vector<t_WCharsLoc> max_waves_time;
 
@@ -548,6 +548,9 @@ bool task::do_global_search_find_max(const int pid){
 
 	// TODO: emprics with d_rg, move to config when tested
 	// not working with small d_arg (like 1.0e-07)
+
+	wxLogMessage(_T("Warning: Check darg in do_global_search_find_max !"));
+
 	const double d_arg = 1.0e-03;
 	const double tol = 1.0e-06;
 
