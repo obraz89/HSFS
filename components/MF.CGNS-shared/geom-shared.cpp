@@ -397,20 +397,35 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	t_ZoneNode surf_znode, outer_znode;
 
-	surf_znode = data_grdline[0];
+	surf_znode = _get_nrst_node_surf(data_grdline[0]);
 
 	// if du_dy increases search max
 	// use du_dy wall otherwise
-	double du_dy_max = 0.0;
-	double du_dy;
+//	double du_dy_max = 0.0;
+//	double du_dy;
+
+	// try to use deriv without vn
+	double dutau_dy_max = 0.0;
+	double dutau_dy;
 
 	mf::t_Rec cur_rec, nxt_rec;
 	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
 	t_Vec3Dbl cur_uvw, nxt_uvw, du;
 
+	t_Vec3Dbl surf_norm;
+	calc_surf_norm(surf_znode, surf_norm);
+
+	wxLogMessage(_T("norm:%s"), surf_norm.to_wxstr());
+
+	double uabs_cur, uabs_nxt;
+	double ut_cur, ut_nxt;
+	double un_cur, un_nxt;
+
 	// wall rec is used to calculate bl_thick
 	get_rec(surf_znode, cur_rec);
 	wall_xyz.set(cur_rec);
+
+	wxLogMessage(_T("surf node xyz:%s"), wall_xyz.to_wxstr());
 
 	// first find max deriv
 	// then find reference point where dudy = eps*dudy_max : y = dd
@@ -440,13 +455,25 @@ void TDomain::_calc_bl_thick_vderiv(
 		matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
 		matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
 
-		du_dy = abs(du.norm()/dr.norm());
+		//du_dy = abs(du.norm()/dr.norm());
+
+		uabs_cur = cur_uvw.norm();
+		un_cur = vector::dot(cur_uvw, surf_norm);
+		ut_cur = sqrt(uabs_cur*uabs_cur - un_cur*un_cur);
+
+		uabs_nxt = nxt_uvw.norm();
+		un_nxt = vector::dot(nxt_uvw, surf_norm);
+		ut_nxt = sqrt(uabs_nxt*uabs_nxt - un_nxt*un_nxt);
+
+		dutau_dy = abs((ut_nxt - ut_cur) / dr.norm());
+
+		//wxLogMessage(_T("du_dy=%lf; dutau_dy=%lf"), du_dy, dutau_dy);
 
 		if (searching_max){
 
-			if (du_dy<du_dy_max) searching_max = false;
+			if (dutau_dy<dutau_dy_max) searching_max = false;
 
-			du_dy_max = du_dy;
+			dutau_dy_max = dutau_dy;
 
 			continue;
 
@@ -456,7 +483,7 @@ void TDomain::_calc_bl_thick_vderiv(
 
 			if (searching_ref){
 
-				if (du_dy<eps*du_dy_max){
+				if (dutau_dy<eps*dutau_dy_max){
 
 					ref_znode = data_grdline[m];
 					searching_ref = false;
