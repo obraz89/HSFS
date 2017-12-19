@@ -97,6 +97,12 @@ public:
 		}
 		return str;
 	}
+
+	wxString to_wxstr() const {
+		std::wostringstream ostr;
+		ostr << *this;
+		return wxString(&ostr.str()[0]);
+	}
 };
 
 //template<typename T> t_Matrix<T>::t_Matrix<T>
