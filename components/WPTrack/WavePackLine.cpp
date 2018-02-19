@@ -161,7 +161,7 @@ void t_WavePackLine::_add_node(
 
 };
 
-void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr) const{
+void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir, t_Vec3Dbl& dr) const{
 
 	mf::t_Rec outer_rec;
 	t_GeomPoint xyz = rec.mean_flow.get_xyz();
@@ -175,9 +175,11 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t
 	{
 	case t_WPLineParams::GROUP_VELO:
 
-		v.set(rec.wave_chars.vga.real(), rec.wave_chars.vgn.real(), rec.wave_chars.vgb.real());
+		dir.set(rec.wave_chars.vga.real(), rec.wave_chars.vgn.real(), rec.wave_chars.vgb.real());
 
-		matrix::base::mul(dt, v, dr);
+		dir.normalize();
+
+		matrix::base::mul(dt, dir, dr);
 
 		break;
 
@@ -188,17 +190,21 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& v, t
 		//wxLogMessage(wostr.str());
 		log_my::wxLogMessageStd(wostr.str());
 
-		v.set(outer_rec.u, outer_rec.v, outer_rec.w);
+		dir.set(outer_rec.u, outer_rec.v, outer_rec.w);
 
-		matrix::base::mul(dt, v, dr);
+		dir.normalize();
+
+		matrix::base::mul(dt, dir, dr);
 
 		break;
 
 	case t_WPLineParams::FIXED_DIRECTION:
 
-		v = _params.RetraceVec;
+		dir = _params.RetraceVec;
 
-		matrix::base::mul(dt, v, dr);
+		dir.normalize();
+
+		matrix::base::mul(dt, dir, dr);
 
 		break;
 	default:
@@ -484,14 +490,14 @@ void t_WavePackLine::_retrace_dir_w_time(t_GeomPoint start_from, t_WCharsLoc ini
 	//std::wofstream f_debug_str(_T("wplines_debug_info.dat"), std::ios::app);
 	//f_debug_str<<_T("======semiline starts\n");
 
-	t_Vec3Dbl vg, dr;
+	t_Vec3Dbl dr_dir, dr;
 
 	do{
 
 		t_WPLineRec& last_rec = pLine->back();
 		double dt = _params.TimeStep*time_direction;
 
-		_calc_dr(dt, last_rec, vg, dr);
+		_calc_dr(dt, last_rec, dr_dir, dr);
 
 		// TODO: IMPORTANT! BE ALWAYS ON SURFACE
 		t_GeomPoint new_gpoint = last_rec.mean_flow.get_xyz()+dr; 
@@ -585,7 +591,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 	 bool proceed_cond=true;
 	 std::wostringstream ostr;
 
-	 t_Vec3Dbl vg, dr;
+	 t_Vec3Dbl dr_dir, dr;
 
 	 t_WCharsLoc cur_wave, nxt_wave;
 	 t_GeomPoint cur_xyz, nxt_xyz;
@@ -737,7 +743,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 		 t_WPLineRec& last_rec = pLine->back();
 
-		 _calc_dr(dt, last_rec, vg, dr);
+		 _calc_dr(dt, last_rec, dr_dir, dr);
 
 		 // TODO: IMPORTANT! BE ALWAYS ON SURFACE
 		 nxt_xyz = cur_xyz + dr; 
