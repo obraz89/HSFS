@@ -725,6 +725,10 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	jac.set_col(0, e1);
 	jac.set_col(1, e2);
 	jac.set_col(2, e3);
+
+	wxLogMessage(_T("bound rec xyz:%s"), bound_rec.get_xyz().to_wxstr());
+	wxLogMessage(_T("bound rec UVW:%s"), bound_rec.get_uvw().to_wxstr());
+	wxLogMessage(_T("Jac to loc rf:%s"), jac.to_wxstr());
 	
 	return jac;
 
