@@ -36,7 +36,15 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	const double dMu2 = rec.mu2*rec.t1*rec.t1 + rec.mu1*rec.t2;
 	const double dMu_U= rec.mu2*rec.t1*rec.u1 + rec.mu1*rec.u2;
 
-	const t_CompVal xi = 1.0/(stabRe*inv_mu+imagUnity*vCoefL*gMaMa*dEicon_dt);
+	const double m13 = _curv_coefs.m13;
+	const double m31 = _curv_coefs.m31;
+	const double m12 = _curv_coefs.m12;
+	const double m32 = _curv_coefs.m32;
+
+	const t_CompVal xi = 1.0 / (stabRe*inv_mu + imagUnity*vCoefL*gMaMa*dEicon_dt);
+	//const t_CompVal xi_m = 1.0 / (stabRe*inv_mu + imagUnity*vCoefL*gMaMa*dEicon_dt + vCoefL*gMaMa*m_e3);
+
+	//const t_CompVal xi_dd = xi_m - xi;
 
 	// compose stab matrix for direct problem first
 
@@ -57,6 +65,9 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	_stab_matrix[4][1] = vCoefM*alpha*inv_t*dEicon_dt - inv_mu*dMu_U;
 
 	_stab_matrix[5][1] = -inv_mu*rec.mu1*rec.u1;
+
+	_stab_matrix[6][1] = 0.0;
+
 	// third
 	_stab_matrix[0][2] = -imagUnity*alpha;
 
@@ -67,7 +78,9 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	_stab_matrix[4][2] = imagUnity*inv_t*dEicon_dt;
 
 	_stab_matrix[6][2] = -imagUnity*beta;
+
 	// fourth
+
 	_stab_matrix[0][3] = -imagUnity*xi*alpha*
 		(2.0*inv_mu*dMu1 + vCoefL*inv_t*rec.t1);
 
@@ -120,6 +133,8 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 	// seventh
 	_stab_matrix[7][6]=1.0;
 	// last
+	_stab_matrix[0][7] = 0.0;
+
 	_stab_matrix[2][7] = -imagUnity*beta*(inv_mu*dMu1+vCoefM*inv_t*rec.t1)+
 		stabRe*inv_mu*inv_t*rec.w1;
 
@@ -136,7 +151,150 @@ void t_StabSolver::_setStabMatrix3D(const t_ProfRec& rec){
 
 	_stab_matrix[7][7] = -inv_mu*dMu1;
 
+	const bool curv_on = _params.CurvTermsOn;
+
+	// compressible addition to curv terms
+	/*
+	if (curv_on) {
+
+		const double m_e1 = m12 + m32;
+
+		const double m_e3 = m31*rec.u + m13*rec.w;
+
+		const double m_e4 = m12*rec.u*rec.u + m32*rec.w*rec.w;
+
+		// second row
+		_stab_matrix[0][1] += stabRe*inv_mu*inv_t*rec.w*m12 +
+			vCoefM*imagUnity*alpha*m21;
+
+		_stab_matrix[2][1] += stabRe*inv_mu*inv_t*rec.u*m13 +
+			vCoefM*imagUnity*alpha*m_e1;
+
+		const double u_e2 = rec.u*rec.w*m12 - rec.w*rec.w*m21;
+
+		_stab_matrix[3][1] += stabRe*inv_mu*inv_t*gMaMa*u_e2 +
+			vCoefM*imagUnity*alpha*gMaMa*m_e3;
+
+		_stab_matrix[4][1] += -stabRe*inv_mu*inv_t*inv_t*u_e2 -
+			vCoefM*imagUnity*alpha*inv_t*m_e3;
+
+		_stab_matrix[6][1] += stabRe*inv_mu*inv_t*(rec.u*m12 - 2 * rec.w*m21) +
+			vCoefM*imagUnity*alpha*m12;
+
+		// thrid row
+
+		_stab_matrix[0][2] += -m21;
+
+		_stab_matrix[2][2] += -m_e1;
+
+		_stab_matrix[3][2] += -gMaMa*m_e3;
+
+		_stab_matrix[4][2] += inv_t*m_e3;
+
+		_stab_matrix[6][2] += -m12;
+
+		// fourth row
+		// IMPORTANT TODO: exact expressions for curvature terms
+		// for now assume xi = xi_m, xi_dd = 0, 
+		// this is the case when m12=m21=0
+
+		_stab_matrix[0][3] += xi*(-2.0*stabRe*inv_mu*inv_t*rec.u*m13 +
+			vCoefL*imagUnity*alpha*m_e1);
+
+		_stab_matrix[2][3] +=
+			xi*vCoefL*m_e1*(-2.0*inv_t*rec.t1 + m_e1 - inv_mu*dMu1);
+
+		_stab_matrix[3][3] += xi*gMaMa*(stabRe*inv_mu*inv_t*m_e4 +
+			vCoefL*m_e1*imagUnity*dEicon_dt);
+
+		_stab_matrix[4][3] += -xi*inv_t*(stabRe*inv_mu*inv_t*m_e4 +
+			vCoefL*m_e1*imagUnity*dEicon_dt);
+
+		_stab_matrix[6][3] += xi*(2.0*stabRe*inv_mu*inv_t*rec.w*m23 +
+			vCoefL*imagUnity*beta*m_e1);
+
+		// eight row
+		_stab_matrix[0][7] += stabRe*inv_mu*inv_t*(rec.w*m21 - 2.0*rec.u*m12) +
+			vCoefM*imagUnity*beta*m21;
+
+		_stab_matrix[2][7] += stabRe*inv_mu*inv_t*rec.w*m23 +
+			vCoefM*imagUnity*beta*m_e1;
+
+		const double w_e2 = rec.u*rec.w*m21 - rec.u*rec.u*m12;
+
+		_stab_matrix[3][7] += stabRe*inv_mu*inv_t*gMaMa*w_e2 +
+			vCoefM*imagUnity*beta*gMaMa*m_e3;
+
+		_stab_matrix[4][7] += -stabRe*inv_mu*inv_t*inv_t*w_e2 -
+			vCoefM*imagUnity*beta*inv_t*m_e3;
+
+		_stab_matrix[6][7] += stabRe*inv_mu*inv_t*rec.u*m21 +
+			vCoefM*imagUnity*beta*m12;
+
+	} */ // Compressible curvature additions to stability matrix 
+
+	// incompressible additions after Cebeci
+	if (curv_on) {
+
+		//wxLogMessage(_T("LS: Curv terms on!"));
+
+		// second row, 'du/dy'-eq
+		_stab_matrix[0][1] += stabRe*rec.w*m13;
+
+		_stab_matrix[2][1] += stabRe*rec.u*m12;
+
+		_stab_matrix[6][1] += stabRe*(rec.u*m13 - 2 * rec.w*m31);
+
+		// third row, 'v'-eq
+
+		_stab_matrix[0][2] += -m31;
+
+		_stab_matrix[2][2] += -(m12+m32);
+
+		_stab_matrix[6][2] += -m13;
+
+		// fourth row, 'p'-eq or 'dv/dz'-eq
+
+		double m2 = m12 + m32;
+
+		_stab_matrix[0][3] += xi*(2.0*stabRe*inv_mu*inv_t*rec.u*m12 +
+			vCoefL*imagUnity*alpha*m2);
+
+		_stab_matrix[2][3] +=
+			xi*vCoefL*m2*(m2-inv_t*rec.t1 - inv_mu*dMu1);
+
+		const double m_e4 = m12*rec.u*rec.u + m32*rec.w*rec.w;
+
+		_stab_matrix[3][3] += xi*gMaMa*(stabRe*inv_mu*inv_t*m_e4 +
+			vCoefL*m2*imagUnity*dEicon_dt);
+
+		_stab_matrix[4][3] += -xi*inv_t*(stabRe*inv_mu*inv_t*m_e4 +
+			vCoefL*m2*imagUnity*dEicon_dt);
+
+		_stab_matrix[6][3] += xi*(2.0*stabRe*inv_mu*inv_t*rec.w*m32 +
+			vCoefL*imagUnity*beta*m2);
+
+		// eighth row, 'dw/dy'-eq
+
+		// eight row
+		_stab_matrix[0][7] += stabRe*(rec.w*m31 - 2.0*rec.u*m13);
+
+		_stab_matrix[2][7] += stabRe*rec.w*m32;
+
+		_stab_matrix[6][7] += stabRe*rec.u*m31;
+
+	}
+
 }
+
+void t_StabSolver::_setCurvCoefs(const mf::t_GeomPoint& a_xyz) {
+
+	// sphere case, dimensional raduis
+	const double R_dim = 0.089;
+
+	_curv_coefs.set_coefs_sphere(_profStab.scales(), R_dim);
+
+};
 
 void t_StabSolver::_setStabMatrix3D(const double& a_y){
 

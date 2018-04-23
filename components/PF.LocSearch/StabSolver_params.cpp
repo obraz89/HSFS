@@ -21,6 +21,8 @@ static const int ADJUST_MAX_ITER_DEFAULT= 50;
 
 #define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_CFD_SCALE")
 
+#define CURV_TERMS_FLAG_DEFAULT_STR _("NO")
+
 // small increment to compute smth like
 // dw/da : (w(a+DELTA) - w(a))/DELTA
 static const double DELTA_SMALL = 1.0e-6;
@@ -47,6 +49,16 @@ void t_StabSolverParams::init_supported_options(){
 	PROFNS_INIT_TYPES_STR.insert(
 		std::make_pair(_T("INTERPOLATE"), blp::NSINIT_INTERPOLATE));
 
+	CURV_TERMS_FLAGS_STR.clear();
+
+	CURV_TERMS_FLAGS_STR.insert(
+		std::make_pair(CURV_TERMS_FLAG_DEFAULT_STR, false)
+	);
+
+	CURV_TERMS_FLAGS_STR.insert(
+		std::make_pair(_T("YES"), true)
+	);
+
 }
 
 void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
@@ -67,7 +79,7 @@ void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("ProfStabNonDimType", PROFSTAB_NDIM_TYPE_DEFAULT_STR, _T("Use this non-dim for stability profiles"));
 
-
+	g.add("CurvTermsEnabled", CURV_TERMS_FLAG_DEFAULT_STR, _T("Enable/disable curvature terms in stability computations"));
 }
 
 void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
@@ -138,6 +150,21 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 	default:
 		wxLogError(_T("PF.LocSearch: failed to read prfstab nondim type"));
 	}
+
+	wxString curv_terms_flag_str = g.get_string_param("CurvTermsEnabled");
+
+	curv_terms_flag_str.Trim(true); curv_terms_flag_str.Trim(false);
+
+	t_MapWxStrBool::iterator it_b = CURV_TERMS_FLAGS_STR.find(curv_terms_flag_str);
+
+	if (it_b == CURV_TERMS_FLAGS_STR.end()) {
+
+		wxString msg(_T("PF.StabSolver: unknown option for CurvTermsEnabled, supported options YES, NO"));
+		wxLogError(msg); ssuGENTHROW(msg);
+
+	}
+
+	CurvTermsOn = it_b->second;
 
 }
 

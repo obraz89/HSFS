@@ -42,6 +42,8 @@ namespace pf{
 		std::vector<double> _grid_y_stab;
 		double _deta;
 
+		t_StabCurvCoefs _curv_coefs;
+
 		std::vector<t_Complex> _spectrum;
 		std::vector<t_WCharsLoc> _eigens;
 
@@ -79,7 +81,10 @@ namespace pf{
 		void fill_FO_row(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 			const int a_nnode, int& a_ins_nvals);
 
+		void _set_curv_coefs_xyz(const mf::t_GeomPoint& a_xyz);
+
 		int _solve();
+
 	public:
 
 		~t_GlobSrchSpat();

@@ -51,6 +51,8 @@ class  t_StabSolver: public stab::t_LSBase{
 	// keep current stability_matrix
 	t_SqMatCmplx _stab_matrix;
 
+	t_StabCurvCoefs _curv_coefs;
+
 	// scalar product of 2 amplitude functions Phi, Psi: 
 	// c = (Hx*Phi, Psi)
 	// keep this matrix Hx
@@ -79,6 +81,9 @@ class  t_StabSolver: public stab::t_LSBase{
 
 	// second version of asymptotics, from Forgoston disser
 	void _setAsymptotics_v2(t_MatCmplx& asym_vecs);
+
+	// set curvature coefs
+	void _setCurvCoefs(const mf::t_GeomPoint& a_xyz);
 
 	// Max instab search realization
 	// maximize wi with wr fixed

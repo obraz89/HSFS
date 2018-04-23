@@ -50,4 +50,34 @@ struct t_StabScales{
 	friend IMPEXP_PHYSCOMMON std::wostream& operator<<(std::wostream& wstr, const t_StabScales& scales);
 };
 
+/************************************************************************/
+/* Curvature coefficients
+   used in stability calculations with
+   curvature effects taken into account
+   Important : in Sousa's work vector of velocity in local rf is
+   {u,w,v}
+   so m12_sousa is cross-term between u and w etc
+
+   // use Cebeci (normal) notation
+   m13 and m31 <-> lateral curvature of the trajectory
+   m12 and m32 <-> body curvature
+/************************************************************************/
+struct t_StabCurvCoefs {
+
+	double m13, m31, m12, m32;
+
+	// set curvature coefs by hand
+	// sphere case
+	// R_dim is dimensional radius of the sphere
+	void set_coefs_sphere(const t_StabScales& scales, const double R_dim) {
+
+		m13 = 0.0;
+		m31 = 0.0;
+
+		m12 = scales.Dels / R_dim;
+		m32 = scales.Dels / R_dim;
+
+	}
+};
+
 #endif	// __STAB_COMMON

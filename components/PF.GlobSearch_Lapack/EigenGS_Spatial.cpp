@@ -172,6 +172,8 @@ void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 	_a_coef = y_max_stab*y_i_stab/(y_max_stab - 2*y_i_stab);
 	_b_coef = 1.0 + _a_coef/y_max_stab;
 
+	_set_curv_coefs_xyz(a_xyz);
+
 }
 
 void t_GlobSrchSpat::setContext(const t_ProfileStab* a_prof_stab){
@@ -282,6 +284,13 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 	const double L1 = 1.0 + sec_visc_ratio;
 	const double L2 = 2.0 + sec_visc_ratio;
 
+	const double inv_L2 = 1.0 / L2;
+
+	const double m13 = _curv_coefs.m13;
+	const double m31 = _curv_coefs.m31;
+	const double m12 = _curv_coefs.m12;
+	const double m32 = _curv_coefs.m32;
+
 	// first row
 	_B[0][0] = inv_mu*mu1*T1;
 	_B[3][0] = inv_mu*mu1*U1;
@@ -301,21 +310,31 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 	_B[4][4] = inv_mu*mu1*T1;
 
 // set _C
-	// first row
+	// first row, u-eq
 	_C[0][0] = -imagUnity*stabRe*dzeta_noA*inv_mu*inv_t-_beta*_beta;
 
 	_C[1][0] = -stabRe*U1*inv_mu*inv_t; 
 
+	_C[2][0] = 0.0;
+
 	_C[3][0] = inv_mu*(mu1*U2 + mu2*T1*U1);
 
-	// second row
+	_C[4][0] = 0.0;
+
+	// second row, v-eq
+	_C[0][1] = 0.0;
+
 	_C[1][1] = -imagUnity*dzeta_noA*stabRe/(L2*mu*T)-pow(_beta,2)/L2;
+
+	_C[2][1] = 0.0;
 
 	_C[3][1] = imagUnity*inv_mu*mu1*_beta*W1/L2;
 
 	_C[4][1] = imagUnity*_beta*inv_mu*mu1*T1*L0/L2;
 
-	// third
+	// third row, p-eq
+
+	_C[0][2] = 0.0;
 
 	_C[1][2] = -T1*inv_t;
 
@@ -325,7 +344,7 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 
 	_C[4][2] = imagUnity*_beta;
 
-	//fourth
+	//fourth row, T-eq
 	_C[1][3] = Pr*(2.0*imagUnity*g_1MaMa*_beta*W1 - stabRe*T1*inv_mu*inv_t);
 
 	_C[2][3] = imagUnity*dzeta_noA*g_1MaMa*Pr*stabRe*inv_mu;
@@ -333,7 +352,10 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 	_C[3][3] = -imagUnity*dzeta_noA*stabRe*Pr*inv_mu*inv_t - pow(_beta,2)
 			   +g_1MaMa*Pr*inv_mu*mu1*(pow(U1,2)+pow(W1,2)) + k2k;
 
-	// last at least
+	// fifth row, w-eq
+
+	_C[0][4] = 0.0;
+
 	_C[1][4] = imagUnity*_beta*inv_mu*mu1*T1 - stabRe*W1*inv_mu*inv_t;
 
 	_C[2][4] = -imagUnity*_beta*stabRe*inv_mu;
@@ -341,6 +363,99 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 	_C[3][4] = inv_mu*mu1*W2 + inv_mu*mu2*T1*W1;
 
 	_C[4][4] = -imagUnity*dzeta_noA*stabRe*inv_mu*inv_t - L2*pow(_beta,2);
+
+	const bool curv_on = _params.CurvTermsOn;
+
+	// compressible additions
+	/*
+	if (curv_on) {
+
+		// full additions after sousa's eqs
+		// first row
+		_C[0][0] += -stabRe*inv_mu*inv_t*W*m12;
+
+		_C[1][0] += -stabRe*inv_mu*inv_t*U*m12;
+
+		_C[2][0] += -stabRe*inv_mu*inv_t*gMaMa*(m12*U*W - m31*W*W);
+
+		_C[3][0] += stabRe*inv_mu*inv_t*inv_t*(m12*U*W - m31*W*W);
+
+		_C[4][0] += stabRe*inv_mu*inv_t*(2.0*W*m31 - U*m12);
+
+		// second row
+
+		_C[0][1] += -2.0*stabRe*inv_mu*inv_t*inv_L2*U*m12;
+
+		_C[2][1] += stabRe*gMaMa*inv_mu*inv_t*inv_L2*(m12*U*U + m32*W*W);
+
+		_C[3][1] += -stabRe*inv_mu*inv_L2*inv_t*inv_t*(m12*U*U + m32*W*W);
+
+		_C[4][1] += 2.0*stabRe*inv_mu*inv_L2*inv_t*W*m32;
+
+		// thrid row
+
+		_C[0][2] += m31;
+
+		_C[1][2] += m12 + m32;
+
+		_C[2][2] += gMaMa*(m31*U + m12*W);
+
+		_C[3][2] += -inv_t*(m31*U + m12*W);
+
+		_C[4][2] += m12;
+
+		// fourth row
+
+		// fifth row
+		_C[0][4] += stabRe*inv_mu*inv_t*(2.0*U*m12 - W*m31);
+
+		_C[1][4] += -stabRe*inv_mu*inv_t*W*m32;
+
+		_C[2][4] += -stabRe*inv_mu*inv_t*gMaMa*(m31*W*U - m12*U*U);
+
+		_C[3][4] += stabRe*inv_mu*inv_t*inv_t*(m31*W*U - m12*U*U);
+
+		_C[4][4] += -stabRe*inv_mu*inv_t*U*m31;
+
+	} // compressible additions 
+	*/
+
+	// incompressible additions after Cebeci
+	if (curv_on) {
+
+		//wxLogMessage(_T("GS: Curv terms on!"));
+
+		// first row
+		_C[0][0] += -stabRe*W*m13;
+
+		_C[1][0] += -stabRe*U*m12;
+
+		_C[4][0] += stabRe*(2.0*W*m31 - U*m13);
+
+		// second row
+
+		_C[0][1] += 2.0*stabRe*U*m12;
+
+		_C[4][1] += 2.0*stabRe*W*m32;
+
+		// thrid row
+
+		_C[0][2] += m31;
+
+		_C[1][2] += m12 + m32;
+
+		_C[4][2] += m13;
+
+		// fourth row
+
+		// fifth row
+		_C[0][4] += stabRe*(2.0*U*m13 - W*m31);
+
+		_C[1][4] += -stabRe*W*m32;
+
+		_C[4][4] += -stabRe*U*m31;
+
+	}
 // Alpha matrices
 	// _A_AL is always zero
 
@@ -387,6 +502,19 @@ void t_GlobSrchSpat::setMatrices(const int a_nnode, const bool a_semi_flag){
 	_C_AL[4][4] = -imagUnity*dzeta_A*stabRe*inv_mu*inv_t;
 
 };
+
+// tmp, set curvature coefs by hand
+// current values for sphere
+
+void t_GlobSrchSpat::_set_curv_coefs_xyz(const mf::t_GeomPoint& a_xyz) {
+
+	// sphere case, dimensional raduis
+	const double R_dim = 0.089;
+
+	_curv_coefs.set_coefs_sphere(_profStab.scales(), R_dim);
+
+
+}
 // a_eq_id={0,1,3,4} <--> {1,2,4,5} - SO
 void t_GlobSrchSpat::fill_SO_row(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat, 
 								 const t_SqMatCmplx& a_RMat, const int a_nnode, const int a_eq_id, int& a_ins_nvals){
