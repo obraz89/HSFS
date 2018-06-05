@@ -59,8 +59,8 @@ public:
 	IMPEXP_PHYSCOMMON bool operator==(const int& val) const{return t_Enum::operator ==(val);};
 protected:
 	void _init_map_vals(){
-		_mapVals.insert(std::make_pair(ViscPower, _T("Power")));
-		_mapVals.insert(std::make_pair(ViscSuther, _T("Suther")));
+		_mapVals.insert(std::make_pair(ViscPower, _T("PowerLaw")));
+		_mapVals.insert(std::make_pair(ViscSuther, _T("Sutherland")));
 	};
 };
 
