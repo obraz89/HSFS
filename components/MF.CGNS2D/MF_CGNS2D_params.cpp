@@ -56,7 +56,7 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 	g.add("Gamma", 1.4e+00, _T("Specific heat ratio")); // pGamma
 
 	mf::t_ViscType visc_type;
-	g.add("ViscType_options=", visc_type.get_accepted_str_vals());
+	g.add("ViscType_options", visc_type.get_accepted_str_vals());
 	g.add("ViscType", _T("Sutherland"), _T("Viscosity Law")); // pViscLaw
 
 	g.add("BulkViscRatio", 0.0, _T("Ratio of bulk viscosity to viscosity"));
@@ -130,6 +130,10 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 	params.T_wall = g.get_real_param("TWall");
 
 	params.ViscType.set_value(g.get_string_param("ViscType"));
+
+	if (params.ViscType.get_value() < 0) {
+		ssuGENTHROW(_T("Unknown value provided for option ViscType!"));
+	}
 
 	params.BulkViscRatio = g.get_real_param("BulkViscRatio");
 

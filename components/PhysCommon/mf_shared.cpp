@@ -24,11 +24,6 @@ t_GeomPoint& t_GeomPoint::set(const t_Rec& rec){
 
 //------------------------------------------------------------- Field parameters
 
-void t_AxeSym::_init_map_vals(){
-	_mapVals.insert(std::make_pair(AxeSym, _T("AxeSym")));
-	_mapVals.insert(std::make_pair(Plane, _T("Plane")));
-};
-
 const int t_AxeSym::AxeSym = 0;
 const int t_AxeSym::Plane  = 1;
 

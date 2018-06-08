@@ -34,10 +34,11 @@ namespace hsstab{
 class IMPEXP_SHARED t_Enum{
 protected:
 	std::map<int, wxString> _mapVals;
-	virtual void _init_map_vals()=0;
+	virtual void _init_map_vals() =0;
 	int _curVal;
 	int* _get_val_addr(){return &_curVal;};
 public:
+	t_Enum() :_curVal(-1) {};
 	virtual void set_value(int val){
 		// enum)))
 		if (_mapVals.find(val) == _mapVals.end()) {

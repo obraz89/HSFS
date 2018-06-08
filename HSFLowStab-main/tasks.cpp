@@ -50,15 +50,8 @@ void task::init_glob_solvers(){
 	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
 	
 	g_pMFDomain = caps_mf.create_domain();
-	try
-	{
-		g_pMFDomain->init(G_Plugins.get_plugin(hsstab::plgMF));
-	}
-	catch (t_GenException e)
-	{
-		wxLogMessage(e.what());
-		return;
-	}
+
+	g_pMFDomain->init(G_Plugins.get_plugin(hsstab::plgMF));
 
 	g_pStabSolver = caps_ls.create_ls_solver(*g_pMFDomain);
 	g_pStabSolver->init(G_Plugins.get_plugin(plgLS));

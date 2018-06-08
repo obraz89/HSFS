@@ -151,6 +151,11 @@ int main(int argc, char* argv[]){
 	catch(t_GenException e){
 		wxLogError(e.what());
 	}
+
+	catch (...) {
+		wxLogMessage(_T("Unhandled Exception while doing task. Aborting..."));
+		return false;
+	}
 	// todo - catch & dump other exceptions
 	/*
 	catch(...){

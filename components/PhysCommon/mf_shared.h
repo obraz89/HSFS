@@ -54,7 +54,7 @@ public:
 class t_ViscType : public t_Enum{
 public:
 	IMPEXP_PHYSCOMMON static const int ViscPower/*=0*/, ViscSuther;
-	IMPEXP_PHYSCOMMON t_ViscType(){_init_map_vals();set_value(ViscPower);};
+	IMPEXP_PHYSCOMMON t_ViscType() :t_Enum() { _init_map_vals(); };
 	IMPEXP_PHYSCOMMON void operator=(const int& val){t_Enum::operator =(val);};
 	IMPEXP_PHYSCOMMON bool operator==(const int& val) const{return t_Enum::operator ==(val);};
 protected:
@@ -67,11 +67,14 @@ protected:
 class t_AxeSym: public t_Enum{
 public:
 	IMPEXP_PHYSCOMMON static const int AxeSym/*=0*/, Plane;
-	IMPEXP_PHYSCOMMON t_AxeSym(){_init_map_vals();set_value(AxeSym);};
+	IMPEXP_PHYSCOMMON t_AxeSym() :t_Enum() { _init_map_vals(); };
 	IMPEXP_PHYSCOMMON void operator=(const int& val){t_Enum::operator =(val);};
 	IMPEXP_PHYSCOMMON bool operator==(const int& val) const{return t_Enum::operator ==(val);};
 protected:
-	IMPEXP_PHYSCOMMON void _init_map_vals();
+	IMPEXP_PHYSCOMMON void _init_map_vals() {
+		_mapVals.insert(std::make_pair(AxeSym, _T("AxeSym")));
+		_mapVals.insert(std::make_pair(Plane, _T("Plane")));
+	};
 };
 
 /************************************************************************/
