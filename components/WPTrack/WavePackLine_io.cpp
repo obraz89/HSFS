@@ -30,14 +30,19 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 
 	const mf::t_FldParams& Params = _rFldMF.get_mf_params();
 
+	const double L_ref = Params.L_ref;
+
 	std::wofstream fstr(&fname[0], write_mode);
-	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tc[]\tNju[Hz]\n");
+	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tlambda[m]\tNju[kHz]\t");
+	fstr << _T("kx[1/m]\tky[1/m]\tkz[1/m]\tstabRe[]\tDels[m]\tMe\n");
 
 	for (int i=0; i<_line.size(); i++){
 
 		const t_WPLineRec& rec = _line[i];
 
 		t_WCharsGlob spat_wave = rec.wave_chars;
+
+		const t_StabScales& stab_scales = rec.wchars_loc.scales();
 
 		if (spat_wave.get_treat()==stab::t_TaskTreat::TIME) spat_wave.to_spat();
 
@@ -53,16 +58,20 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 
 		mf::t_GeomPoint xyz= rec.mean_flow.get_xyz();
 
-		fstr<<_T("\t")<<xyz.x()	//Params.L_ref*rec.mean_flow.x
-			<<_T("\t")<<xyz.y()	//Params.L_ref*rec.mean_flow.y
-			<<_T("\t")<<xyz.z()	//Params.L_ref*rec.mean_flow.z
-			<<_T("\t")<<_sigma[i]<<_T("\t")<<rec.n_factor
+		fstr<<_T("\t")<<L_ref*xyz.x()	
+			<<_T("\t")<<L_ref*xyz.y()	
+			<<_T("\t")<<L_ref*xyz.z()	
+			<<_T("\t")<<_sigma[i]
+			<<_T("\t")<<rec.n_factor
 			<<_T("\t")<<lambda
 			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)
 			// debug
 			<<_T("\t")<<dim_wave.a.real()
 			<<_T("\t")<<dim_wave.kn.real()
 			<<_T("\t")<<dim_wave.b.real()
+			<<_T("\t")<<stab_scales.ReStab
+			<<_T("\t")<<stab_scales.Dels
+			<<_T("\t")<< stab_scales.Me
 			<<_T("\n");	
 	};
 
