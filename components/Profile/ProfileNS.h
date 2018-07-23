@@ -15,22 +15,17 @@
 
 class IMPEXP_PROFILE t_ProfileNS : public t_ProfMF{
 
-	// true if this is a disturbance profile
-	bool _is_disturb_profile;
-
+	// extract from mean flow field
 	void _initialize_extract(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg);
+
 	void _initialize_interpolate(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg);
 
 public:
 
+	// read DNS disturbance profile from file
+	void initialize_extract(const std::string fname, const mf::t_ProfDataCfg& data_cfg);
+
 	t_ProfileNS(const mf::t_DomainBase& rDomain);
-
-	bool is_disturbance_profile(){return _is_disturb_profile;};
-
-	// tmp, to load DNS profiles
-	void init_from_uvwpt_vec(const std::vector<double>& y_vec, 
-		const std::vector<std::vector<double>>& v_uvwpt,
-		double a_bl_thick_scale);
 
 };
 

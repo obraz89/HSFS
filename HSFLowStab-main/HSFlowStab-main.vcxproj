@@ -176,6 +176,7 @@
     <ClCompile Include="msg_pack.cpp" />
     <ClCompile Include="settings.cpp" />
     <ClCompile Include="tasks.cpp" />
+    <ClCompile Include="tasks_dns_lst_nmd.cpp" />
     <ClCompile Include="tasks_gs.cpp" />
     <ClCompile Include="tasks_wp.cpp" />
     <ClCompile Include="test_cf_nlf415.cpp" />

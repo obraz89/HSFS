@@ -49,6 +49,8 @@ namespace task{
 
 	void calc_scal_prod_dns_test();
 
+	void calc_scal_prod_particle_test();
+
 	void get_bl_spectrum();
 
 

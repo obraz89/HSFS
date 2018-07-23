@@ -25,6 +25,23 @@ struct IMPEXP_PROFILE t_ProfStabCfg{
 
 };
 
+/************************************************************************/
+//
+// configure profile stab initialization
+// for DNS disturbance profile
+/************************************************************************/
+struct IMPEXP_PROFILE t_ProfStabCfgDNSDisturb {
+
+	int NNodes;
+
+	double Ymax;
+
+	double Dels_gndim;
+
+	double Ue, Rhoe, Te;
+
+};
+
 class IMPEXP_PROFILE t_ProfileStab : public t_Profile{	
 
 	t_StabScales _scales;
@@ -42,6 +59,8 @@ public:
 
 	void initialize(t_ProfileNS& a_rProfNS, 
 		const std::vector<double>& y_distrib, t_ProfStabCfg cfg);
+
+	void initialize_dist_DNS(t_ProfileNS& a_rProfNS, t_ProfStabCfgDNSDisturb cfg);
 
 	// for testing with AVF code
 	// w=0

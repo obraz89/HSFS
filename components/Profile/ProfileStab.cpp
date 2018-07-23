@@ -57,26 +57,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS,
 void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, 
 			const std::vector<double>& a_y_distrib, t_ProfStabCfg cfg){
 
-	t_Profile::t_Rec ns_outer_rec;
-
-	if (!a_rProfNS.is_disturbance_profile()){
-
-		ns_outer_rec = a_rProfNS.get_bound_rec();
-
-	}else{
-
-		// tmp, to initialize disturbance "stability profiles" on a flat plate
-		wxLogMessage(_T("Warning: Initialization for disturbance profiles only!"));
-		ns_outer_rec.u = 1.0;
-		ns_outer_rec.v = 0.0;
-		ns_outer_rec.w = 0.0;
-
-		ns_outer_rec.r = 1.0;
-		ns_outer_rec.t = 1.0;
-		ns_outer_rec.mu = 1.0;
-
-
-	}
+	t_Profile::t_Rec ns_outer_rec = a_rProfNS.get_bound_rec();
 
 	double mu_e = ns_outer_rec.mu;
 
@@ -172,6 +153,70 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 			_mu2[i] = _mu1[i]*d-_mu[i]/lt*(d+t_suth/pow(lt+t_suth,2));
 
 		}
+	}
+};
+
+void t_ProfileStab::initialize_dist_DNS(t_ProfileNS& a_rProfNS, t_ProfStabCfgDNSDisturb cfg){
+
+	_resize(cfg.NNodes);
+
+	const mf::t_DomainBase& rMF = a_rProfNS.getMFDomain();
+	
+	double mu_e = rMF.calc_viscosity(cfg.Te);
+
+	double u_e = cfg.Ue;
+
+	double rho_e = cfg.Rhoe;
+
+	double t_e = cfg.Te;
+
+	const t_FldParams& Params = rMF.get_mf_params();
+
+	const double bl_thick_scale = cfg.Dels_gndim;
+
+	_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
+
+	_scales.Dels = Params.L_ref*bl_thick_scale;
+
+	_scales.Me = Params.Mach*u_e/sqrt(t_e);
+
+	_scales.UeDim = rMF.calc_c_dim(t_e)*_scales.Me;
+
+	_scales.Ue = u_e;
+
+	// order important - first interpolate then nondim
+
+	const double dY = a_rProfNS.get_thick() / (cfg.NNodes - 1);
+
+	const double y_scale = bl_thick_scale*sqrt(Params.Re);
+
+	for (int i=0; i<_nnodes; i++){
+
+		double cur_y = i*dY;
+
+		// interpolate
+		set_rec(a_rProfNS.get_rec(cur_y), i);
+
+		//nondim
+		_y[i] = _y[i]/y_scale;
+
+		_u[i] =_u[i]/u_e;
+		_u1[i]=_u1[i]*y_scale/u_e;
+		_u2[i]=_u2[i]*pow(y_scale,2)/u_e;
+
+		_t[i]=_t[i]/t_e;
+		_t1[i]=_t1[i]*y_scale/t_e;
+		_t2[i]=_t2[i]*pow(y_scale,2)/t_e;
+
+		// IMPORTANT TODO: why isn't w nondim by u_e in orig solver?
+		_w[i]=_w[i]/u_e;
+		_w1[i]=_w1[i]*y_scale/u_e;
+	    _w2[i]=_w2[i]*pow(y_scale,2)/u_e;
+
+		_v[i] = _v[i]/u_e;
+
+		_p[i] = _p[i] / (rho_e*u_e*u_e);
+
 	}
 };
 

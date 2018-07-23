@@ -132,11 +132,11 @@ int main(int argc, char* argv[]){
 			break;
 
 		case task::CalcScalProd_LST_test:
-			task::calc_scal_prod_self();
+			//task::calc_scal_prod_particle_test();
 			break;
 
 		case task::CalcScalProd_DNS_test:
-			task::calc_scal_prod_dns_test();
+			task::calc_scal_prod_particle_test(); 
 			break;
 
 		case task::GetBLSpectrum:

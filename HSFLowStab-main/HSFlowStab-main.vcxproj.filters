@@ -69,6 +69,9 @@
     <ClCompile Include="tasks_wp.cpp">
       <Filter>Source Files\tasks</Filter>
     </ClCompile>
+    <ClCompile Include="tasks_dns_lst_nmd.cpp">
+      <Filter>Source Files\tasks</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="cmd_parse.h">
