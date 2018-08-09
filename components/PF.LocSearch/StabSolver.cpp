@@ -33,6 +33,10 @@ const t_StabScales& t_StabSolver::get_stab_scales() const{
 	return _profStab.scales();
 };
 
+const std::vector<double>& t_StabSolver::get_y_distrib() const {
+	return _math_solver.varRange;
+}
+
 // private, to be used in 3D context
 
 /*const t_SqMatrix& t_StabSolver::_getStabMatrix3D() const{

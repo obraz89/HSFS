@@ -143,6 +143,8 @@ public:
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 
 	const t_StabScales& get_stab_scales() const;
+
+	const std::vector<double>& get_y_distrib() const;
 	//========================
 
 	// search for nearest eigenmode

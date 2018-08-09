@@ -123,6 +123,8 @@ namespace stab{
 
 		virtual const t_StabScales& get_stab_scales() const =0;
 
+		virtual const std::vector<double>& get_y_distrib() const = 0;
+
 		virtual void dumpEigenFuctions(const std::string& fname)=0;
 
 		virtual void dumpProfileStab(const std::string& fname) const=0;
