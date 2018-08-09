@@ -144,26 +144,25 @@ void _read_crop_raw_profile_from_file(const std::string fname, const mf::t_ProfD
 
 	int total_nodes = 0;
 	t_Vec3Dbl dr;
+
+	bool thick_ok = false;
+
 	for (int m = 0; m<nnodes_ns; m++) {
 
 		matrix::base::minus<double, double>(xyz_vec[m], xyz_vec[0], dr);
 		total_nodes++;
-		if (dr.norm()>total_thick) break;
+		if (dr.norm() > total_thick) {
+			thick_ok = true;
+			break;
+		}
 
-	}
-
-	if (total_nodes == nnodes_ns-1) {
-		wxLogError(_T("Profile extract error: Requested thickness \
-						  is greater than computational domain, trying to proceed"));
 	}
 
 	raw_profile.resize(total_nodes);
 
 	for (int p = 0; p < total_nodes; p++) {
 
-		raw_profile[p].x = xyz_vec[p][0];
-		raw_profile[p].y = xyz_vec[p][1];
-		raw_profile[p].z = xyz_vec[p][2];
+		raw_profile[p].set_xyz(xyz_vec[p]);
 
 		raw_profile[p].u = vec_data[p][0];
 		raw_profile[p].v = vec_data[p][1];
@@ -172,6 +171,43 @@ void _read_crop_raw_profile_from_file(const std::string fname, const mf::t_ProfD
 		raw_profile[p].t = vec_data[p][4];
 
 	} ;
+
+	if (!thick_ok) {
+		wxLogError(_T("Error in ProfileNS::_read_crop_raw_profile_from_file Requested thickness \
+						  is greater than provided from file, trying to proceed"));
+	}
+	else {
+		// do some interpolation for the last point
+		// we want thickness to be exactly total_thick
+		// for now only xyz interpolated
+		// TODO: linear interpolation for flow variables
+		t_GeomPoint xyz1, xyz2, surf_xyz;
+
+		t_Vec3Dbl rvec;
+
+		surf_xyz = raw_profile[0].get_xyz();
+
+		xyz1 = raw_profile[total_nodes-2].get_xyz();
+
+		matrix::base::minus<double, double>(xyz1, surf_xyz, rvec);
+
+		double r1 = rvec.norm();
+
+		xyz2 = raw_profile[total_nodes - 1].get_xyz();
+
+		matrix::base::minus<double, double>(xyz2, surf_xyz, rvec);
+
+		double r2 = rvec.norm();
+
+		double coef = (total_thick - r1) / (r2 - r1);
+
+		if (coef<0.0 || coef>1.0)
+			wxLogMessage(_T("Error in ProfileNS::_read_crop_raw_profile_from_file: interpolation coef is %lf, should be between 0 and 1"), coef);
+
+		t_GeomPoint xyz_int = xyz1 + coef*(xyz2 - xyz1);
+
+		raw_profile[total_nodes - 1].set_xyz(xyz_int);
+	}
 
 }
 

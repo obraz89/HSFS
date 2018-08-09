@@ -659,7 +659,7 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 
 		_calc_bl_thick(xyz, bl_thick, raw_profile);
 
-		double total_thick = bl_thick * init_cfg.ThickCoef;
+		const double total_thick = bl_thick * init_cfg.ThickCoef;
 
 		t_GeomPoint cur_xyz, surf_xyz;
 		t_Rec cur_rec;
@@ -671,26 +671,68 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 		int total_nodes = 0;
 		double eta = 0.0;
 
+		bool thick_ok = false;
+
 		for (int m=0; m<raw_profile.size(); m++){
 
 			get_rec(raw_profile[m], cur_rec);
 			cur_xyz.set(cur_rec);
 			matrix::base::minus<double, double>(cur_xyz, surf_xyz, rvec);
 			eta = rvec.norm();
+			total_nodes = m + 1;
 
-			if (eta>total_thick) break;
-			total_nodes++;
+			if (eta > total_thick) {
 
-		}
+				thick_ok = true;
 
-		if (total_nodes==raw_profile.size()){
-			wxLogError(_T("Profile extract error: Requested thickness \
-						  is greater than computational domain, trying to proceed"));
+				break;
+			} 
+
 		}
 
 		data.resize(total_nodes);
 
-		for (int p=0; p<total_nodes; p++) get_rec(raw_profile[p], data[p]);
+		if (!thick_ok){
+			wxLogError(_T("Error in _extract_profile_data_blbound: Requested thickness \
+						  is greater than extracted from cgns domain"));
+
+			for (int p = 0; p<total_nodes; p++) get_rec(raw_profile[p], data[p]);
+		}
+		else {
+
+			for (int p = 0; p<total_nodes-1; p++) get_rec(raw_profile[p], data[p]);
+
+			// do some interpolation for the last point
+			// we want thickness to be exactly total_thick
+			// for now only xyz interpolated
+			// TODO: linear interpolation for flow variables
+			t_GeomPoint xyz1, xyz2;
+
+			get_rec(raw_profile[total_nodes-2], cur_rec);
+			xyz1.set(cur_rec);
+
+			matrix::base::minus<double, double>(xyz1, surf_xyz, rvec);
+
+			double r1 = rvec.norm();
+
+			get_rec(raw_profile[total_nodes-1], cur_rec);
+			xyz2.set(cur_rec);
+
+			matrix::base::minus<double, double>(xyz2, surf_xyz, rvec);
+
+			double r2 = rvec.norm();
+
+			double coef = (total_thick - r1) / (r2 - r1);
+
+			if (coef<0.0 || coef>1.0) 
+				wxLogMessage(_T("Error in _extract_profile_data_blbound: interpolation coef is %lf, should be between 0 and 1"), coef);
+
+			t_GeomPoint xyz_int = xyz1 + coef*(xyz2 - xyz1);
+
+			get_rec(raw_profile[total_nodes - 1], data[total_nodes - 1]);
+			data[total_nodes - 1].set_xyz(xyz_int);
+			
+		}
 
 }
 
