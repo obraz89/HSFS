@@ -10,6 +10,92 @@
 
 using namespace hsstab;
 
+struct t_SpctrInfo {
+
+	int Nw, Nb, Ny;
+
+	double Om_fft_min, Om_fft_max;
+
+	double B_fft_min, B_fft_max;
+
+};
+
+// iinformation required from Mean-Flow profiles
+// to correctly initialize disturbance profiles
+// Dels gndim is Dels/L_ref from StabProfile
+// Ue, Ve, We - direction of velocity at bl edge
+// Eta_max is profile thickness in gndim
+//
+struct t_MFProfInfo {
+
+	double Dels_gndim;
+
+	int NNodesStab;
+
+	double Ue_dir, Ve_dir, We_dir;
+
+	double Eta_max;
+
+	double Ue_abs, Rho_e, T_e;
+
+};
+
+void _get_spctr_info(t_SpctrInfo& spd, std::string fname_spctr_info) {
+
+	std::ifstream ifstr(fname_spctr_info);
+	std::stringstream istr;
+
+	const int max_line_size = 256;
+	char line[max_line_size];
+
+	// header
+	ifstr.getline(line, max_line_size, '\n');
+	//data
+	ifstr.getline(line, max_line_size, '\n');
+
+	istr << line;
+
+	istr >> spd.Ny >> spd.Nw >> spd.Nb;
+
+	istr >> spd.Om_fft_min >> spd.Om_fft_max;
+
+	istr >> spd.B_fft_min >> spd.B_fft_max;
+
+	ifstr.close();
+
+}
+
+// TODO: all info from 1 file
+void _get_mfprof_info(t_MFProfInfo& mfd, std::string fname_mf_info) {
+
+	std::ifstream ifstr(fname_mf_info);
+	std::stringstream istr;
+
+	const int max_line_size = 256;
+	char line[max_line_size];
+
+	// header
+	ifstr.getline(line, max_line_size, '\n');
+	//data
+	ifstr.getline(line, max_line_size, '\n');
+
+	istr << line;
+
+	istr >> mfd.Eta_max >> mfd.NNodesStab >> mfd.Dels_gndim;
+
+	istr >> mfd.Ue_abs >> mfd.Rho_e >> mfd.T_e;
+
+	ifstr.getline(line, max_line_size, '\n');
+
+	istr.clear();
+	istr << line;
+
+	istr >> mfd.Ue_dir >> mfd.Ve_dir >> mfd.We_dir;
+
+	ifstr.close();
+
+}
+
 void task::calc_scal_prod_self() {
 
 	wxLogMessage(_T("Scal prod LST test: both modes from LST"));
@@ -249,22 +335,6 @@ void _get_DNS_amp_vecs_from_file(std::string fname_re, std::string fname_im, std
 		amp_vec_out[i_stab][7] = t_Complex(ps_re.get_rec(i).w1, ps_im.get_rec(i).w1);
 
 	}
-
-
-
-	// debug, check amp_vec_out
-	
-	std::ofstream ofstr("output/amp_vec_DNS.dat");
-
-	for (int i = 0; i<nnodes_stab; i++) {
-		ofstr << ps_re.get_rec(i).y << "\t";
-		for (int j = 0; j<8; j++) {
-			ofstr << amp_vec_out[nnodes_stab - 1 - i][j].real() << "\t";
-			ofstr << amp_vec_out[nnodes_stab - 1 - i][j].imag() << "\t";
-		}
-		ofstr << "\n";
-	}
-	ofstr.close();
 	
 }
 
@@ -286,18 +356,25 @@ void _do_calc_scal_prod_spctr_max_point() {
 	std::vector<double> yy_DNS(nnodes_stab);
 	std::vector<t_VecCmplx> amp_fun_DNS(nnodes_stab, STAB_MATRIX_DIM);
 
-	// x~0.2
-	// DNS wave packet initiated by particle near x~0.13:
-	// packet hump at Om_glob_ndim = 150, B_glob_ndim = 500
-	// get lst amp funcs for specified Om and Beta,
-	// normalize them
-	// and calculate scal prod coefficient
+	// calculate scal prod coefficient
 	// A - direct task, B - conjugate, Q - DNS (direct)
 	// <Q_dns, B>/<A, B>
-	// Om_glob = 150 <=> w = 0.181
-	// B_glob = 500 <=> b = 0.55
 
 	_get_DNS_amp_vecs_from_file(fname_re, fname_im, fname_bl_data, amp_fun_DNS, yy_DNS);
+
+	// debug, check amp_vec_out
+
+	std::ofstream ofstr_dns("output/amp_vec_DNS.dat");
+
+	for (int i = 0; i<nnodes_stab; i++) {
+		ofstr_dns << yy_DNS[i] << "\t";
+		for (int j = 0; j<8; j++) {
+			ofstr_dns << amp_fun_DNS[nnodes_stab - 1 - i][j].real() << "\t";
+			ofstr_dns << amp_fun_DNS[nnodes_stab - 1 - i][j].imag() << "\t";
+		}
+		ofstr_dns << "\n";
+	}
+	ofstr_dns.close();
 
 	t_Complex pmax_DNS = _search_max_pressure_disturb(amp_fun_DNS);
 
@@ -307,9 +384,9 @@ void _do_calc_scal_prod_spctr_max_point() {
 
 	t_WCharsLoc wchars_A;
 
-	wchars_A.a = t_Complex(-0.3029, -0.01141);
-	wchars_A.b = 0.55;
-	wchars_A.w = t_Complex(-0.181, 0.0);
+	bool read_ok = read_max_wave_pid(0, _T("wchars_max_loc.dat"), wchars_A);
+
+	if (!read_ok) wxLogMessage(_T("cannot read wchars from wchars_max_loc.dat"));
 
 	wchars_A.set_treat(stab::t_TaskTreat::SPAT);
 
@@ -328,6 +405,8 @@ void _do_calc_scal_prod_spctr_max_point() {
 
 	g_pStabSolver->getAmpFuncs(amp_fun_LST);
 
+	const std::vector<double>& y_lst = g_pStabSolver->get_y_distrib();
+
 	t_Complex pmax_LST = _search_max_pressure_disturb(amp_fun_LST);
 
 	t_Complex coef_p = pmax_DNS / pmax_LST;
@@ -341,7 +420,7 @@ void _do_calc_scal_prod_spctr_max_point() {
 
 	for (int i = 0; i<nnodes_stab; i++) {
 
-		ofstr << yy_DNS[i] << "\t";
+		ofstr << y_lst[nnodes_stab - 1 - i] << "\t";
 		for (int j = 0; j<8; j++) {
 			t_Complex val = amp_fun_LST[nnodes_stab - 1 - i][j] * coef_p;
 			ofstr << val.real() << "\t";
@@ -367,7 +446,7 @@ void _do_calc_scal_prod_spctr_max_point() {
 
 	for (int i = 0; i<nnodes_stab; i++) {
 
-		ofstr1 << yy_DNS[i] << "\t";
+		ofstr1 << y_lst[nnodes_stab - 1 - i] << "\t";
 		for (int j = 0; j<8; j++) {
 			t_Complex val = amp_fun_LST[nnodes_stab - 1 - i][j] * coef_scal;
 			ofstr1 << val.real() << "\t";
@@ -379,132 +458,10 @@ void _do_calc_scal_prod_spctr_max_point() {
 
 }
 
-void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>& a_wall_data) {
-
-	std::string fname_bl_data("spectrum_input/_amp_funcs_bl_data.dat");
-
-	std::string fname_re("spectrum_input/_amp_funcs_tmp_re.dat");
-	std::string fname_im("spectrum_input/_amp_funcs_tmp_im.dat");
-
-	const int STAB_MATRIX_DIM = 8;
-
-	const int nnodes_stab = 501;
-
-	std::vector<double> yy_DNS(nnodes_stab);
-	std::vector<t_VecCmplx> amp_fun_DNS(nnodes_stab, STAB_MATRIX_DIM);
-
-	_get_DNS_amp_vecs_from_file(fname_re, fname_im, fname_bl_data, amp_fun_DNS, yy_DNS);
-
-	// direct problem
-
-	g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
-
-	g_pStabSolver->searchWave(wchars_A, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
-		stab::t_TaskTreat::SPAT);
-
-	wxLogMessage(_T("Wave chars A (direct):%s"), &(wchars_A.to_wstr()[0]));
-
-	std::vector<t_VecCmplx> amp_fun_LST(nnodes_stab, STAB_MATRIX_DIM);
-
-	g_pStabSolver->getAmpFuncs(amp_fun_LST);
-
-	if (false) {
-
-		// version 1 - scale lst amp_funcs to dns amp funcs by pressure coef
-
-		t_Complex pmax_DNS = _search_max_pressure_disturb(amp_fun_DNS);
-
-		t_Complex pmax_LST = _search_max_pressure_disturb(amp_fun_LST);
-
-		t_Complex coef_p = pmax_DNS / pmax_LST;
-
-		wxLogMessage(_T("pmax_DNS/pmax_LST=(%lf,%lf)"), coef_p.real(), coef_p.imag());
-		wxLogMessage(_T("abs(pmax_DNS/pmax_LST)=%lf"), smat::norm(coef_p));
-
-		// du
-		a_wall_data[0] = amp_fun_LST[nnodes_stab - 1][0] * coef_p;
-		// dv
-		a_wall_data[1] = amp_fun_LST[nnodes_stab - 1][2] * coef_p;
-		// dw
-		a_wall_data[2] = amp_fun_LST[nnodes_stab - 1][6] * coef_p;
-		// dp
-		a_wall_data[3] = amp_fun_LST[nnodes_stab - 1][3] * coef_p;
-		// dt
-		a_wall_data[4] = amp_fun_LST[nnodes_stab - 1][4] * coef_p;
-
-	}else
-	{
-
-		// version 2 - calculate (<Q_DNS, A_conj>/<A, A_conj>)*A
-
-		t_Complex val_lst = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, NULL);
-
-		t_Complex val_dns = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, &amp_fun_DNS);
-
-		//wxLogMessage(_T("LST <A_lst_scaled2dns_p, A_lst_conj>=%lf"), smat::norm(coef_p*val_lst));
-
-		wxLogMessage(_T("DNS <Q_dns, A_lst_conj>=%lf"), smat::norm(val_dns));
-
-		t_Complex coef_scal = val_dns / val_lst;
-
-		// du
-		a_wall_data[0] = amp_fun_LST[nnodes_stab - 1][0] * coef_scal;
-		// dv
-		a_wall_data[1] = amp_fun_LST[nnodes_stab - 1][2] * coef_scal;
-		// dw
-		a_wall_data[2] = amp_fun_LST[nnodes_stab - 1][6] * coef_scal;
-		// dp
-		a_wall_data[3] = amp_fun_LST[nnodes_stab - 1][3] * coef_scal;
-		// dt
-		a_wall_data[4] = amp_fun_LST[nnodes_stab - 1][4] * coef_scal;
-	
-	}
-
-}
-
-void task::calc_scal_prod_particle_test() {
-
-	_get_lst_wpacket_from_dns();
-
-	//_do_calc_scal_prod_spctr_max_point();
-
-}
-
-struct t_SpctrInfo {
-
-	int Nw, Nb, Ny;
-
-	double Om_fft_min, Om_fft_max;
-
-	double B_fft_min, B_fft_max;
-
-};
-
-// iinformation required from Mean-Flow profiles
-// to correctly initialize disturbance profiles
-// Dels gndim is Dels/L_ref from StabProfile
-// Ue, Ve, We - direction of velocity at bl edge
-// Eta_max is profile thickness in gndim
-//
-struct t_MFProfInfo {
-
-	double Dels_gndim;
-
-	int NNodesStab;
-
-	double Ue_dir, Ve_dir, We_dir;
-
-	double Eta_max;
-
-	double Ue_abs, Rho_e, T_e;
-
-};
-
-
 // get amp funcs from bunch of spectrum files
 // output is a pair of intermediate files _amp_funcs_tmp_*.dat *={re,im}
 // which are then used to initialize amp functions in LST solver basis
-void _get_amp_funcs_from_full_spectrum(int i_w, int j_b,  const t_SpctrInfo spd, const t_MFProfInfo mfd){
+void _get_amp_funcs_from_full_spectrum(int i_w, int j_b, const t_SpctrInfo spd, const t_MFProfInfo mfd) {
 
 	char fname_sp_j_fix[128];
 
@@ -512,7 +469,7 @@ void _get_amp_funcs_from_full_spectrum(int i_w, int j_b,  const t_SpctrInfo spd,
 	char line[max_lsize];
 	char ch;
 
-	char fname_sp_base[] = "spectrum_input/amp_funcs_dns_x0.2_ombeta";
+	char fname_sp_base[] = "spectrum_input/amp_funcs_dns_ombeta";
 
 	std::ifstream ifstr;
 
@@ -539,7 +496,7 @@ void _get_amp_funcs_from_full_spectrum(int i_w, int j_b,  const t_SpctrInfo spd,
 
 	for (int j = 0; j < spd.Ny; j++) {
 
-		ifstr_xyz.getline(line, max_lsize, '\n'); 
+		ifstr_xyz.getline(line, max_lsize, '\n');
 		istr.clear();
 		istr << line;
 
@@ -555,7 +512,7 @@ void _get_amp_funcs_from_full_spectrum(int i_w, int j_b,  const t_SpctrInfo spd,
 		ifstr.getline(line, max_lsize, '\n');
 
 		// skip all data up to a required line
-		for (int ln = 0; ln < glob_ind; ln++) 	
+		for (int ln = 0; ln < glob_ind; ln++)
 			ifstr.getline(line, max_lsize, '\n');
 
 		ifstr.getline(line, max_lsize, '\n');
@@ -588,59 +545,105 @@ void _get_amp_funcs_from_full_spectrum(int i_w, int j_b,  const t_SpctrInfo spd,
 	ifstr_xyz.close();
 }
 
-void _get_spctr_info(t_SpctrInfo& spd, std::string fname_spctr_info) {
+void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>& a_wall_data) {
 
-	std::ifstream ifstr(fname_spctr_info);
-	std::stringstream istr;
+	std::string fname_bl_data("spectrum_input/_amp_funcs_bl_data.dat");
 
-	const int max_line_size = 256;
-	char line[max_line_size];
+	std::string fname_re("spectrum_input/_amp_funcs_tmp_re.dat");
+	std::string fname_im("spectrum_input/_amp_funcs_tmp_im.dat");
 
-	// header
-	ifstr.getline(line, max_line_size, '\n');
-	//data
-	ifstr.getline(line, max_line_size, '\n');
+	const int STAB_MATRIX_DIM = 8;
 
-	istr << line;
+	const int nnodes_stab = 501;
 
-	istr >> spd.Ny >> spd. Nw >> spd.Nb;
+	std::vector<double> yy_DNS(nnodes_stab);
+	std::vector<t_VecCmplx> amp_fun_DNS(nnodes_stab, STAB_MATRIX_DIM);
 
-	istr >> spd.Om_fft_min >> spd.Om_fft_max;
+	_get_DNS_amp_vecs_from_file(fname_re, fname_im, fname_bl_data, amp_fun_DNS, yy_DNS);
 
-	istr >> spd.B_fft_min >> spd.B_fft_max;
+	// direct problem
 
-	ifstr.close();
+	g_pStabSolver->setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
 
-}
+	g_pStabSolver->searchWave(wchars_A, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
+		stab::t_TaskTreat::SPAT);
 
-// TODO: all info from 1 file
-void _get_mfprof_info(t_MFProfInfo& mfd, std::string fname_mf_info) {
+	wxLogMessage(_T("Wave chars A (direct):%s"), &(wchars_A.to_wstr()[0]));
 
-	std::ifstream ifstr(fname_mf_info);
-	std::stringstream istr;
+	std::vector<t_VecCmplx> amp_fun_LST(nnodes_stab, STAB_MATRIX_DIM);
 
-	const int max_line_size = 256;
-	char line[max_line_size];
+	g_pStabSolver->getAmpFuncs(amp_fun_LST);
 
-	// header
-	ifstr.getline(line, max_line_size, '\n');
-	//data
-	ifstr.getline(line, max_line_size, '\n');
+	if (true) {
 
-	istr << line;
+		// debug - write amplitude functions
 
-	istr >> mfd.Eta_max>> mfd.NNodesStab >> mfd.Dels_gndim;
+		t_Complex pmax_DNS = _search_max_pressure_disturb(amp_fun_DNS);
 
-	istr >> mfd.Ue_abs >> mfd.Rho_e >> mfd.T_e;
+		t_Complex pmax_LST = _search_max_pressure_disturb(amp_fun_LST);
 
-	ifstr.getline(line, max_line_size, '\n');
+		t_Complex coef_p = pmax_DNS / pmax_LST;
 
-	istr.clear();
-	istr << line;
+		wxLogMessage(_T("pmax_DNS/pmax_LST=(%lf,%lf)"), coef_p.real(), coef_p.imag());
+		wxLogMessage(_T("abs(pmax_DNS/pmax_LST)=%lf"), smat::norm(coef_p));
 
-	istr >> mfd.Ue_dir >> mfd.Ve_dir >> mfd.We_dir;
+		std::ofstream ofstr_dns("output/amp_vec_DNS.dat");
 
-	ifstr.close();
+		for (int i = 0; i<nnodes_stab; i++) {
+			ofstr_dns << yy_DNS[i] << "\t";
+			for (int j = 0; j<8; j++) {
+				ofstr_dns << amp_fun_DNS[nnodes_stab - 1 - i][j].real() << "\t";
+				ofstr_dns << amp_fun_DNS[nnodes_stab - 1 - i][j].imag() << "\t";
+			}
+			ofstr_dns << "\n";
+		}
+		ofstr_dns.close();
+
+		std::ofstream ofstr("output/amp_vec_lst_scaled2dns_by_pressure.dat");
+
+		const std::vector<double>& y_lst = g_pStabSolver->get_y_distrib();
+
+		for (int i = 0; i<nnodes_stab; i++) {
+
+			ofstr << y_lst[nnodes_stab - 1 - i] << "\t";
+			for (int j = 0; j<8; j++) {
+				t_Complex val = amp_fun_LST[nnodes_stab - 1 - i][j] * coef_p;
+				ofstr << val.real() << "\t";
+				ofstr << val.imag() << "\t";
+			}
+			ofstr << "\n";
+		}
+		ofstr.close();	
+
+	}
+
+	if(true){
+
+		// version 2 - calculate (<Q_DNS, A_conj>/<A, A_conj>)*A
+
+		t_Complex val_lst = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, NULL);
+
+		t_Complex val_dns = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, &amp_fun_DNS);
+
+		//wxLogMessage(_T("LST <A_lst_scaled2dns_p, A_lst_conj>=%lf"), smat::norm(coef_p*val_lst));
+
+		t_Complex coef_scal = val_dns / val_lst;
+
+		wxLogMessage(_T("<Q_dns, A_lst_conj>/<A_lst, A_lst_conj>=(%lf, %lf)"), coef_scal.real(), coef_scal.imag());
+		wxLogMessage(_T("abs(coef_scal)=%lf"), smat::norm(coef_scal));
+
+		// du
+		a_wall_data[0] = amp_fun_LST[nnodes_stab - 1][0] * coef_scal;
+		// dv
+		a_wall_data[1] = amp_fun_LST[nnodes_stab - 1][2] * coef_scal;
+		// dw
+		a_wall_data[2] = amp_fun_LST[nnodes_stab - 1][6] * coef_scal;
+		// dp
+		a_wall_data[3] = amp_fun_LST[nnodes_stab - 1][3] * coef_scal;
+		// dt
+		a_wall_data[4] = amp_fun_LST[nnodes_stab - 1][4] * coef_scal;
+	
+	}
 
 }
 
@@ -648,9 +651,9 @@ t_WCharsLoc _get_wc_s_default(const t_WCharsLoc& wc_dest) {
 
 	t_WCharsLoc wchars_A;
 
-	wchars_A.a = t_Complex(0.3029, -0.01141);
-	wchars_A.b = 0.55;
-	wchars_A.w = t_Complex(0.181, 0.0);
+	bool read_ok = read_max_wave_pid(0, _T("wchars_max_loc.dat"), wchars_A);
+
+	if (!read_ok) wxLogMessage(_T("cannot read wchars from wchars_max_loc.dat"));
 
 	wchars_A.set_treat(stab::t_TaskTreat::SPAT);
 
@@ -690,7 +693,7 @@ void _get_wchars(t_WCharsLoc& wc_dest, const t_WCharsLoc& wc_s) {
 
 	// move along w line to final destination
 
-	const double dw = wc_dest.w.real() >= wc_s.w.real() ? 0.001 : -0.001;
+	const double dw = wc_dest.w.real() >= wc_s.w.real() ? 0.0025 : -0.0025;
 
 	const int Nw = int(abs((wc_dest.w.real() - wc_s.w.real()) / dw));
 
@@ -698,6 +701,8 @@ void _get_wchars(t_WCharsLoc& wc_dest, const t_WCharsLoc& wc_s) {
 
 		g_pStabSolver->searchWave(wc_cur, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
 			stab::t_TaskTreat::SPAT);
+
+		//wxLogMessage(_T("wc_cur:%s"), &(wc_cur.to_wstr()[0]));
 
 		if (i < 3) {
 
@@ -719,7 +724,7 @@ void _get_wchars(t_WCharsLoc& wc_dest, const t_WCharsLoc& wc_s) {
 
 	// move along b line with wixed w
 
-	const double db = wc_dest.b.real() >= wc_s.b.real() ? 0.001 : -0.001;
+	const double db = wc_dest.b.real() >= wc_s.b.real() ? 0.0025 : -0.0025;
 
 	const int Nb = int(abs((wc_dest.b.real() - wc_s.b.real()) / db));
 
@@ -741,7 +746,7 @@ void _get_wchars(t_WCharsLoc& wc_dest, const t_WCharsLoc& wc_s) {
 			a_arr[1] = a_arr[2];
 			a_arr[2] = wc_cur.a;
 
-			wc_cur.a = smat::interpolate_parab(0.0, a_arr[0], db, a_arr[1], 2*db, a_arr[2], 3*db);
+			wc_cur.a = smat::interpolate_parab(0.0, a_arr[0], db, a_arr[1], 2 * db, a_arr[2], 3 * db);
 
 		}
 
@@ -795,16 +800,18 @@ void _get_lst_wpacket_from_dns() {
 
 	ofstr << spd.Nw << "\t" << spd.Nb << "\n";
 
-	if (spd.Nw % 2 == 0) {
+	double w_fft_min_crop = 4.77;
+	double w_fft_max_crop = 38.2;
 
-		wxLogMessage(_T("Error in _get_lst_wpacket_from_dns:Number of frequencies should be odd!"));
-		getchar();
+	double b_fft_min_crop = 0.0;
+	double b_fft_max_crop = 127.0;
 
-	}
-	int i_w_zero = (spd.Nw - 1) / 2;
+	//for (int i = 0; i < spd.Nw; i++){
+	for (int i = 43; i < 44; i++) {
 
-	for (int i = 0; i<spd.Nw; i++)
-		for (int j = 0; j < spd.Nb; j++) {
+		bool need_full_search = true;
+
+		for (int j = 63; j < 64; j++) {
 
 			w_fft = spd.Om_fft_min + i*dOm_fft;
 			b_fft = spd.B_fft_min + j*dB_fft;
@@ -812,22 +819,28 @@ void _get_lst_wpacket_from_dns() {
 			w_lst = -2.0*pi*mfd.Dels_gndim / mfd.Ue_abs*w_fft;
 			b_lst = 2.0*pi*mfd.Dels_gndim*b_fft;
 
-			// tmp fix to avoid calc near w=0
-			// problems with convergence
-			if ((i == i_w_zero - 1) || (i == i_w_zero) || (i == i_w_zero + 1)) {
+			// no need to calc products where spectrum is zero (speed up only)
+			// this is defined by hand and depends on how spectrum looks!
+			// to avoid this set all min crops by 0 and max crops by HUGE_VAL
+			bool crop_by_w = (abs(w_fft) < w_fft_min_crop) || (abs(w_fft) > w_fft_max_crop);
+			bool crop_by_b = (abs(b_fft) < b_fft_min_crop) || (abs(b_fft) > b_fft_max_crop);
+			if (crop_by_w || crop_by_b) {
+
+				wxLogMessage(_T("Spectrum cropped for Om_fft=%lf, B_fft=%lf"), w_fft, b_fft);
 
 				for (int k = 0; k < 5; k++) wall_data[k] = t_Complex(0.0, 0.0);
+
+				need_full_search = true;
 
 			}
 			else {
 
+				wxLogMessage(_T("Calculating lst2dns for Om_fft=%lf, B_fft=%lf"), w_fft, b_fft);
+
 				wc_cur.w = w_lst;
 				wc_cur.b = b_lst;
 
-				// this is to reduce search paths
-				// do once a full path from spectral maximum
-				// after that use previous point as starting
-				if (j == 0) {
+				if (need_full_search) {
 					_get_wchars(wc_cur, _get_wc_s_default(wc_cur));
 					wc_prev = wc_cur;
 				}
@@ -835,6 +848,8 @@ void _get_lst_wpacket_from_dns() {
 					_get_wchars(wc_cur, wc_prev);
 					wc_prev = wc_cur;
 				}
+
+				need_full_search = false;
 
 				// wc_cur is set, calc scaled amp function
 
@@ -846,16 +861,74 @@ void _get_lst_wpacket_from_dns() {
 
 			ofstr << i << "\t" << j << "\t" << w_fft << "\t" << b_fft << "\t";
 
+			// output should be in global nondim rf
+			double coef2gndim[5];
+
+			// u,v,w was ndim by ue
+			coef2gndim[0] = mfd.Ue_abs;
+			coef2gndim[1] = mfd.Ue_abs;
+			coef2gndim[2] = mfd.Ue_abs;
+			// p was ndim by rhoe*ue*ue
+			coef2gndim[3] = mfd.Rho_e*mfd.Ue_abs*mfd.Ue_abs;
+			// t was ndim by Te
+			coef2gndim[4] = mfd.T_e;
+
 			for (int k = 0; k < 5; k++) {
-				ofstr << wall_data[k].real() << "\t" << wall_data[k].imag() << "\t";
+				ofstr << coef2gndim[k]*wall_data[k].real() << "\t" 
+					  << coef2gndim[k]*wall_data[k].imag() << "\t";
 			}
 
 			ofstr << "\n";
 			ofstr.flush();
 
 		}
-
+	}
 	ofstr.close();
+
+}
+
+void task::calc_scal_prod_particle_test() {
+
+	// get lst part of dns spectrum
+	// using biortho scalar product
+	if (true){
+
+		_get_lst_wpacket_from_dns();
+
+	}
+	// test _get_wchars for a particular spectral point
+	if (false) {
+
+		const mf::t_GeomPoint& xyz = g_pStabDB->get_pave_pt(0).xyz;
+
+		g_pStabSolver->setContext(xyz);
+
+		t_WCharsLoc wchars_A;
+
+		wchars_A.a = t_Complex(0.0, 0.0);
+		wchars_A.b = -2.00;
+		wchars_A.w = t_Complex(0.05, 0.0);
+
+		wchars_A.set_treat(stab::t_TaskTreat::SPAT);
+
+		wchars_A.set_scales(g_pStabSolver->get_stab_scales());
+
+		_get_wchars(wchars_A, _get_wc_s_default(wchars_A));
+	}
+	// test dns vs lst amplitude functions for a particular spectral point
+	if (false){
+		t_SpctrInfo spd;
+
+		t_MFProfInfo mfd;
+
+		_get_spctr_info(spd, "spectrum_input/_fft_info.dat");
+
+		_get_mfprof_info(mfd, "spectrum_input/_amp_funcs_bl_data.dat");
+
+		_get_amp_funcs_from_full_spectrum(43,63,spd, mfd);
+
+		_do_calc_scal_prod_spctr_max_point();
+	}
 
 }
 
