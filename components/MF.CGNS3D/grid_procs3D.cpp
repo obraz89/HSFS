@@ -316,128 +316,147 @@ bool t_MFCGNS3D::_parseGhostData3DfromCGNS( TcgnsContext& ctx )
 	//G_Plugins.get_discret_caps().getParI(11/*nsx*/, ghostI);  ghostI /= 2;
 	//G_Plugins.get_discret_caps().getParI(24/*nsy*/, ghostJ);  ghostJ /= 2;
 
+	ctx.cgZones = new TcgnsZone[ nZones ];
+
 //
 // (1) Read connectivity data from CGNS file
 // 
 for( int iZone = 1;  iZone <= nZones;  ++iZone )
 {
-	TZone& blk = Zones[iZone-1];
-	TcgnsZone& cgZne = ctx.cgZones[iZone-1];
+	TZone& zne = Zones[iZone-1];
+	TcgnsZone& cgZne = ctx.cgZones[iZone - 1];
 
-	int n1to1 = 0;  cg_n1to1(ctx.fileID,ctx.iBase,iZone, &n1to1);
-	if( n1to1 < 1 && nZones > 1 )
+	cg_n1to1(ctx.fileID,ctx.iBase,iZone, &cgZne.nPatches);
+	if( cgZne.nPatches < 1 && nZones > 1 )
 	{
-		wxLogError(_("Missing inter-block 1-to-1 connectivity info"));
+		wxLogError(_("Missing inter-zone 1-to-1 connectivity info"));
 		return false;
 	}
 
-	// Original block size without ghosts
-	const int
-		nx0 = blk.ie - blk.is + 1,
-		ny0 = blk.je - blk.js + 1,
-		nz0 = blk.ke - blk.ks + 1;
-
+	cgZne.Patches = new TcgnsZone::TFacePatch[cgZne.nPatches];
 
 	// Loop through connectivity patches
-	for( int iConn = 1; iConn <= n1to1; ++iConn )
+	for( int iPatch = 1; iPatch <= cgZne.nPatches; ++iPatch )
 	{
-		cgsize_t idxRange[6];   // Imin, Jmin, Kmin, Imax, Jmax, Kmin
-
-		cgsize_t idxRangeDonor[6];
+		TcgnsZone::TFacePatch& cgFacePatch = cgZne.Patches[iPatch - 1];
 
 		char szName[33], szDonor[33];
+		cgsize_t idxRange[6], idxRangeDonor[6];
 		int iTsh[3]; // short-hand notation of transform matrix
-		bool res = cg_1to1_read( ctx.fileID,ctx.iBase,iZone,iConn,
+
+		int res = cg_1to1_read( ctx.fileID,ctx.iBase,iZone,iPatch,
 			szName, szDonor, idxRange, idxRangeDonor, iTsh
 		);
 		if( res != CG_OK )
 		{
 			wxLogError( _("Can't read connection patch '%s'(#%d) of zone '%s'(#%d)"),
-				wxString::FromAscii(szName).c_str(), iConn,
-				wxString::FromAscii(blk.szName).c_str(), iZone
+				wxString::FromAscii(szName).c_str(), iPatch,
+				wxString::FromAscii(zne.szName).c_str(), iZone
 			);
 			return false;
 		}
 
-		const long
+		const cgsize_t
 			&is = idxRange[0],  &js = idxRange[1],  &ks = idxRange[2],
 			&ie = idxRange[3],  &je = idxRange[4],  &ke = idxRange[5];
 
-		const long
+		const cgsize_t
 			&ids = idxRangeDonor[0],  &jds = idxRangeDonor[1],  &kds = idxRangeDonor[2],
 			&ide = idxRangeDonor[3],  &jde = idxRangeDonor[4],  &kde = idxRangeDonor[5];
 
-		// Check that whole faces connected
-		bool ok = true;
-		ok &= (is==1 && ie==1) || (is==nx0 && ie==nx0) || (is==1 && ie==nx0);
-		ok &= (js==1 && je==1) || (js==ny0 && je==ny0) || (js==1 && je==ny0);
-		ok &= (ks==1 && ke==1) || (ks==nz0 && ke==nz0) || (ks==1 && ke==nz0);
-		if( ! ok )
+		//
+		// Detect face, the current connection patch belongs to
+		// 
+		     if( is==ie )  cgFacePatch.posFace = (is==1) ? faceXmin : faceXmax;
+		else if( js==je )  cgFacePatch.posFace = (js==1) ? faceYmin : faceYmax;
+		else if( ks==ke )  cgFacePatch.posFace = (ks==1) ? faceZmin : faceZmax;
+
+		cgFacePatch.is0 = is;   cgFacePatch.ie0 = ie;
+		cgFacePatch.js0 = js;   cgFacePatch.je0 = je;
+		cgFacePatch.ks0 = ks;   cgFacePatch.ke0 = ke;
+
+		//
+		// Increase the zone size by ghosts count
+		//
+		if( zne.Faces[cgFacePatch.posFace].bcType != bcAbutted ) // not processed yet
+		{
+			zne.Faces[cgFacePatch.posFace].bcType = bcAbutted;
+
+			if( zne.isFrozen ) continue;
+
+			switch( cgFacePatch.posFace )
+			{
+			case faceXmin:  zne.nx += ghostI;  zne.is += ghostI;  zne.ie += ghostI;  break;
+			case faceXmax:  zne.nx += ghostI;                                        break;
+
+			case faceYmin:  zne.ny += ghostJ;  zne.js += ghostJ;  zne.je += ghostJ;  break;
+			case faceYmax:  zne.ny += ghostJ;                                        break;
+
+			case faceZmin:  zne.nz += ghostK;  zne.ks += ghostK;  zne.ke += ghostK;  break;
+			case faceZmax:  zne.nz += ghostK;                                        break;
+			}
+		}
+
+		//
+		// Detect donor zone
+		//
+		if( ctx.map_zoneName_id.find(szDonor) == ctx.map_zoneName_id.end() )
 		{
 			wxLogError(
-				_("Connection patch '%s'(#%d) of zone '%s'(#%d) don't cover whole block face"),
-				wxString::FromAscii(szName).c_str(), iConn,
-				wxString::FromAscii(blk.szName).c_str(), iZone
+				_("Connection patch '%s'#%d of zone '%s'#%d abuts to nonexistent zone '%s'"),
+				wxString::FromAscii(szName).c_str(), iPatch,
+				wxString::FromAscii(zne.szName).c_str(), iZone,
+				wxString::FromAscii(szDonor).c_str()
+			);
+			return false;
+		}
+		cgFacePatch.nDnrZne = ctx.map_zoneName_id[szDonor] - 1; // 0-based
+
+
+		//
+		// Detect face, the donor connection patch belongs to.
+		// Check if connectivity info is correct
+		// 
+		const TZone& zneDnr = Zones[cgFacePatch.nDnrZne];
+		if( ids == ide )
+		{
+			if( ids == 1 )
+				cgFacePatch.dnrPosFace = faceXmin;
+			else if( ids == (zneDnr.ie - zneDnr.is + 1) )
+				cgFacePatch.dnrPosFace = faceXmax;
+		}
+		else if( jds == jde )
+		{
+			if( jds == 1 )
+				cgFacePatch.dnrPosFace = faceYmin;
+			if( jds == (zneDnr.je - zneDnr.js + 1) )
+				cgFacePatch.dnrPosFace = faceYmax;
+		}
+		else if( kds == kde )
+		{
+			if( kds == 1 )
+				cgFacePatch.dnrPosFace = faceZmin;
+			else if( kds == (zneDnr.ke - zneDnr.ks + 1) )
+				cgFacePatch.dnrPosFace = faceZmax;
+		}
+
+		if( cgFacePatch.dnrPosFace == faceNone )
+		{
+			wxLogError(
+				_("Connection patch '%s'#%d of zone '%s'#%d doesn't abut to any face"),
+				wxString::FromAscii(szName).c_str(), iPatch,
+				wxString::FromAscii(zne.szName).c_str(), iZone
 			);
 			return false;
 		}
 
-		//
-		// Detect connection face of the current block
-		// and 
-		// increase the block size by ghosts
-		// 
-		TZoneFacePos posFace = faceNone;  // block face
+		cgFacePatch.dnr_is0 = ids;
+		cgFacePatch.dnr_js0 = jds;
+		cgFacePatch.dnr_ks0 = kds;
 
-		if( is==ie ) // Xmin or Xmax block face
-		{
-			blk.nx += ghostI;
-			if( is==1 )
-			{
-				posFace = faceXmin;
-				blk.is += ghostI;
-				blk.ie += ghostI;
-			}
-			else
-				posFace = faceXmax;
-
-		}
-		else if( js==je )  // Ymin or Ymax block face
-		{
-			blk.ny += ghostJ;
-			if( js==1 )
-			{
-				posFace = faceYmin;
-				blk.js += ghostJ;
-				blk.je += ghostJ;
-			}
-			else
-				posFace = faceYmax;
-		}
-		else if( ks==ke )  // Zmin or Zmax block face
-		{
-			blk.nz += ghostK;
-			if( ks==1 )
-			{
-				posFace = faceZmin;
-				blk.ks += ghostK;
-				blk.ke += ghostK;
-			}
-			else
-				posFace = faceZmax;
-		}
-
-		blk.Faces[posFace].bcType = bcAbutted;
-
-		TcgnsZone::TFace& face = cgZne.Faces[posFace];
-		face.nDnrZne = ctx.map_zoneName_id[szDonor] - 1; // 0-based
-
-		face.dnr_is0 = ids;
-		face.dnr_js0 = jds;
-		face.dnr_ks0 = kds;
 
 		// Transform matrix between node indexes
-		// of the current and donor blocks
+		// of the current and donor zones
 		// 
 		// CGNS SIDS documentation,
 		// section 8.2 1-to-1 Interface Connectivity Structure Definition
@@ -451,43 +470,173 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 			static int del(int x, int y){ return (abs(x)==abs(y))?+1:0; }
 		};
 
-		face.matTrans[0] = F::sgn(iTsh[0]) * F::del(iTsh[0],1);
-		face.matTrans[1] = F::sgn(iTsh[1]) * F::del(iTsh[1],1);
-		face.matTrans[2] = F::sgn(iTsh[2]) * F::del(iTsh[2],1);
+		int* mT = cgFacePatch.matTrans;
+		mT[0] = F::sgn(iTsh[0]) * F::del(iTsh[0],1);
+		mT[1] = F::sgn(iTsh[1]) * F::del(iTsh[1],1);
+		mT[2] = F::sgn(iTsh[2]) * F::del(iTsh[2],1);
 
-		face.matTrans[3] = F::sgn(iTsh[0]) * F::del(iTsh[0],2);
-		face.matTrans[4] = F::sgn(iTsh[1]) * F::del(iTsh[1],2);
-		face.matTrans[5] = F::sgn(iTsh[2]) * F::del(iTsh[2],2);
+		mT[3] = F::sgn(iTsh[0]) * F::del(iTsh[0],2);
+		mT[4] = F::sgn(iTsh[1]) * F::del(iTsh[1],2);
+		mT[5] = F::sgn(iTsh[2]) * F::del(iTsh[2],2);
 
-		face.matTrans[6] = F::sgn(iTsh[0]) * F::del(iTsh[0],3);
-		face.matTrans[7] = F::sgn(iTsh[1]) * F::del(iTsh[1],3);
-		face.matTrans[8] = F::sgn(iTsh[2]) * F::del(iTsh[2],3);
-	} // loop through connection patches
+		mT[6] = F::sgn(iTsh[0]) * F::del(iTsh[0],3);
+		mT[7] = F::sgn(iTsh[1]) * F::del(iTsh[1],3);
+		mT[8] = F::sgn(iTsh[2]) * F::del(iTsh[2],3);
+	} // loop connection patches
 } // loop through zones
+
+
+//
+// (2) Assign owners for abutted faces
+//
+
+
+//
+// (2.1) Mark faces that should be skipped and processed by abutted zone
+// 
+for( int b = 0; b < nZones; ++b )
+{
+	TZone& zne = Zones[b];
+	TcgnsZone& cgZne = ctx.cgZones[b];
+
+	//std::set<TZoneFacePos> processedFaces;  // TODO
+	for( int p = 0; p < cgZne.nPatches; ++p ) // face patches
+	{
+		TcgnsZone::TFacePatch& cgFacePatch = cgZne.Patches[p];
+		TZone& zneDnr = Zones[ cgFacePatch.nDnrZne ];
+
+		if( ! zne.isFrozen && zneDnr.isFrozen )
+		{
+			zne.Faces[cgFacePatch.posFace].isSkipped = true;
+			continue;
+		}
+
+		// Areas of the abutted faces with ghosts
+		int areaMy = 0;
+		switch( cgFacePatch.posFace )
+		{
+		case faceXmin:   case faceXmax:
+			areaMy = zne.ny * zne.nz;
+			break;
+		case faceYmin:   case faceYmax:
+			areaMy = zne.nx * zne.nz;
+			break;
+		case faceZmin:   case faceZmax:
+			areaMy = zne.nx * zne.ny;
+			break;
+		}
+
+		int areaDnr = 0;
+		switch( cgFacePatch.dnrPosFace )
+		{
+		case faceXmin:   case faceXmax:
+			areaDnr = zneDnr.ny * zneDnr.nz;
+			break;
+		case faceYmin:   case faceYmax:
+			areaDnr = zneDnr.nx * zneDnr.nz;
+			break;
+		case faceZmin:   case faceZmax:
+			areaDnr = zneDnr.nx * zneDnr.ny;
+			break;
+		}
+
+		// Skip face (it will be processed by the abutted zone),
+		// if donor face is shorter, i.e. has less ghost nodes, has boundary nearby
+		if( areaDnr < areaMy )
+			zne.Faces[cgFacePatch.posFace].isSkipped = true;
+	} // loop faces
+} // loop zones
+
+
+// FIXME: Check triple-points
+//
+// (2.2) Resolve conflicts if faces are owned by both abutted zones
+// 
+for( int b = 0; b < nZones; ++b )
+{
+	TcgnsZone& cgZne = ctx.cgZones[b];
+	for( int p = 0; p < cgZne.nPatches; ++p ) // abutted face patches
+	{
+		TcgnsZone::TFacePatch& cgPatch = cgZne.Patches[p];
+
+		TZoneFace& face = Zones[b].Faces[cgPatch.posFace];
+		TZoneFace& faceDnr = Zones[cgPatch.nDnrZne].Faces[cgPatch.dnrPosFace];
+
+		if( ! face.isSkipped && ! faceDnr.isSkipped )
+			faceDnr.isSkipped = true;
+	}
+}
+
+
+//
+// (3) Update domain zones dimensions and indices using abutted faces info
+// 
+for( int b = 0; b < nZones; ++b )
+{
+	TZone& zne = Zones[b];
+	TcgnsZone& cgZne = ctx.cgZones[b];
+
+	cgZne.is1 = zne.is;   cgZne.ie1 = zne.ie;
+	cgZne.js1 = zne.js;   cgZne.je1 = zne.je;
+	cgZne.ks1 = zne.ks;   cgZne.ke1 = zne.ke;
+
+	for( int f = 0; f < 6; ++f ) // faces
+	{
+		TZoneFace& face = zne.Faces[f];
+		if( face.bcType != bcAbutted )  continue;
+
+		if( face.isSkipped )
+		{
+			// Face is owned by donor zone, skip it here -> cut nodes layer
+			switch( f )
+			{
+			case faceXmin:
+				zne.nx -= 1;
+				cgZne.ie1 = (zne.ie -= 1);
+				cgZne.is1 -= 1;
+				break;
+			case faceXmax:
+				zne.nx -= 1;
+				zne.ie -= 1;
+				break;
+			case faceYmin:
+				zne.ny -= 1;
+				cgZne.je1 = (zne.je -= 1);
+				cgZne.js1 -= 1;
+				break;
+			case faceYmax:
+				zne.ny -= 1;
+				zne.je -= 1;
+				break;
+			case faceZmin:
+				zne.nz -= 1;
+				cgZne.ke1 = (zne.ke -= 1);
+				cgZne.ks1 -= 1;
+				break;
+			case faceZmax:
+				zne.nz -= 1;
+				zne.ke -= 1;
+				break;
+			}
+		}
+	} // loop faces
+} // loop zones
 
 
 
 //
-// (2) Generate global indices of real nodes
-// 
+// (4) Global indices of real nodes
+//
+
+TZoneGlobIndices** znesGlobIndices = new TZoneGlobIndices*[nZones];
+
 int gIdx = 0;
 for( int b = 0; b < nZones; ++b )
 {
 	TZone& zne = Zones[b];
+	znesGlobIndices[b] = new TZoneGlobIndices(zne);
 
 	zne.nGlobStart = gIdx;
-
-	zne.globIndices = new int[ zne.nx * zne.ny * zne.nz ];
-	memset( zne.globIndices, 0xFF, zne.nx* zne.ny* zne.nz * sizeof(int) );  // -1
-
-	// Fill-in global indices of real nodes
-	for( int k=zne.ks; k<=zne.ke; ++k )
-	for( int j=zne.js; j<=zne.je; ++j )
-	for( int i=zne.is; i<=zne.ie; ++i )
-	{
-		const int locInd = zne.absIdx(i,j,k) - 1;  // 0-based
-		zne.globIndices[locInd] = zne.globRealInd(i,j,k);
-	}
 
 	// Real nodes count (without ghosts)
 	const int
@@ -500,187 +649,158 @@ for( int b = 0; b < nZones; ++b )
 
 
 //
-// (3) Parse connectivity data and fill in ghost nodes indices
+// (5) Parse connectivity data and fill in ghost nodes indices
 //
+for( int stage = 0; stage < 3; ++stage ){
 for( int b = 0; b < nZones; ++b )
 {
 	TZone& zne = Zones[b];
+	TcgnsZone& cgZne = ctx.cgZones[b];
+	TZoneGlobIndices& zneGlobInd = *znesGlobIndices[b];
 
-	// Loop through faces
-	for( int f = 0; f < 6; ++f )
+	// Loop through face patches
+	for( int p = 0; p < cgZne.nPatches; ++p )
 	{
-		if( zne.Faces[f].bcType != bcAbutted ) continue;
+		const TcgnsZone::TFacePatch& cgPatch = cgZne.Patches[p];
 
-		// Start & End indexes of ghost layer
+		// Start indices of the original patch (assuming no layers were skipped) in working numbering (with ghosts)
+		const int ips = cgPatch.is0 + cgZne.is1 - 1;
+		const int jps = cgPatch.js0 + cgZne.js1 - 1;
+		const int kps = cgPatch.ks0 + cgZne.ks1 - 1;
+
+		//
+		// Start & End indices of ghost layer
 		int igs, ige,   jgs, jge,   kgs, kge;
 
-		// Start indexes of the block face 'bF'
-		int ifs, jfs, kfs;
+		// Indices range of the patch in working numbering assuming no layers were skipped
+		igs = cgPatch.is0 + cgZne.is1 - 1;
+		ige = cgPatch.ie0 + cgZne.is1 - 1;
+		jgs = cgPatch.js0 + cgZne.js1 - 1;
+		jge = cgPatch.je0 + cgZne.js1 - 1;
+		kgs = cgPatch.ks0 + cgZne.ks1 - 1;
+		kge = cgPatch.ke0 + cgZne.ks1 - 1;
 
-		switch( f )
+		if( stage > 0 )
 		{
-		case faceXmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			igs = 1;           jgs = zne.js;      kgs = zne.ks;
-			ige = zne.is - 1;  jge = zne.je;      kge = zne.ke;
-			break;
-		case faceXmax:
-			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
-			igs = zne.ie + 1;  jgs = zne.js;      kgs = zne.ks;
-			ige = zne.nx;      jge = zne.je;      kge = zne.ke;
-			break;
-		case faceYmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			igs = zne.is;      jgs = 1;           kgs = zne.ks;
-			ige = zne.ie;      jge = zne.js - 1;  kge = zne.ke;
-			break;
-		case faceYmax:
-			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
-			igs = zne.is;      jgs = zne.je + 1;  kgs = zne.ks;
-			ige = zne.ie;      jge = zne.ny;      kge = zne.ke;
-			break;
-		case faceZmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			igs = zne.is;      jgs = zne.js;      kgs = 1;
-			ige = zne.ie;      jge = zne.je;      kge = zne.ks - 1;
-			break;
-		case faceZmax:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ke;
-			igs = zne.is;      jgs = zne.js;      kgs = zne.ke + 1;
-			ige = zne.ie;      jge = zne.je;      kge = zne.nz;
-			break;
+			// Extend patch nodes by ghosts if patch edge coinside with the face edge
+			if( cgPatch.is0 == 1 )                            igs = 1;
+			if( cgPatch.ie0 == (cgZne.ie1 - cgZne.is1 + 1) )  ige = zne.nx;
+
+			if( cgPatch.js0 == 1 )                            jgs = 1;
+			if( cgPatch.je0 == (cgZne.je1 - cgZne.js1 + 1) )  jge = zne.ny;
+
+			if( cgPatch.ks0 == 1 )                            kgs = 1;
+			if( cgPatch.ke0 == (cgZne.ke1 - cgZne.ks1 + 1) )  kge = zne.nz;
 		}
 
-		TcgnsZone::TFace& face = ctx.cgZones[b].Faces[f];
-		TZone& zneDonor = Zones[ face.nDnrZne ];
-
-		// Donor block face starting index with ghosts
-		int ids = face.dnr_is0 + zneDonor.is - 1;
-		int jds = face.dnr_js0 + zneDonor.js - 1;
-		int kds = face.dnr_ks0 + zneDonor.ks - 1;
-
-		for( int k=kgs; k<=kge; ++k )
-		for( int j=jgs; j<=jge; ++j )
-		for( int i=igs; i<=ige; ++i )
+		// Nodes of the ghost layer extruded from the patch
+		switch( cgPatch.posFace )
 		{
-			// Donor block indexes
-			int id = (i-ifs)*face.matTrans[0] + (j-jfs)*face.matTrans[1] + (k-kfs)*face.matTrans[2] + ids;
-			int jd = (i-ifs)*face.matTrans[3] + (j-jfs)*face.matTrans[4] + (k-kfs)*face.matTrans[5] + jds;
-			int kd = (i-ifs)*face.matTrans[6] + (j-jfs)*face.matTrans[7] + (k-kfs)*face.matTrans[8] + kds;
+		case faceXmin:  igs = 1;          ige = zne.is-1;   break;
+		case faceXmax:  igs = zne.ie+1;   ige = zne.nx;     break;
+		case faceYmin:  jgs = 1;          jge = zne.js-1;   break;
+		case faceYmax:  jgs = zne.je+1;   jge = zne.ny;     break;
+		case faceZmin:  kgs = 1;          kge = zne.ks-1;   break;
+		case faceZmax:  kgs = zne.ke+1;   kge = zne.nz;     break;
+		}
 
-			if( id > zneDonor.ie || id < zneDonor.is ||
-				jd > zneDonor.je || jd < zneDonor.js ||
-				kd > zneDonor.ke || kd < zneDonor.ks
-				)
+		const TZone& zneDnr = Zones[ cgPatch.nDnrZne ];
+		const TcgnsZone& cgZneDnr = ctx.cgZones[ cgPatch.nDnrZne ];
+		TZoneGlobIndices& zneDnrGlobInd = *znesGlobIndices[cgPatch.nDnrZne];
+
+		// Start indices of the original donor patch (assuming no layers were skipped) in working numbering
+		const int ids = cgPatch.dnr_is0 + cgZneDnr.is1 - 1;
+		const int jds = cgPatch.dnr_js0 + cgZneDnr.js1 - 1;
+		const int kds = cgPatch.dnr_ks0 + cgZneDnr.ks1 - 1;
+
+		for( int k = kgs; k <= kge; ++k ){
+		for( int j = jgs; j <= jge; ++j ){
+		for( int i = igs; i <= ige; ++i )
+		{
+			// Donor zone indices
+			int id = (i-ips)*cgPatch.matTrans[0] + (j-jps)*cgPatch.matTrans[1] + (k-kps)*cgPatch.matTrans[2] + ids;
+			int jd = (i-ips)*cgPatch.matTrans[3] + (j-jps)*cgPatch.matTrans[4] + (k-kps)*cgPatch.matTrans[5] + jds;
+			int kd = (i-ips)*cgPatch.matTrans[6] + (j-jps)*cgPatch.matTrans[7] + (k-kps)*cgPatch.matTrans[8] + kds;
+
+			if( 0 == stage )
 			{
-				wxLogError(
-					_("Ghost node (%d,%d,%d) in zone '%s' tried to be mapped to \
-					  nonexistent node (%d,%d,%d) in zone '%s'. Check indices orientation!"),
-					i,  j,  k,  wxString::FromAscii(zne.szName).c_str(),
-					id, jd, kd, wxString::FromAscii(zneDonor.szName).c_str()
-				);
-				return false;
+				if( id < cgZneDnr.is1 || id > cgZneDnr.ie1 ||
+					jd < cgZneDnr.js1 || jd > cgZneDnr.je1 || 
+					kd < cgZneDnr.ks1 || kd > cgZneDnr.ke1
+					)
+				{
+					wxLogError(
+						_("Ghost node (%d,%d,%d) of zone '%s' tried to be mapped \
+to nonexistent node (%d,%d,%d) of zone '%s'. Check indices orientation!"),
+						i,  j,  k,  wxString::FromAscii(zne.szName).c_str(),
+						id, jd, kd, wxString::FromAscii(zneDnr.szName).c_str()
+					);
+					return false;
+				}
+
+				if( id < zneDnr.is || id > zneDnr.ie ||
+					jd < zneDnr.js || jd > zneDnr.je || 
+					kd < zneDnr.ks || kd > zneDnr.ke
+					)
+				{
+					continue;    // process on next stage
+				}
+
+				zneGlobInd(i,j,k) = zneDnr.globRealInd(id,jd,kd);
 			}
+			else // resolve cross references (nodes around corners)
+			{
+				if( zneGlobInd(i,j,k) != -1 )  continue;
 
-			const int locInd = zne.absIdx(i,j,k) - 1;
-			zne.globIndices[ locInd ] = zneDonor.globRealInd(id,jd,kd);
-		}
+				if( id < 1 || id > zneDnr.nx ||
+					jd < 1 || jd > zneDnr.ny ||
+					kd < 1 || kd > zneDnr.nz
+				  )
+				{
+					// ghost data unavailable
+					continue;
+				}
 
-	} 	// loop through faces
-
-} // loop through zones
+				zneGlobInd(i,j,k) = zneDnrGlobInd(id,jd,kd);
+			}
+		}}} // for i,j,k
+	} // loop faces
+}} // loop zones, stages
 
 
 //
-// (4) Fill-in remaining ghost node indices around corners
+// Fill-in globIndices[] of zones in current MPI-rank
 //
-for( int b = 0; b < nZones; ++b )
+for( int b = bs; b <= be; ++b )
 {
 	TZone& zne = Zones[b];
+	TZoneGlobIndices& zneGlobInd = *znesGlobIndices[b];
 
-	// Loop through faces
-	for( int f = 0; f < 6; ++f )
+	try {
+		zne.globIndices = new int[ zne.nx * zne.ny * zne.nz ];
+	}
+	catch( std::bad_alloc& e )
 	{
-		if( zne.Faces[f].bcType != bcAbutted ) continue;
+		printf(
+			"[%d] %s(): Memory allocation for TZone::globIndices[] in zone #%d/%d FAILED. Asked for %.3f MB.\n",
+			G_State.mpiRank, __FUNCTION__,
+			b+1, nZones,
+			zne.nx*zne.ny*zne.nz * (float)sizeof(int) / (1024.*1024.)
+		);
+		return false;
+	}
 
-		// Start & End indexes of ghost layer
-		int igs, ige,   jgs, jge,   kgs, kge;
+	// Fill-in global indices of real nodes
+	for( int k=1; k<=zne.nz; ++k ){
+	for( int j=1; j<=zne.ny; ++j ){
+	for( int i=1; i<=zne.nx; ++i )
+	{
+		zne.globInd(i,j,k) = zneGlobInd(i,j,k);
+	}}}
+}
 
-		// Start indexes of the block face 'bF'
-		int ifs, jfs, kfs;
-
-		switch( f )
-		{
-		case faceXmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			igs = 1;           jgs = 1;           kgs = 1;
-			ige = zne.is - 1;  jge = zne.ny;      kge = zne.nz;
-			break;
-		case faceXmax:
-			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
-			igs = zne.ie + 1;  jgs = 1;           kgs = 1;
-			ige = zne.nx;      jge = zne.ny;      kge = zne.nz;
-			break;
-		case faceYmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			igs = 1;           jgs = 1;           kgs = 1;
-			ige = zne.nx;      jge = zne.js - 1;  kge = zne.nz;
-			break;
-		case faceYmax:
-			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
-			igs = 1;           jgs = zne.je + 1;  kgs = 1;
-			ige = zne.nx;      jge = zne.ny;      kge = zne.nz;
-			break;
-		case faceZmin:
-			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
-			igs = 1;           jgs = 1;           kgs = 1;
-			ige = zne.nx;      jge = zne.ny;      kge = zne.ks - 1;
-			break;
-		case faceZmax:
-			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
-			igs = 1;           jgs = 1;           kgs = zne.ke + 1;
-			ige = zne.nx;      jge = zne.ny;      kge = zne.nz;
-			break;
-		}
-
-		TcgnsZone::TFace& face = ctx.cgZones[b].Faces[f];
-		TZone& zneDonor = Zones[ face.nDnrZne ];
-
-		// Donor block face starting index with ghosts
-		int ids = face.dnr_is0 + zneDonor.is - 1;
-		int jds = face.dnr_js0 + zneDonor.js - 1;
-		int kds = face.dnr_ks0 + zneDonor.ks - 1;
-
-		for( int k=kgs; k<=kge; ++k )
-		for( int j=jgs; j<=jge; ++j )
-		for( int i=igs; i<=ige; ++i )
-		{
-			const int locInd = zne.absIdx(i,j,k) - 1;
-			if( zne.globIndices[ locInd ] != -1 ) continue;
-
-			// Donor block indexes
-			int id = (i-ifs)*face.matTrans[0] + (j-jfs)*face.matTrans[1] + (k-kfs)*face.matTrans[2] + ids;
-			int jd = (i-ifs)*face.matTrans[3] + (j-jfs)*face.matTrans[4] + (k-kfs)*face.matTrans[5] + jds;
-			int kd = (i-ifs)*face.matTrans[6] + (j-jfs)*face.matTrans[7] + (k-kfs)*face.matTrans[8] + kds;
-			if( id > zneDonor.nx || id < 1 ||
-				jd > zneDonor.ny || jd < 1 ||
-				kd > zneDonor.nz || kd < 1    )
-			{
-				// ghost data unavailable
-				wxLogError(_("Provided multi-block layout is not supported yet. Sorry"));
-				return false;
-				//continue;
-			}
-
-			int dnrLocInd = zneDonor.absIdx(id,jd,kd) - 1;  // 0-based
-
-			zne.globIndices[locInd] = zneDonor.globIndices[ dnrLocInd ];
-		}
-
-	} 	// loop through faces
-
-} // loop through zones
-
+	for( int b = 0; b < nZones; ++b )  delete znesGlobIndices[b];
+	delete[] znesGlobIndices;
 
 	return true;
 }
@@ -766,115 +886,127 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 bool t_MFCGNS3D::_parseBCData3DfromCGNS( TcgnsContext& ctx )
 {
 
-for( int iZone = 1;  iZone <= nZones;  ++iZone )
-{
-	TZone& blk = Zones[iZone-1];
+	assert(ctx.cgZones);
 
-	// Original block size without ghosts
-	const int
-		nx0 = blk.ie - blk.is + 1,
-		ny0 = blk.je - blk.js + 1,
-		nz0 = blk.ke - blk.ks + 1;
-
-	// Number of BCs in the Zone
-	int nBCs = 0;  cg_nbocos(ctx.fileID,ctx.iBase,iZone, &nBCs);
-
-	for( int iBC = 1; iBC <= nBCs; ++iBC )
+	for (int iZone = 1; iZone <= nZones; ++iZone)
 	{
-		CG_MY_BCType_t iBCtype;
+		TZone& zne = Zones[iZone - 1];
+		TcgnsZone& cgZne = ctx.cgZones[iZone - 1];
 
-		CG_MY_PointSetType_t pntSet;
-		cgsize_t nPnts = -1; // number of points defining the BC region
+		// Original zone size (not accounting added ghosts & skipped layers)
+		const int
+			nx0 = cgZne.ie1 - cgZne.is1 + 1,
+			ny0 = cgZne.je1 - cgZne.js1 + 1,
+			nz0 = cgZne.ke1 - cgZne.ks1 + 1;
 
-		// Normals to the BC patch
-		int iNorm[3]; // normal as index vector (computational coords)
-		cgsize_t normListSize;  CG_MY_DataType_t normDataType; // normals in phys coords
+		// Number of BCs in the Zone
+		int nBCs = 0;  cg_nbocos(ctx.fileID, ctx.iBase, iZone, &nBCs);
 
-		int nDatasets = 0; // number of datasets with additional info for the BC
+		for (int iBC = 1; iBC <= nBCs; ++iBC)
+		{
+			CG_BCType_t iBCtype;
 
-		char szName[33];
+			CG_PointSetType_t pntSet;
+			cgsize_t nPnts = 0; // number of points defining the BC region
 
-		cg_boco_info( ctx.fileID, ctx.iBase, iZone, iBC,
-			szName, &iBCtype,
-			&pntSet, &nPnts,
-			iNorm, &normListSize, &normDataType,
-			&nDatasets
+								// Normals to the BC patch
+			int iNorm[3]; // normal as index vector (computational coords)
+			cgsize_t normListSize = 0;  CG_DataType_t normDataType; // normals in phys coords
+
+			int nDatasets = 0; // number of datasets with additional info for the BC
+
+			char szName[33];
+
+			cg_boco_info(ctx.fileID, ctx.iBase, iZone, iBC,
+				szName, &iBCtype,
+				&pntSet, &nPnts,
+				iNorm, &normListSize, &normDataType,
+				&nDatasets
 			);
-		if( pntSet != CG_MY_PointRange && nPnts != 2 )
-		{
-			wxLogError(
-				_("Boundary condition patch '%s'(#%d) of zone '%s'(#%d) isn't defined as point range"),
-				wxString::FromAscii(szName).c_str(), iBC,
-				wxString::FromAscii(blk.szName).c_str(), iZone
-			);
-			return false;
-		}
-		/*
-		if( iBCtype == FamilySpecified )
-		{
-			// Support for Pointwise version >= 16.04
-			// It writes meaningless BC names, but correct BC FamilyName
-			cg_goto(ctx.fileID,ctx.iBase, "Zone_t",iZone, "ZoneBC",0, "BC_t",iBC, NULL);
-			cg_famname_read(szName);
-		}*/
-
-		// Family name
-		cg_goto(ctx.fileID,ctx.iBase, "Zone_t",iZone, "ZoneBC",0, "BC_t",iBC, NULL);
-		if( cg_famname_read(szName) == CG_OK )
-		{
-			// Read "Fam_Descr_Name" generated by Pointwise 16.03
-			if( cg_goto(ctx.fileID,ctx.iBase, szName,0, NULL) == CG_OK )
+			if (pntSet != CG_PointRange && nPnts != 2)
 			{
-				char szDescrName[33] = "";
-				char* szDescrText = NULL;
-				if( cg_descriptor_read(1, szDescrName, &szDescrText) == CG_OK )
+				wxLogError(
+					_("Boundary condition patch '%s'(#%d) of zone '%s'(#%d) isn't defined as point range"),
+					wxString::FromAscii(szName).c_str(), iBC,
+					wxString::FromAscii(zne.szName).c_str(), iZone
+				);
+				return false;
+			}
+
+			// Family name
+			cg_goto(ctx.fileID, ctx.iBase, "Zone_t", iZone, "ZoneBC", 0, "BC_t", iBC, NULL);
+			if (cg_famname_read(szName) == CG_OK)
+			{
+				// Read "Fam_Descr_Name" generated by Pointwise 16.03
+				if (cg_goto(ctx.fileID, ctx.iBase, szName, 0, NULL) == CG_OK)
 				{
-					if( strcmp(szDescrName, "Fam_Descr_Name") == 0 )
+					char szDescrName[33] = "";
+					char* szDescrText = NULL;
+					if (cg_descriptor_read(1, szDescrName, &szDescrText) == CG_OK)
 					{
-						strcpy(szName, szDescrText);
-						cg_free(szDescrText);
+						if (strcmp(szDescrName, "Fam_Descr_Name") == 0)
+						{
+							strcpy(szName, szDescrText);
+							cg_free(szDescrText);
+						}
 					}
 				}
 			}
-		}
 
-		// Read BC patch point range
-		cgsize_t idxRange[6];   // Imin, Jmin, Kmin, Imax, Jmax, Kmax
+			// Read BC patch point range
+			cgsize_t idxRange[6];   // Imin, Jmin, Kmin, Imax, Jmax, Kmax
+			cg_boco_read(ctx.fileID, ctx.iBase, iZone, iBC, idxRange, NULL);
 
-		cg_boco_read(ctx.fileID,ctx.iBase,iZone, iBC, idxRange, NULL);
+			const long
+				&is = idxRange[0], &js = idxRange[1], &ks = idxRange[2],
+				&ie = idxRange[3], &je = idxRange[4], &ke = idxRange[5];
 
-		// Check that BC patch cover whole face
+			// Check that BC patch cover whole face
+			bool ok = true;
+			ok &= (is == 1 && ie == 1) || (is == nx0 && ie == nx0) || (is == 1 && ie == nx0);
+			ok &= (js == 1 && je == 1) || (js == ny0 && je == ny0) || (js == 1 && je == ny0);
+			ok &= (ks == 1 && ke == 1) || (ks == nz0 && ke == nz0) || (ks == 1 && ke == nz0);
+			if (!ok)
+			{
+				wxLogError(
+					_("Boundary condition patch '%s'#%d of zone '%s'#%d doesn't cover whole zone face"),
+					wxString::FromAscii(szName).c_str(), iBC,
+					wxString::FromAscii(zne.szName).c_str(), iZone
+				);
+				return false;
+			}
 
-		const long
-			&is = idxRange[0],  &js = idxRange[1],  &ks = idxRange[2],
-			&ie = idxRange[3],  &je = idxRange[4],  &ke = idxRange[5];
+			// Detect BC face
+			TZoneFacePos posFace = faceNone;
+			if (is == ie)
+				posFace = (is == 1) ? faceXmin : faceXmax;
+			else if (js == je)
+				posFace = (js == 1) ? faceYmin : faceYmax;
+			else if (ks == ke)
+				posFace = (ks == 1) ? faceZmin : faceZmax;
 
-		bool ok = true;
-		ok &= (is==1 && ie==1) || (is==nx0 && ie==nx0) || (is==1 && ie==nx0);
-		ok &= (js==1 && je==1) || (js==ny0 && je==ny0) || (js==1 && je==ny0);
-		ok &= (ks==1 && ke==1) || (ks==nz0 && ke==nz0) || (ks==1 && ke==nz0);
-		if( ! ok )
+			strcpy(zne.Faces[posFace].szBCFamName, szName);
+		} // for iBC
+
+		  //
+		  // Fill-in missed BCs
+		  //
+		for (int f = 0; f < 6; ++f)
 		{
-			wxLogError(
-				_("Boundary condition patch '%s'(#%d) of zone '%s'(#%d) don't cover whole block face"),
-				wxString::FromAscii(szName).c_str(), iBC,
-				wxString::FromAscii(blk.szName).c_str(), iZone
+			TZoneFace& bF = zne.Faces[f];
+			if (bF.bcType != bcTypeH || bF.szBCFamName[0])  continue;
+
+			const char* names[] = { "Imin", "Imax", "Jmin", "Jmax", "Kmin", "Kmax" };
+			sprintf(bF.szBCFamName, "%s-%s", zne.szName, names[f]);
+
+			wxLogWarning(
+				_("Zone '%s' has face w/o BC; name '%s' was assigned"),
+				wxString::FromAscii(zne.szName).c_str(),
+				wxString::FromAscii(bF.szBCFamName).c_str()
 			);
-			return false;
-		}
+		} // loop faces
 
-		// Detect BC face
-		TZoneFace* bF = NULL;
-		if( is==ie ) // Xmin or Xmax block face
-			bF = ( is==1 ) ? &blk.Faces[faceXmin] : &blk.Faces[faceXmax];
-		else if( js==je )  // Ymin or Ymax block face
-			bF = ( js==1 ) ? &blk.Faces[faceYmin] : &blk.Faces[faceYmax];
-		else if( ks==ke )  // Zmin or Zmax block face
-			bF = ( ks==1 ) ? &blk.Faces[faceZmin] : &blk.Faces[faceZmax];
-
-		strcpy(bF->szBCFamName, szName);
-	} // for iBC
-} // for iZone
+	} // for iZone
 
 	return true;
 }

@@ -13,6 +13,8 @@
 #define __CGNS_STRUCTS
 
 #include "MFDomainBase.h"
+#include <vector>
+#include <algorithm>  // for std::lower_bound() - binary find
 
 typedef void TfuncPhys;
 
@@ -146,24 +148,31 @@ namespace mf{
 
 		struct TcgnsZone
 		{
-			// Data of the abutted faces
-			struct TFace
+			int is1, ie1, js1, je1, ks1, ke1;  // real nodes indices range when ghosts were added, but no faces were skipped
+
+			// Abutted faces data. The face consists of one or many patches
+			struct TFacePatch
 			{
-				int nDnrZne;  // 0-based number of abutted donor zone
+				int is0, ie0, js0, je0, ks0, ke0;  // patch indices in original numbering (no ghosts, no skipped faces)
+				TZoneFacePos posFace;           // face the patch belongs to
 
-				// Starting index of the abutted donor face
-				// Ghost nodes are not taken into account (i.e. without ghosts) !!!
-				int dnr_is0, dnr_js0, dnr_ks0;
+				int nDnrZne;                    // 0-based number of donor zone
+				TZoneFacePos dnrPosFace;        // donor face we abutting to
+				int dnr_is0, dnr_js0, dnr_ks0;  // donor patch starting indices in original numbering (no ghosts, no skipped faces)
 
-				// Transform matrix between node indices of the current and donor blocks
+												// Transform matrix between node indices of the current and donor zones
 				int matTrans[9];
 
 				// Ctor
-				TFace() : nDnrZne(-1) { ; }
+				TFacePatch() : nDnrZne(-1), posFace(faceNone), dnrPosFace(faceNone) { ; }
 			};
 
-			// Zone faces connectivity info
-			TFace Faces[6];
+			// Zone connectivity info
+			int nPatches;
+			TFacePatch* Patches;
+
+			TcgnsZone() : nPatches(0), Patches(NULL) { ; }
+			~TcgnsZone() { delete[] Patches; }
 		};
 		//-----------------------------------------------------------------------------
 
@@ -193,6 +202,7 @@ namespace mf{
 		struct TZoneFace
 		{
 			char szBCFamName[33];	// BC family name the face belongs to
+			bool isSkipped;  // face's grid layer skipped for processing by abutted zone
 
 			TBlockBCType bcType;
 
@@ -202,6 +212,7 @@ namespace mf{
 			// Constructor
 			TZoneFace()
 			{
+				isSkipped = false;
 				bcType = bcTypeH;
 				funBC = NULL;
 			}
@@ -222,9 +233,74 @@ namespace mf{
 			}
 		};
 
+		/**
+		*  Compact storage of global indices of all nodes in a zone:
+		*     Indices of ghost nodes are stored,
+		*     indices of real nodes are computed
+		*/
+		class TZoneGlobIndices
+		{
+			TZone& zne;  // owner zone
+
+			struct Tidx {
+				int loc;  int64_t glob;
+				bool operator<(const Tidx& that) const { return loc < that.loc; }
+			};
+			std::vector<Tidx> vec;   // NB: not using std::map to save memory
+
+			TZoneGlobIndices();  // disable default ctor
+
+		public:
+			TZoneGlobIndices(TZone& aZone) : zne(aZone)
+			{
+				// Fill-in by ghost node indices
+				const int nx0 = (zne.ie - zne.is + 1),
+					ny0 = (zne.je - zne.js + 1),
+					nz0 = (zne.ke - zne.ks + 1);
+				vec.reserve(zne.nx*zne.ny*zne.nz - nx0*ny0*nz0);
+
+				for (int k = 1; k <= zne.nz; ++k) {
+					for (int j = 1; j <= zne.ny; ++j) {
+						for (int i = 1; i <= zne.nx; ++i)
+						{
+							if (zne.is <= i && i <= zne.ie &&
+								zne.js <= j && j <= zne.je &&
+								zne.ks <= k && k <= zne.ke)
+								continue;
+
+							Tidx idx = { zne.absIdx(i,j,k), -1 };
+							vec.push_back(idx);
+						}
+					}
+				}
+			}
+
+			int64_t& operator()(int i, int j, int k = 1)
+			{
+				// Real node: compute global index
+				if (zne.is <= i && i <= zne.ie &&
+					zne.js <= j && j <= zne.je &&
+					zne.ks <= k && k <= zne.ke
+					)
+				{
+					static int64_t ind;
+					ind = zne.globRealInd(i, j, k);
+					return ind;
+				}
+
+				const Tidx locIdx = { zne.absIdx(i,j,k), -2 };
+				std::vector<Tidx>::iterator it = std::lower_bound(vec.begin(), vec.end(), locIdx);
+				assert(it != vec.end() && !(locIdx < *it));
+				return it->glob;
+			}
+		};
+		//-----------------------------------------------------------------------------
+
 		struct TZone
 		{
 			char szName[33];  // name of the zone
+
+			bool isFrozen;    // don't compute anything in this zone, keep field fixed
 
 			int nx, ny, nz;  // grid dimensions, including ghost nodes
 			int is,ie,  js,je,  ks,ke;  // start & end 1-based indices of real nodes
@@ -300,16 +376,13 @@ namespace mf{
 
 			// Global (inter-zones) 0-based index
 			// of the *any* (real or ghost) (i,j,k)-node
-			int globInd(int i, int j)
+			int& globInd(int aIdx)
 			{
-				return globIndices[ absIdx(i,j) - 1 ];
+				assert(globIndices && aIdx >= 1);
+				return globIndices[aIdx - 1];
 			}
-			int globInd(int i, int j, int k)
-			{
-				return globIndices[ absIdx(i,j,k) - 1 ];
-			}
-
-
+			int& globInd(int i, int j) { return globInd(absIdx(i, j)); }
+			int& globInd(int i, int j, int k) { return globInd(absIdx(i, j, k)); }
 			//
 			// Zone faces data, including connectivity info
 			// 
@@ -327,6 +400,7 @@ namespace mf{
 			TZone()
 			{
 				szName[0] = NULL;
+				isFrozen = false;
 				nx = 0;  ny = 0;  nz = 1;
 
 				nGlobStart = 0;
