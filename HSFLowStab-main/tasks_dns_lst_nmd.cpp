@@ -801,17 +801,16 @@ void _get_lst_wpacket_from_dns() {
 	ofstr << spd.Nw << "\t" << spd.Nb << "\n";
 
 	double w_fft_min_crop = 4.77;
-	double w_fft_max_crop = 38.2;
+	double w_fft_max_crop = 238.0;
 
 	double b_fft_min_crop = 0.0;
-	double b_fft_max_crop = 127.0;
+	double b_fft_max_crop = 300.0;
 
-	//for (int i = 0; i < spd.Nw; i++){
-	for (int i = 43; i < 44; i++) {
+	for (int i = 0; i < spd.Nw; i++){
 
 		bool need_full_search = true;
 
-		for (int j = 63; j < 64; j++) {
+		for (int j = 0; j < spd.Nb; j++) {
 
 			w_fft = spd.Om_fft_min + i*dOm_fft;
 			b_fft = spd.B_fft_min + j*dB_fft;
@@ -837,25 +836,36 @@ void _get_lst_wpacket_from_dns() {
 
 				wxLogMessage(_T("Calculating lst2dns for Om_fft=%lf, B_fft=%lf"), w_fft, b_fft);
 
-				wc_cur.w = w_lst;
-				wc_cur.b = b_lst;
+				try {
 
-				if (need_full_search) {
-					_get_wchars(wc_cur, _get_wc_s_default(wc_cur));
-					wc_prev = wc_cur;
+					wc_cur.w = w_lst;
+					wc_cur.b = b_lst;
+
+					if (need_full_search) {
+						_get_wchars(wc_cur, _get_wc_s_default(wc_cur));
+						wc_prev = wc_cur;
+					}
+					else {
+						_get_wchars(wc_cur, wc_prev);
+						wc_prev = wc_cur;
+					}
+
+					need_full_search = false;
+
+					// wc_cur is set, calc scaled amp function
+
+					_get_amp_funcs_from_full_spectrum(i, j, spd, mfd);
+
+					_do_calc_dns2lst_wall_disturb(wc_cur, wall_data);
+
 				}
-				else {
-					_get_wchars(wc_cur, wc_prev);
-					wc_prev = wc_cur;
+				catch (...) {
+
+					for (int k = 0; k < 5; k++) wall_data[k] = t_Complex(0.0, 0.0);
+
+					need_full_search = true;
+
 				}
-
-				need_full_search = false;
-
-				// wc_cur is set, calc scaled amp function
-
-				_get_amp_funcs_from_full_spectrum(i, j, spd, mfd);
-
-				_do_calc_dns2lst_wall_disturb(wc_cur, wall_data);
 
 			}
 
