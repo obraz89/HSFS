@@ -42,6 +42,8 @@ namespace mf{
 
 		t_Rec get_rec(const t_GeomPoint& xyz) const;
 
+		const mf::cg::TcgnsZone::TFacePatch& get_face_patch(const mf::cg::t_ZoneNode& a_znode) const;
+
 		mf::cg::t_ZoneNode get_abutted_znode(
 			const mf::cg::t_ZoneNode& a_znode, const int di, const int dj, const int dk) const;
 

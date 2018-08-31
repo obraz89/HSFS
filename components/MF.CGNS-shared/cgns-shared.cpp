@@ -17,6 +17,8 @@ using namespace mf::cg;
   #define CG_MY_Vertex Vertex
 #endif
 
+static const char* g_cgCoordNames[] = { "CoordinateX", "CoordinateY", "CoordinateZ" };
+
 // full or truncated (in case surf_znode is internal but carries face_pos of starting face) 
 // grid line from a starting znode to its opposite face position;
 // end node is always on real zone surface
@@ -317,20 +319,17 @@ bool mf::cg::TDomain::initField(const wxString& a_fldFName)
 **/  
 bool mf::cg::TDomain::loadField( const wxString& fileName, bool bIsPrev )
 {
-	//const int &nu = G_Domain.nu;
 
-	if( fileName.EndsWith(_T(".cgns")) )
+	if (fileName.EndsWith(_T(".cgns")))
 	{
 		// CGNS file format
 		//
 		int f = -1;
-		if( cg_open( fileName.mb_str(),CG_MODE_READ, &f ) != CG_OK )
+		if (cg_open(fileName.mb_str(), CG_MODE_READ, &f) != CG_OK)
 		{
 			wxLogError(
-				_("Can't open field file '%s' for reading. Possibly \
-unaccessible file, broken internal links (e.g. to grid) \
-or unsupported CGNS version"),
-				fileName.c_str()
+				_("Can't open field file '%s' for reading: %s"),
+				fileName.c_str(), wxString::FromAscii(cg_get_error()).c_str()
 			);
 			return false;
 		}
@@ -341,95 +340,79 @@ or unsupported CGNS version"),
 		// Space dimensions
 		int dimCell = 0, dimPhys = 0;
 		char szName[33];
-		cg_base_read(f,iBase,  szName,&dimCell,&dimPhys);
+		cg_base_read(f, iBase, szName, &dimCell, &dimPhys);
 
-		if( dimCell != nDim )
+		if (dimCell != nDim)
 		{
 			wxLogError(_("CGNS: Inconsistent space dimensions"));
 			return false;
 		}
 
 		// Number of zones (aka blocks)
-		int nBlk = 0;  cg_nzones(f,iBase, &nBlk);
-		if( nBlk != nZones )
+		int nBlk = 0;  cg_nzones(f, iBase, &nBlk);
+		if (nBlk != nZones)
 		{
-			wxLogError( _("CGNS: Inconsistent number of blocks") );
+			wxLogError(_("CGNS: Inconsistent number of zones"));
 			return false;
 		}
 
-		// Loop through blocks
-		for( int b = bs; b <= be; ++b )
+		// Loop through zones
+		for (int b = bs; b <= be; ++b)
 		{
 			int iZone = b + 1;
-			TZone& blk = Zones[b];
-			double* dstU = (bIsPrev) ? blk.Unm1 : blk.U;
+			TZone& zne = Zones[b];
+			if (zne.isFrozen && bIsPrev) continue;
 
-			// Block size without ghosts
-			const int  
-				nx = blk.ie - blk.is + 1,
-				ny = blk.je - blk.js + 1,
-				nz = blk.ke - blk.ks + 1;
+			double* dstU = (bIsPrev) ? zne.Unm1 : zne.U;
 
-			// Data of the block excluding ghosts!!!
+			// Original zone size
+			// (not accounting added ghosts & skipped layers)
+			const int is0 = zne.is - (zne.Faces[faceXmin].isSkipped ? 1 : 0);
+			const int ie0 = zne.ie +(zne.Faces[faceXmax].isSkipped ? 1 : 0);
+			const int js0 = zne.js -(zne.Faces[faceYmin].isSkipped ? 1 : 0);
+			const int je0 = zne.je +(zne.Faces[faceYmax].isSkipped ? 1 : 0);
+			const int ks0 = zne.ks -(zne.Faces[faceZmin].isSkipped ? 1 : 0);
+			const int ke0 = zne.ke +(zne.Faces[faceZmax].isSkipped ? 1 : 0);
+
+			const unsigned int
+				nx0 = ie0 - is0 + 1,
+				ny0 = je0 - js0 + 1,
+				nz0 = ke0 - ks0 + 1;
+
+			// Data of the zone excluding ghosts!!!
 			TDims dims;  double *newGrid = NULL, *newField = NULL;
-
-			if( ! readBlockFromCGNS(f,iZone,  dims, &newGrid, &newField) )
+			
+			if (!readCGNSZone(f, iBase, iZone, dims, &newGrid, &newField)) {
+				wxLogMessage(_T("Error: Failed to read cgns zone iZone=%d"), iZone);
 				return false;
+			}
 
-			if( dims.numX==nx && dims.numY==ny && dims.numZ==nz
-				&& /*g_genOpts.remapField==false*/ true       )
+			if (dims.numX != nx0 || dims.numY != ny0 || dims.numZ != nz0)
 			{
-				// Loaded and current grids are the same -> copy field
-				const double* srcU = newField;
-				for( int k = blk.ks;  k <= blk.ke;  ++k )
-				for( int j = blk.js;  j <= blk.je;  ++j )
-				for( int i = blk.is;  i <= blk.ie;  ++i )
-				{
-					double* U = dstU + nu*( blk.absIdx(i,j,k) - 1 );
+				wxLogError(
+					_("Zone #%d has different dimensions in the loaded field (%dx%dx%d) and in the current grid (%dx%dx%d)."),
+					dims.numX, dims.numY, dims.numZ,
+					nx0, ny0, nz0
+				);
+				return false;
+			}
 
-					memcpy( U, srcU, nu*sizeof(double) );
-					srcU += nu;
+			// Copy field to internal structs
+			// NB: skipped grid layers are also filled to support immediate saving (e.g. slices) without scatternig ghosts
+			for (int k = ks0; k <= ke0; ++k) {
+				for (int j = js0; j <= je0; ++j) {
+					for (int i = is0; i <= ie0; ++i)
+					{
+						double* U = dstU + nu*(zne.absIdx(i, j, k) - 1);
+						double* srcU = newField + nu*((i - is0) + (j - js0)*nx0 + (k - ks0)*nx0*ny0);
+
+						memcpy(U, srcU, nu * sizeof(double));
+					}
 				}
 			}
-			else
-			{
-				wxLogError(_T("Loaded and current grids do not match, wrong grid file?"));
-				ssuTHROW(t_GenException, _T("in LoadField: Loaded and current grids do not match"));
-				// Loaded and current grids are different -> remap field
-				//remapField(b, bIsPrev, dims, newGrid, newField);
-			}
 
-			delete[] newGrid, newField;
+			delete[] newGrid;   delete[] newField;
 		} // Loop through blocks
-
-		
-		// Get time
-		/*
-		if( g_genOpts.initTimeFromFile )
-		do
-		{
-			int nTmSteps = 0;  cg_biter_read(f,iBase, szName, &nTmSteps);
-			if( nTmSteps < 1 ) break;
-
-			if( cg_goto(f,iBase,"BaseIterativeData_t",1, NULL) != CG_OK )
-				break;
-
-			int nArrs = 0;  cg_narrays(&nArrs);
-			if( nArrs < 1 )  break;
-
-			int arrIdx;
-			for( arrIdx = 1; arrIdx <= nArrs; ++arrIdx )
-			{
-				DataType_t type;  int dim;  int len[3];
-				cg_array_info(arrIdx, szName, &type, &dim, len);
-				if( strcmp( szName, "TimeValues" ) == 0 )
-					break;
-			}
-			if( arrIdx <= nArrs )
-				cg_array_read_as(arrIdx, RealDouble, &g_time);
-		}
-		while(false);
-		*/
 
 		cg_close(f);
 	}
@@ -455,140 +438,183 @@ or unsupported CGNS version"),
  *  
  *  @return true if succeeded, false if failed
 **/  
-bool mf::cg::TDomain::readBlockFromCGNS(
-	int fileID, int iZone,
-	mf::cg::TDims& dims, double** grid, double** field)
+bool mf::cg::TDomain::readCGNSZone(
+	const int fileID, const int iBase, const int iZone,
+	TDims& dims, double** grid, double** field)
 {
-	int r = CG_OK;
-	const int iBase = 1;  // NB: Assume only one base
+	char cgName[33];  // temp string to store CGNS node names
 
-	// Get zone size and name
+					  // Get zone size and name
 	char szZone[33];
 	cgsize_t isize[9];  // NVertexI, NVertexJ, NVertexK,
-	               // NCellI, NCellJ, NCellK,
-	               // NBoundVertexI, NBoundVertexJ, NBoundVertexK
-	if( cg_zone_read(fileID,iBase,iZone,  szZone,isize) != CG_OK )
+						// NCellI, NCellJ, NCellK,
+						// NBoundVertexI, NBoundVertexJ, NBoundVertexK
+	if (cg_zone_read(fileID, iBase, iZone, szZone, isize) != CG_OK)
 	{
-		wxLogError( _("Can't read CGNS zone #%d"), iZone );
+		wxLogError(_("Can't read CGNS zone #%d ( %s )"),
+			iZone, wxString::FromAscii(cg_get_error()).c_str());
 		return false;
 	}
+
+	if (strcmp(szZone, Zones[iZone - 1].szName) != 0)
+	{
+		wxLogWarning(
+			_("Inconsistent zone #%d names: '%s' -> '%s'"), iZone,
+			wxString::FromAscii(szZone).c_str(),
+			wxString::FromAscii(Zones[iZone - 1].szName).c_str()
+		);
+	}
+
 
 	// Block size without ghosts
 	unsigned int &nx = dims.numX;  nx = isize[0];
 	unsigned int &ny = dims.numY;  ny = isize[1];
-	unsigned int &nz = dims.numZ;  nz = (nDim==2) ? 1 : isize[2];
+	unsigned int &nz = dims.numZ;  nz = (nDim == 2) ? 1 : isize[2];
 
-	// Indexes ranges
-	cgsize_t irmin[3] = {1, 1, 1};
-	cgsize_t irmax[3] = {nx, ny, nz};
+	// Indexes faces
+	cgsize_t irmin[3] = { 1, 1, 1 };
+	cgsize_t irmax[3] = { nx, ny, nz };
+
+	// Array for reading CGNS values into
+	double* VV = new double[nx*ny*nz];
 
 	//
 	// Read grid coordinates
 	// 
 	*grid = new double[nDim * nx*ny*nz];
+	for (int iCoord = 0; iCoord < nDim; ++iCoord)
 	{
-		double* x = new double[nx*ny*nz];
-		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateX",CG_MY_RealDouble,irmin,irmax, x);
-		if( r != CG_OK ){
+		const char* name = g_cgCoordNames[iCoord];
 
-			wxLogError(_T("cg_ccord_read error"));
-			wxLogError(_T("%s"), wxString::FromAscii(cg_get_error()).c_str());
-
-		}  
-
-		double* y = new double[nx*ny*nz];
-		r |= cg_coord_read(fileID,iBase,iZone,"CoordinateY",CG_MY_RealDouble,irmin,irmax, y);
-
-		double* z = NULL;
-		if( nDim == 3 )
+		if (cg_coord_read(fileID, iBase, iZone, name, CG_RealDouble, irmin, irmax, VV) != CG_OK)
 		{
-			z = new double[nx*ny*nz];
-			r |= cg_coord_read(fileID,iBase,iZone,"CoordinateZ",CG_MY_RealDouble,irmin,irmax, z);
-		}
-
-		if( r != CG_OK )
-		{
-			wxLogError( _("Can't read coordinates from zone '%s'(#%d)"),
-				wxString::FromAscii(szZone).c_str(), iZone
+			wxLogError(
+				_("Can't read %s from zone '%s'#%d ( %s )"),
+				wxString::FromAscii(name).c_str(),
+				wxString::FromAscii(szZone).c_str(), iZone,
+				wxString::FromAscii(cg_get_error()).c_str()
 			);
-			//return false;
+			return false;
 		}
 
-		for( int k=0; k<nz; ++k )
-		for( int j=0; j<ny; ++j )
-		for( int i=0; i<nx; ++i )
+		// Pack to output array
+		for (unsigned int k = 0; k<nz; ++k) {
+			for (unsigned int j = 0; j<ny; ++j) {
+				for (unsigned int i = 0; i<nx; ++i)
+				{
+					int n = i + j*nx + k*nx*ny;
+					int pos = nDim * n + iCoord;
+
+					(*grid)[pos] = VV[n];
+				}
+			}
+		}
+	} // for iCoord
+
+
+	  //
+	  // Get solution info
+	  // FIXME: flow assumed existing
+	  // 
+	int iSol = 1;
+	{
+		CG_GridLocation_t loc;
+		if (cg_sol_info(fileID, iBase, iZone, iSol, cgName, &loc) != CG_OK)
 		{
-			int n = i + j*nx + k*nx*ny;
-			double* G = *grid + nDim * n;
-
-			G[0] = x[n];
-			G[1] = y[n];
-			if( nDim==3 )  G[2] = z[n];
+			wxLogError(_("Can't read flow info from zone '%s'#%d ( %s )"),
+				wxString::FromAscii(szZone).c_str(), iZone,
+				wxString::FromAscii(cg_get_error()).c_str()
+			);
+			return false;
 		}
 
-		delete[] x, y, z;
+		if (loc != CG_Vertex)
+		{
+			wxLogError(_("CGNS: GridLocation must be Vertex"));
+			return false;
+		}
 	}
 
 
 	//
-	// Get solution info
-	// FIXME: flow assumed existing
-	// 
-	int iFlow = 1;  char szFlow[33];  CG_MY_GridLocation_t loc;
-	r = cg_sol_info(fileID,iBase,iZone,iFlow,  szFlow,&loc);
-	if( r != CG_OK )
-	{
-		wxLogError( _("Can't read flow info from zone '%s'(#%d)"),
-			wxString::FromAscii(szZone).c_str(), iZone
-		);
-		return false;
-	}
-
-	if( loc != CG_MY_Vertex )
-	{
-		wxLogError(_("CGNS: GridLocation must be Vertex"));
-		return false;
-	}
-
-
-	//
-	// Load needed functions
+	// Read functions
 	//
 	*field = new double[nu * nx*ny*nz];
+
+	dims.numFunc = 0;
+	for (int iFun = 0; iFun < nu; ++iFun)
 	{
-		dims.numFunc = 0;
-		double* FF = new double[nx*ny*nz];
+		const char* name = G_vecCGNSFuncNames[iFun].c_str();
 
-		for( int iFun = 0; iFun < nu; ++iFun )
+		int r = cg_field_read(fileID, iBase, iZone, iSol, name,
+			CG_RealDouble, irmin, irmax, VV);
+
+		if (r != CG_OK && r != CG_NODE_NOT_FOUND)
 		{
-			const char* name = G_vecCGNSFuncNames[iFun].c_str();
-
-			r = cg_field_read(fileID,iBase,iZone,iFlow,(char*)name,CG_MY_RealDouble,irmin,irmax, FF);
-			if( r != CG_OK )
-			{
-				wxLogError(_T("%s"), wxString::FromAscii(cg_get_error()).c_str());
-				wxLogError(
-					_("CGNS: Can't read '%s' data from zone '%s'(#%d)"),
-					wxString::FromAscii(name).c_str(),
-					wxString::FromAscii(szZone).c_str(), iZone
-				);
-				return false;
-			}
-
-			for( int k=0; k<nz; ++k )
-			for( int j=0; j<ny; ++j )
-			for( int i=0; i<nx; ++i )
-			{
-				int n = i + j*nx + k*nx*ny;
-				int pos = nu * n;
-
-				(*field)[pos + iFun] = FF[n];
-			}
-
-			dims.numFunc++;
+			wxLogError(
+				_("Can't read '%s' from zone '%s'#%d ( %s )"),
+				wxString::FromAscii(name).c_str(),
+				wxString::FromAscii(szZone).c_str(), iZone,
+				wxString::FromAscii(cg_get_error()).c_str()
+			);
+			return false;
 		}
-		delete[] FF;
+
+		if (r == CG_NODE_NOT_FOUND)
+		{
+			wxLogWarning(
+				_("%s not found in zone '%s'#%d, using free stream values"),
+				wxString::FromAscii(name).c_str(),
+				wxString::FromAscii(szZone).c_str(), iZone
+			);
+
+			for (unsigned int k = 0; k<nz; ++k) {
+				for (unsigned int j = 0; j<ny; ++j) {
+					for (unsigned int i = 0; i<nx; ++i)
+					{
+						int n = i + j*nx + k*nx*ny;
+						int pos = nu * n + iFun;
+
+						(*field)[pos] = infVals[iFun];
+					}
+				}
+			}
+
+			continue;
+		}
+
+		bool checkPositive =
+			(strcmp(name, "Pressure") == 0) ||
+			(strcmp(name, "Temperature") == 0) ||
+			(strstr(name, "TurbulentEnergy") == name); // begins with "Turb..."
+
+													   // Pack to output array
+		for (unsigned int k = 0; k<nz; ++k) {
+			for (unsigned int j = 0; j<ny; ++j) {
+				for (unsigned int i = 0; i<nx; ++i)
+				{
+					const int n = i + j*nx + k*nx*ny;
+					const int pos = nu * n + iFun;
+
+					if (checkPositive && VV[n] < 0)
+					{
+						wxLogWarning(
+							_("Negative value %s=%g @ '%s'(%d,%d,%d). Using absolute value."),
+							wxString::FromAscii(name).c_str(), VV[n],
+							wxString::FromAscii(szZone).c_str(), i + 1, j + 1, k + 1
+						);
+						VV[n] *= -1;
+					}
+
+					(*field)[pos] = VV[n];
+				}
+			}
+		}
+
+		dims.numFunc++;
 	}
+
+	delete[] VV;
 
 	return true;
 }

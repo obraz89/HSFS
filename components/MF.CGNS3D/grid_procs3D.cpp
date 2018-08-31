@@ -81,12 +81,6 @@ bool t_MFCGNS3D::loadGrid( const wxString& gridFN ){
 	}
 	*/
 
-	// One core distribution
-	this->bs = 0;
-	this->be = nZones - 1;
-
-	// [HSFlow legacy]
-	//G_Plugins.get_mesh_caps().calcHalfnodes();
 
 	return true;
 }
@@ -104,194 +98,203 @@ bool t_MFCGNS3D::_doLoadGrid3D_cgns( const wxString& gridFN )
 	int res = CG_OK;
 	char szName[33];  // names in CGNS file
 
-	TcgnsContext& ctx = this->cgCtx;
+	TcgnsContext& ctx = cgCtx;
 
-	res = cg_open( gridFN.ToAscii(),CG_MODE_READ, &ctx.fileID );
-	if( res != CG_OK )
+	res = cg_open(gridFN.ToAscii(), CG_MODE_READ, &ctx.fileID);
+	if (res != CG_OK)
 	{
-		wxLogError( _("Can't open grid file for reading") );
+		wxLogError(
+			_("Can't open grid file '%s' for reading (%s)"),
+			gridFN.c_str(), wxString::FromAscii(cg_get_error()).c_str()
+		);
 		return false;
 	}
 	ctx.iBase = 1; // assume only one base
 
-	//
-	// Space dimensions
-	// 
+				   //
+				   // Space dimensions
+				   // 
 	int dimCell = 0, dimPhys = 0;
-	cg_base_read(ctx.fileID,ctx.iBase,  szName,&dimCell,&dimPhys);
-	if( dimCell != 3 )
+	cg_base_read(ctx.fileID, ctx.iBase, szName, &dimCell, &dimPhys);
+	if (dimCell != 3)
 	{
-		wxLogError( _("The grid is not for 3D problems") );
+		wxLogError(_("The grid is not for 3D problems"));
 		return false;
 	}
 
 	//
-	// Number of zones (aka blocks)
+	// Number of zones
 	// 
-	nZones = 0;  cg_nzones(ctx.fileID,ctx.iBase, &nZones);
-	if( nZones < 1 )
+	nZones = 0;  cg_nzones(ctx.fileID, ctx.iBase, &nZones);
+	if (nZones < 1)
 	{
-		wxLogError( _("Domain blocks are not found") );
+		wxLogError(_("Domain zones are not found"));
 		return false;
 	}
 
 	//
 	// Allocate memory for whole computational domain
 	// 
-	Zones = new TZone[ nZones ];
-	ctx.cgZones = new TcgnsZone[ nZones ];
-	if( ! Zones )  wxLogFatalError(_("Not enough memory for domain"));
-
-
-	//
-	// Get zones (blocks) sizes and names
-	// 
-	for( int iZone = 1;  iZone <= nZones;  ++iZone )
+	try {
+		Zones = new TZone[nZones];
+	}
+	catch (std::bad_alloc& ba)
 	{
-		CG_MY_ZoneType_t type;  cg_zone_type(ctx.fileID,ctx.iBase,iZone, &type);
-		if( type != CG_MY_Structured )
-		{
-			wxLogError( _("Only structured grids are supported") );
-			return false;
-		}
-
-		TZone& blk = Zones[iZone -1];
-
-		// Get zone (block) name & size
-		cgsize_t isize[9]; // NVertexI, NVertexJ, NVertexK,
-		              // NCellI, NCellJ, NCellK,
-		              // NBoundVertexI, NBoundVertexJ, NBoundVertexK
-		res = cg_zone_read(ctx.fileID,ctx.iBase,iZone,  blk.szName,isize);
-		if( res != CG_OK )
-		{
-			wxLogError( _("Can't read zone #%d info"), iZone );
-			return false;
-		}
-
-		blk.nx = isize[0];  blk.ny = isize[1];   blk.nz = isize[2];
-
-		// Indices of real (not ghost) nodes
-		blk.is = 1;  blk.ie = blk.nx;
-		blk.js = 1;  blk.je = blk.ny;
-		blk.ks = 1;  blk.ke = blk.nz;
-
-		ctx.map_zoneName_id[blk.szName] = iZone;
+		wxLogError(_("Can't allocate memory for domain zones container. Asked for %.3f MB."),
+			(float)sizeof(TZone) * nZones / (1024.*1024.)
+		);
+		return false;
 	}
 
 
 	//
-	// Connectivity info
-	// NB: blk.{nx, ny, nz} will be updated
+	// Get zones sizes and names
+	// 
+	for (int iZone = 1; iZone <= nZones; ++iZone)
+	{
+		CG_ZoneType_t type;  cg_zone_type(ctx.fileID, ctx.iBase, iZone, &type);
+		if (type != CGNS_ENUMV(Structured))
+		{
+			wxLogError(_("Only structured grids are supported"));
+			return false;
+		}
+
+		TZone& zne = Zones[iZone - 1];
+
+		// Get zone name & size
+		cgsize_t isize[9]; // NVertexI, NVertexJ, NVertexK,
+						   // NCellI, NCellJ, NCellK,
+						   // NBoundVertexI, NBoundVertexJ, NBoundVertexK
+		res = cg_zone_read(ctx.fileID, ctx.iBase, iZone, zne.szName, isize);
+		if (res != CG_OK)
+		{
+			wxLogError(_("Can't read zone #%d info"), iZone);
+			return false;
+		}
+
+		zne.nx = isize[0];  zne.ny = isize[1];   zne.nz = isize[2];
+
+		// Indices of real (not ghost) nodes
+		zne.is = 1;  zne.ie = zne.nx;
+		zne.js = 1;  zne.je = zne.ny;
+		zne.ks = 1;  zne.ke = zne.nz;
+
+		ctx.map_zoneName_id[zne.szName] = iZone;
+	}
+
 	//
-	if( ! _parseGhostData3DfromCGNS(ctx) )  return false;
+	// Volume conditions info (frozen zones)
+	//
+	//parseVCDatafromCGNS(ctx);
+
+
+	// Distribute grid zones through MPI ranks (CPUs)
+	//if (!assignZonesToCPUs()) return false;
+
+	//
+	// Connectivity info
+	// Updates {zne,cgZne}.{is,ie,js,je,ks,ke}, zne.{nx,ny,nz}
+	//
+	if (!_parseGhostData3DfromCGNS(ctx))  return false;
 
 	//
 	// Boundary conditions info
 	//
-	if( ! _parseBCData3DfromCGNS(ctx) )  return false;
+	if (!_parseBCData3DfromCGNS(ctx))  return false;
 
+	// One core distribution
+	this->bs = 0;
+	this->be = nZones - 1;
 
 	//
-	// Read grid coordinates for all zones
-	// (to simplify mesh data transfer to ghosts)
+	// Read grid coordinates
 	//
-	for( int b = 0;  b < nZones;  ++b )
+	for (int b = bs; b <= be; ++b)
 	{
-		int iZone = b + 1;
-		TZone& blk = Zones[b];
+		TZone& zne = Zones[b];
+		TcgnsZone& cgZne = ctx.cgZones[b];
 
-		// Original block size without ghosts
+		// Original zone size (not accounting added ghosts & skipped layers)
 		const int
-			nx0 = blk.ie - blk.is + 1,
-			ny0 = blk.je - blk.js + 1,
-			nz0 = blk.ke - blk.ks + 1;
+			nx0 = cgZne.ie1 - cgZne.is1 + 1,
+			ny0 = cgZne.je1 - cgZne.js1 + 1,
+			nz0 = cgZne.ke1 - cgZne.ks1 + 1;
 
 		// Zone index ranges
-		cgsize_t irmin[3] = {1, 1, 1};
-		cgsize_t irmax[3] = {nx0, ny0, nz0};
+		cgsize_t irmin[3] = { 1, 1, 1 };
+		cgsize_t irmax[3] = { nx0, ny0, nz0 };
 
+		int iZone = b + 1;
 		double* x = new double[nx0*ny0*nz0];
-		res = cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateX",CG_MY_RealDouble,irmin,irmax, x);
-
-		if( res != CG_OK )
-			wxLogError(_T("cg_ccord_read error:%s"), wxString::FromAscii(cg_get_error()).c_str());
+		res = cg_coord_read(ctx.fileID, ctx.iBase, iZone, "CoordinateX", CGNS_ENUMV(RealDouble), irmin, irmax, x);
 
 		double* y = new double[nx0*ny0*nz0];
-		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateY",CG_MY_RealDouble,irmin,irmax, y);
+		res |= cg_coord_read(ctx.fileID, ctx.iBase, iZone, "CoordinateY", CGNS_ENUMV(RealDouble), irmin, irmax, y);
 
 		double* z = new double[nx0*ny0*nz0];
-		res |= cg_coord_read(ctx.fileID,ctx.iBase,iZone,"CoordinateZ",CG_MY_RealDouble,irmin,irmax, z);
+		res |= cg_coord_read(ctx.fileID, ctx.iBase, iZone, "CoordinateZ", CGNS_ENUMV(RealDouble), irmin, irmax, z);
 
-		if( res != CG_OK )  return false;
+		if (res != CG_OK)  return false;
 
 		//
 		// Grid step in computational (curvilinear) coordinates
-		// 
-		blk.grd.dx = 1./(blk.nx - 1);
-		blk.grd.dy = 1./(blk.ny - 1);
-		blk.grd.dz = 1./(blk.nz - 1);
+		//
+		{
+			zne.grd.dx = 1. / (zne.nx - 1);
+			zne.grd.dy = 1. / (zne.ny - 1);
+			zne.grd.dz = 1. / (zne.nz - 1);
+		}
+
 
 		//
 		// Packed grid data storage
-		// 
-		blk.grd.c3d = new TgridCell3D[blk.nx*blk.ny*blk.nz];
-		if( ! blk.grd.c3d )  wxLogFatalError(_("Not enough memory for mesh"));
+		//
+		try {
+			zne.grd.c3d = new TgridCell3D[zne.nx*zne.ny*zne.nz];
+		}
+		catch (std::bad_alloc& ba)
+		{
+			wxLogError(_("Can't allocate memory for grid data in zone '%s'#%d: asked for %.3f MB."),
+				wxString::FromAscii(zne.szName).c_str(), iZone,
+				(float)sizeof(TgridCell3D) * zne.nx*zne.ny*zne.nz / (1024.*1024.)
+			);
+			return false;
+		}
 
 		// Pack grid coordinates
-		for( int k=blk.ks; k <= blk.ke; ++k )
-		for( int j=blk.js; j <= blk.je; ++j )
-		for( int i=blk.is; i <= blk.ie; ++i )
-		{
-			Tmtr3D& node = blk.cell(i,j,k).ijk;
+		for (int k = 1; k <= zne.nz; ++k) {
+			for (int j = 1; j <= zne.ny; ++j) {
+				for (int i = 1; i <= zne.nx; ++i)
+				{
+					Tmtr3D& node = zne.cell(i, j, k).ijk;
 
-			int n = (i - blk.is) + (j - blk.js)*nx0 + (k - blk.ks)*nx0*ny0;
-			node.x = x[n];
-			node.y = y[n];
-			node.z = z[n];
-			//node.Rw = HUGE_VAL;
+					if (zne.is <= i && i <= zne.ie &&
+						zne.js <= j && j <= zne.je &&
+						zne.ks <= k && k <= zne.ke
+						)
+					{
+						int n = (i - cgZne.is1) + (j - cgZne.js1)*nx0 + (k - cgZne.ks1)*nx0*ny0;
+						node.x = x[n];
+						node.y = y[n];
+						node.z = z[n];
+					}
+					else
+					{
+						static const double NaN = fmod(1., 0.);
+						node.x = NaN;
+						node.y = NaN;
+						node.z = NaN;
+					}
+					//node.Rw = HUGE_VAL;
+				}
+			}
 		}
 
-			delete[] x, y, z;
+		delete[] x;   delete[] y;   delete[] z;
 	} // loop through zones
 
+	cg_close(ctx.fileID);
 
-	//
-	// Transfer grid data to ghost nodes
-	// 
-	for( int b = 0; b < nZones; ++b )
-	{
-		TZone& zne = Zones[b];
-
-		for( int k = 1; k <= zne.nz; ++k )
-		for( int j = 1; j <= zne.ny; ++j )
-		for( int i = 1; i <= zne.nx; ++i )
-		{
-			if( i >= zne.is && i <= zne.ie &&
-				j >= zne.js && j <= zne.je &&
-				k >= zne.ks && k <= zne.ke    )
-				continue; // myself
-
-			const int locInd = zne.absIdx(i,j) - 1;
-			const int globInd = zne.globIndices[ locInd ];
-			if( globInd == -1 )  // unmapped
-				continue;
-
-			// Detect donor zone
-			int nDnrZne = -1;
-			for( nDnrZne = nZones - 1; nDnrZne >= 0; --nDnrZne )
-			{
-				if( globInd >= Zones[ nDnrZne ].nGlobStart )
-					break;
-			}
-
-			TZone& dnrZne = Zones[ nDnrZne ];
-			int dnrLocInd = dnrZne.absIdxFromGlobInd( globInd ) - 1; // 0-based
-
-			zne.grd.c3d[ locInd ] = dnrZne.grd.c3d[ dnrLocInd ];
-		}
-	}
-
-	cg_close( ctx.fileID );
 	return true;
 }
 //-----------------------------------------------------------------------------
@@ -805,6 +808,43 @@ for( int b = bs; b <= be; ++b )
 	return true;
 }
 
+const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znode) const{
+
+	int b = a_znode.iZone - 1;
+
+	//IMPORTANT TODO: patch is0 etc are zero-based?
+	const int nd_i = a_znode.iNode.i - 1;
+	const int nd_j = a_znode.iNode.j - 1;
+	const int nd_k = a_znode.iNode.k - 1;
+
+	const TcgnsZone& zcg = cgCtx.cgZones[b];
+
+	for (int ip = 0; ip < zcg.nPatches; ip++) {
+
+		TcgnsZone::TFacePatch& p = zcg.Patches[ip];
+
+		bool ok = true;
+
+		ok = ok && (nd_i >= p.is0) && (nd_i <= p.ie0);
+		ok = ok && (nd_j >= p.js0) && (nd_j <= p.je0);
+		ok = ok && (nd_k >= p.ks0) && (nd_k <= p.ke0);
+
+		if (ok) {
+
+			return p;
+
+		}
+
+	}
+
+	// something is wrong
+
+	wxLogMessage(_T("t_MFCGNS3D: get_face_patch error: provided znode is not on zone face patches..."));
+
+	return TcgnsZone::TFacePatch();
+
+}
+
 t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 	const t_ZoneNode& a_znode, const int di, const int dj, const int dk) const{
 
@@ -817,9 +857,9 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 
 		TZoneFacePos f = a_znode.iFacePos;
 
-		TcgnsZone::TFace& face = cgCtx.cgZones[b].Faces[f];
+		const TcgnsZone::TFacePatch& face_patch = get_face_patch(a_znode);
 
-		TZone& zneDonor = Zones[ face.nDnrZne ];
+		TZone& zneDonor = Zones[ face_patch.nDnrZne ];
 
 		// Start indexes of the zone face:
 		int ifs, jfs, kfs;
@@ -851,14 +891,14 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 		const int k = a_znode.iNode.k + dk;
 
 		// Donor block face starting index with ghosts
-		int ids = face.dnr_is0 + zneDonor.is - 1;
-		int jds = face.dnr_js0 + zneDonor.js - 1;
-		int kds = face.dnr_ks0 + zneDonor.ks - 1;
+		int ids = face_patch.dnr_is0 + zneDonor.is - 1;
+		int jds = face_patch.dnr_js0 + zneDonor.js - 1;
+		int kds = face_patch.dnr_ks0 + zneDonor.ks - 1;
 
 		// Donor block indexes
-		int id = (i-ifs)*face.matTrans[0] + (j-jfs)*face.matTrans[1] + (k-kfs)*face.matTrans[2] + ids;
-		int jd = (i-ifs)*face.matTrans[3] + (j-jfs)*face.matTrans[4] + (k-kfs)*face.matTrans[5] + jds;
-		int kd = (i-ifs)*face.matTrans[6] + (j-jfs)*face.matTrans[7] + (k-kfs)*face.matTrans[8] + kds;
+		int id = (i-ifs)*face_patch.matTrans[0] + (j-jfs)*face_patch.matTrans[1] + (k-kfs)*face_patch.matTrans[2] + ids;
+		int jd = (i-ifs)*face_patch.matTrans[3] + (j-jfs)*face_patch.matTrans[4] + (k-kfs)*face_patch.matTrans[5] + jds;
+		int kd = (i-ifs)*face_patch.matTrans[6] + (j-jfs)*face_patch.matTrans[7] + (k-kfs)*face_patch.matTrans[8] + kds;
 
 		if( id > zneDonor.nx || id < 1 ||
 			jd > zneDonor.ny || jd < 1 ||
@@ -871,7 +911,7 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 		t_ZoneNode ret;
 
 		// 1-based zone id
-		ret.iZone = face.nDnrZne + 1;
+		ret.iZone = face_patch.nDnrZne + 1;
 
 		ret.iNode = t_BlkInd(id, jd, kd);
 
