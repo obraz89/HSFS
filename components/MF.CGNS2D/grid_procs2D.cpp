@@ -432,14 +432,14 @@ bool t_MFCGNS2D::_parseGhostData2DfromCGNS( TcgnsContext& ctx )
 	} // loop zones
 
 
-	  //
-	  // (2) Assign owners for abutted faces
-	  // 
+	//
+	// (2) Assign owners for abutted faces
+	// 
 
-	  //
-	  // (2.1) Mark faces that should be skipped and processed by abutted zone
-	  //
-	
+	//
+	// (2.1) Mark faces that should be skipped and processed by abutted zone
+	//
+	// NOTE: skipped faces disabled
 	for (int b = 0; b < nZones; ++b)
 	{
 		TZone& zne = Zones[b];
@@ -452,7 +452,7 @@ bool t_MFCGNS2D::_parseGhostData2DfromCGNS( TcgnsContext& ctx )
 
 			if (!zne.isFrozen && zneDnr.isFrozen)
 			{
-				zne.Faces[cgFacePatch.posFace].isSkipped = true;
+				zne.Faces[cgFacePatch.posFace].isSkipped = false; // true;
 				continue;
 			}
 
@@ -482,7 +482,7 @@ bool t_MFCGNS2D::_parseGhostData2DfromCGNS( TcgnsContext& ctx )
 			// Skip face for processing by the abutted zone,
 			// if donor face is shorter, i.e. has less ghost nodes, has boundary nearby
 			if (lenDnr < lenMy)
-				zne.Faces[cgFacePatch.posFace].isSkipped = true;
+				zne.Faces[cgFacePatch.posFace].isSkipped = false; // true;
 		}
 	}
 	
@@ -492,7 +492,7 @@ bool t_MFCGNS2D::_parseGhostData2DfromCGNS( TcgnsContext& ctx )
 	//
 	// (2.2) Resolve conflicts if faces are owned by both abutted zones
 	// 
-	
+	// NOTE: skipped faces disabled
 	for (int b = 0; b < nZones; ++b)
 	{
 		TcgnsZone& cgZne = ctx.cgZones[b];
@@ -504,17 +504,17 @@ bool t_MFCGNS2D::_parseGhostData2DfromCGNS( TcgnsContext& ctx )
 			TZoneFace& faceDnr = Zones[cgPatch.nDnrZne].Faces[cgPatch.dnrPosFace];
 
 			if (!face.isSkipped && !faceDnr.isSkipped)
-				faceDnr.isSkipped = true;
+				faceDnr.isSkipped = false; // true;
 		}
 	} // loop zones
 
 	
 
 
-	  //
-	  // (3) Update domain zones dimensions and indices using abutted faces info
-	  //
-	
+	//
+	// (3) Update domain zones dimensions and indices using abutted faces info
+	//
+	// NOTE: skipped faces disabled
 	for (int b = 0; b < nZones; ++b)
 	{
 		TZone& zne = Zones[b];
@@ -736,7 +736,10 @@ const TcgnsZone::TFacePatch& t_MFCGNS2D::get_face_patch(const t_ZoneNode& a_znod
 	const TcgnsZone& zcg = cgCtx.cgZones[b];
 
 	// debug
-	const TZone& zzz = Zones[b];
+	const TZone& z = Zones[b];
+
+	// patch indexes in 1-based block indexing (with ghosts, works when skipped faces disabled)
+	int is_p, ie_p, js_p, je_p;
 
 	for (int ip = 0; ip < zcg.nPatches; ip++) {
 
@@ -744,8 +747,14 @@ const TcgnsZone::TFacePatch& t_MFCGNS2D::get_face_patch(const t_ZoneNode& a_znod
 
 		bool ok = true;
 
-		ok = ok && (nd_i >= p.is0) && (nd_i <= p.ie0);
-		ok = ok && (nd_j >= p.js0) && (nd_j <= p.je0);
+		is_p = z.is - 1 + p.is0;
+		ie_p = z.is - 1 + p.ie0;
+
+		js_p = z.js - 1 + p.js0;
+		je_p = z.js - 1 + p.je0;
+
+		ok = ok && (nd_i >= is_p) && (nd_i <= ie_p);
+		ok = ok && (nd_j >= js_p) && (nd_j <= je_p);
 
 		if (ok) {
 

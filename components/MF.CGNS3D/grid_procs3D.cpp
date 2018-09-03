@@ -496,7 +496,7 @@ for( int iZone = 1;  iZone <= nZones;  ++iZone )
 
 //
 // (2.1) Mark faces that should be skipped and processed by abutted zone
-// 
+// NOTE: skipped faces disabled
 for( int b = 0; b < nZones; ++b )
 {
 	TZone& zne = Zones[b];
@@ -510,7 +510,7 @@ for( int b = 0; b < nZones; ++b )
 
 		if( ! zne.isFrozen && zneDnr.isFrozen )
 		{
-			zne.Faces[cgFacePatch.posFace].isSkipped = true;
+			zne.Faces[cgFacePatch.posFace].isSkipped = false;// true;
 			continue;
 		}
 
@@ -545,8 +545,8 @@ for( int b = 0; b < nZones; ++b )
 
 		// Skip face (it will be processed by the abutted zone),
 		// if donor face is shorter, i.e. has less ghost nodes, has boundary nearby
-		if( areaDnr < areaMy )
-			zne.Faces[cgFacePatch.posFace].isSkipped = true;
+		if (areaDnr < areaMy)
+			zne.Faces[cgFacePatch.posFace].isSkipped = false; // true;
 	} // loop faces
 } // loop zones
 
@@ -555,6 +555,7 @@ for( int b = 0; b < nZones; ++b )
 //
 // (2.2) Resolve conflicts if faces are owned by both abutted zones
 // 
+// NOTE: skipped faces disabled
 for( int b = 0; b < nZones; ++b )
 {
 	TcgnsZone& cgZne = ctx.cgZones[b];
@@ -565,8 +566,8 @@ for( int b = 0; b < nZones; ++b )
 		TZoneFace& face = Zones[b].Faces[cgPatch.posFace];
 		TZoneFace& faceDnr = Zones[cgPatch.nDnrZne].Faces[cgPatch.dnrPosFace];
 
-		if( ! face.isSkipped && ! faceDnr.isSkipped )
-			faceDnr.isSkipped = true;
+		if (!face.isSkipped && !faceDnr.isSkipped)
+			faceDnr.isSkipped = false; // true;
 	}
 }
 
@@ -574,6 +575,7 @@ for( int b = 0; b < nZones; ++b )
 //
 // (3) Update domain zones dimensions and indices using abutted faces info
 // 
+// NOTE: skipped faces disabled
 for( int b = 0; b < nZones; ++b )
 {
 	TZone& zne = Zones[b];
@@ -812,12 +814,18 @@ const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znod
 
 	int b = a_znode.iZone - 1;
 
-	//IMPORTANT TODO: patch is0 etc are zero-based?
-	const int nd_i = a_znode.iNode.i - 1;
-	const int nd_j = a_znode.iNode.j - 1;
-	const int nd_k = a_znode.iNode.k - 1;
+	//IMPORTANT TODO: patch is0 etc are zero-based? No! Ask Nova why)
+	const int nd_i = a_znode.iNode.i;
+	const int nd_j = a_znode.iNode.j;
+	const int nd_k = a_znode.iNode.k;
 
 	const TcgnsZone& zcg = cgCtx.cgZones[b];
+
+	// debug
+	const TZone& z = Zones[b];
+
+	// patch indexes in 1-based block indexing (with ghosts, works when skipped faces disabled)
+	int is_p, ie_p, js_p, je_p, ks_p, ke_p;
 
 	for (int ip = 0; ip < zcg.nPatches; ip++) {
 
@@ -825,9 +833,18 @@ const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znod
 
 		bool ok = true;
 
-		ok = ok && (nd_i >= p.is0) && (nd_i <= p.ie0);
-		ok = ok && (nd_j >= p.js0) && (nd_j <= p.je0);
-		ok = ok && (nd_k >= p.ks0) && (nd_k <= p.ke0);
+		is_p = z.is - 1 + p.is0;
+		ie_p = z.is - 1 + p.ie0;
+
+		js_p = z.js - 1 + p.js0;
+		je_p = z.js - 1 + p.je0;
+
+		ks_p = z.ks - 1 + p.ks0;
+		ke_p = z.ks - 1 + p.ke0;
+
+		ok = ok && (nd_i >= is_p) && (nd_i <= ie_p);
+		ok = ok && (nd_j >= js_p) && (nd_j <= je_p);
+		ok = ok && (nd_k >= ks_p) && (nd_k <= ke_p);
 
 		if (ok) {
 
