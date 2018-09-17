@@ -495,6 +495,9 @@ namespace mf{
 			}
 		};
 
+		// TODO: make options from robust methods
+		enum t_VeloDerivType { VD_ABS = 0, VD_VEC_ABS, VD_X_ABS, VD_TAU_VEC_ABS };
+
 		//
 		// The whole computational domain
 		// 
@@ -569,6 +572,9 @@ namespace mf{
 
 			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
 				std::vector<t_ZoneNode>& raw_profile) const;
+
+			double _calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
+				int ind, t_VeloDerivType vd_type) const;
 
 			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, double& bl_thick, 
 				std::vector<t_ZoneNode>& raw_profile) const;

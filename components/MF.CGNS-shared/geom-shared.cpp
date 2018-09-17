@@ -388,6 +388,82 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	return get_mf_params().L_ref;
 };
 
+// calculate derivative of velocity vs y like:
+// U={u,v,w}
+// d|U|/dy
+// |dU/dy|
+// du/dy
+// etc
+double TDomain::_calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline, 
+	int ind, t_VeloDerivType vd_type) const{
+
+	int is = 0;
+	int ie = data_grdline.size() - 2;
+
+	if (ind<is || ind>ie) {
+
+		wxLogMessage(_T("Error: _calc_specifid_velo_deriv: index is out of range: i=%d"), ind);
+
+		return -1.0;
+
+	}
+
+	mf::t_Rec cur_rec, nxt_rec;
+	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
+	t_Vec3Dbl cur_uvw, nxt_uvw, du;
+
+	get_rec(data_grdline[ind], cur_rec);
+
+	cur_xyz.set(cur_rec);
+
+	cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
+
+	double cur_uvw_abs = cur_uvw.norm();
+
+	get_rec(data_grdline[ind + 1], nxt_rec);
+
+	nxt_xyz.set(nxt_rec);
+
+	nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+
+	double nxt_uvw_abs = nxt_uvw.norm();
+
+	matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+	matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
+
+	double dd = dr.norm();
+
+	if (vd_type == t_VeloDerivType::VD_ABS) return abs(cur_uvw_abs - nxt_uvw_abs)/dd;
+
+	if (vd_type == t_VeloDerivType::VD_VEC_ABS) return du.norm()/dd;
+
+	if (vd_type == t_VeloDerivType::VD_X_ABS) return abs(du[0]) / dd;
+
+	if (vd_type == t_VeloDerivType::VD_TAU_VEC_ABS){
+
+		t_ZoneNode surf_znode = _get_nrst_node_surf(data_grdline[0]);
+
+		t_Vec3Dbl surf_norm;
+		calc_surf_norm(surf_znode, surf_norm);
+
+		double un_cur = vector::dot(cur_uvw, surf_norm);
+		double ut_cur = sqrt(cur_uvw_abs*cur_uvw_abs - un_cur*un_cur);
+
+		double un_nxt = vector::dot(nxt_uvw, surf_norm);
+		double ut_nxt = sqrt(nxt_uvw_abs*nxt_uvw_abs - un_nxt*un_nxt);
+
+		return abs((ut_nxt - ut_cur) / dr.norm());
+
+
+	}
+
+	wxLogMessage(_T("Error: velo deriv type not implemented, check TDomain::_calc_specifid_velo_deriv_abs"));
+
+	return -1.0;
+
+	
+}
+
 // TODO: works only for grids nearly orthogonal to viscous wall 
 // input: data_grdline - for now just an extracted domain gridline
 // output: bl_thick & raw_profile (truncated data_grdline)
@@ -399,127 +475,170 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	surf_znode = _get_nrst_node_surf(data_grdline[0]);
 
-	// if du_dy increases search max
-	// use du_dy wall otherwise
-//	double du_dy_max = 0.0;
-//	double du_dy;
+	t_GeomPoint wall_xyz, cur_xyz;
 
-	// try to use deriv without vn
-	double dutau_dy_max = 0.0;
-	double dutau_dy;
-
-	mf::t_Rec cur_rec, nxt_rec;
-	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
-	t_Vec3Dbl cur_uvw, nxt_uvw, du;
-
-	t_Vec3Dbl surf_norm;
+	t_Vec3Dbl surf_norm, dr;
 	calc_surf_norm(surf_znode, surf_norm);
 
 	wxLogMessage(_T("norm:%s"), surf_norm.to_wxstr());
 
-	double uabs_cur, uabs_nxt;
-	double ut_cur, ut_nxt;
-	double un_cur, un_nxt;
-
 	// wall rec is used to calculate bl_thick
-	get_rec(surf_znode, cur_rec);
-	wall_xyz.set(cur_rec);
+	mf::t_Rec wall_rec, cur_rec;
+	get_rec(surf_znode, wall_rec);
+	wall_xyz.set(wall_rec);
 
 	wxLogMessage(_T("surf node xyz:%s"), wall_xyz.to_wxstr());
 
-	// first find max deriv
-	// then find reference point where dudy = eps*dudy_max : y = dd
-	// then find outer record y_out = thick_coef*dd
-	bool searching_max = true;
-	bool searching_ref = true;
+	double du_dy = 0.0;
+	double du_dy_max = 0.0;
+	double du_dy_base = 0.0;
 
 	double y_ref;
 
 	t_ZoneNode ref_znode;
 
-	for (int m=0; m<data_grdline.size()-2; m++) 
+	t_VeloDerivType vd_type = t_VeloDerivType::VD_ABS;
+
+	wxLogMessage(_T("_calc_bl_thick_vderiv derivative type: currently VD_ABS"));
+
+	enum {VD_WALL, VD_MAX} vd_ref_type;
+
+	vd_ref_type = VD_WALL;
+
+	wxLogMessage(_T("_calc_bl_thick_vderiv derivative mode: currently WALL value is used"));
+
+	int ind_bound = -1;
+
+	// first find base reference deriv
+	// then find reference point where dudy = eps*dudy_base : y = dd
+	// then check that derivative is small inside dd and thick_coef*dd
+	// then find outer record y_out = thick_coef*dd
+
+	// step1 - find du_dy_base
+
+	for (int m = 0; m < data_grdline.size() - 1; m++)
 	{
 
-		get_rec(data_grdline[m], cur_rec);
-
-		cur_xyz.set(cur_rec);
-
-		cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
-
-		get_rec(data_grdline[m+1], nxt_rec);
-
-		nxt_xyz.set(nxt_rec);
-
-		nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
-
-		matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
-		matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
-
-		//du_dy = abs(du.norm()/dr.norm());
-
-		uabs_cur = cur_uvw.norm();
-		un_cur = vector::dot(cur_uvw, surf_norm);
-		ut_cur = sqrt(uabs_cur*uabs_cur - un_cur*un_cur);
-
-		uabs_nxt = nxt_uvw.norm();
-		un_nxt = vector::dot(nxt_uvw, surf_norm);
-		ut_nxt = sqrt(uabs_nxt*uabs_nxt - un_nxt*un_nxt);
-
-		dutau_dy = abs((ut_nxt - ut_cur) / dr.norm());
+		du_dy = _calc_specifid_velo_deriv_abs(data_grdline, m, vd_type);
 
 		//wxLogMessage(_T("du_dy=%lf; dutau_dy=%lf"), du_dy, dutau_dy);
 
-		if (searching_max){
+		if (vd_ref_type == VD_WALL) {
 
-			if (dutau_dy<dutau_dy_max) searching_max = false;
+				if (m == 0) {
 
-			dutau_dy_max = dutau_dy;
+					// debug 
+					wxLogMessage(_T("_calc_bl_thick_vderiv:: wall deriv = %lf"), du_dy);
 
-			continue;
+					du_dy_base = du_dy;
 
-		}else{
-
-			double eps = _profile_cfg.DerivThreshold;
-
-			if (searching_ref){
-
-				if (dutau_dy<eps*dutau_dy_max){
-
-					ref_znode = data_grdline[m];
-					searching_ref = false;
-
-					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-					y_ref = dr.norm();
-					bl_thick = y_ref;	
-
-					continue;
-				}
-				
-
-			}else{
-
-				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-				double cur_dd = dr.norm();
-
-				if (cur_dd>=_profile_cfg.ThickCoefDefault*y_ref){
-
-					outer_znode = data_grdline[m];
-
-					out_raw_profile.resize(m+1);
-
-					for (int p=0; p<m+1; p++) out_raw_profile[p] = data_grdline[p];
-
-					return;
+					break;
 
 				}
 
 			}
 
+		// find first max deriv value moving from the wall to outside
+		if (vd_ref_type == VD_MAX) {
+
+			if (du_dy < du_dy_max) {
+
+				// debug 
+				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv = %lf"), du_dy);
+
+				du_dy_base = du_dy;
+
+				break;
+			}
+
+		}
+	} 
+
+	// step 2 - find bl bound rec
+
+	int ind_ref;
+
+	for (int m = 0; m < data_grdline.size() - 1; m++) {
+
+		du_dy = _calc_specifid_velo_deriv_abs(data_grdline, m, vd_type);
+
+		double eps = _profile_cfg.DerivThreshold;
+
+		if (du_dy<eps*du_dy_base) {
+
+			get_rec(data_grdline[m], cur_rec);
+
+			cur_xyz.set(cur_rec);
+
+			matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+			y_ref = dr.norm();
+
+			// additional check required that from y_ref to 
+			// y_ref*ThickCoef the derivative is below tolerance
+
+			bool deriv_check = true;
+
+			for (int j = m; j < data_grdline.size() - 1; j++) {
+
+				get_rec(data_grdline[j], cur_rec);
+
+				cur_xyz.set(cur_rec);
+
+				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+				double cur_y = dr.norm();
+
+				// TODO: ThickCoef should be here
+				if (cur_y < _profile_cfg.ThickCoefDefault*y_ref) {
+
+					double du_dy_up = _calc_specifid_velo_deriv_abs(data_grdline, j, vd_type);
+
+					if (du_dy_up > eps*du_dy_base) {
+						deriv_check = false;
+						break;
+					}
+
+				}
+				else { break; }
+
+			}
+
+			if (deriv_check) {
+				ind_ref = m;
+				bl_thick = y_ref;
+				break;
+			}
+
 		}
 
-	};
+	}
+
+	// step 3 - extract cropped profile data
+	for (int m = 0; m < data_grdline.size() - 1; m++) {
+
+		get_rec(data_grdline[m], cur_rec);
+
+		cur_xyz.set(cur_rec);
+
+		matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+		double cur_dd = dr.norm();
+
+		// TODO: here should be ThickCoef, not default...
+		if (cur_dd >= _profile_cfg.ThickCoefDefault*bl_thick) {
+
+			outer_znode = data_grdline[m];
+
+			out_raw_profile.resize(m + 1);
+
+			for (int p = 0; p < m + 1; p++) out_raw_profile[p] = data_grdline[p];
+
+			return;
+
+		}
+
+	}
 
 	wxLogError(_T("Error: Zone boundary reached while searching BL bound & outer rec"));
 
