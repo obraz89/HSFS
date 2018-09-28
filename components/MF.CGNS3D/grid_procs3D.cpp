@@ -814,7 +814,6 @@ const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znod
 
 	int b = a_znode.iZone - 1;
 
-	//IMPORTANT TODO: patch is0 etc are zero-based? No! Ask Nova why)
 	const int nd_i = a_znode.iNode.i;
 	const int nd_j = a_znode.iNode.j;
 	const int nd_k = a_znode.iNode.k;
@@ -854,8 +853,6 @@ const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znod
 
 	}
 
-	// something is wrong
-
 	wxLogMessage(_T("t_MFCGNS3D: get_face_patch error: provided znode is not on zone face patches..."));
 
 	return TcgnsZone::TFacePatch();
@@ -868,54 +865,34 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 		int b = a_znode.iZone - 1;
 
 		TZone& zne = Zones[b];
+		TcgnsZone& cgZne = cgCtx.cgZones[b];
 
 		if (a_znode.iFacePos==faceNone) 
 			wxLogError(_T("In get_abutted_znode: ifacepos not specified for input znode param"));
 
-		TZoneFacePos f = a_znode.iFacePos;
+		const TcgnsZone::TFacePatch& cgPatch = get_face_patch(a_znode);
 
-		const TcgnsZone::TFacePatch& face_patch = get_face_patch(a_znode);
+		TZone& zneDonor = Zones[cgPatch.nDnrZne ];
+		const TcgnsZone& cgZneDnr = cgCtx.cgZones[cgPatch.nDnrZne];
 
-		TZone& zneDonor = Zones[ face_patch.nDnrZne ];
-
-		// Start indexes of the zone face:
-		int ifs, jfs, kfs;
-
-		switch( f )
-		{
-		case faceXmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			break;
-		case faceXmax:
-			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
-			break;
-		case faceYmin:
-			ifs = zne.is;      jfs = zne.js;      kfs = zne.ks;
-			break;
-		case faceYmax:
-			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
-			break;
-		case faceZmin:
-			ifs = zne.is;      jfs = zne.je;      kfs = zne.ks;
-			break;
-		case faceZmax:
-			ifs = zne.ie;      jfs = zne.js;      kfs = zne.ks;
-			break;
-		}
+		// Start indices of the original patch (assuming no layers were skipped) 
+		// in working numbering (with ghosts)
+		const int ips = cgPatch.is0 + cgZne.is1 - 1;
+		const int jps = cgPatch.js0 + cgZne.js1 - 1;
+		const int kps = cgPatch.ks0 + cgZne.ks1 - 1;
 
 		const int i = a_znode.iNode.i + di;
 		const int j = a_znode.iNode.j + dj;
 		const int k = a_znode.iNode.k + dk;
 
-		// Donor block face starting index with ghosts
-		int ids = face_patch.dnr_is0 + zneDonor.is - 1;
-		int jds = face_patch.dnr_js0 + zneDonor.js - 1;
-		int kds = face_patch.dnr_ks0 + zneDonor.ks - 1;
+		const int ids = cgPatch.dnr_is0 + cgZneDnr.is1 - 1;
+		const int jds = cgPatch.dnr_js0 + cgZneDnr.js1 - 1;
+		const int kds = cgPatch.dnr_ks0 + cgZneDnr.ks1 - 1;
 
-		// Donor block indexes
-		int id = (i-ifs)*face_patch.matTrans[0] + (j-jfs)*face_patch.matTrans[1] + (k-kfs)*face_patch.matTrans[2] + ids;
-		int jd = (i-ifs)*face_patch.matTrans[3] + (j-jfs)*face_patch.matTrans[4] + (k-kfs)*face_patch.matTrans[5] + jds;
-		int kd = (i-ifs)*face_patch.matTrans[6] + (j-jfs)*face_patch.matTrans[7] + (k-kfs)*face_patch.matTrans[8] + kds;
+		// Donor block indices
+		int id = (i - ips)*cgPatch.matTrans[0] + (j - jps)*cgPatch.matTrans[1] + (k - kps)*cgPatch.matTrans[2] + ids;
+		int jd = (i - ips)*cgPatch.matTrans[3] + (j - jps)*cgPatch.matTrans[4] + (k - kps)*cgPatch.matTrans[5] + jds;
+		int kd = (i - ips)*cgPatch.matTrans[6] + (j - jps)*cgPatch.matTrans[7] + (k - kps)*cgPatch.matTrans[8] + kds;
 
 		if( id > zneDonor.nx || id < 1 ||
 			jd > zneDonor.ny || jd < 1 ||
@@ -928,7 +905,7 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 		t_ZoneNode ret;
 
 		// 1-based zone id
-		ret.iZone = face_patch.nDnrZne + 1;
+		ret.iZone = cgPatch.nDnrZne + 1;
 
 		ret.iNode = t_BlkInd(id, jd, kd);
 

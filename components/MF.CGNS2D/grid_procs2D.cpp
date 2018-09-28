@@ -729,7 +729,6 @@ const TcgnsZone::TFacePatch& t_MFCGNS2D::get_face_patch(const t_ZoneNode& a_znod
 
 	int b = a_znode.iZone - 1;
 
-	//IMPORTANT TODO: patch is0 etc are zero-based? No! Ask Nova why)
 	const int nd_i = a_znode.iNode.i;
 	const int nd_j = a_znode.iNode.j;
 
@@ -764,8 +763,6 @@ const TcgnsZone::TFacePatch& t_MFCGNS2D::get_face_patch(const t_ZoneNode& a_znod
 
 	}
 
-	// something is wrong
-
 	wxLogMessage(_T("t_MFCGNS3D: get_face_patch error: provided znode is not on zone face patches..."));
 
 	return TcgnsZone::TFacePatch();
@@ -777,52 +774,37 @@ t_ZoneNode t_MFCGNS2D::get_abutted_znode(
 	const t_ZoneNode& a_znode, const int di, const int dj, const int dk) const{
 
 		if (dk!=0){
-			wxLogError(_T("Get abutted znode 2D: k-shift is not allowed (2D configuration)"));
+			wxLogError(_T("MFCGNS2D: get_abutted_znode error: k-shift is not allowed (2D configuration)"));
 		}
 
 		int b = a_znode.iZone - 1;
 
 		TZone& zne = Zones[b];
+		TcgnsZone& cgZne = cgCtx.cgZones[b];
 
-		if (a_znode.iFacePos==faceNone) 
+		if (a_znode.iFacePos == faceNone)
 			wxLogError(_T("In get_abutted_znode: ifacepos not specified for input znode param"));
 
-		TZoneFacePos f = a_znode.iFacePos;
+		const TcgnsZone::TFacePatch& cgPatch = get_face_patch(a_znode);
 
-		const TcgnsZone::TFacePatch& face_patch = get_face_patch(a_znode);
+		TZone& zneDonor = Zones[cgPatch.nDnrZne];
+		const TcgnsZone& cgZneDnr = cgCtx.cgZones[cgPatch.nDnrZne];
 
-		TZone& zneDonor = Zones[face_patch.nDnrZne];
-
-		// Start indexes of the zone face:
-		int ifs, jfs;
-
-		switch( f )
-		{
-		case faceXmin:
-			ifs = zne.is;      jfs = zne.js;
-			break;
-		case faceXmax:
-			ifs = zne.ie;      jfs = zne.js;
-			break;
-		case faceYmin:
-			ifs = zne.is;      jfs = zne.js;
-			break;
-		case faceYmax:
-			ifs = zne.is;      jfs = zne.je;
-			break;
-		}
+		// Start indices of the original patch (assuming no layers were skipped) 
+		// in working numbering (with ghosts)
+		const int ips = cgPatch.is0 + cgZne.is1 - 1;
+		const int jps = cgPatch.js0 + cgZne.js1 - 1;
 
 		const int i = a_znode.iNode.i + di;
 		const int j = a_znode.iNode.j + dj;
 		const int k = a_znode.iNode.k + dk;
 
-		// Donor block face starting index with ghosts
-		int ids = face_patch.dnr_is0 + zneDonor.is - 1;
-		int jds = face_patch.dnr_js0 + zneDonor.js - 1;
+		const int ids = cgPatch.dnr_is0 + cgZneDnr.is1 - 1;
+		const int jds = cgPatch.dnr_js0 + cgZneDnr.js1 - 1;
 
-		// Donor block indexes
-		int id = (i-ifs)*face_patch.matTrans[0] + (j-jfs)*face_patch.matTrans[1] + ids;
-		int jd = (i-ifs)*face_patch.matTrans[2] + (j-jfs)*face_patch.matTrans[3] + jds;
+		// Donor zone indices
+		int id = (i - ips)*cgPatch.matTrans[0] + (j - jps)*cgPatch.matTrans[1] + ids;
+		int jd = (i - ips)*cgPatch.matTrans[2] + (j - jps)*cgPatch.matTrans[3] + jds;
 
 		if( id > zneDonor.nx || id < 1 ||
 			jd > zneDonor.ny || jd < 1    )
@@ -833,7 +815,7 @@ t_ZoneNode t_MFCGNS2D::get_abutted_znode(
 		t_ZoneNode ret;
 
 		// 1-based zone id
-		ret.iZone = face_patch.nDnrZne + 1;
+		ret.iZone = cgPatch.nDnrZne + 1;
 
 		// k is unchanged
 		ret.iNode = t_BlkInd(id, jd, a_znode.iNode.k);
