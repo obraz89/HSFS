@@ -704,6 +704,8 @@ namespace mf{
 
 			void _add(const t_ZoneGrdLine& grd_line);
 
+			void dump(std::string fname) const;
+
 		};
 
 	}	// ~namespace cg

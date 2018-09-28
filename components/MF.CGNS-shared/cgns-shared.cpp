@@ -5,6 +5,8 @@
 
 #include "io_helpers.h"
 
+#include <fstream>
+
 using namespace mf::cg;
 
 #if CG_BUILD_SCOPE
@@ -118,6 +120,10 @@ void t_DomainGrdLine::init(const t_ZoneNode& a_face_znode){
 
 		_add(grd_line);
 
+		// debug, dump at every iter to get last line before crash
+
+		dump("output/dom_grdline.dat");
+
 		// move on to the abutted zone if final node is on zone interface
 
 		cur_face_pos = TZoneFace::get_brick_opposite_face(start_znode.iFacePos);
@@ -176,6 +182,28 @@ void t_DomainGrdLine::init(const t_ZoneNode& a_face_znode){
 		start_znode.iNode = znode_dnr_i.iNode;
 
 	} while (true);
+
+}
+
+void t_DomainGrdLine::dump(std::string fname) const{
+
+	std::ofstream ofstr(fname);
+	ofstr.width(12);
+	ofstr.precision(6);
+
+	mf::t_Rec rec;
+
+	ofstr << "iZone\ti\tj\tk\tx\ty\tz\tu\tv\tw\n";
+
+	for (int i= 0; i < znodes.size(); i++) {
+
+		const t_ZoneNode& z = znodes[i];
+		dom.get_rec(z, rec);
+		ofstr << z.iZone << "\t" << z.iNode.i << "\t" << z.iNode.j << "\t" << z.iNode.k << "\t";
+		ofstr << rec.x << "\t" << rec.y << "\t" << rec.z << "\t"<< rec.u << "\t" << rec.v << "\t" << rec.w << "\n";
+
+	}
+	ofstr.flush();
 
 }
 
