@@ -58,20 +58,20 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 
 		mf::t_GeomPoint xyz= rec.mean_flow.get_xyz();
 
-		fstr<<_T("\t")<<L_ref*xyz.x()	
-			<<_T("\t")<<L_ref*xyz.y()	
-			<<_T("\t")<<L_ref*xyz.z()	
-			<<_T("\t")<<_sigma[i]
-			<<_T("\t")<<rec.n_factor
-			<<_T("\t")<<lambda
-			<<_T("\t")<<dim_wave.w.real()/(2000.0*3.141592653)
+		fstr<<_T("\t")<<std_manip::std_format_fixed(L_ref*xyz.x())
+			<<_T("\t")<< std_manip::std_format_fixed(L_ref*xyz.y())
+			<<_T("\t")<< std_manip::std_format_fixed(L_ref*xyz.z())
+			<<_T("\t")<< std_manip::std_format_fixed(_sigma[i])
+			<<_T("\t")<< std_manip::std_format_fixed(rec.n_factor)
+			<<_T("\t")<< std_manip::std_format_fixed(lambda)
+			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.w.real()/(2000.0*3.141592653))
 			// debug
-			<<_T("\t")<<dim_wave.a.real()
-			<<_T("\t")<<dim_wave.kn.real()
-			<<_T("\t")<<dim_wave.b.real()
-			<<_T("\t")<<stab_scales.ReStab
-			<<_T("\t")<<stab_scales.Dels
-			<<_T("\t")<< stab_scales.Me
+			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.a.real())
+			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.kn.real())
+			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.b.real())
+			<<_T("\t")<< std_manip::std_format_fixed(stab_scales.ReStab)
+			<<_T("\t")<< std_manip::std_format_fixed(stab_scales.Dels)
+			<<_T("\t")<< std_manip::std_format_fixed(stab_scales.Me)
 			<<_T("\n");	
 	};
 
