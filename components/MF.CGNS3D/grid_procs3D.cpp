@@ -818,36 +818,35 @@ const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znod
 	const int nd_j = a_znode.iNode.j;
 	const int nd_k = a_znode.iNode.k;
 
-	const TcgnsZone& zcg = cgCtx.cgZones[b];
+	const TcgnsZone& cgZne = cgCtx.cgZones[b];
 
-	// debug
-	const TZone& z = Zones[b];
+	// Start & End indices of ghost layer
+	int ips, ipe, jps, jpe, kps, kpe;
 
-	// patch indexes in 1-based block indexing (with ghosts, works when skipped faces disabled)
-	int is_p, ie_p, js_p, je_p, ks_p, ke_p;
+	for (int ip = 0; ip < cgZne.nPatches; ip++) {
 
-	for (int ip = 0; ip < zcg.nPatches; ip++) {
+		TcgnsZone::TFacePatch& cgPatch = cgZne.Patches[ip];
 
-		TcgnsZone::TFacePatch& p = zcg.Patches[ip];
+		// important: when on edge, skip edges of patches from adjacent faces
+		if (cgPatch.posFace != a_znode.iFacePos) continue;
 
 		bool ok = true;
 
-		is_p = z.is - 1 + p.is0;
-		ie_p = z.is - 1 + p.ie0;
+		// Indices range of the patch in working numbering assuming no layers were skipped
+		ips = cgPatch.is0 + cgZne.is1 - 1;
+		ipe = cgPatch.ie0 + cgZne.is1 - 1;
+		jps = cgPatch.js0 + cgZne.js1 - 1;
+		jpe = cgPatch.je0 + cgZne.js1 - 1;
+		kps = cgPatch.ks0 + cgZne.ks1 - 1;
+		kpe = cgPatch.ke0 + cgZne.ks1 - 1;
 
-		js_p = z.js - 1 + p.js0;
-		je_p = z.js - 1 + p.je0;
-
-		ks_p = z.ks - 1 + p.ks0;
-		ke_p = z.ks - 1 + p.ke0;
-
-		ok = ok && (nd_i >= is_p) && (nd_i <= ie_p);
-		ok = ok && (nd_j >= js_p) && (nd_j <= je_p);
-		ok = ok && (nd_k >= ks_p) && (nd_k <= ke_p);
+		ok = ok && (nd_i >= ips) && (nd_i <= ipe);
+		ok = ok && (nd_j >= jps) && (nd_j <= jpe);
+		ok = ok && (nd_k >= kps) && (nd_k <= kpe);
 
 		if (ok) {
 
-			return p;
+			return cgPatch;
 
 		}
 
@@ -867,12 +866,9 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 		TZone& zne = Zones[b];
 		TcgnsZone& cgZne = cgCtx.cgZones[b];
 
-		if (a_znode.iFacePos==faceNone) 
-			wxLogError(_T("In get_abutted_znode: ifacepos not specified for input znode param"));
-
 		const TcgnsZone::TFacePatch& cgPatch = get_face_patch(a_znode);
 
-		TZone& zneDonor = Zones[cgPatch.nDnrZne ];
+		const TZone& zneDnr = Zones[cgPatch.nDnrZne ];
 		const TcgnsZone& cgZneDnr = cgCtx.cgZones[cgPatch.nDnrZne];
 
 		// Start indices of the original patch (assuming no layers were skipped) 
@@ -894,12 +890,17 @@ t_ZoneNode t_MFCGNS3D::get_abutted_znode(
 		int jd = (i - ips)*cgPatch.matTrans[3] + (j - jps)*cgPatch.matTrans[4] + (k - kps)*cgPatch.matTrans[5] + jds;
 		int kd = (i - ips)*cgPatch.matTrans[6] + (j - jps)*cgPatch.matTrans[7] + (k - kps)*cgPatch.matTrans[8] + kds;
 
-		if( id > zneDonor.nx || id < 1 ||
-			jd > zneDonor.ny || jd < 1 ||
-			kd > zneDonor.nz || kd < 1    )
+		if (id < cgZneDnr.is1 || id > cgZneDnr.ie1 ||
+			jd < cgZneDnr.js1 || jd > cgZneDnr.je1 ||
+			kd < cgZneDnr.ks1 || kd > cgZneDnr.ke1
+			)
 		{
-			// ghost data unavailable
-			wxLogError(_("Get abutted znode 3D : Failed to get correct abutted znode index"));
+			wxLogError(
+				_("Ghost node (%d,%d,%d) of zone '%s' tried to be mapped \
+to nonexistent node (%d,%d,%d) of zone '%s'. Check indices orientation!"),
+			i, j, k, wxString::FromAscii(zne.szName).c_str(),
+			id, jd, kd, wxString::FromAscii(zneDnr.szName).c_str()
+			);
 		}
 
 		t_ZoneNode ret;

@@ -44,7 +44,9 @@ void TDomain::set_face_iters(int iZone, int iFace, int& is, int& ie,
 	
 };
 
-
+// TODO: this works when every edge belongs to only one boundary face
+// counter example: cube with adjacent faces of "wall1" and "wall2" conditions
+// in this case "normal" is undefined etc, a lot of problems...
 t_ZoneNode TDomain::_get_nrst_node_surf(const t_GeomPoint& point) const{
 
 	t_Rec cur_rec;

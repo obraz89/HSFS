@@ -731,39 +731,38 @@ const TcgnsZone::TFacePatch& t_MFCGNS2D::get_face_patch(const t_ZoneNode& a_znod
 
 	const int nd_i = a_znode.iNode.i;
 	const int nd_j = a_znode.iNode.j;
+	const TcgnsZone& cgZne = cgCtx.cgZones[b];
 
-	const TcgnsZone& zcg = cgCtx.cgZones[b];
+	// Start & End indices of ghost layer
+	int ips, ipe, jps, jpe;
 
-	// debug
-	const TZone& z = Zones[b];
+	for (int ip = 0; ip < cgZne.nPatches; ip++) {
 
-	// patch indexes in 1-based block indexing (with ghosts, works when skipped faces disabled)
-	int is_p, ie_p, js_p, je_p;
+		TcgnsZone::TFacePatch& cgPatch = cgZne.Patches[ip];
 
-	for (int ip = 0; ip < zcg.nPatches; ip++) {
-
-		TcgnsZone::TFacePatch& p = zcg.Patches[ip];
+		// important: when on edge, skip edges of patches from adjacent faces
+		if (cgPatch.posFace != a_znode.iFacePos) continue;
 
 		bool ok = true;
 
-		is_p = z.is - 1 + p.is0;
-		ie_p = z.is - 1 + p.ie0;
+		// Indices range of the patch in working numbering assuming no layers were skipped
+		ips = cgPatch.is0 + cgZne.is1 - 1;
+		ipe = cgPatch.ie0 + cgZne.is1 - 1;
+		jps = cgPatch.js0 + cgZne.js1 - 1;
+		jpe = cgPatch.je0 + cgZne.js1 - 1;
 
-		js_p = z.js - 1 + p.js0;
-		je_p = z.js - 1 + p.je0;
-
-		ok = ok && (nd_i >= is_p) && (nd_i <= ie_p);
-		ok = ok && (nd_j >= js_p) && (nd_j <= je_p);
+		ok = ok && (nd_i >= ips) && (nd_i <= ipe);
+		ok = ok && (nd_j >= jps) && (nd_j <= jpe);
 
 		if (ok) {
 
-			return p;
+			return cgPatch;
 
 		}
 
 	}
 
-	wxLogMessage(_T("t_MFCGNS3D: get_face_patch error: provided znode is not on zone face patches..."));
+	wxLogMessage(_T("t_MFCGNS2D: get_face_patch error: provided znode is not on zone face patches..."));
 
 	return TcgnsZone::TFacePatch();
 

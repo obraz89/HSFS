@@ -129,17 +129,35 @@ void t_DomainGrdLine::init(const t_ZoneNode& a_face_znode){
 		cur_face_pos = TZoneFace::get_brick_opposite_face(start_znode.iFacePos);
 
 		const TZone& zne = dom.getZone(start_znode.iZone);
+		//const TcgnsZone& cgZne = dom.getCgZone(start_znode.iZone);
 
 		if (zne.Faces[cur_face_pos].bcType!=TBlockBCType::bcAbutted)
 			break;
-
-		const TcgnsContext& cgCtx = dom.get_cg_ctx();
 
 		t_ZoneNode znode_face(grd_line.iZone, grd_line.ind_e, cur_face_pos);
 		
 		// donor znode on (f)ace
 		t_ZoneNode znode_dnr_f = dom.get_abutted_znode(znode_face, 0, 0, 0);
 
+		// debug, checking that the nodes coincide
+		/*
+		const TZone& zneDnr = dom.getZone(znode_dnr_f.iZone);
+		const TcgnsZone& cgZneDnr = dom.getCgZone(znode_dnr_f.iZone);
+
+		mf::t_Rec rec1, rec2;
+
+		std::ofstream ofstr("output/znode_face_check.dat", std::ios::app);
+		dom.get_rec(znode_face, rec1);
+		ofstr << "znode    :" << znode_face.iZone <<"\t"
+			<<znode_face.iNode.i<<"\t"<<znode_face.iNode.j<<"\t"<<znode_face.iNode.k<<"\t"
+			<< rec1.x << "\t" << rec1.y << "\t" << rec1.z << "\n";
+		dom.get_rec(znode_dnr_f, rec2);
+		ofstr << "znode_dnr:" << znode_dnr_f.iZone << "\t"
+			<< znode_dnr_f.iNode.i << "\t" << znode_dnr_f.iNode.j << "\t" << znode_dnr_f.iNode.k << "\t" 
+			<< rec2.x << "\t" << rec2.y << "\t" << rec2.z << "\n";
+		ofstr.flush(); ofstr.close();
+		*/
+		
 		// first (i)nterior donor znode
 		t_ZoneNode znode_dnr_i = 
 			dom.get_abutted_znode(znode_face, grd_line.di, grd_line.dj, grd_line.dk);
@@ -178,7 +196,9 @@ void t_DomainGrdLine::init(const t_ZoneNode& a_face_znode){
 		start_znode.iFacePos = new_face_pos;
 		start_znode.iZone = znode_dnr_i.iZone;
 
-		// to avoid duplication of face nodes start from first interior node
+		// to avoid duplication of face nodes start from first interior node;
+		// this node does NOT belong to zone surface but carries facePos information
+		// to initialize zone grd line
 		start_znode.iNode = znode_dnr_i.iNode;
 
 	} while (true);

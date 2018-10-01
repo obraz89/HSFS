@@ -629,6 +629,8 @@ namespace mf{
 
 			const TZone& getZone(const int zIdx) const{return Zones[zIdx-1];}
 
+			const TcgnsZone& getCgZone(const int zIdx) const { return cgCtx.cgZones[zIdx - 1]; }
+
 			virtual void get_k_range(int iZone, int& ks, int& ke) const=0;
 
 			bool is_point_inside(const t_GeomPoint& xyz) const;
