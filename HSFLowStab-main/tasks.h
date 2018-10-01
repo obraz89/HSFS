@@ -33,6 +33,8 @@ namespace task{
 
 	void retrace_MPI(stab::t_WPRetraceMode a_mode_retrace);
 
+	void retrace_streamlines();
+
 	void postproc_retrace();
 
 	void get_amplitude_funcs();

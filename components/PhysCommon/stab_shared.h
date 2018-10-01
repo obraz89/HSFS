@@ -36,7 +36,7 @@ namespace stab{
 	
 /************************************************************************/
 
-struct t_StabScales{
+struct IMPEXP_PHYSCOMMON t_StabScales{
 
 	double ReStab, Me;
 
@@ -48,6 +48,8 @@ struct t_StabScales{
 	double FreqScale() const{return UeDim/Dels;};
 
 	friend IMPEXP_PHYSCOMMON std::wostream& operator<<(std::wostream& wstr, const t_StabScales& scales);
+
+	std::wstring to_wstr() const;
 };
 
 /************************************************************************/

@@ -409,6 +409,37 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 
 }
 
+void task::retrace_streamlines() {
+
+	char szFname[] = "output/streamlines.dat";
+
+	TCapsWPTrack& caps_wp = G_Plugins.get_caps_wp();
+
+	stab::t_WPTrackBase* wp_line = caps_wp.create_wp_track(*g_pMFDomain);
+
+	wp_line->init(G_Plugins.get_plugin(plgWPTrack));
+
+	const int pid_s = 0; 
+	const int pid_e = g_pStabDB->get_npoints() - 1;
+
+	for (int pid = pid_s; pid <= pid_e; pid++) {
+
+		const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+		wp_line->retrace_streamline(test_xyz);
+
+		std::ofstream ofstr(szFname, std::ios::app);
+
+		ofstr << "Streamline pid=" << pid << "\n";
+
+		ofstr.close();
+
+		wp_line->print_to_file(szFname, std::ios::app);
+
+	}
+
+}
+
 void task::get_amplitude_funcs(){
 
 	int npave_pts = g_pStabDB->get_npoints();

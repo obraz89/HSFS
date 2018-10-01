@@ -34,6 +34,9 @@ namespace task{
 		// when tested, replace Retrace 
 		RetraceMPI,
 
+		// retrace external (inviscid) streamlines only
+		RetraceStreamlines,
+
 		// posprocess data obtained in retraceMPI
 		PostProcRetrace,
 

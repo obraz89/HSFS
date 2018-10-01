@@ -309,6 +309,8 @@ bool search_max_ai_spat_OBSOLETE(const t_WCharsLoc& init_wave, t_WCharsLoc& max_
 bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact, 
 	stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver) {
 
+	wxLogMessage(_T("=============starting search_instab_ls_gs=================="));
+
 	stab::t_LSCond srch_cond;
 
 	srch_cond.set(stab::t_LSCond::W_FIXED | stab::t_LSCond::B_FIXED);
@@ -320,18 +322,27 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	try {
 		loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT);
 	}
-	catch (...) { ok_ls = false; }
+	catch (...) { 
+		wxLogMessage(_T("ls-gs: local search with init wave failed"));
+		ok_ls = false; }
 
-	//std::wcout << _T("Loc search ls-gs:") << w_cur;
+	std::wcout << _T("Loc search ls-gs:") << w_ls;
+
+	getchar();
 
 	// loc search can easily converge to stable modes, e.g. near leading edge
 	// we want only instabilities here
+	// stable modes are considered below...
 	ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
-	ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
+	//ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
 
-	if (ok_ls && (w_ls.a.imag()<0.0)) {
+	//if (ok_ls && (w_ls.a.imag()<0.0)) {
+	if (ok_ls && (w_ls.a.real()>0.0)){
 		w_exact = w_ls;
 		return true;
+	}
+	else {
+		wxLogMessage(_T("ls-gs: local search checks failed"));
 	}
 
 	// try gs if ls failed
@@ -352,8 +363,12 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 			ok_gs = ok_gs && stab::check_wchars_increment(w_gs);
 			ok_gs = ok_gs && stab::check_wchars_c_phase(w_gs);
 
+			// TODO: gs can converge to stable modes, avoid this
+			wxLogMessage(_T("ls-gs note: GS allowed to converge to stable modes"));
+			//ok_gs = ok_gs && (w_gs.a.imag() < 0.0);
+
 			if (ok_gs) {
-				//std::wcout << _T("Glob search ls-gs:") << w_cur;
+				std::wcout << _T("ls-gs: glob search ok:") << w_gs;
 				w_exact = w_gs;
 				return true;
 			}
@@ -361,10 +376,12 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 		}
 	}
+	
 
 	// if gs failed, maybe we are near neut point and ls was ok but stable
 
 	if (ok_ls) {
+		std::wcout << _T("ls-gs: using stable mode:") << w_ls;
 		w_exact = w_ls;
 		return true;
 	}
@@ -613,7 +630,13 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 		 if (pLine->size() > 2) {
 
-			 w_intpol = _interpolate_next_wchars(*pLine, nxt_xyz, loc_solver.get_stab_scales());
+			 // TODO: cur_xyz instead of nxt_xyz ?
+			 //w_intpol = _interpolate_next_wchars(*pLine, nxt_xyz, loc_solver.get_stab_scales());
+
+			 //wxLogMessage(_T("Interpolation of wave chars disabled, check t_WavePackLine::_retrace_dir_cond"));
+
+			 w_intpol = pLine->back().wchars_loc;
+
 
 			 wxLogMessage(_T("interpolated wchars:\n%s"), &w_intpol.to_wstr()[0]);
 
@@ -668,14 +691,67 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 			 const t_StabScales& stab_scales = loc_solver.get_stab_scales();
 
-			 cur_wave.w = wchars_dim_cnd.w.real()/stab_scales.FreqScale();
+			 cur_wave.w = wchars_dim_cnd.w.real() / stab_scales.FreqScale();
 			 cur_wave.b = wchars_dim_cnd.b.real()*stab_scales.Dels;
+
+			 // this is pseudo interpolation
+			 // via previous non-dim values
+			 // TODO: w=ck instead of w=ca
+			 // assume w=c*a => da = a_old*dw/w_old
+			 if (pLine->size() > 0) {
+
+				 const t_WCharsLoc& last_wave = pLine->back().wchars_loc;
+				 t_CompVal a_old = last_wave.a;
+				 t_CompVal w_old = last_wave.w;
+
+				 t_CompVal vga_old = last_wave.vga;
+
+				 t_CompVal dw_ps = cur_wave.w - w_old;
+				 t_CompVal da = 0.0;
+				 // extrapolate via phase speed
+				 {
+					//wxLogMessage(_T("WPTrack: doing pseudo extrapolation w/a=const, dw=%lf"), smat::norm(dw_ps));
+					//da = a_old*dw_ps / w_old;
+					 //cur_wave.a = a_old + da;
+					//wxLogMessage(_T("WPTrack: pseudo extrapolation da=(%lf, %lf)"), da.real(), da.imag()); 
+				 }
+				 // extrapolate via group velo 
+				 {
+					 //wxLogMessage(_T("WPTrack: doing pseudo extrapolation dw/da=const, dw=%lf"), smat::norm(dw_ps));
+					 //da = dw_ps/vga_old;
+					 //cur_wave.a = a_old + da;
+					 //wxLogMessage(_T("WPTrack: pseudo extrapolation da=(%lf, %lf)"), da.real(), da.imag()); 
+				 }
+
+				 {
+					 wxLogMessage(_T("WPTrack: using last dimensional a as init for current point, dw=%lf"), smat::norm(dw_ps));
+					 cur_wave.a = a_old*stab_scales.Dels / last_wave.scales().Dels;
+				 }
+				 // debug
+				 wxLogMessage(_T("compare prev & curre nt wchars loc:"));
+				 wxLogMessage(_T("old wchars:%s"), wxString(last_wave.to_wstr()));
+				 wxLogMessage(_T("cur wchars:%s"), wxString(cur_wave.to_wstr()));
+				 wxLogMessage(_T("old scales:%s"), wxString(last_wave.scales().to_wstr()));
+				 wxLogMessage(_T("new scales:%s"), wxString(stab_scales.to_wstr()));
+
+				 
+
+			 }
 
 			 t_WCharsLoc w_init = cur_wave;
 
 			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver);
 
-			 if (!ok_wave) break;
+			 //getchar();
+
+			 if (!ok_wave) {
+
+				 wxLogMessage(_T("WPLine: failed to find wchars, proceeding in test mode"));
+				 // TEST: try to pass through problematic zone
+				 //cur_wave = w_init;
+				 //continue;
+				 break;
+			 }
 
 			 //if (!search_wave_wb_fixed(cur_wave, loc_solver, gs_solver))  break;
 
@@ -724,7 +800,11 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 cur_wave.set_scales(loc_solver.get_stab_scales());
 
 		 // TODO: avoid group velo calcs if not needed ?
-		 loc_solver.calcGroupVelocity(cur_wave);
+		 if (srch_cnd_ok) {
+
+			 loc_solver.calcGroupVelocity(cur_wave);
+
+		 }
 
 		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
 			 loc_solver.get_stab_scales());
@@ -936,6 +1016,63 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
 	calc_n_factor();
 };
+
+void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
+
+	clear();
+
+	t_RecArray* pLines[2] = { &_line_down, &_line_up };
+	int dt_sign[2] = { 1.0, -1.0 };
+
+	t_Vec3Dbl dr_dir, dr;
+	mf::t_Rec out_rec;
+	_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
+	t_GeomPoint cur_xyz = out_rec.get_xyz();
+
+	// dummy wchars
+	t_WCharsGlob wchars_glob;
+	t_WCharsLoc wchars_loc;
+
+
+	// retrace downstream & upstream
+	for (int i = 0; i < 2; i++) {
+
+		t_RecArray* pLine = pLines[i];
+
+		double dt = _params.TimeStep*dt_sign[i];
+
+		int count = 0;
+
+		bool proceed_cond = true;
+
+		while (proceed_cond) {
+
+			_add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, wchars_loc);
+
+			_calc_dr(dt, pLine->back(), dr_dir, dr);
+
+			// TODO: IMPORTANT! BE ALWAYS ON BL EDGE
+			cur_xyz = cur_xyz + dr;
+
+			proceed_cond = _rFldMF.is_point_inside(cur_xyz) && (count++<NMAX_WPRECS/2);
+
+		}
+
+	}
+
+
+	// merge lines
+	{
+		int nlup = _line_up.size();
+		for (int i = 0; i<nlup; i++)	_line.push_back(_line_up[nlup - 1 - i]);
+	}
+	{
+		int nldn = _line_down.size();
+		// do not write mid point twice!
+		for (int i = 1; i<nldn; i++) 	_line.push_back(_line_down[i]);
+	}
+
+}
 
 // search fun zero
 // parabolic interpolation f = a*x*x + b*x + c

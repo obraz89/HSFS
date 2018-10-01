@@ -13,3 +13,10 @@ std::wostream& operator <<(std::wostream& wstr, const t_StabScales& scales){
 	return wstr;
 
 }
+std::wstring t_StabScales::to_wstr() const{
+
+	std::wostringstream wostr; 
+	wostr << *this; 
+	return wostr.str();
+
+}
