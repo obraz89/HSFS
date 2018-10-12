@@ -104,8 +104,7 @@ protected:
 
 	mf::t_GeomPoint _xyz;
 
-		// after init store useful info about bl layer
-	double _bl_thick_scale;
+	mf::t_ProfScales _bl_scales;
 
 	// TODO: remove?
 	const mf::t_DomainBase& _rDomain;
@@ -125,7 +124,7 @@ public:
 
 	const mf::t_DomainBase& getMFDomain() const;
 
-	double get_bl_thick_scale() const;
+	const mf::t_ProfScales& get_bl_thick_scales() const;
 
 	double get_x_scale() const;
 

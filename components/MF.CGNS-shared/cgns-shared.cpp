@@ -726,14 +726,14 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz,
 void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz, 
 				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
 
-		double bl_thick;
+		t_ProfScales bl_scales;
 		t_ZoneNode surf_znode, outer_znode;
 
 		std::vector<t_ZoneNode> raw_profile;
 
-		_calc_bl_thick(xyz, bl_thick, raw_profile);
+		_calc_bl_thick(xyz, bl_scales, raw_profile);
 
-		const double total_thick = bl_thick * init_cfg.ThickCoef;
+		const double total_thick = bl_scales.thick_scale * init_cfg.ThickCoef;
 
 		t_GeomPoint cur_xyz, surf_xyz;
 		t_Rec cur_rec;

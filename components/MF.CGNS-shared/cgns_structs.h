@@ -570,19 +570,19 @@ namespace mf{
 			void _extract_profile_data_grdline(const t_GeomPoint& xyz, 
 				std::vector<t_ZoneNode>& data) const;
 
-			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+			void _calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_scales, 
 				std::vector<t_ZoneNode>& raw_profile) const;
 
 			double _calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
 				int ind, t_VeloDerivType vd_type) const;
 
-			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_full_gridline(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+			void _calc_bl_thick_full_gridline(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales, 
 				std::vector<t_ZoneNode>& raw_profile) const;
 
 			// TDomainBase interface realization
@@ -646,7 +646,7 @@ namespace mf{
 			// calc character length scale
 			virtual double calc_x_scale(const t_GeomPoint& xyz) const;
 
-			virtual double calc_bl_thick(const t_GeomPoint& xyz) const;
+			virtual mf::t_ProfScales calc_bl_thick_scales(const t_GeomPoint& xyz) const;
 
 			void calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const;
 

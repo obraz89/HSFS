@@ -71,7 +71,11 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 
 	const t_FldParams& Params = rMF.get_mf_params();
 
-	double bl_thick_scale = a_rProfNS.get_bl_thick_scale();
+	mf::t_ProfScales bl_thick_scales = a_rProfNS.get_bl_thick_scales();
+
+	wxLogMessage(_T("Warning:testing new d1 nondim type, using dels=2.5*d1, remove when hexa calcs finished"));
+	// coef 2.5 just to keep to previously calcled vals via old Dels for hexafly cases
+	double bl_thick_scale = 2.5*bl_thick_scales.d1;
 
 	// old selfsim scale, TODO: keep as option to nondim ?
 	double x_scale = a_rProfNS.get_x_scale();

@@ -470,7 +470,7 @@ double TDomain::_calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 // input: data_grdline - for now just an extracted domain gridline
 // output: bl_thick & raw_profile (truncated data_grdline)
 void TDomain::_calc_bl_thick_vderiv(
-		const std::vector<t_ZoneNode>& data_grdline, double& bl_thick, 
+		const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
 		std::vector<t_ZoneNode>& out_raw_profile) const{
 
 	t_ZoneNode surf_znode, outer_znode;
@@ -515,6 +515,12 @@ void TDomain::_calc_bl_thick_vderiv(
 	// then find reference point where dudy = eps*dudy_base : y = dd
 	// then check that derivative is small inside dd and thick_coef*dd
 	// then find outer record y_out = thick_coef*dd
+
+	// new method: then calculate displacement thickness
+	// integral((1-U/Ue)dy)=D1
+	// multiply D1 by empirics constant to obtain new Dels: Dels1 = C*D1
+	// (to pertain Thick coef as with old Dels)
+	// this Dels should vary much more smooth along x...
 
 	// step1 - find du_dy_base
 
@@ -608,12 +614,50 @@ void TDomain::_calc_bl_thick_vderiv(
 
 			if (deriv_check) {
 				ind_ref = m;
-				bl_thick = y_ref;
+				bl_thick_scales.thick_scale = y_ref;
 				break;
 			}
 
 		}
 
+	}
+
+	// step 3 - calculate new Dels via displacement thickness
+	double D1 = 0.0;
+	{
+
+		get_rec(data_grdline[ind_ref], cur_rec);
+		double Ue = cur_rec.u;
+
+		mf::t_Rec nxt_rec;
+		t_GeomPoint nxt_xyz;
+
+		double fl, fr, dd; 
+
+		for (int m = 0; m < ind_ref - 1; m++) {
+
+			get_rec(data_grdline[m], cur_rec);
+
+			cur_xyz.set(cur_rec);
+
+			get_rec(data_grdline[m + 1], nxt_rec);
+
+			nxt_xyz.set(nxt_rec);
+
+			matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+
+			double dd = dr.norm();
+
+			fl = 1.0 - cur_rec.u / Ue;
+
+			fr = 1.0 - nxt_rec.u / Ue;
+
+			D1 += 0.5*(fl + fr)*dd;
+
+		}
+		bl_thick_scales.d1 = D1;
+		// debug, also to get average ratio of Dels to D1
+		wxLogMessage(_T("Dels_old/D1=%lf"), bl_thick_scales.thick_scale/ bl_thick_scales.d1);
 	}
 
 	// step 3 - extract cropped profile data
@@ -628,7 +672,7 @@ void TDomain::_calc_bl_thick_vderiv(
 		double cur_dd = dr.norm();
 
 		// TODO: here should be ThickCoef, not default...
-		if (cur_dd >= _profile_cfg.ThickCoefDefault*bl_thick) {
+		if (cur_dd >= _profile_cfg.ThickCoefDefault*bl_thick_scales.thick_scale) {
 
 			outer_znode = data_grdline[m];
 
@@ -648,7 +692,7 @@ void TDomain::_calc_bl_thick_vderiv(
 
 // TODO : works only for grids nearly orthogonal to viscous wall
 void TDomain::_calc_bl_thick_enthalpy(
-	const std::vector<t_ZoneNode>& data_grdline, double& bl_thick, 
+	const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
 	std::vector<t_ZoneNode>& out_profile_data) const{
 
 	t_ZoneNode surf_znode, outer_znode;
@@ -688,7 +732,7 @@ void TDomain::_calc_bl_thick_enthalpy(
 
 			matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
 
-			bl_thick = dr.norm();
+			bl_thick_scales.thick_scale = dr.norm();
 
 			break;
 		}
@@ -703,7 +747,7 @@ void TDomain::_calc_bl_thick_enthalpy(
 
 void TDomain::_calc_bl_thick_full_gridline(
 	const std::vector<t_ZoneNode>& data_grdline,
-	double& bl_thick, std::vector<t_ZoneNode>& out_raw_profile) const{
+	t_ProfScales& bl_thick_scales, std::vector<t_ZoneNode>& out_raw_profile) const{
 
 	t_ZoneNode surf_znode, outer_znode;
 
@@ -723,13 +767,13 @@ void TDomain::_calc_bl_thick_full_gridline(
 	r2.set(rec2);
 
 	matrix::base::minus<double, double>(r1, r2, dr);
-	bl_thick = dr.norm();
+	bl_thick_scales.thick_scale = dr.norm();
 
 	out_raw_profile = data_grdline;
 	
 }
 
-inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_thick_scales, 
 									std::vector<t_ZoneNode>& raw_profile) const{
 
 	std::vector<t_ZoneNode> data_grdline;
@@ -739,14 +783,14 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
-		_calc_bl_thick_vderiv(data_grdline, bl_thick, raw_profile);
+		_calc_bl_thick_vderiv(data_grdline, bl_thick_scales, raw_profile);
 		break;
 
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
-		_calc_bl_thick_enthalpy(data_grdline, bl_thick, raw_profile);
+		_calc_bl_thick_enthalpy(data_grdline, bl_thick_scales, raw_profile);
 		break;
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
-		_calc_bl_thick_full_gridline(data_grdline, bl_thick, raw_profile);
+		_calc_bl_thick_full_gridline(data_grdline, bl_thick_scales, raw_profile);
 		break;
 
 	default:
@@ -758,13 +802,13 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 }
 
 
-double TDomain::calc_bl_thick(const t_GeomPoint& xyz) const{
+t_ProfScales TDomain::calc_bl_thick_scales(const t_GeomPoint& xyz) const{
 	
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
+	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
-	return bl_thick;
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
+	return bl_thick_scales;
 
 };
 
@@ -783,9 +827,9 @@ void TDomain::calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) con
 void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const{
 
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
+	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
 
 	get_rec(raw_profile.back(), outer_rec);
 
@@ -794,9 +838,9 @@ void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec
 int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
+	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
 
 	return raw_profile.size();
 }
@@ -804,8 +848,9 @@ int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
+	t_ProfScales bl_thick_scales;
+
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
 
 	t_SqMat3Dbl jac;
 

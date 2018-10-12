@@ -300,13 +300,12 @@ void t_ProfMF::initialize(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& d
 
 void t_ProfMF::_store_bl_thick_data(){
 
-	_bl_thick_scale = _rDomain.calc_bl_thick(_xyz);
-	// TODO: do i need this?
-	//_bl_bound_ind = 0;
+	_bl_scales = _rDomain.calc_bl_thick_scales(_xyz);
+
 	
 };
 
-double t_ProfMF::get_bl_thick_scale() const{return _bl_thick_scale;}
+const mf::t_ProfScales& t_ProfMF::get_bl_thick_scales() const{return _bl_scales;}
 
 double t_ProfMF::get_x_scale() const{
 
