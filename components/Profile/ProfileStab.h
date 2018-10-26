@@ -16,7 +16,8 @@ struct IMPEXP_PROFILE t_ProfStabCfg{
 
 	enum t_Nondim{
 		NONDIM_BY_CFD_SCALE=0,
-		NONDIM_BY_X_SELFSIM
+		NONDIM_BY_X_SELFSIM,
+		NONDIM_BY_FIXED_VAL
 	};
 	
 	t_Nondim NondimScaleType;

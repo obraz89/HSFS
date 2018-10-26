@@ -53,6 +53,18 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS,
 
 }
 
+double read_fixed_scale_from_file() {
+
+	std::ifstream ifstr("Dels_fixed_val.dat");
+
+	double val;
+
+	ifstr >> val;
+
+	return val;
+
+}
+
 /************************************************************************/
 void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, 
 			const std::vector<double>& a_y_distrib, t_ProfStabCfg cfg){
@@ -95,6 +107,13 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 		y_scale = y_scale_selfsim;
 		_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x_scale/mu_e);
 		_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+		break;
+	case t_ProfStabCfg::NONDIM_BY_FIXED_VAL:
+		// coef 2.5 just to keep to previously calcled vals via old Dels for hexafly cases
+		bl_thick_scale = 2.5*read_fixed_scale_from_file();
+		y_scale = bl_thick_scale*sqrt(Params.Re);
+		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
+		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	default:
 		wxLogError(_T("Unsupported option for profile stab non dim!"));

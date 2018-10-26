@@ -34,6 +34,9 @@ void t_EigenGSParams::init_supported_options(){
 	PROFSTAB_NONDIM_TYPES_STR.insert(
 		std::make_pair(_T("BY_X_SELFSIM"), t_ProfStabCfg::NONDIM_BY_X_SELFSIM));
 
+	PROFSTAB_NONDIM_TYPES_STR.insert(
+		std::make_pair(_T("BY_FIXED_VAL"), t_ProfStabCfg::NONDIM_BY_FIXED_VAL));
+
 	PROFNS_INIT_TYPES_STR.clear();
 
 	PROFNS_INIT_TYPES_STR.insert(
@@ -144,6 +147,9 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 		break;
 	case (t_ProfStabCfg::NONDIM_BY_X_SELFSIM):
 		NondimScaleType = t_ProfStabCfg::NONDIM_BY_X_SELFSIM;
+		break;
+	case (t_ProfStabCfg::NONDIM_BY_FIXED_VAL):
+		NondimScaleType = t_ProfStabCfg::NONDIM_BY_FIXED_VAL;
 		break;
 	default:
 		wxLogError(_("PF.EigenGS: failed to read prf stab nondim type"));
