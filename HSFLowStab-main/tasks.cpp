@@ -436,6 +436,32 @@ void task::retrace_streamlines() {
 
 		wp_line->print_to_file(szFname, std::ios::app);
 
+		// print rarefied streamline = pave points for global search
+
+		char szFname_pp[64];
+
+		sprintf(szFname_pp, "output/pave_points_str_%d.dat", pid);
+
+		ofstr.open(szFname_pp);
+
+		double dx = 0.0;
+		double dx_th = 0.1;
+
+		for (int i = 0; i < wp_line->get_size()-1; i++) {
+
+			dx += (wp_line->get_rec(i + 1).mean_flow.x - wp_line->get_rec(i).mean_flow.x);
+
+			if (dx > dx_th) {
+				ofstr << wp_line->get_rec(i + 1).mean_flow.x<<"\t"
+					  << wp_line->get_rec(i + 1).mean_flow.y <<"\t"
+					  << wp_line->get_rec(i + 1).mean_flow.z <<"\n";
+				dx = 0.0;
+			}
+
+		}
+
+		ofstr.close();
+
 	}
 
 }
