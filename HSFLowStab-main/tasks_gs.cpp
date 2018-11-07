@@ -74,6 +74,14 @@ bool search_global_initial_wr_fixed_spat(double a_wr, t_WCharsLoc& ret_wave){
 	}	// ~loop over betas
 
 	if (waves_spat.size()>0){
+
+		// tmp, dump ai vs br
+		std::ofstream ofstr("output/ai_vs_br.dat");
+		for (int i = 0; i < waves_spat.size(); i++) {
+			ofstr << waves_spat[i].b.real() <<"\t"<< abs(waves_spat[i].a.imag())<<"\n";
+		}
+		ofstr.close();
+
 		ret_wave = t_WCharsLoc::find_max_instab_spat(waves_spat); 
 		return true;
 	}else 
