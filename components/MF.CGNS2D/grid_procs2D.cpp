@@ -768,7 +768,10 @@ const TcgnsZone::TFacePatch& t_MFCGNS2D::get_face_patch(const t_ZoneNode& a_znod
 
 }
 
-// copy-paste from connectivity part of grid loading
+// get donor zone-node index of the specified zone-node index
+// we have a_znode, shifting with di, dj, dk (not exceeding size of ghost layer!)
+// then we get znode index for the specified znode
+// (Zone, i, j, k) <=> (ZoneDonor, i_donor, j_donor, k_donor)
 t_ZoneNode t_MFCGNS2D::get_abutted_znode(
 	const t_ZoneNode& a_znode, const int di, const int dj, const int dk) const{
 
