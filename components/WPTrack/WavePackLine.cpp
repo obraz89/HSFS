@@ -319,6 +319,7 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	bool ok_ls = true;
 
 	// first try local search
+	
 	try {
 		loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT);
 	}
@@ -328,13 +329,13 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 	std::wcout << _T("Loc search ls-gs:") << w_ls;
 
-	getchar();
+	//getchar();
 
 	// loc search can easily converge to stable modes, e.g. near leading edge
 	// we want only instabilities here
 	// stable modes are considered below...
 	ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
-	//ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
+	ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
 
 	//if (ok_ls && (w_ls.a.imag()<0.0)) {
 	if (ok_ls && (w_ls.a.real()>0.0)){
@@ -344,6 +345,7 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	else {
 		wxLogMessage(_T("ls-gs: local search checks failed"));
 	}
+	
 
 	// try gs if ls failed
 
@@ -580,12 +582,21 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 									   const stab::t_WPRetraceMode& retrace_mode, 
 									   t_Direction direction){
 
+	// TODO: tmp way to write dels
+	mf::t_ProfScales prof_scales = _rFldMF.calc_bl_thick_scales(start_xyz);
+
+	std::ofstream ofstr("Dels_fixed_val.dat");
+
+	ofstr << prof_scales.d1;
+
+	ofstr.close();
+
 	loc_solver.setContext(start_xyz);
 	gs_solver.setContext(start_xyz);
 
 	init_wave.set_scales(loc_solver.get_stab_scales());
 
-	t_WCharsLocDim wchars_dim_cnd = init_wave.make_dim();
+	const t_WCharsLocDim wchars_dim_cnd = init_wave.make_dim();
 
 	 double time_direction;
 	 t_RecArray* pLine;
@@ -633,7 +644,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 			 // TODO: cur_xyz instead of nxt_xyz ?
 			 //w_intpol = _interpolate_next_wchars(*pLine, nxt_xyz, loc_solver.get_stab_scales());
 
-			 //wxLogMessage(_T("Interpolation of wave chars disabled, check t_WavePackLine::_retrace_dir_cond"));
+			 wxLogMessage(_T("Interpolation of wave chars disabled, check t_WavePackLine::_retrace_dir_cond"));
 
 			 w_intpol = pLine->back().wchars_loc;
 
@@ -710,9 +721,9 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 				 t_CompVal da = 0.0;
 				 // extrapolate via phase speed
 				 {
-					//wxLogMessage(_T("WPTrack: doing pseudo extrapolation w/a=const, dw=%lf"), smat::norm(dw_ps));
-					//da = a_old*dw_ps / w_old;
-					 //cur_wave.a = a_old + da;
+					wxLogMessage(_T("WPTrack: doing pseudo extrapolation w/a=const, dw=%lf"), smat::norm(dw_ps));
+					da = a_old*dw_ps / w_old;
+					cur_wave.a = a_old + da;
 					//wxLogMessage(_T("WPTrack: pseudo extrapolation da=(%lf, %lf)"), da.real(), da.imag()); 
 				 }
 				 // extrapolate via group velo 
@@ -724,8 +735,13 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 				 }
 
 				 {
-					 wxLogMessage(_T("WPTrack: using last dimensional a as init for current point, dw=%lf"), smat::norm(dw_ps));
-					 cur_wave.a = a_old*stab_scales.Dels / last_wave.scales().Dels;
+					// wxLogMessage(_T("WPTrack: using last dimensional a as init for current point, dw=%lf"), smat::norm(dw_ps));
+					// cur_wave.a = a_old*stab_scales.Dels / last_wave.scales().Dels;
+				 }
+				 {
+					 // no change in a
+					 wxLogMessage(_T("WPTrack: no extrapolation for a"));
+					 cur_wave.a = a_old;
 				 }
 				 // debug
 				 wxLogMessage(_T("compare prev & curre nt wchars loc:"));
@@ -748,7 +764,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 				 wxLogMessage(_T("WPLine: failed to find wchars, proceeding in test mode"));
 				 // TEST: try to pass through problematic zone
-				 //cur_wave = w_init;
+				 //cur_wave = pLine->back().wchars_loc;
 				 //continue;
 				 break;
 			 }
@@ -800,11 +816,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 cur_wave.set_scales(loc_solver.get_stab_scales());
 
 		 // TODO: avoid group velo calcs if not needed ?
-		 if (srch_cnd_ok) {
-
-			 loc_solver.calcGroupVelocity(cur_wave);
-
-		 }
+		 loc_solver.calcGroupVelocity(cur_wave);
 
 		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
 			 loc_solver.get_stab_scales());
@@ -1025,9 +1037,19 @@ void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
 	int dt_sign[2] = { 1.0, -1.0 };
 
 	t_Vec3Dbl dr_dir, dr;
-	mf::t_Rec out_rec;
-	_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
-	t_GeomPoint cur_xyz = out_rec.get_xyz();
+
+	// starting point on bl edge
+	//mf::t_Rec out_rec;
+	//_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
+	//t_GeomPoint cur_xyz = out_rec.get_xyz();
+
+	// starting point on surface
+	//mf::t_Rec surf_rec;
+	//_rFldMF.calc_nearest_surf_rec(a_xyz, surf_rec);
+	//t_GeomPoint cur_xyz = surf_rec.get_xyz();
+
+	// starting point as is
+	t_GeomPoint cur_xyz;
 
 	// dummy wchars
 	t_WCharsGlob wchars_glob;
@@ -1036,6 +1058,8 @@ void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
 
 	// retrace downstream & upstream
 	for (int i = 0; i < 2; i++) {
+
+		cur_xyz = a_xyz;
 
 		t_RecArray* pLine = pLines[i];
 
