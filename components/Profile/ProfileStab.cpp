@@ -85,9 +85,8 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 
 	mf::t_ProfScales bl_thick_scales = a_rProfNS.get_bl_thick_scales();
 
-	wxLogMessage(_T("Warning:testing new d1 nondim type, using dels=2.5*d1, remove when hexa calcs finished"));
-	// coef 2.5 just to keep to previously calcled vals via old Dels for hexafly cases
-	double bl_thick_scale = 2.5*bl_thick_scales.d1;
+	// particular thick scale that will be used to nondim everything
+	double bl_thick_scale;
 
 	// old selfsim scale, TODO: keep as option to nondim ?
 	double x_scale = a_rProfNS.get_x_scale();
@@ -98,9 +97,16 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 
 	switch (cfg.NondimScaleType)
 	{
-	case t_ProfStabCfg::NONDIM_BY_CFD_SCALE:
-		y_scale = y_scale_bl;
+	case t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE:
+		bl_thick_scale = bl_thick_scales.thick_scale;
+		y_scale = bl_thick_scale*sqrt(Params.Re);
 		_scales.ReStab = rho_e*u_e*bl_thick_scale/mu_e*Params.Re;
+		_scales.Dels = Params.L_ref*bl_thick_scale;
+		break;
+	case t_ProfStabCfg::NONDIM_BY_DISP_THICK:
+		bl_thick_scale = bl_thick_scales.d1;
+		y_scale = bl_thick_scale*sqrt(Params.Re);
+		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_X_SELFSIM:
@@ -109,8 +115,7 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 		_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
 		break;
 	case t_ProfStabCfg::NONDIM_BY_FIXED_VAL:
-		// coef 2.5 just to keep to previously calcled vals via old Dels for hexafly cases
-		bl_thick_scale = 2.5*read_fixed_scale_from_file();
+		bl_thick_scale = read_fixed_scale_from_file();
 		y_scale = bl_thick_scale*sqrt(Params.Re);
 		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
@@ -156,6 +161,8 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 		// _v is not used (assuming 0 in parallel flow assumption)
 		// rescale for verification purpose
 		_v[i] = _v[i]/u_e;
+
+		_r[i] = _r[i] / rho_e;
 
 		if (Params.ViscType==mf::t_ViscType::ViscPower){
 
@@ -239,6 +246,8 @@ void t_ProfileStab::initialize_dist_DNS(t_ProfileNS& a_rProfNS, t_ProfStabCfgDNS
 		_v[i] = _v[i]/u_e;
 
 		_p[i] = _p[i] / (rho_e*u_e*u_e);
+
+		_r[i] = _r[i] / rho_e;
 
 	}
 };

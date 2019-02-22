@@ -18,7 +18,7 @@ static const double SECOND_VISC_RATIO_DEFAULT = -2./3.;
 
 #define PROFNS_INIT_DEFAULT_STR _("EXTRACT")
 
-#define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_CFD_SCALE")
+#define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_BL_BOUND_SCALE")
 
 #define CURV_TERMS_FLAG_DEFAULT_STR _("NO")
 
@@ -29,7 +29,10 @@ void t_EigenGSParams::init_supported_options(){
 	PROFSTAB_NONDIM_TYPES_STR.clear();
 
 	PROFSTAB_NONDIM_TYPES_STR.insert(
-		std::make_pair(PROFSTAB_NDIM_TYPE_DEFAULT_STR, t_ProfStabCfg::NONDIM_BY_CFD_SCALE));
+		std::make_pair(PROFSTAB_NDIM_TYPE_DEFAULT_STR, t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE));
+
+	PROFSTAB_NONDIM_TYPES_STR.insert(
+		std::make_pair(_T("BY_DISP_THICK"), t_ProfStabCfg::NONDIM_BY_DISP_THICK));
 
 	PROFSTAB_NONDIM_TYPES_STR.insert(
 		std::make_pair(_T("BY_X_SELFSIM"), t_ProfStabCfg::NONDIM_BY_X_SELFSIM));
@@ -133,13 +136,16 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 
 	if (it==PROFSTAB_NONDIM_TYPES_STR.end()){
 
-		wxString msg(_T("PF.EigenGS: prof stab nondim type not supported, supported options BY_CFD_SCALE, BY_X_SELFSIM"));
+		wxString msg(_T("PF.EigenGS: prof stab nondim type not supported, supported options BY_BL_BOUND_SCALE, BY_DISP_THICK, BY_X_SELFSIM"));
 		wxLogError(msg); ssuGENTHROW(msg);
 
 	}
 
 	rmode = it->second;
 
+	NondimScaleType = static_cast<t_ProfStabCfg::t_Nondim>(rmode);
+
+	/*
 	switch (rmode)
 	{
 	case (t_ProfStabCfg::NONDIM_BY_CFD_SCALE):
@@ -154,7 +160,7 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 	default:
 		wxLogError(_("PF.EigenGS: failed to read prf stab nondim type"));
 
-	}
+	}*/
 
 	wxString curv_terms_flag_str = g.get_string_param("CurvTermsEnabled");
 

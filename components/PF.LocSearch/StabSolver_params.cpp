@@ -19,7 +19,7 @@ static const int ADJUST_MAX_ITER_DEFAULT= 50;
 
 #define PROFNS_INIT_DEFAULT_STR _("EXTRACT")
 
-#define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_CFD_SCALE")
+#define PROFSTAB_NDIM_TYPE_DEFAULT_STR _("BY_BL_BOUND_SCALE")
 
 #define CURV_TERMS_FLAG_DEFAULT_STR _("NO")
 
@@ -36,7 +36,10 @@ void t_StabSolverParams::init_supported_options(){
 	PROFSTAB_NONDIM_TYPES_STR.clear();
 
 	PROFSTAB_NONDIM_TYPES_STR.insert(
-		std::make_pair(PROFSTAB_NDIM_TYPE_DEFAULT_STR, t_ProfStabCfg::NONDIM_BY_CFD_SCALE));
+		std::make_pair(PROFSTAB_NDIM_TYPE_DEFAULT_STR, t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE));
+
+	PROFSTAB_NONDIM_TYPES_STR.insert(
+		std::make_pair(_T("BY_DISP_THICK"), t_ProfStabCfg::NONDIM_BY_DISP_THICK));
 
 	PROFSTAB_NONDIM_TYPES_STR.insert(
 		std::make_pair(_T("BY_X_SELFSIM"), t_ProfStabCfg::NONDIM_BY_X_SELFSIM));
@@ -135,17 +138,19 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 
 	if (it==PROFSTAB_NONDIM_TYPES_STR.end()){
 
-		wxString msg(_T("PF.LocSearch: ProfStab Nondim Type not supported, supported options BY_CFD_SCALE, BY_X_SELFSIM"));
+		wxString msg(_T("PF.LocSearch: ProfStab Nondim Type not supported, supported options BY_BL_BOUND_SCALE, BY_DISP_THICK ,BY_X_SELFSIM"));
 		wxLogError(msg); ssuGENTHROW(msg);
 
 	}
 
 	rmode = it->second;
 
-	switch (rmode)
+	NondimScaleType = static_cast<t_ProfStabCfg::t_Nondim>(rmode);
+
+	/*switch (rmode)
 	{
-	case (t_ProfStabCfg::NONDIM_BY_CFD_SCALE):
-		NondimScaleType = t_ProfStabCfg::NONDIM_BY_CFD_SCALE;
+	case (t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE):
+		NondimScaleType = t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE;
 		break;
 	case (t_ProfStabCfg::NONDIM_BY_X_SELFSIM):
 		NondimScaleType = t_ProfStabCfg::NONDIM_BY_X_SELFSIM;
@@ -155,7 +160,7 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 		break;
 	default:
 		wxLogError(_T("PF.LocSearch: failed to read prfstab nondim type"));
-	}
+	}*/
 
 	wxString curv_terms_flag_str = g.get_string_param("CurvTermsEnabled");
 
