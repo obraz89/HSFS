@@ -53,6 +53,18 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS,
 
 }
 
+double read_fixed_scale_from_file() {
+
+	std::ifstream ifstr("Dels_fixed_val.dat");
+
+	double val;
+
+	ifstr >> val;
+
+	return val;
+
+}
+
 /************************************************************************/
 void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, 
 			const std::vector<double>& a_y_distrib, t_ProfStabCfg cfg){
@@ -71,7 +83,10 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 
 	const t_FldParams& Params = rMF.get_mf_params();
 
-	double bl_thick_scale = a_rProfNS.get_bl_thick_scale();
+	mf::t_ProfScales bl_thick_scales = a_rProfNS.get_bl_thick_scales();
+
+	// particular thick scale that will be used to nondim everything
+	double bl_thick_scale;
 
 	// old selfsim scale, TODO: keep as option to nondim ?
 	double x_scale = a_rProfNS.get_x_scale();
@@ -82,15 +97,28 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 
 	switch (cfg.NondimScaleType)
 	{
-	case t_ProfStabCfg::NONDIM_BY_CFD_SCALE:
-		y_scale = y_scale_bl;
+	case t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE:
+		bl_thick_scale = bl_thick_scales.thick_scale;
+		y_scale = bl_thick_scale*sqrt(Params.Re);
 		_scales.ReStab = rho_e*u_e*bl_thick_scale/mu_e*Params.Re;
+		_scales.Dels = Params.L_ref*bl_thick_scale;
+		break;
+	case t_ProfStabCfg::NONDIM_BY_DISP_THICK:
+		bl_thick_scale = bl_thick_scales.d1;
+		y_scale = bl_thick_scale*sqrt(Params.Re);
+		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_X_SELFSIM:
 		y_scale = y_scale_selfsim;
 		_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x_scale/mu_e);
 		_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+		break;
+	case t_ProfStabCfg::NONDIM_BY_FIXED_VAL:
+		bl_thick_scale = read_fixed_scale_from_file();
+		y_scale = bl_thick_scale*sqrt(Params.Re);
+		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
+		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	default:
 		wxLogError(_T("Unsupported option for profile stab non dim!"));
@@ -133,6 +161,8 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 		// _v is not used (assuming 0 in parallel flow assumption)
 		// rescale for verification purpose
 		_v[i] = _v[i]/u_e;
+
+		_r[i] = _r[i] / rho_e;
 
 		if (Params.ViscType==mf::t_ViscType::ViscPower){
 
@@ -216,6 +246,8 @@ void t_ProfileStab::initialize_dist_DNS(t_ProfileNS& a_rProfNS, t_ProfStabCfgDNS
 		_v[i] = _v[i]/u_e;
 
 		_p[i] = _p[i] / (rho_e*u_e*u_e);
+
+		_r[i] = _r[i] / rho_e;
 
 	}
 };

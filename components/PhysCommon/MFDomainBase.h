@@ -50,6 +50,19 @@ namespace mf{
 
 	};
 
+// scales of extracted bl profile
+
+	struct IMPEXP_PHYSCOMMON t_ProfScales {
+
+		// thikness scale, total extracted thickness is ThickCoef*thick_scale
+		double thick_scale;
+
+		// smooth displacement thickness scale
+		// better than thick_scale in stability nondim
+		double d1;
+
+	};
+
 
 /************************************************************************/
 //
@@ -125,7 +138,7 @@ namespace mf{
 			virtual double calc_mach(const t_Rec& rec) const;
 			virtual double calc_mach(const t_GeomPoint& xyz) const;
 
-			virtual double calc_bl_thick(const t_GeomPoint& xyz) const=0;
+			virtual t_ProfScales calc_bl_thick_scales(const t_GeomPoint& xyz) const=0;
 
 			virtual bool is_point_inside(const t_GeomPoint& xyz) const=0;
 

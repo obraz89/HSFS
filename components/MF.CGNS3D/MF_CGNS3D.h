@@ -30,6 +30,8 @@ namespace mf{
 
 		void init(const hsstab::TPlugin& g_plug);
 
+		const cg::t_VDParams& get_vd_params() const;
+
 		const mf::t_FldParams& get_mf_params() const;
 
 		const mf::t_CGNS3DParams& get_params() const;
@@ -41,6 +43,8 @@ namespace mf{
 		void get_rec(const mf::cg::TZone& blk, int i, int j, int k, mf::t_Rec& rec) const;
 
 		t_Rec get_rec(const t_GeomPoint& xyz) const;
+
+		const mf::cg::TcgnsZone::TFacePatch& get_face_patch(const mf::cg::t_ZoneNode& a_znode) const;
 
 		mf::cg::t_ZoneNode get_abutted_znode(
 			const mf::cg::t_ZoneNode& a_znode, const int di, const int dj, const int dk) const;

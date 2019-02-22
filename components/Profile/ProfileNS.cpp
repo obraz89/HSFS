@@ -347,11 +347,11 @@ void t_ProfileNS::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_Pr
 	_rDomain.calc_surf_point(xyz, r_xyz_base, surf_norm);
 
 	_xyz = r_xyz_base;
-	double bl_thick = _rDomain.calc_bl_thick(_xyz);
+	mf::t_ProfScales bl_thick_scales = _rDomain.calc_bl_thick_scales(_xyz);
 
-	double cur_eta = bl_thick;
+	double cur_eta = bl_thick_scales.thick_scale;
 
-	double prof_thick = a_thick_coef*bl_thick;
+	double prof_thick = a_thick_coef*bl_thick_scales.thick_scale;
 
 	// transform vector fields and coordinates
 	// to a new reference frame
@@ -426,11 +426,11 @@ void t_ProfMFGlob::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_P
 	_rDomain.calc_surf_point(xyz, r_xyz_base, surf_norm);
 
 	_xyz = r_xyz_base;
-	double bl_thick = _rDomain.calc_bl_thick(_xyz);
+	mf::t_ProfScales bl_thick_scales = _rDomain.calc_bl_thick_scales(_xyz);
 
-	double cur_eta = bl_thick;
+	double cur_eta = bl_thick_scales.thick_scale;
 
-	double prof_thick = a_thick_coef*bl_thick;
+	double prof_thick = a_thick_coef*bl_thick_scales.thick_scale;
 
 	t_Vec3Dbl u_xyz, dr_xyz;
 	t_GeomPoint r_xyz;
@@ -540,11 +540,11 @@ void t_ProfMFLoc::_initialize_interpolate(const t_GeomPoint& xyz, const mf::t_Pr
 	_rDomain.calc_surf_point(xyz, r_xyz_base, surf_norm);
 
 	_xyz = r_xyz_base;
-	double bl_thick = _rDomain.calc_bl_thick(_xyz);
+	mf::t_ProfScales bl_thick_scales = _rDomain.calc_bl_thick_scales(_xyz);
 
-	double cur_eta = bl_thick;
+	double cur_eta = bl_thick_scales.thick_scale;
 
-	double prof_thick = a_thick_coef*bl_thick;
+	double prof_thick = a_thick_coef*bl_thick_scales.thick_scale;
 
 	t_Vec3Dbl u_xyz, dr_xyz, u_ked;
 	t_GeomPoint r_xyz;

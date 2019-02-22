@@ -13,6 +13,8 @@
 #define __CGNS_STRUCTS
 
 #include "MFDomainBase.h"
+#include <vector>
+#include <algorithm>  // for std::lower_bound() - binary find
 
 typedef void TfuncPhys;
 
@@ -144,26 +146,38 @@ namespace mf{
 		};
 		//-----------------------------------------------------------------------------
 
+		// Zone face position in curvilinear coords
+		enum TZoneFacePos { faceNone = -1, faceXmin = 0, faceXmax, faceYmin, faceYmax, faceZmin, faceZmax };
+
+		// Zone boundary condition type
+		enum TBlockBCType { bcAbutted = -1, bcTypeH = 0, bcTypeO, bcTypeC };
+
 		struct TcgnsZone
 		{
-			// Data of the abutted faces
-			struct TFace
+			int is1, ie1, js1, je1, ks1, ke1;  // real nodes indices range when ghosts were added, but no faces were skipped
+
+			// Abutted faces data. The face consists of one or many patches
+			struct TFacePatch
 			{
-				int nDnrZne;  // 0-based number of abutted donor zone
+				int is0, ie0, js0, je0, ks0, ke0;  // patch indices in original numbering (no ghosts, no skipped faces)
+				TZoneFacePos posFace;           // face the patch belongs to
 
-				// Starting index of the abutted donor face
-				// Ghost nodes are not taken into account (i.e. without ghosts) !!!
-				int dnr_is0, dnr_js0, dnr_ks0;
+				int nDnrZne;                    // 0-based number of donor zone
+				TZoneFacePos dnrPosFace;        // donor face we abutting to
+				int dnr_is0, dnr_js0, dnr_ks0;  // donor patch starting indices in original numbering (no ghosts, no skipped faces)
 
-				// Transform matrix between node indices of the current and donor blocks
+												// Transform matrix between node indices of the current and donor zones
 				int matTrans[9];
 
 				// Ctor
-				TFace() : nDnrZne(-1) { ; }
+				TFacePatch() : nDnrZne(-1), posFace(faceNone), dnrPosFace(faceNone) { ; }
 			};
+			// Zone connectivity info
+			int nPatches;
+			TFacePatch* Patches;
 
-			// Zone faces connectivity info
-			TFace Faces[6];
+			TcgnsZone() : nPatches(0), Patches(NULL) { ; }
+			~TcgnsZone() { delete[] Patches; }
 		};
 		//-----------------------------------------------------------------------------
 
@@ -184,15 +198,10 @@ namespace mf{
 		// 
 		struct TZone;
 
-		// Zone face position in curvilinear coords
-		enum TZoneFacePos { faceNone=-1, faceXmin=0,faceXmax, faceYmin,faceYmax, faceZmin,faceZmax };
-
-		// Zone boundary condition type
-		enum TBlockBCType { bcAbutted = -1, bcTypeH = 0, bcTypeO, bcTypeC };
-
 		struct TZoneFace
 		{
 			char szBCFamName[33];	// BC family name the face belongs to
+			bool isSkipped;  // face's grid layer skipped for processing by abutted zone
 
 			TBlockBCType bcType;
 
@@ -202,6 +211,7 @@ namespace mf{
 			// Constructor
 			TZoneFace()
 			{
+				isSkipped = false;
 				bcType = bcTypeH;
 				funBC = NULL;
 			}
@@ -224,109 +234,113 @@ namespace mf{
 
 		struct TZone
 		{
-			char szName[33];  // name of the zone
+			char szName[40];  // name of the zone
+			bool isFrozen;    // don't compute anything in this zone, keep field fixed
 
 			int nx, ny, nz;  // grid dimensions, including ghost nodes
-			int is,ie,  js,je,  ks,ke;  // start & end 1-based indices of real nodes
+			int is, ie, js, je, ks, ke;  // start & end 1-based indices of real nodes
 
-			// Inter-zone indices set
-			int nGlobStart;   // starting global 0-based index of the real nodes
-			int* globIndices; // 0-based indices of all nodes (real & ghosts)
-			// in the order of continuous numbering
+										 //
+										 // Primitive field variables values in all nodes of the zone
+										 // 
+			double* __restrict U;     // current (n+1) time layer
+			double* __restrict Un;    // previous (n) time layer
+			double* __restrict Unm1;  // pre-previous (n-1) time layer
 
-			// Grid coords data
+									  // Grid coords data
 			struct {
 				TgridCell2D* c2d;
 				TgridCell3D* c3d;
 
 				// grid steps in computational space
 				double dx, dy, dz;
-
-				// min&max determinant of coords transformation Jacobian
-				double minJac, maxJac;
 			} grd;
 
+			// Zone faces info
+			TZoneFace Faces[6];
 
-			// Curvilinear computational coordinates for (i,j,k)-node
-			double getKsi(int i, int j, int k=0) const {  return 0.0 + (i-1)*grd.dx;  }
-			double getEta(int i, int j, int k=0) const {  return 0.0 + (j-1)*grd.dy;  }
-			double getDzeta(int i, int j, int k) const {  return 0.0 + (k-1)*grd.dz;  }
+			// Inter-zone connectivity data
+			int nGlobStart;   // starting global 0-based index of the real nodes
+			int* globIndices; // global 0-based indices of each zone's node (real & ghost)
+							  // NB: maximum grid nodes count is 2'147 mln !!!
 
+							  //---
 
-			// "Absolute" 1-based index of the (i,j,k)-node in continuous numbering local to the zone
-			int absIdx(int i, int j) const        {  return i + (j-1)*nx;  }
-			int absIdx(int i, int j, int k) const {  return i + (j-1)*nx + (k-1)*nx*ny;  }
+							  // Local to the zone 1-based packed 1D index of the (i,j,k)-node
+							  // ("absolute index")
+			int absIdx(int i, int j) const
+			{
+				assert(nz <= 1);
+				//assert( i>=1 && i<=nx && j>=1 && j<=ny );
+				return i + (j - 1)*nx;
+			}
+			int absIdx(int i, int j, int k) const
+			{
+				assert(nz > 1 || k == 1);
+				//assert( i>=1 && i<=nx && j>=1 && j<=ny && k>=1 && k<=nz );
+				return i + (j - 1)*nx + (k - 1)*nx*ny;
+			}
 
-			// Grid cell data
-			TgridCell2D& cell(int i, int j)       {  return grd.c2d[absIdx(i,j)  -1];  }
-			const TgridCell2D& cell(int i, int j) const{  return grd.c2d[absIdx(i,j)  -1];  }
-
-			TgridCell3D& cell(int i, int j, int k)      {  return grd.c3d[absIdx(i,j,k)-1];  }
-			const TgridCell3D& cell(int i, int j, int k) const{  return grd.c3d[absIdx(i,j,k)-1];  }
-
-
-
-			// Global (inter-zones) 0-based index
-			// of the *real* (i,j,k)-node
+			// Global (inter-zones) 0-based index of the *real* (i,j,k)-node
 			int globRealInd(int i, int j) const
 			{
-				assert( i>=is && i<=ie && j>=js && j<=je );
+				assert(nz <= 1 && i >= is && i <= ie && j >= js && j <= je);
 				// size excluding ghosts
 				int nx0 = ie - is + 1;
-				return nGlobStart + (i-is) + (j-js)*nx0;
+				return  nGlobStart + (i - is) + (j - js)*nx0;
 			}
 			int globRealInd(int i, int j, int k) const
 			{
-				assert( i>=is && i<=ie && j>=js && j<=je && k>=ks && k<=ke );
+				assert(i >= is && i <= ie && j >= js && j <= je && k >= ks && k <= ke);
 				// size excluding ghosts
-				int nx0 = ie - is + 1,  ny0 = je - js + 1;
-				return nGlobStart + (i-is) + (j-js)*nx0 + (k-ks)*nx0*ny0;
+				int nx0 = ie - is + 1, ny0 = je - js + 1;
+				return  nGlobStart + (i - is) + (j - js)*nx0 + (k - ks)*nx0*ny0;
 			}
 
-			int absIdxFromGlobInd( int aGlobInd ) const
+			// Global (inter-zones) 0-based index
+			// of the *any* (real or ghost) (i,j,k)-node
+			int& globInd(int aIdx)
 			{
-				int n0 = aGlobInd - nGlobStart;
-				assert( n0 >= 0 );
+				assert(globIndices && aIdx >= 1);
+				return globIndices[aIdx - 1];
+			}
+			int& globInd(int i, int j) { return globInd(absIdx(i, j)); }
+			int& globInd(int i, int j, int k) { return globInd(absIdx(i, j, k)); }
 
-				int nx0 = ie - is + 1,  ny0 = je - js + 1;
+			int absIdxFromGlobInd(int aGlobInd) const
+			{
+				int n0 = int(aGlobInd - nGlobStart);
+				assert(n0 >= 0);
+
+				int nx0 = ie - is + 1, ny0 = je - js + 1;
 
 				int k0 = n0 / (nx0*ny0);
 				int t = n0 - k0* nx0*ny0;
 				int j0 = t / nx0;
 				int i0 = t - j0* nx0;
 
-				return absIdx(i0+is, j0+js, k0+ks);
+				return absIdx(i0 + is, j0 + js, k0 + ks);
 			}
 
-			// Global (inter-zones) 0-based index
-			// of the *any* (real or ghost) (i,j,k)-node
-			int globInd(int i, int j)
-			{
-				return globIndices[ absIdx(i,j) - 1 ];
-			}
-			int globInd(int i, int j, int k)
-			{
-				return globIndices[ absIdx(i,j,k) - 1 ];
-			}
+			//---
 
+			// Curvilinear computational coordinates for (i,j,k)-node
+			double getKsi(int i, int j, int k = 0) const { return 0.0 + (i - 1)*grd.dx; }
+			double getEta(int i, int j, int k = 0) const { return 0.0 + (j - 1)*grd.dy; }
+			double getDzeta(int i, int j, int k) const { return 0.0 + (k - 1)*grd.dz; }
 
-			//
-			// Zone faces data, including connectivity info
-			// 
-			TZoneFace Faces[6];
+			// Grid cell data
+			TgridCell2D& cell(int i, int j) { return grd.c2d[absIdx(i, j) - 1]; }
+			const TgridCell2D& cell(int i, int j) const{ return grd.c2d[absIdx(i, j) - 1]; }
 
-
-			//
-			// Fields
-			// 
-			double* __restrict U;     // current (n+1) time layer
-			double* __restrict Un;    // previous (n) time layer
-			double* __restrict Unm1;  // pre-previous (n-1) time layer
-
+			TgridCell3D& cell(int i, int j, int k) { return grd.c3d[absIdx(i, j, k) - 1]; }
+			const TgridCell3D& cell(int i, int j, int k) const{ return grd.c3d[absIdx(i, j, k) - 1]; }
 
 			TZone()
 			{
-				szName[0] = NULL;
+				szName[0] = '\0';
+				isFrozen = false;
+
 				nx = 0;  ny = 0;  nz = 1;
 
 				nGlobStart = 0;
@@ -340,10 +354,81 @@ namespace mf{
 			{
 				delete[] globIndices;
 
-				delete[] U, Un, Unm1;
-				delete[] grd.c2d, grd.c3d;
+				delete[] U;
+				delete[] Un;
+				delete[] Unm1;
+				delete[] grd.c2d;
+				delete[] grd.c3d;
+			}
+
+		private:
+			// Disallow copying
+			TZone(const TZone&);
+			TZone& operator=(const TZone&);
+		};
+
+		/**
+		*  Compact storage of global indices of all nodes in a zone:
+		*     Indices of ghost nodes are stored,
+		*     indices of real nodes are computed
+		*/
+		class TZoneGlobIndices
+		{
+			TZone& zne;  // owner zone
+
+			struct Tidx {
+				int loc;  int64_t glob;
+				bool operator<(const Tidx& that) const { return loc < that.loc; }
+			};
+			std::vector<Tidx> vec;   // NB: not using std::map to save memory
+
+			TZoneGlobIndices();  // disable default ctor
+
+		public:
+			TZoneGlobIndices(TZone& aZone) : zne(aZone)
+			{
+				// Fill-in by ghost node indices
+				const int nx0 = (zne.ie - zne.is + 1),
+					ny0 = (zne.je - zne.js + 1),
+					nz0 = (zne.ke - zne.ks + 1);
+				vec.reserve(zne.nx*zne.ny*zne.nz - nx0*ny0*nz0);
+
+				for (int k = 1; k <= zne.nz; ++k) {
+					for (int j = 1; j <= zne.ny; ++j) {
+						for (int i = 1; i <= zne.nx; ++i)
+						{
+							if (zne.is <= i && i <= zne.ie &&
+								zne.js <= j && j <= zne.je &&
+								zne.ks <= k && k <= zne.ke)
+								continue;
+
+							Tidx idx = { zne.absIdx(i,j,k), -1 };
+							vec.push_back(idx);
+						}
+					}
+				}
+			}
+
+			int64_t& operator()(int i, int j, int k = 1)
+			{
+				// Real node: compute global index
+				if (zne.is <= i && i <= zne.ie &&
+					zne.js <= j && j <= zne.je &&
+					zne.ks <= k && k <= zne.ke
+					)
+				{
+					static int64_t ind;
+					ind = zne.globRealInd(i, j, k);
+					return ind;
+				}
+
+				const Tidx locIdx = { zne.absIdx(i,j,k), -2 };
+				std::vector<Tidx>::iterator it = std::lower_bound(vec.begin(), vec.end(), locIdx);
+				assert(it != vec.end() && !(locIdx < *it));
+				return it->glob;
 			}
 		};
+		//-----------------------------------------------------------------------------
 
 		// This is from fieldIO_procs.h, maybe get full src later
 
@@ -410,9 +495,24 @@ namespace mf{
 			}
 		};
 
+		// params of reference velocity derivative to be used in bl thick calculations
+
+		struct t_VDParams {
+
+			// TODO: make options from robust methods
+			enum t_VeloDerivType { VD_ABS = 0, VD_VEC_ABS, VD_X_ABS, VD_TAU_VEC_ABS };
+
+			t_VeloDerivType vd_calc_type;
+
+			enum t_VeloDerivPlace { VD_WALL, VD_MAX };
+
+			t_VeloDerivPlace vd_place;
+
+		};
+
 		//
 		// The whole computational domain
-		// 
+		//
 
 		class TDomain : public mf::t_DomainBase
 		{
@@ -448,8 +548,8 @@ namespace mf{
 			// this funcs can be shared by 2D and 3D domains
 			bool initField(const wxString& fldFName);
 			bool loadField(const wxString& fileName, bool bIsPrev);
-			bool readBlockFromCGNS(
-				int fileID, int iZone,
+			bool readCGNSZone(
+				const int fileID, const int iBase, const int iZone,
 				TDims& dims, double** grid, double** field);
 
 			// common params readers
@@ -482,16 +582,19 @@ namespace mf{
 			void _extract_profile_data_grdline(const t_GeomPoint& xyz, 
 				std::vector<t_ZoneNode>& data) const;
 
-			void _calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+			void _calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_scales, 
 				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+			double _calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
+				int ind, const t_VDParams& vd_params) const;
+
+			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
+				std::vector<t_ZoneNode>& raw_profile, const t_VDParams& vd_params) const;
+
+			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, double& bl_thick, 
-				std::vector<t_ZoneNode>& raw_profile) const;
-
-			void _calc_bl_thick_full_gridline(const std::vector<t_ZoneNode>& data, double& bl_thick, 
+			void _calc_bl_thick_full_gridline(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales, 
 				std::vector<t_ZoneNode>& raw_profile) const;
 
 			// TDomainBase interface realization
@@ -501,6 +604,8 @@ namespace mf{
 		public:
 
 			const TcgnsContext& get_cg_ctx() const{return cgCtx;};
+
+			virtual const t_VDParams& get_vd_params() const = 0;
 
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block
@@ -529,10 +634,16 @@ namespace mf{
 			virtual t_ZoneNode get_abutted_znode(const t_ZoneNode& a_znode, 
 				const int di, const int dj, const int dk) const = 0;
 
+			// search a face patch the znode belongs to
+
+			virtual const TcgnsZone::TFacePatch& get_face_patch(const t_ZoneNode& a_znode) const = 0;
+
 			// zIdx is 1-based index
 			TZone& getZone(const int zIdx){return Zones[zIdx-1];}
 
 			const TZone& getZone(const int zIdx) const{return Zones[zIdx-1];}
+
+			const TcgnsZone& getCgZone(const int zIdx) const { return cgCtx.cgZones[zIdx - 1]; }
 
 			virtual void get_k_range(int iZone, int& ks, int& ke) const=0;
 
@@ -549,7 +660,7 @@ namespace mf{
 			// calc character length scale
 			virtual double calc_x_scale(const t_GeomPoint& xyz) const;
 
-			virtual double calc_bl_thick(const t_GeomPoint& xyz) const;
+			virtual mf::t_ProfScales calc_bl_thick_scales(const t_GeomPoint& xyz) const;
 
 			void calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) const;
 
@@ -608,6 +719,8 @@ namespace mf{
 			void init(const t_ZoneNode& face_znode);
 
 			void _add(const t_ZoneGrdLine& grd_line);
+
+			void dump(std::string fname) const;
 
 		};
 

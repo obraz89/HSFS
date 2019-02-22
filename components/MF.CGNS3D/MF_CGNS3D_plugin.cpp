@@ -20,7 +20,7 @@ void TPluginCGNS3D::default_settings(){
 
 	TPluginParamsGroup g;
 
-	mf::cg::hsf3d::_plug_default_settings(g);
+	mf::t_CGNS3DParams::plug_default_settings(g);
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 

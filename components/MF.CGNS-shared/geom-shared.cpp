@@ -44,7 +44,9 @@ void TDomain::set_face_iters(int iZone, int iFace, int& is, int& ie,
 	
 };
 
-
+// TODO: this works when every edge belongs to only one boundary face
+// counter example: cube with adjacent faces of "wall1" and "wall2" conditions
+// in this case "normal" is undefined etc, a lot of problems...
 t_ZoneNode TDomain::_get_nrst_node_surf(const t_GeomPoint& point) const{
 
 	t_Rec cur_rec;
@@ -388,138 +390,314 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	return get_mf_params().L_ref;
 };
 
-// TODO: works only for grids nearly orthogonal to viscous wall 
-// input: data_grdline - for now just an extracted domain gridline
-// output: bl_thick & raw_profile (truncated data_grdline)
-void TDomain::_calc_bl_thick_vderiv(
-		const std::vector<t_ZoneNode>& data_grdline, double& bl_thick, 
-		std::vector<t_ZoneNode>& out_raw_profile) const{
+// calculate derivative of velocity vs y like:
+// U={u,v,w}
+// d|U|/dy
+// |dU/dy|
+// du/dy
+// etc
+double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline, 
+	int ind, const t_VDParams& vd_params) const{
 
-	t_ZoneNode surf_znode, outer_znode;
+	const t_VDParams::t_VeloDerivType& vd_type = vd_params.vd_calc_type;
 
-	surf_znode = _get_nrst_node_surf(data_grdline[0]);
+	int is = 0;
+	int ie = data_grdline.size() - 2;
 
-	// if du_dy increases search max
-	// use du_dy wall otherwise
-//	double du_dy_max = 0.0;
-//	double du_dy;
+	if (ind<is || ind>ie) {
 
-	// try to use deriv without vn
-	double dutau_dy_max = 0.0;
-	double dutau_dy;
+		wxLogMessage(_T("Error: _calc_specifid_velo_deriv: index is out of range: i=%d"), ind);
+
+		return -1.0;
+
+	}
 
 	mf::t_Rec cur_rec, nxt_rec;
 	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
 	t_Vec3Dbl cur_uvw, nxt_uvw, du;
 
-	t_Vec3Dbl surf_norm;
+	get_rec(data_grdline[ind], cur_rec);
+
+	cur_xyz.set(cur_rec);
+
+	cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
+
+	double cur_uvw_abs = cur_uvw.norm();
+
+	get_rec(data_grdline[ind + 1], nxt_rec);
+
+	nxt_xyz.set(nxt_rec);
+
+	nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+
+	double nxt_uvw_abs = nxt_uvw.norm();
+
+	matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+	matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
+
+	double dd = dr.norm();
+
+	if (vd_type == t_VDParams::VD_ABS) return abs(cur_uvw_abs - nxt_uvw_abs)/dd;
+
+	if (vd_type == t_VDParams::VD_VEC_ABS) return du.norm()/dd;
+
+	if (vd_type == t_VDParams::VD_X_ABS) return abs(du[0]) / dd;
+
+	if (vd_type == t_VDParams::VD_TAU_VEC_ABS){
+
+		t_ZoneNode surf_znode = _get_nrst_node_surf(data_grdline[0]);
+
+		t_Vec3Dbl surf_norm;
+		calc_surf_norm(surf_znode, surf_norm);
+
+		double un_cur = vector::dot(cur_uvw, surf_norm);
+		double ut_cur = sqrt(cur_uvw_abs*cur_uvw_abs - un_cur*un_cur);
+
+		double un_nxt = vector::dot(nxt_uvw, surf_norm);
+		double ut_nxt = sqrt(nxt_uvw_abs*nxt_uvw_abs - un_nxt*un_nxt);
+
+		return abs((ut_nxt - ut_cur) / dr.norm());
+
+
+	}
+
+	wxLogMessage(_T("Error: velo deriv type not implemented, check TDomain::_calc_specifid_velo_deriv_abs"));
+
+	return -1.0;
+
+	
+}
+
+// TODO: works only for grids nearly orthogonal to viscous wall 
+// input: data_grdline - for now just an extracted domain gridline
+// output: bl_thick & raw_profile (truncated data_grdline)
+void TDomain::_calc_bl_thick_vderiv(
+		const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
+		std::vector<t_ZoneNode>& out_raw_profile, const t_VDParams& vd_params) const{
+
+	t_ZoneNode surf_znode, outer_znode;
+
+	surf_znode = _get_nrst_node_surf(data_grdline[0]);
+
+	t_GeomPoint wall_xyz, cur_xyz;
+
+	t_Vec3Dbl surf_norm, dr;
 	calc_surf_norm(surf_znode, surf_norm);
 
 	wxLogMessage(_T("norm:%s"), surf_norm.to_wxstr());
 
-	double uabs_cur, uabs_nxt;
-	double ut_cur, ut_nxt;
-	double un_cur, un_nxt;
-
 	// wall rec is used to calculate bl_thick
-	get_rec(surf_znode, cur_rec);
-	wall_xyz.set(cur_rec);
+	mf::t_Rec wall_rec, cur_rec;
+	get_rec(surf_znode, wall_rec);
+	wall_xyz.set(wall_rec);
 
 	wxLogMessage(_T("surf node xyz:%s"), wall_xyz.to_wxstr());
 
-	// first find max deriv
-	// then find reference point where dudy = eps*dudy_max : y = dd
-	// then find outer record y_out = thick_coef*dd
-	bool searching_max = true;
-	bool searching_ref = true;
+	double du_dy = 0.0;
+	double du_dy_max = 0.0;
+	double du_dy_base = 0.0;
 
 	double y_ref;
 
 	t_ZoneNode ref_znode;
 
-	for (int m=0; m<data_grdline.size()-2; m++) 
+	int ind_bound = -1;
+
+	// first find base reference deriv
+	// then find reference point where dudy = eps*dudy_base : y = dd
+	// then check that derivative is small inside dd and thick_coef*dd
+	// then find outer record y_out = thick_coef*dd
+
+	// new method: then calculate displacement thickness
+	// integral((1-U/Ue)dy)=D1
+	// multiply D1 by empirics constant to obtain new Dels: Dels1 = C*D1
+	// (to pertain Thick coef as with old Dels)
+	// this Dels should vary much more smooth along x...
+
+	// step1 - find du_dy_base
+
+	// this value is used to calculate max velo deriv: first N_BL_MAX_DERIV_POINTS are used
+	// IMPORTANT TODO: all points should be below shock!
+	const int N_BL_MAX_DERIV_POINTS = 50;
+
+	// index of point at which max deriv is reached
+	int j_max_deriv = 0;
+
+	for (int m = 0; m < data_grdline.size() - 1; m++)
 	{
 
-		get_rec(data_grdline[m], cur_rec);
-
-		cur_xyz.set(cur_rec);
-
-		cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
-
-		get_rec(data_grdline[m+1], nxt_rec);
-
-		nxt_xyz.set(nxt_rec);
-
-		nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
-
-		matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);	
-		matrix::base::minus<double, double>(nxt_uvw, cur_uvw, du);
-
-		//du_dy = abs(du.norm()/dr.norm());
-
-		uabs_cur = cur_uvw.norm();
-		un_cur = vector::dot(cur_uvw, surf_norm);
-		ut_cur = sqrt(uabs_cur*uabs_cur - un_cur*un_cur);
-
-		uabs_nxt = nxt_uvw.norm();
-		un_nxt = vector::dot(nxt_uvw, surf_norm);
-		ut_nxt = sqrt(uabs_nxt*uabs_nxt - un_nxt*un_nxt);
-
-		dutau_dy = abs((ut_nxt - ut_cur) / dr.norm());
+		du_dy = _calc_specific_velo_deriv_abs(data_grdline, m, vd_params);
 
 		//wxLogMessage(_T("du_dy=%lf; dutau_dy=%lf"), du_dy, dutau_dy);
 
-		if (searching_max){
+		if (vd_params.vd_place == t_VDParams::VD_WALL) {
 
-			if (dutau_dy<dutau_dy_max) searching_max = false;
+				if (m == 0) {
 
-			dutau_dy_max = dutau_dy;
+					// debug 
+					wxLogMessage(_T("_calc_bl_thick_vderiv:: wall deriv = %lf"), du_dy);
 
-			continue;
+					du_dy_base = du_dy;
 
-		}else{
-
-			double eps = _profile_cfg.DerivThreshold;
-
-			if (searching_ref){
-
-				if (dutau_dy<eps*dutau_dy_max){
-
-					ref_znode = data_grdline[m];
-					searching_ref = false;
-
-					matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-					y_ref = dr.norm();
-					bl_thick = y_ref;	
-
-					continue;
-				}
-				
-
-			}else{
-
-				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-				double cur_dd = dr.norm();
-
-				if (cur_dd>=_profile_cfg.ThickCoefDefault*y_ref){
-
-					outer_znode = data_grdline[m];
-
-					out_raw_profile.resize(m+1);
-
-					for (int p=0; p<m+1; p++) out_raw_profile[p] = data_grdline[p];
-
-					return;
+					break;
 
 				}
 
 			}
 
+		// find first max deriv value moving from the wall to outside
+		if (vd_params.vd_place == t_VDParams::VD_MAX) {
+
+			if (du_dy > du_dy_max) {
+
+				du_dy_max = du_dy;
+				j_max_deriv = m;
+
+			}
+
+			if (m >= N_BL_MAX_DERIV_POINTS) {
+
+				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv calculated using first %d points"), N_BL_MAX_DERIV_POINTS);
+				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv = %lf"), du_dy_max);
+
+				du_dy_base = du_dy_max;
+
+				break;
+			}
+
+		}
+	} 
+
+	// step 2 - find bl bound rec
+
+	int ind_ref;
+
+	// do not start from surface, start from j_max_deriv
+	// because for the flows where velocity deriv at the wall is small
+	// bl thickness will be zero if started from the wall 
+
+	for (int m = j_max_deriv; m < data_grdline.size() - 1; m++) {
+
+		du_dy = _calc_specific_velo_deriv_abs(data_grdline, m, vd_params);
+
+		double eps = _profile_cfg.DerivThreshold;
+
+		if (du_dy<eps*du_dy_base) {
+
+			get_rec(data_grdline[m], cur_rec);
+
+			cur_xyz.set(cur_rec);
+
+			matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+			y_ref = dr.norm();
+
+			// additional check required that from y_ref to 
+			// y_ref*ThickCoef the derivative is below tolerance
+
+			bool deriv_check = true;
+
+			for (int j = m; j < data_grdline.size() - 1; j++) {
+
+				get_rec(data_grdline[j], cur_rec);
+
+				cur_xyz.set(cur_rec);
+
+				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+				double cur_y = dr.norm();
+
+				// TODO: ThickCoef should be here
+				if (cur_y < _profile_cfg.ThickCoefDefault*y_ref) {
+
+					double du_dy_up = _calc_specific_velo_deriv_abs(data_grdline, j, vd_params);
+
+					if (du_dy_up > eps*du_dy_base) {
+						deriv_check = false;
+						break;
+					}
+
+				}
+				else { break; }
+
+			}
+
+			if (deriv_check) {
+				ind_ref = m;
+				bl_thick_scales.thick_scale = y_ref;
+				break;
+			}
+
 		}
 
-	};
+	}
+
+	// step 3 - calculate new Dels via displacement thickness
+	double D1 = 0.0;
+	{
+
+		get_rec(data_grdline[ind_ref], cur_rec);
+
+		double Ue_abs = cur_rec.get_uvw().norm();
+
+		double rho_e = cur_rec.r;
+
+		mf::t_Rec nxt_rec;
+		t_GeomPoint nxt_xyz;
+
+		double fl, fr, dd; 
+
+		for (int m = 0; m < ind_ref - 1; m++) {
+
+			get_rec(data_grdline[m], cur_rec);
+
+			cur_xyz.set(cur_rec);
+
+			get_rec(data_grdline[m + 1], nxt_rec);
+
+			nxt_xyz.set(nxt_rec);
+
+			matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+
+			double dd = dr.norm();
+
+			fl = (1.0 - cur_rec.get_uvw().norm() / Ue_abs)*cur_rec.r/rho_e;
+
+			fr = (1.0 - nxt_rec.get_uvw().norm() / Ue_abs)*nxt_rec.r/rho_e;
+
+			D1 += 0.5*(fl + fr)*dd;
+
+		}
+		bl_thick_scales.d1 = D1;
+		// debug, also to get average ratio of Dels to D1
+		wxLogMessage(_T("Dels_old/D1=%lf"), bl_thick_scales.thick_scale/ bl_thick_scales.d1);
+	}
+
+	// step 3 - extract cropped profile data
+	for (int m = 0; m < data_grdline.size() - 1; m++) {
+
+		get_rec(data_grdline[m], cur_rec);
+
+		cur_xyz.set(cur_rec);
+
+		matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
+
+		double cur_dd = dr.norm();
+
+		// TODO: here should be ThickCoef, not default...
+		if (cur_dd >= _profile_cfg.ThickCoefDefault*bl_thick_scales.thick_scale) {
+
+			outer_znode = data_grdline[m];
+
+			out_raw_profile.resize(m + 1);
+
+			for (int p = 0; p < m + 1; p++) out_raw_profile[p] = data_grdline[p];
+
+			return;
+
+		}
+
+	}
 
 	wxLogError(_T("Error: Zone boundary reached while searching BL bound & outer rec"));
 
@@ -527,7 +705,7 @@ void TDomain::_calc_bl_thick_vderiv(
 
 // TODO : works only for grids nearly orthogonal to viscous wall
 void TDomain::_calc_bl_thick_enthalpy(
-	const std::vector<t_ZoneNode>& data_grdline, double& bl_thick, 
+	const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
 	std::vector<t_ZoneNode>& out_profile_data) const{
 
 	t_ZoneNode surf_znode, outer_znode;
@@ -567,7 +745,7 @@ void TDomain::_calc_bl_thick_enthalpy(
 
 			matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
 
-			bl_thick = dr.norm();
+			bl_thick_scales.thick_scale = dr.norm();
 
 			break;
 		}
@@ -582,7 +760,7 @@ void TDomain::_calc_bl_thick_enthalpy(
 
 void TDomain::_calc_bl_thick_full_gridline(
 	const std::vector<t_ZoneNode>& data_grdline,
-	double& bl_thick, std::vector<t_ZoneNode>& out_raw_profile) const{
+	t_ProfScales& bl_thick_scales, std::vector<t_ZoneNode>& out_raw_profile) const{
 
 	t_ZoneNode surf_znode, outer_znode;
 
@@ -602,13 +780,13 @@ void TDomain::_calc_bl_thick_full_gridline(
 	r2.set(rec2);
 
 	matrix::base::minus<double, double>(r1, r2, dr);
-	bl_thick = dr.norm();
+	bl_thick_scales.thick_scale = dr.norm();
 
 	out_raw_profile = data_grdline;
 	
 }
 
-inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick, 
+inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_thick_scales, 
 									std::vector<t_ZoneNode>& raw_profile) const{
 
 	std::vector<t_ZoneNode> data_grdline;
@@ -618,14 +796,14 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
-		_calc_bl_thick_vderiv(data_grdline, bl_thick, raw_profile);
+		_calc_bl_thick_vderiv(data_grdline, bl_thick_scales, raw_profile, get_vd_params());
 		break;
 
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
-		_calc_bl_thick_enthalpy(data_grdline, bl_thick, raw_profile);
+		_calc_bl_thick_enthalpy(data_grdline, bl_thick_scales, raw_profile);
 		break;
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
-		_calc_bl_thick_full_gridline(data_grdline, bl_thick, raw_profile);
+		_calc_bl_thick_full_gridline(data_grdline, bl_thick_scales, raw_profile);
 		break;
 
 	default:
@@ -637,13 +815,13 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, double& bl_thick,
 }
 
 
-double TDomain::calc_bl_thick(const t_GeomPoint& xyz) const{
+t_ProfScales TDomain::calc_bl_thick_scales(const t_GeomPoint& xyz) const{
 	
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
+	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
-	return bl_thick;
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
+	return bl_thick_scales;
 
 };
 
@@ -662,9 +840,9 @@ void TDomain::calc_nearest_surf_rec(const t_GeomPoint& xyz, t_Rec& surf_rec) con
 void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const{
 
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
+	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
 
 	get_rec(raw_profile.back(), outer_rec);
 
@@ -673,9 +851,9 @@ void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec
 int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
+	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
 
 	return raw_profile.size();
 }
@@ -683,8 +861,9 @@ int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	
 	std::vector<t_ZoneNode> raw_profile;
-	double bl_thick;
-	_calc_bl_thick(xyz, bl_thick, raw_profile);
+	t_ProfScales bl_thick_scales;
+
+	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
 
 	t_SqMat3Dbl jac;
 

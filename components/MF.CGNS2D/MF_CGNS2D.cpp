@@ -61,6 +61,8 @@ void t_MFCGNS2D::init(const TPlugin& g_plug){
 
 }
 
+const t_VDParams& t_MFCGNS2D::get_vd_params() const { return _base_params.vd_params; };
+
 void t_MFCGNS2D::_init(){
 
 	loadGrid(_grd_bin_path);

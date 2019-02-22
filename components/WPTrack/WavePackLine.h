@@ -124,6 +124,8 @@ namespace pf{
 			stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,
 			const stab::t_WPRetraceMode& retrace_mode);
 
+		void retrace_streamline(mf::t_GeomPoint start_from);
+
 		void calc_n_factor();
 
 		void calc_d2N_dxx();

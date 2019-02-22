@@ -15,13 +15,15 @@ struct IMPEXP_PROFILE t_ProfStabCfg{
 	int NNodes;
 
 	enum t_Nondim{
-		NONDIM_BY_CFD_SCALE=0,
-		NONDIM_BY_X_SELFSIM
+		NONDIM_BY_BL_BOUND_SCALE=0,
+		NONDIM_BY_DISP_THICK,
+		NONDIM_BY_X_SELFSIM,
+		NONDIM_BY_FIXED_VAL
 	};
 	
 	t_Nondim NondimScaleType;
 
-	t_ProfStabCfg():NNodes(0), NondimScaleType(NONDIM_BY_CFD_SCALE){}
+	t_ProfStabCfg():NNodes(0), NondimScaleType(NONDIM_BY_BL_BOUND_SCALE){}
 
 };
 

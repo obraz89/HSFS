@@ -26,6 +26,8 @@ struct IMPEXP_PHYSCOMMON t_Rec{
 
 	IMPEXP_PHYSCOMMON friend std::wostream& operator<<(std::wostream& os, t_Rec rec);
 
+	static t_Rec lin_comb(double c1, const t_Rec& r1, double c2, const t_Rec& r2);
+
 };
 
 /************************************************************************/
