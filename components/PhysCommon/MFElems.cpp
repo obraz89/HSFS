@@ -37,6 +37,22 @@ std::wostream& operator<<(std::wostream& os, const t_Rec& rec){
 
 //---------------------------------------------------------------------operators
 
+t_Rec t_Rec::lin_comb(double c1, const t_Rec& rec1, double c2, const t_Rec& rec2) {
+
+	t_Rec res;
+	res.x = c1*rec1.x + c2*rec2.x;
+	res.y = c1*rec1.y + c2*rec2.y;
+	res.z = c1*rec1.z + c2*rec2.z;
+	res.u = c1*rec1.u + c2*rec2.u;
+	res.v = c1*rec1.v + c2*rec2.v;
+	res.w = c1*rec1.w + c2*rec2.w;
+	res.p = c1*rec1.p + c2*rec2.p;
+	res.t = c1*rec1.t + c2*rec2.t;
+	res.r = c1*rec1.r + c2*rec2.r;
+	return res;
+
+}
+
 t_Rec mf::operator-(const t_Rec& rec1, const t_Rec& rec2){
 	t_Rec res;
 	res.x = rec1.x - rec2.x;
@@ -47,5 +63,6 @@ t_Rec mf::operator-(const t_Rec& rec1, const t_Rec& rec2){
 	res.w = rec1.w - rec2.w;
 	res.p = rec1.p - rec2.p;
 	res.t = rec1.t - rec2.t;
+	res.r = rec1.r - rec2.r;
 	return res;
 };

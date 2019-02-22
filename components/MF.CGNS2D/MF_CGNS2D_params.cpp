@@ -13,11 +13,28 @@ typedef std::map<wxString,int> t_MapWxStrInt;
 #define OPT_AXESYM_STR _T("AxeSym")
 #define OPT_PLANE_STR _T("Plane")
 
+#define OPT_VD_ABS _T("VD_ABS")
+#define OPT_VD_VEC_ABS _T("VD_VEC_ABS")
+#define OPT_VD_X_ABS _T("VD_X_ABS")
+#define OPT_VD_TAU_VEC_ABS _T("VD_TAU_VEC_ABS")
+
+#define OPT_VD_WALL _T("VD_WALL")
+#define OPT_VD_MAX _T("VD_MAX")
+
 t_CGNS2DParams::t_CGNS2DParams():t_FldParams() {
 
 	AXESYM_MODES_STR.clear();
 	AXESYM_MODES_STR.insert(std::make_pair(OPT_AXESYM_STR, mf::t_AxeSym::AxeSym));
 	AXESYM_MODES_STR.insert(std::make_pair(OPT_PLANE_STR, mf::t_AxeSym::Plane));
+
+	VD_TYPES_STR.clear();
+	VD_TYPES_STR.insert(std::make_pair(OPT_VD_ABS, mf::cg::t_VDParams::VD_ABS));
+	VD_TYPES_STR.insert(std::make_pair(OPT_VD_VEC_ABS, mf::cg::t_VDParams::VD_VEC_ABS));
+
+	VD_PLACES_STR.clear();
+	VD_PLACES_STR.insert(std::make_pair(OPT_VD_WALL, mf::cg::t_VDParams::VD_WALL));
+	VD_PLACES_STR.insert(std::make_pair(OPT_VD_MAX, mf::cg::t_VDParams::VD_MAX));
+
 
 };
 
@@ -74,6 +91,10 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 	g.add("MolWeight", 2.7e-02, _T("Dimensional molecular weight of the gas[kg/mol*K]")); 
 
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
+
+	g.add("VD_TYPE", _T("VD_ABS"), _T("Reference velo deriv calc type"));
+
+	g.add("VD_PLACE", _T("VD_WALL or VD_MAX"), _T("Reference velo deriv place"));
 
 	// 2D specific part
 	g.add("AxeSym_or_Plane", _T("AxeSym or Plane"), _T("Is Flow AxeSym? 0-axesym, 1-plane"));
@@ -137,14 +158,38 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 
 	params.BulkViscRatio = g.get_real_param("BulkViscRatio");
 
+	// get axesym param
+
 	wxString axesym_str = g.get_string_param("AxeSym_or_Plane");
 
 	t_MapWxStrInt::iterator it = params.AXESYM_MODES_STR.find(axesym_str);
 
 	if (it==params.AXESYM_MODES_STR.end()) 
-		ssuGENTHROW(_T("Unknown value provided for option AxeSym!"));
+		ssuGENTHROW(_T("Unknown value provided for option AxeSym   (!)"));
 
 	params.MFSym = it->second;
+
+	// get vd_type param
+
+	wxString vd_type_str = g.get_string_param("VD_TYPE");
+
+	it = params.VD_TYPES_STR.find(vd_type_str);
+
+	if (it == params.VD_TYPES_STR.end())
+		ssuGENTHROW(_T("Unknown value provided for option VD_TYPE    (!)"));
+
+	params.vd_params.vd_calc_type = static_cast<mf::cg::t_VDParams::t_VeloDerivType>(it->second);
+
+	// get vd_place param
+
+	wxString vd_place_str = g.get_string_param("VD_PLACE");
+
+	it = params.VD_PLACES_STR.find(vd_place_str);
+
+	if (it == params.VD_PLACES_STR.end())
+		ssuGENTHROW(_T("Unknown value provided for option VD_PLACE    (!)"));
+
+	params.vd_params.vd_place = static_cast<mf::cg::t_VDParams::t_VeloDerivPlace>(it->second);
 
 	params.ZSpan = g.get_real_param("ZSpan");
 

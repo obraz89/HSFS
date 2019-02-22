@@ -495,12 +495,24 @@ namespace mf{
 			}
 		};
 
-		// TODO: make options from robust methods
-		enum t_VeloDerivType { VD_ABS = 0, VD_VEC_ABS, VD_X_ABS, VD_TAU_VEC_ABS };
+		// params of reference velocity derivative to be used in bl thick calculations
+
+		struct t_VDParams {
+
+			// TODO: make options from robust methods
+			enum t_VeloDerivType { VD_ABS = 0, VD_VEC_ABS, VD_X_ABS, VD_TAU_VEC_ABS };
+
+			t_VeloDerivType vd_calc_type;
+
+			enum t_VeloDerivPlace { VD_WALL, VD_MAX };
+
+			t_VeloDerivPlace vd_place;
+
+		};
 
 		//
 		// The whole computational domain
-		// 
+		//
 
 		class TDomain : public mf::t_DomainBase
 		{
@@ -573,11 +585,11 @@ namespace mf{
 			void _calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_scales, 
 				std::vector<t_ZoneNode>& raw_profile) const;
 
-			double _calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
-				int ind, t_VeloDerivType vd_type) const;
+			double _calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
+				int ind, const t_VDParams& vd_params) const;
 
 			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
-				std::vector<t_ZoneNode>& raw_profile) const;
+				std::vector<t_ZoneNode>& raw_profile, const t_VDParams& vd_params) const;
 
 			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
@@ -592,6 +604,8 @@ namespace mf{
 		public:
 
 			const TcgnsContext& get_cg_ctx() const{return cgCtx;};
+
+			virtual const t_VDParams& get_vd_params() const = 0;
 
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block

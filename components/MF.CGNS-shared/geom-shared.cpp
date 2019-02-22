@@ -396,8 +396,10 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 // |dU/dy|
 // du/dy
 // etc
-double TDomain::_calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline, 
-	int ind, t_VeloDerivType vd_type) const{
+double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline, 
+	int ind, const t_VDParams& vd_params) const{
+
+	const t_VDParams::t_VeloDerivType& vd_type = vd_params.vd_calc_type;
 
 	int is = 0;
 	int ie = data_grdline.size() - 2;
@@ -435,13 +437,13 @@ double TDomain::_calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 
 	double dd = dr.norm();
 
-	if (vd_type == t_VeloDerivType::VD_ABS) return abs(cur_uvw_abs - nxt_uvw_abs)/dd;
+	if (vd_type == t_VDParams::VD_ABS) return abs(cur_uvw_abs - nxt_uvw_abs)/dd;
 
-	if (vd_type == t_VeloDerivType::VD_VEC_ABS) return du.norm()/dd;
+	if (vd_type == t_VDParams::VD_VEC_ABS) return du.norm()/dd;
 
-	if (vd_type == t_VeloDerivType::VD_X_ABS) return abs(du[0]) / dd;
+	if (vd_type == t_VDParams::VD_X_ABS) return abs(du[0]) / dd;
 
-	if (vd_type == t_VeloDerivType::VD_TAU_VEC_ABS){
+	if (vd_type == t_VDParams::VD_TAU_VEC_ABS){
 
 		t_ZoneNode surf_znode = _get_nrst_node_surf(data_grdline[0]);
 
@@ -471,7 +473,7 @@ double TDomain::_calc_specifid_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 // output: bl_thick & raw_profile (truncated data_grdline)
 void TDomain::_calc_bl_thick_vderiv(
 		const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
-		std::vector<t_ZoneNode>& out_raw_profile) const{
+		std::vector<t_ZoneNode>& out_raw_profile, const t_VDParams& vd_params) const{
 
 	t_ZoneNode surf_znode, outer_znode;
 
@@ -499,16 +501,6 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	t_ZoneNode ref_znode;
 
-	t_VeloDerivType vd_type = t_VeloDerivType::VD_ABS;
-
-	wxLogMessage(_T("_calc_bl_thick_vderiv derivative type: currently VD_ABS"));
-
-	enum {VD_WALL, VD_MAX} vd_ref_type;
-
-	vd_ref_type = VD_WALL;
-
-	wxLogMessage(_T("_calc_bl_thick_vderiv derivative mode: currently WALL value is used"));
-
 	int ind_bound = -1;
 
 	// first find base reference deriv
@@ -524,14 +516,21 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	// step1 - find du_dy_base
 
+	// this value is used to calculate max velo deriv: first N_BL_MAX_DERIV_POINTS are used
+	// IMPORTANT TODO: all points should be below shock!
+	const int N_BL_MAX_DERIV_POINTS = 50;
+
+	// index of point at which max deriv is reached
+	int j_max_deriv = 0;
+
 	for (int m = 0; m < data_grdline.size() - 1; m++)
 	{
 
-		du_dy = _calc_specifid_velo_deriv_abs(data_grdline, m, vd_type);
+		du_dy = _calc_specific_velo_deriv_abs(data_grdline, m, vd_params);
 
 		//wxLogMessage(_T("du_dy=%lf; dutau_dy=%lf"), du_dy, dutau_dy);
 
-		if (vd_ref_type == VD_WALL) {
+		if (vd_params.vd_place == t_VDParams::VD_WALL) {
 
 				if (m == 0) {
 
@@ -547,14 +546,21 @@ void TDomain::_calc_bl_thick_vderiv(
 			}
 
 		// find first max deriv value moving from the wall to outside
-		if (vd_ref_type == VD_MAX) {
+		if (vd_params.vd_place == t_VDParams::VD_MAX) {
 
-			if (du_dy < du_dy_max) {
+			if (du_dy > du_dy_max) {
 
-				// debug 
-				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv = %lf"), du_dy);
+				du_dy_max = du_dy;
+				j_max_deriv = m;
 
-				du_dy_base = du_dy;
+			}
+
+			if (m >= N_BL_MAX_DERIV_POINTS) {
+
+				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv calculated using first %d points"), N_BL_MAX_DERIV_POINTS);
+				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv = %lf"), du_dy_max);
+
+				du_dy_base = du_dy_max;
 
 				break;
 			}
@@ -566,9 +572,13 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	int ind_ref;
 
-	for (int m = 0; m < data_grdline.size() - 1; m++) {
+	// do not start from surface, start from j_max_deriv
+	// because for the flows where velocity deriv at the wall is small
+	// bl thickness will be zero if started from the wall 
 
-		du_dy = _calc_specifid_velo_deriv_abs(data_grdline, m, vd_type);
+	for (int m = j_max_deriv; m < data_grdline.size() - 1; m++) {
+
+		du_dy = _calc_specific_velo_deriv_abs(data_grdline, m, vd_params);
 
 		double eps = _profile_cfg.DerivThreshold;
 
@@ -600,7 +610,7 @@ void TDomain::_calc_bl_thick_vderiv(
 				// TODO: ThickCoef should be here
 				if (cur_y < _profile_cfg.ThickCoefDefault*y_ref) {
 
-					double du_dy_up = _calc_specifid_velo_deriv_abs(data_grdline, j, vd_type);
+					double du_dy_up = _calc_specific_velo_deriv_abs(data_grdline, j, vd_params);
 
 					if (du_dy_up > eps*du_dy_base) {
 						deriv_check = false;
@@ -627,7 +637,10 @@ void TDomain::_calc_bl_thick_vderiv(
 	{
 
 		get_rec(data_grdline[ind_ref], cur_rec);
-		double Ue = cur_rec.u;
+
+		double Ue_abs = cur_rec.get_uvw().norm();
+
+		double rho_e = cur_rec.r;
 
 		mf::t_Rec nxt_rec;
 		t_GeomPoint nxt_xyz;
@@ -648,9 +661,9 @@ void TDomain::_calc_bl_thick_vderiv(
 
 			double dd = dr.norm();
 
-			fl = 1.0 - cur_rec.u / Ue;
+			fl = (1.0 - cur_rec.get_uvw().norm() / Ue_abs)*cur_rec.r/rho_e;
 
-			fr = 1.0 - nxt_rec.u / Ue;
+			fr = (1.0 - nxt_rec.get_uvw().norm() / Ue_abs)*nxt_rec.r/rho_e;
 
 			D1 += 0.5*(fl + fr)*dd;
 
@@ -783,7 +796,7 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_thi
 	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
-		_calc_bl_thick_vderiv(data_grdline, bl_thick_scales, raw_profile);
+		_calc_bl_thick_vderiv(data_grdline, bl_thick_scales, raw_profile, get_vd_params());
 		break;
 
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:

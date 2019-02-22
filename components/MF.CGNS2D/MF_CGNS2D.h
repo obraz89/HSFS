@@ -37,6 +37,8 @@ namespace mf{
 
 		const mf::t_FldParams& get_mf_params() const;
 
+		const cg::t_VDParams& get_vd_params() const;
+
 		virtual mf::t_Rec interpolate_to_point(const t_GeomPoint& point) const;
 		// TODO: implement for optimization
 		//virtual void interpolate_to_point(const t_GeomPoint& point, t_Rec& rec) const=0;

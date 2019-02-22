@@ -30,6 +30,8 @@ namespace mf{
 
 		void init(const hsstab::TPlugin& g_plug);
 
+		const cg::t_VDParams& get_vd_params() const;
+
 		const mf::t_FldParams& get_mf_params() const;
 
 		const mf::t_CGNS3DParams& get_params() const;

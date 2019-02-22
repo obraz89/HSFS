@@ -778,33 +778,31 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 
 			// do some interpolation for the last point
 			// we want thickness to be exactly total_thick
-			// for now only xyz interpolated
-			// TODO: linear interpolation for flow variables
 			t_GeomPoint xyz1, xyz2;
+			mf::t_Rec r1, r2;
 
-			get_rec(raw_profile[total_nodes-2], cur_rec);
-			xyz1.set(cur_rec);
+			get_rec(raw_profile[total_nodes-2], r1);
+			xyz1.set(r1);
 
 			matrix::base::minus<double, double>(xyz1, surf_xyz, rvec);
 
-			double r1 = rvec.norm();
+			double d1 = rvec.norm();
 
-			get_rec(raw_profile[total_nodes-1], cur_rec);
-			xyz2.set(cur_rec);
+			get_rec(raw_profile[total_nodes-1], r2);
+			xyz2.set(r2);
 
 			matrix::base::minus<double, double>(xyz2, surf_xyz, rvec);
 
-			double r2 = rvec.norm();
+			double d2 = rvec.norm();
 
-			double coef = (total_thick - r1) / (r2 - r1);
+			double coef = (total_thick - d1) / (d2 - d1);
 
 			if (coef<0.0 || coef>1.0) 
 				wxLogMessage(_T("Error in _extract_profile_data_blbound: interpolation coef is %lf, should be between 0 and 1"), coef);
 
-			t_GeomPoint xyz_int = xyz1 + coef*(xyz2 - xyz1);
+			mf::t_Rec rec_intp = mf::t_Rec::lin_comb(1.0-coef, r1, coef, r2);
 
-			get_rec(raw_profile[total_nodes - 1], data[total_nodes - 1]);
-			data[total_nodes - 1].set_xyz(xyz_int);
+			data[total_nodes - 1] = rec_intp;
 			
 		}
 

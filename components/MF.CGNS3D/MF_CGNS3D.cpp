@@ -23,7 +23,7 @@ void t_MFCGNS3D::init(const hsstab::TPlugin& g_plug){
 			ssuTHROW(t_GenException, _T("Error: Failed to initialize MF.CGNS3D, see errlog"));
 	}
 
-	mf::cg::hsf3d::_init_fld_base_params(_base_params, g);
+	mf::t_CGNS3DParams::init_fld_base_params(_base_params, g);
 
 	bbox.xmin = g.get_real_param("BBox_Xmin");
 	bbox.xmax = g.get_real_param("BBox_Xmax");
@@ -73,6 +73,8 @@ void t_MFCGNS3D::_init(){
 	initField(_fld_bin_path);
 
 };
+
+const t_VDParams& t_MFCGNS3D::get_vd_params() const { return _base_params.vd_params; };
 
 t_Rec t_MFCGNS3D::get_rec(const t_GeomPoint& xyz) const{
 
