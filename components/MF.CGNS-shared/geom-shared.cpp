@@ -2,6 +2,7 @@
 #include "cgns_structs.h"
 
 #include <fstream>
+#include <cmath>
 
 using namespace mf;
 using namespace mf::cg;
@@ -437,11 +438,11 @@ double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 
 	double dd = dr.norm();
 
-	if (vd_type == t_VDParams::VD_ABS) return abs(cur_uvw_abs - nxt_uvw_abs)/dd;
+	if (vd_type == t_VDParams::VD_ABS) return std::abs(cur_uvw_abs - nxt_uvw_abs)/dd;
 
 	if (vd_type == t_VDParams::VD_VEC_ABS) return du.norm()/dd;
 
-	if (vd_type == t_VDParams::VD_X_ABS) return abs(du[0]) / dd;
+	if (vd_type == t_VDParams::VD_X_ABS) return std::abs(du[0]) / dd;
 
 	if (vd_type == t_VDParams::VD_TAU_VEC_ABS){
 
@@ -456,7 +457,7 @@ double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 		double un_nxt = vector::dot(nxt_uvw, surf_norm);
 		double ut_nxt = sqrt(nxt_uvw_abs*nxt_uvw_abs - un_nxt*un_nxt);
 
-		return abs((ut_nxt - ut_cur) / dr.norm());
+		return std::abs((ut_nxt - ut_cur) / dr.norm());
 
 
 	}
@@ -735,7 +736,7 @@ void TDomain::_calc_bl_thick_enthalpy(
 
 		h_cur = calc_enthalpy(cur_rec);
 
-		double tol = abs(h_cur/h_inf -1);
+		double tol = std::abs(h_cur/h_inf -1);
 
 		if (tol>_profile_cfg.DerivThreshold){
 
