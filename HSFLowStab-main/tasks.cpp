@@ -243,12 +243,12 @@ void task::analyze_wchars(const std::string& fname){
 bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc& wave){
 
 
-	wxChar szFname[64];
+	wxChar szFname[128];
 
-	swprintf(szFname, MAX_FNAME_LEN, _T("%s/%s"),hsstab::OUTPUT_DIR.c_str(), &fname_max_waves[0]);
+	swprintf(szFname, MAX_FNAME_LEN, _T("%ls/%ls"), hsstab::OUTPUT_DIR.c_str(), &fname_max_waves[0]);
 	
 	wxString szFname_wx(szFname);
-
+	
 	std::wifstream ifstr(szFname_wx.ToAscii());
 
 	if (!ifstr.is_open())
