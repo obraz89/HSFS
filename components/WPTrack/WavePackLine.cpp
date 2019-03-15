@@ -1038,18 +1038,20 @@ void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
 
 	t_Vec3Dbl dr_dir, dr;
 
+	t_GeomPoint cur_xyz, starting_xyz;
+
 	// starting point on bl edge
-	//mf::t_Rec out_rec;
-	//_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
-	//t_GeomPoint cur_xyz = out_rec.get_xyz();
+	mf::t_Rec out_rec;
+	_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
+	starting_xyz = out_rec.get_xyz();
 
 	// starting point on surface
 	//mf::t_Rec surf_rec;
 	//_rFldMF.calc_nearest_surf_rec(a_xyz, surf_rec);
-	//t_GeomPoint cur_xyz = surf_rec.get_xyz();
+	//t_GeomPoint starting_xyz = surf_rec.get_xyz();
 
 	// starting point as is
-	t_GeomPoint cur_xyz;
+	//t_GeomPoint starting_xyz = a_xyz;
 
 	// dummy wchars
 	t_WCharsGlob wchars_glob;
@@ -1059,7 +1061,7 @@ void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
 	// retrace downstream & upstream
 	for (int i = 0; i < 2; i++) {
 
-		cur_xyz = a_xyz;
+		cur_xyz = starting_xyz;
 
 		t_RecArray* pLine = pLines[i];
 
