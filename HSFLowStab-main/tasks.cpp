@@ -445,7 +445,7 @@ void task::retrace_streamlines() {
 		ofstr.open(szFname_pp);
 
 		double dx = 0.0;
-		double dx_th = 0.1;
+		double dx_th = 0.05;
 
 		for (int i = 0; i < wp_line->get_size()-1; i++) {
 
