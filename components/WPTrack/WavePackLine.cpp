@@ -170,6 +170,13 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 	//dbg
 	std::wostringstream wostr;
 
+	// tmp, variable step for expansion ramps
+	wxLogMessage(_T("using hardcoded dt in retrace, check t_WavePackLine::_calc_dr (!)"));
+	if (abs(xyz.x()) < 0.5)
+		dt = 0.01;
+	else
+		dt = 0.05;
+
 	switch (_params.RetraceDir)
 
 	{
@@ -335,7 +342,7 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	// we want only instabilities here
 	// stable modes are considered below...
 	ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
-	ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
+	//ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
 
 	//if (ok_ls && (w_ls.a.imag()<0.0)) {
 	if (ok_ls && (w_ls.a.real()>0.0)){
@@ -344,11 +351,12 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	}
 	else {
 		wxLogMessage(_T("ls-gs: local search checks failed"));
+		getchar();
 	}
 	
 
 	// try gs if ls failed
-
+	/*
 	t_WCharsLoc w_gs;
 
 	std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(w_init);
@@ -378,77 +386,19 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 		}
 	}
-	
+	*/
 
-	// if gs failed, maybe we are near neut point and ls was ok but stable
-
-	if (ok_ls) {
-		std::wcout << _T("ls-gs: using stable mode:") << w_ls;
-		w_exact = w_ls;
-		return true;
-	}
+	// if stable wave is ok for computations
+	//if (ok_ls) {
+	//	std::wcout << _T("ls-gs: using stable mode:") << w_ls;
+	//	w_exact = w_ls;
+	//	return true;
+	//}
 
 	wxLogMessage(_T("Retrace: Search Wave : ls-gs failed"));
 	return false;
 
 };
-
-// obsolete, use search_instab_ls_gs
-bool search_wave_wb_fixed_OBSOLETE(t_WCharsLoc& cur_wave, 
-						  stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver){
-
-	stab::t_LSCond srch_cond;
-
-	srch_cond.set(stab::t_LSCond::W_FIXED|stab::t_LSCond::B_FIXED);
-
-	try
-	{
-		// first try to use global search
-		std::vector<t_WCharsLoc> raw_waves = gs_solver.getInstabModes(cur_wave);
-
-		if (raw_waves.size()>0){
-
-			std::vector<t_WCharsLoc> filt_waves = loc_solver.filter_gs_waves_spat(raw_waves, srch_cond);
-
-			if (filt_waves.size()>0){
-
-				cur_wave = t_WCharsLoc::find_max_instab_spat(filt_waves);
-
-			} else{
-
-				// gs candidates failed, 
-				// try local search directly
-				loc_solver.searchWave(cur_wave, srch_cond, stab::t_TaskTreat::SPAT);
-
-			}
-
-		}else{
-			// global search doesnt work
-			// try local search directly
-			loc_solver.searchWave(cur_wave, srch_cond, stab::t_TaskTreat::SPAT);
-
-		}
-
-	}
-	catch (...)
-	{
-		wxLogMessage(_T("Retrace: Search Wave Failed[mode=WB_FIXED]"));
-		return false;
-	}
-
-	// check that converged to a physical wave
-	bool ok_wchars = true;
-	ok_wchars = ok_wchars && stab::check_wchars_increment(cur_wave);
-	ok_wchars = ok_wchars && stab::check_wchars_c_phase(cur_wave);
-
-	if (!ok_wchars){
-		wxLogMessage(_T("Warning: converged to unphysical wave, break..."));
-		return false;
-	}
-
-	return true;
-
-}
 
 // retrace with keeping dimensional w constant
 // this is so called "wave packet" retrace approach
@@ -586,7 +536,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 	mf::t_ProfScales prof_scales = _rFldMF.calc_bl_thick_scales(start_xyz);
 
 	std::ofstream ofstr("Dels_fixed_val.dat");
-
+	wxLogMessage(_T("Using dels at starting point as fixed val for profiles nondim, check t_WavePackLine::_retrace_dir_cond"));
 	ofstr << prof_scales.d1;
 
 	ofstr.close();
@@ -721,9 +671,9 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 				 t_CompVal da = 0.0;
 				 // extrapolate via phase speed
 				 {
-					wxLogMessage(_T("WPTrack: doing pseudo extrapolation w/a=const, dw=%lf"), smat::norm(dw_ps));
-					da = a_old*dw_ps / w_old;
-					cur_wave.a = a_old + da;
+					//wxLogMessage(_T("WPTrack: doing pseudo extrapolation w/a=const, dw=%lf"), smat::norm(dw_ps));
+					//da = a_old*dw_ps / w_old;
+					//cur_wave.a = a_old + da;
 					//wxLogMessage(_T("WPTrack: pseudo extrapolation da=(%lf, %lf)"), da.real(), da.imag()); 
 				 }
 				 // extrapolate via group velo 
@@ -744,11 +694,11 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 					 cur_wave.a = a_old;
 				 }
 				 // debug
-				 wxLogMessage(_T("compare prev & curre nt wchars loc:"));
-				 wxLogMessage(_T("old wchars:%s"), wxString(last_wave.to_wstr()));
-				 wxLogMessage(_T("cur wchars:%s"), wxString(cur_wave.to_wstr()));
-				 wxLogMessage(_T("old scales:%s"), wxString(last_wave.scales().to_wstr()));
-				 wxLogMessage(_T("new scales:%s"), wxString(stab_scales.to_wstr()));
+				 //wxLogMessage(_T("compare prev & current wchars loc:"));
+				 //wxLogMessage(_T("old wchars:%s"), wxString(last_wave.to_wstr()));
+				 //wxLogMessage(_T("cur wchars:%s"), wxString(cur_wave.to_wstr()));
+				 //wxLogMessage(_T("old scales:%s"), wxString(last_wave.scales().to_wstr()));
+				 //wxLogMessage(_T("new scales:%s"), wxString(stab_scales.to_wstr()));
 
 				 
 
