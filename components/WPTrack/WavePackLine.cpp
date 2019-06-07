@@ -172,10 +172,11 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 
 	// tmp, variable step for expansion ramps
 	wxLogMessage(_T("using hardcoded dt in retrace, check t_WavePackLine::_calc_dr (!)"));
+	double dt_dir = dt / abs(dt);
 	if (abs(xyz.x()) < 0.5)
-		dt = 0.01;
+		dt = dt_dir*0.01;
 	else
-		dt = 0.05;
+		dt = dt_dir*0.05;
 
 	switch (_params.RetraceDir)
 
