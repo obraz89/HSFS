@@ -352,7 +352,6 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	}
 	else {
 		wxLogMessage(_T("ls-gs: local search checks failed"));
-		getchar();
 	}
 	
 
