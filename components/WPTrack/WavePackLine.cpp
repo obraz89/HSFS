@@ -176,7 +176,7 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 	if (abs(xyz.x()) < 0.5)
 		dt = dt_dir*0.01;
 	else
-		dt = dt_dir*0.05;
+		dt = dt_dir*0.03;
 
 	switch (_params.RetraceDir)
 
@@ -208,9 +208,22 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 
 	case t_WPLineParams::FIXED_DIRECTION:
 
-		dir = _params.RetraceVec;
+		//dir = _params.RetraceVec;
 
-		dir.normalize();
+		//dir.normalize();
+
+		wxLogMessage(_T("using custom dir for n ramp to go along surface, check t_WavePackLine::_calc_dr"));
+
+		if (xyz.x() <= 0) {
+			dir[0] = 1.0;
+			dir[1] = 0.0;
+			dir[2] = 0.0;
+		}
+		else {
+			dir[0] = 0.996195;
+			dir[1] = -0.087155;
+			dir[2] = 0.0;
+		}
 
 		matrix::base::mul(dt, dir, dr);
 
@@ -533,16 +546,17 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 									   t_Direction direction){
 
 	// TODO: tmp way to write dels
+	// single proc retrace
+	wxLogMessage(_T("Using d1 at starting point as fixed val for profiles nondim, check t_WavePackLine::_retrace_dir_cond"));
+	std::ofstream ofstr("tmp/Dels_fixed_val_0.dat");
 	mf::t_ProfScales prof_scales = _rFldMF.calc_bl_thick_scales(start_xyz);
-
-	std::ofstream ofstr("Dels_fixed_val.dat");
-	wxLogMessage(_T("Using dels at starting point as fixed val for profiles nondim, check t_WavePackLine::_retrace_dir_cond"));
-	ofstr << prof_scales.d1;
-
+	ofstr << prof_scales.d1*_rFldMF.get_mf_params().L_ref;
 	ofstr.close();
 
 	loc_solver.setContext(start_xyz);
 	gs_solver.setContext(start_xyz);
+
+
 
 	init_wave.set_scales(loc_solver.get_stab_scales());
 
