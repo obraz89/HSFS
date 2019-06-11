@@ -13,9 +13,6 @@ CFLAGS = -D linux -xHost -O3 -DNDEBUG
 
 MPICC := mpiicpc
 CFLAGS := -xHost -O3 -DNDEBUG -std=c++0x
-MPI_INC :=
-MPI_LIBS :=
-
 
 #-------------------------
 
