@@ -216,14 +216,24 @@ bool search_init_wave(const int wpid, const int a_ppoint_id, const bool a_do_sim
 	// if doing simplified retrace search for instab at all pave points until instab is found
 	// if doing exact retrace, do gs at a given point
 
-	const int npp_s = a_do_simple_retrace ? npp - 1 : a_ppoint_id;
-	const int npp_e = a_do_simple_retrace ? 0 : a_ppoint_id;
+	const int npp_s = a_do_simple_retrace ? 0 : a_ppoint_id;
+	const int npp_e = a_do_simple_retrace ? npp - 1 : a_ppoint_id;
 
-	for (int npp = npp_s; npp >= npp_e; npp--) {
+	for (int npp = npp_s; npp <= npp_e; npp++) {
 
 		try {
 
 			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(npp).xyz;
+
+			// TODO: write fixed dels, multiproc variant
+			char ftmp_dels_fixed[64]; int mpi_rank;
+			MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+
+			sprintf(ftmp_dels_fixed, "tmp/Dels_fixed_val_%d.dat", mpi_rank);
+			std::ofstream ofstr(ftmp_dels_fixed);
+			mf::t_ProfScales prof_scales = g_pMFDomain->calc_bl_thick_scales(test_xyz);
+			ofstr << prof_scales.d1*g_pMFDomain->get_mf_params().L_ref;
+			ofstr.close();
 
 			g_pGSSolverSpat->setContext(test_xyz);
 
