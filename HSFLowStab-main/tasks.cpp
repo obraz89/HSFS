@@ -530,7 +530,11 @@ void task::get_amplitude_funcs(){
 
 			sprintf(strFname, "output/amp_funcs_%d.dat", pid);
 
+			wxLogMessage(_T("initial wave:%s"), &w_init.to_wstr()[0]);
+
 			g_pStabSolver->searchWave(w_init, cond, stab_treat);
+
+			wxLogMessage(_T("converged to wave:%s"), &w_init.to_wstr()[0]);
 
 			g_pStabSolver->dumpEigenFuctions(strFname);
 
