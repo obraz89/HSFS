@@ -29,9 +29,9 @@ CGNS_LIB_DIR := $(CGNS_DIR)/lib
 CGNS_LFLAGS := -L$(CGNS_LIB_DIR) -lcgns -lhdf5 -lz
 HDF5_LFLAGS := -L$(CGNS_LIB_DIR) -lhdf5 -lz
 
-MPI_INC_DIR := -I/usr/include/openmpi-x86_64
+MPI_INC_DIR := -I/usr/include/openmpi
 MPI_LIB_DIR := /usr/lib64/openmpi/lib
-MPI_LFLAGS := -L$(MPI_LIB_DIR) -lmpi -lopen-rte -lopen-pal
+MPI_LFLAGS := -L$(MPI_LIB_DIR) -lmpi
 
 MKL_INC_DIR := $(MKLROOT)/include
 MKL_LIB_DIR := $(MKLROOT)/lib/em64t

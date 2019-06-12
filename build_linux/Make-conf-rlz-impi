@@ -31,6 +31,9 @@ MKL_INC_DIR := $(MKLROOT)/include
 MKL_LIB_DIR := $(MKLROOT)/lib/em64t
 MKL_LFLAGS := -L$(MKL_LIB_DIR) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
 
+MPI_INC_DIR :=  /opt/intel/impi_5.0.1/include64
+MPI_LIB_DIR := /opt/intel/impi/5.0.1.035/intel64/lib
+
 #-------------------------
 
 LFLAGS := -Wl,-no-undefined
