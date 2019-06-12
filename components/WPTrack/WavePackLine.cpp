@@ -172,8 +172,8 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 
 	// tmp, variable step for expansion ramps
 	wxLogMessage(_T("using hardcoded dt in retrace, check t_WavePackLine::_calc_dr (!)"));
-	double dt_dir = dt / abs(dt);
-	double xa = abs(xyz.x());
+	double dt_dir = dt / std::abs(dt);
+	double xa = std::abs(xyz.x());
 	if (xa < 0.03)
 		dt = dt_dir*0.001;
 	else
@@ -187,6 +187,8 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 					dt = dt_dir*0.03;
 				else
 					dt = dt_dir*0.06;
+					
+	wxLogMessage(_T("Computed dt=%lf"), dt);
 
 	switch (_params.RetraceDir)
 
@@ -790,7 +792,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 cur_wave.set_scales(loc_solver.get_stab_scales());
 
 		 // TODO: avoid group velo calcs if not needed ?
-		 loc_solver.calcGroupVelocity(cur_wave);
+		 wxLogMessage(_T("Warning: calc group velo disabled in _retrace_dir_cond"));
+		 //loc_solver.calcGroupVelocity(cur_wave);
 
 		 t_WCharsGlob wchars_glob(cur_wave, _rFldMF.calc_jac_to_loc_rf(cur_xyz), 
 			 loc_solver.get_stab_scales());
