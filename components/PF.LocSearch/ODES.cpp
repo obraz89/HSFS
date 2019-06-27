@@ -6,7 +6,7 @@
 // default 3D context
 
 
-static const int NNODES_BIG = 1001;
+static const int NNODES_BIG = 5001;
 
 t_ODES::t_ODES(const int NSolVecs, const int SolVecDim):
 _NSolVecs(NSolVecs), _SolVecDim(SolVecDim),
