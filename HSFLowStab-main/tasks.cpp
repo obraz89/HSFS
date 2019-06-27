@@ -426,7 +426,7 @@ void task::retrace_streamlines() {
 
 		const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
 
-		wp_line->retrace_streamline(test_xyz);
+		wp_line->retrace_streamline(test_xyz, *g_pStabSolver);
 
 		std::ofstream ofstr(szFname, std::ios::app);
 

@@ -174,7 +174,16 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 	wxLogMessage(_T("using hardcoded dt in retrace, check t_WavePackLine::_calc_dr (!)"));
 	double dt_dir = dt / std::abs(dt);
 	double xa = std::abs(xyz.x());
-	if (xa < 0.03)
+	double x = xyz.x();
+
+	/*if (x < -0.05) dt = dt_dir*0.03;
+	if ((-0.05 < x) && (x < 0.001)) dt = dt_dir*0.001;
+	if ((0.0 < x) && (x < 0.2)) dt = dt_dir*0.2;
+	if ((0.2 < x) && (x < 1.0)) dt = dt_dir*0.01;
+	if (1.0 < x) dt = 0.06;
+	*/
+	// small steps
+	{if (xa < 0.05)
 		dt = dt_dir*0.001;
 	else
 		if (xa < 0.1)
@@ -183,10 +192,11 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 			if (xa < 1.0)
 				dt = dt_dir*0.01;
 			else
-				if (xa < 2.0)
+				if (xa < 3.0)
 					dt = dt_dir*0.03;
 				else
-					dt = dt_dir*0.06;
+					dt = dt_dir*0.06; 
+	}
 					
 	wxLogMessage(_T("Computed dt=%lf"), dt);
 
@@ -232,8 +242,8 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 			dir[2] = 0.0;
 		}
 		else {
-			dir[0] = 0.996195;
-			dir[1] = -0.087155;
+			dir[0] = 0.9848077;//0.996195;
+			dir[1] = -0.1736481;//-0.087155;
 			dir[2] = 0.0;
 		}
 
@@ -339,8 +349,9 @@ bool search_max_ai_spat_OBSOLETE(const t_WCharsLoc& init_wave, t_WCharsLoc& max_
 // first try to do ls on it, if converged - ok
 // if failed, try gs, if converged -ok
 // if both failed , it is a bad initial approach
+// DEBUG: cur_xyz required for manual mode detection
 bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact, 
-	stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver) {
+	stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, t_GeomPoint cur_xyz) {
 
 	wxLogMessage(_T("=============starting search_instab_ls_gs=================="));
 
@@ -378,6 +389,42 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	else {
 		wxLogMessage(_T("ls-gs: local search checks failed"));
 	}
+
+	if (false){
+		// testing the multimode hell for nramp case
+		wxLogMessage(_T("testing new mode for retrace, remove it when done (!), check search_instab_ls_gs"));
+		//w_ls.a = t_Complex(0.4211, 0.00428);
+		w_ls.a = t_Complex(0.275, 0.00037);
+
+		ok_ls = true;
+
+		// first try local search
+
+		try {
+			loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT);
+		}
+		catch (...) {
+			wxLogMessage(_T("ls-gs: local search with new wave failed"));
+			ok_ls = false;
+		}
+
+		std::wcout << _T("Loc search ls-gs with a new mode:") << w_ls;
+
+		//getchar();
+
+		// loc search can easily converge to stable modes, e.g. near leading edge
+		// we want only instabilities here
+		// stable modes are considered below...
+		ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
+		//ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
+
+		//if (ok_ls && (w_ls.a.imag()<0.0)) {
+		if (ok_ls && (w_ls.a.real()>0.0)) {
+			w_exact = w_ls;
+			return true;
+		}
+	}
+
 	
 
 	// try gs if ls failed
@@ -655,7 +702,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 			 // do gs if ls failed
 
-			 bool ok_wave = search_instab_ls_gs(cur_wave, w_exact, loc_solver, gs_solver);
+			 bool ok_wave = search_instab_ls_gs(cur_wave, w_exact, loc_solver, gs_solver, cur_xyz);
 
 			 if (!ok_wave) break;
 
@@ -732,7 +779,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 			 t_WCharsLoc w_init = cur_wave;
 
-			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver);
+			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver, cur_xyz);
 
 			 //getchar();
 
@@ -777,7 +824,7 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 			 t_WCharsLoc w_init = cur_wave;
 
-			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver);
+			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver, cur_xyz);
 
 			 if (!ok_wave) break;
 
@@ -1006,7 +1053,7 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 	calc_n_factor();
 };
 
-void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
+void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz, stab::t_LSBase& loc_solver) {
 
 	clear();
 
@@ -1018,14 +1065,14 @@ void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
 	t_GeomPoint cur_xyz, starting_xyz;
 
 	// starting point on bl edge
-	mf::t_Rec out_rec;
-	_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
-	starting_xyz = out_rec.get_xyz();
+	//mf::t_Rec out_rec;
+	//_rFldMF.calc_nearest_inviscid_rec(a_xyz, out_rec);
+	//starting_xyz = out_rec.get_xyz();
 
 	// starting point on surface
-	//mf::t_Rec surf_rec;
-	//_rFldMF.calc_nearest_surf_rec(a_xyz, surf_rec);
-	//t_GeomPoint starting_xyz = surf_rec.get_xyz();
+	mf::t_Rec surf_rec;
+	_rFldMF.calc_nearest_surf_rec(a_xyz, surf_rec);
+	starting_xyz = surf_rec.get_xyz();
 
 	// starting point as is
 	//t_GeomPoint starting_xyz = a_xyz;
@@ -1049,6 +1096,10 @@ void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz) {
 		bool proceed_cond = true;
 
 		while (proceed_cond) {
+
+			loc_solver.setContext(cur_xyz);
+
+			wchars_loc.set_scales(loc_solver.get_stab_scales());
 
 			_add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, wchars_loc);
 
