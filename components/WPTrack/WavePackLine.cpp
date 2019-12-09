@@ -170,35 +170,7 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 	//dbg
 	std::wostringstream wostr;
 
-	// tmp, variable step for expansion ramps
-	wxLogMessage(_T("using hardcoded dt in retrace, check t_WavePackLine::_calc_dr (!)"));
 	double dt_dir = dt / std::abs(dt);
-	double xa = std::abs(xyz.x());
-	double x = xyz.x();
-
-	/*if (x < -0.05) dt = dt_dir*0.03;
-	if ((-0.05 < x) && (x < 0.001)) dt = dt_dir*0.001;
-	if ((0.0 < x) && (x < 0.2)) dt = dt_dir*0.2;
-	if ((0.2 < x) && (x < 1.0)) dt = dt_dir*0.01;
-	if (1.0 < x) dt = 0.06;
-	*/
-	// small steps
-	{if (xa < 0.05)
-		dt = dt_dir*0.001;
-	else
-		if (xa < 0.1)
-			dt = dt_dir*0.003;
-		else
-			if (xa < 1.0)
-				dt = dt_dir*0.01;
-			else
-				if (xa < 3.0)
-					dt = dt_dir*0.03;
-				else
-					dt = dt_dir*0.06; 
-	}
-					
-	wxLogMessage(_T("Computed dt=%lf"), dt);
 
 	switch (_params.RetraceDir)
 
@@ -230,23 +202,10 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 
 	case t_WPLineParams::FIXED_DIRECTION:
 
-		//dir = _params.RetraceVec;
+		dir = _params.RetraceVec;
 
-		//dir.normalize();
-
-		wxLogMessage(_T("using custom dir for n ramp to go along surface, check t_WavePackLine::_calc_dr"));
-
-		if (xyz.x() <= 0) {
-			dir[0] = 1.0;
-			dir[1] = 0.0;
-			dir[2] = 0.0;
-		}
-		else {
-			dir[0] = 0.9848077;//0.996195;
-			dir[1] = -0.1736481;//-0.087155;
-			dir[2] = 0.0;
-		}
-
+		dir.normalize();
+		
 		matrix::base::mul(dt, dir, dr);
 
 		break;
