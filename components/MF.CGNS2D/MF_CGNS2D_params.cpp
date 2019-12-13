@@ -21,6 +21,8 @@ typedef std::map<wxString,int> t_MapWxStrInt;
 #define OPT_VD_WALL _T("VD_WALL")
 #define OPT_VD_MAX _T("VD_MAX")
 
+#define OPT_VD_N_BL_MAX_DERIV_POINTS 50
+
 t_CGNS2DParams::t_CGNS2DParams():t_FldParams() {
 
 	AXESYM_MODES_STR.clear();
@@ -95,6 +97,8 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 	g.add("VD_TYPE", _T("VD_ABS"), _T("Reference velo deriv calc type"));
 
 	g.add("VD_PLACE", _T("VD_WALL or VD_MAX"), _T("Reference velo deriv place"));
+
+	g.add("VD_N_BL_MAX_DERIV_POINTS", OPT_VD_N_BL_MAX_DERIV_POINTS, _T("Number of cells from the wall to be used to compute max velo deriv"));
 
 	// 2D specific part
 	g.add("AxeSym_or_Plane", _T("AxeSym or Plane"), _T("Is Flow AxeSym? 0-axesym, 1-plane"));
@@ -190,6 +194,8 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 		ssuGENTHROW(_T("Unknown value provided for option VD_PLACE    (!)"));
 
 	params.vd_params.vd_place = static_cast<mf::cg::t_VDParams::t_VeloDerivPlace>(it->second);
+
+	params.vd_params.N_BL_MAX_DERIV_POINTS = g.get_int_param("VD_N_BL_MAX_DERIV_POINTS");
 
 	params.ZSpan = g.get_real_param("ZSpan");
 

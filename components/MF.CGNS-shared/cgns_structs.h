@@ -508,6 +508,8 @@ namespace mf{
 
 			t_VeloDerivPlace vd_place;
 
+			int N_BL_MAX_DERIV_POINTS;
+
 		};
 
 		//
