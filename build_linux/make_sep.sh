@@ -4,7 +4,7 @@
 #
 
 PROJ='
-../components/WPTrack
+../components/Profile
 '
 
 for p in $PROJ

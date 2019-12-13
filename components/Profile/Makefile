@@ -21,12 +21,13 @@ INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
 CFLAGS += -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I. $(WXFLAGS) -vec_report3
+CFLAGS += -I$(MPI_INC_DIR)
 
 #MYLIBS := shared.so SmallMat.so PhysCommon.so
 #MYLIBS := $(addprefix $(OUTDIR)/, $(MYLIBS))
 
 LFLAGS += -L$(OUTDIR) -Wl,-no-undefined -lhsfs_shared -lhsfs_smallmat -lhsfs_physcommon $(WXLIBS)
-
+LFLAGS += -L$(MPI_LIB_DIR) -lmpi
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
 OBJS := $(notdir $(OBJS))
@@ -39,7 +40,7 @@ $(OUTDIR)/$(OUTLIB).so : $(OBJS) $(OUTDIR)
 	$(CC) -o $@ -shared $(OBJS) $(LFLAGS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
-	$(CC) -o $@ -fPIC $(CFLAGS) -c $<
+	$(CC) -o $@ -fPIC $(CFLAGS) -c -H $<
 
 
 # Create output and intermed dirs

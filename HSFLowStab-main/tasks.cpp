@@ -426,7 +426,7 @@ void task::retrace_streamlines() {
 
 		const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
 
-		wp_line->retrace_streamline(test_xyz);
+		wp_line->retrace_streamline(test_xyz, *g_pStabSolver);
 
 		std::ofstream ofstr(szFname, std::ios::app);
 
@@ -530,7 +530,11 @@ void task::get_amplitude_funcs(){
 
 			sprintf(strFname, "output/amp_funcs_%d.dat", pid);
 
+			wxLogMessage(_T("initial wave:%s"), &w_init.to_wstr()[0]);
+
 			g_pStabSolver->searchWave(w_init, cond, stab_treat);
+
+			wxLogMessage(_T("converged to wave:%s"), &w_init.to_wstr()[0]);
 
 			g_pStabSolver->dumpEigenFuctions(strFname);
 

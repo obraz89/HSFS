@@ -519,7 +519,7 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	// this value is used to calculate max velo deriv: first N_BL_MAX_DERIV_POINTS are used
 	// IMPORTANT TODO: all points should be below shock!
-	const int N_BL_MAX_DERIV_POINTS = 50;
+	const int& N_BL_MAX_DERIV_POINTS = vd_params.N_BL_MAX_DERIV_POINTS;
 
 	// index of point at which max deriv is reached
 	int j_max_deriv = 0;

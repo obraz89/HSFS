@@ -16,7 +16,7 @@ protected:
 	// TODO: sizes and initialization!!!
 	t_VecCmplx _rk1, _rk2, _rk3, _rk4, _hl, _hr, _h_res, 
 			   _sol_vec_tmp1,_sol_vec_tmp2, 
-			   _trans_mat_vec_tmp;
+			   _trans_mat_vec_tmp1, _trans_mat_vec_tmp2;
 
 	t_MatCmplx _sol_tmp;
 	// _NSolVecs - number of solution vectors to solve

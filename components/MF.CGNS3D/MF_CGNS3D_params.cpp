@@ -14,6 +14,8 @@ using namespace hsstab;
 #define OPT_VD_WALL _T("VD_WALL")
 #define OPT_VD_MAX _T("VD_MAX")
 
+#define OPT_VD_N_BL_MAX_DERIV_POINTS 50
+
 t_CGNS3DParams::t_CGNS3DParams() :t_FldParams() {
 
 	VD_TYPES_STR.clear();
@@ -97,6 +99,8 @@ void t_CGNS3DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("VD_PLACE", _T("VD_WALL or VD_MAX"), _T("Reference velo deriv place"));
 
+	g.add("VD_N_BL_MAX_DERIV_POINTS", OPT_VD_N_BL_MAX_DERIV_POINTS, _T("Number of cells from the wall to be used to compute max velo deriv"));
+
 }
 
 void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginParamsGroup& g){
@@ -154,6 +158,8 @@ void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginP
 		ssuGENTHROW(_T("Unknown value provided for option VD_PLACE    (!)"));
 
 	params.vd_params.vd_place = static_cast<mf::cg::t_VDParams::t_VeloDerivPlace>(it->second);
+
+	params.vd_params.N_BL_MAX_DERIV_POINTS = g.get_int_param("VD_N_BL_MAX_DERIV_POINTS");
 
 
 }

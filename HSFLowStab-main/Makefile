@@ -22,12 +22,18 @@ INTDIR := $(topDIR)/$(OUTDIR)/obj/$(OUTLIB)
 OUTDIR := $(topDIR)/$(OUTDIR)
 
 CFLAGS += -I. -I$(topDIR)/shared -I$(plugDIR)/SmallMat -I$(plugDIR)/PhysCommon -I$(plugDIR)/Profile -I$(CGNS_DIR)/include_hdf5
-CFLAGS += $(MPI_INC_DIR)
+CFLAGS += -I$(MPI_INC_DIR)
+
 CFLAGS += $(WXFLAGS) -vec_report3
+
 #MY_LIBS := shared.so SmallMat.so PhysCommon.so Profile.so
 #MY_LIBS := $(addprefix $(OUTDIR)/, $(MY_LIBS))
+
 LFLAGS += -L$(OUTDIR) -lhsfs_shared -lhsfs_smallmat -lhsfs_physcommon -lhsfs_profile $(WXLIBS)
-LFLAGS += $(MPI_LFLAGS) $(HDF5_LFLAGS)
+
+LFLAGS += $(HDF5_LFLAGS)
+
+LFLAGS += -L$(MPI_LIB_DIR) -lmpi
 
 SRCDIRS := . 
 OBJS := $(wildcard $(addsuffix /*.cpp, $(SRCDIRS) ) )
@@ -38,10 +44,10 @@ VPATH := $(SRCDIRS)
 #-------------------------
 
 $(OUTDIR)/$(OUTLIB).exe : $(OBJS) $(OUTDIR)
-	$(MPICC) -o $@ $(OBJS) $(LFLAGS)
+	$(CC) -o $@ $(OBJS) $(LFLAGS)
 
 $(INTDIR)/%.o : %.cpp $(INTDIR)
-	$(MPICC) -o $@ -fPIC $(CFLAGS) -c $<
+	$(CC) -o $@ -fPIC $(CFLAGS) -c $<
 
 
 # Create output and intermed dirs
