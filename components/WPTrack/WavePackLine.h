@@ -22,6 +22,20 @@
 
 namespace pf{
 
+	struct t_GeomLineFromFile {
+
+		std::vector<mf::t_GeomPoint> points;
+
+		// when iterating over points, keep current position (index)
+		int ind;
+
+		t_GeomLineFromFile():points(0){};
+		void init();
+		void set_ind_base(const mf::t_GeomPoint& pnt);
+		void calc_dr_and_move(double dir, t_Vec3Dbl& dr);
+
+	};	// ~t_GeomLinePointer
+
 	class  t_WavePackLine: public stab::t_WPTrackBase{
 	protected:
 
@@ -74,10 +88,12 @@ namespace pf{
 		double _dx0_dw_gndim, _dx0_db_gndim;
 		t_Complex _da_dw_neut_gndim, _da_db_neut_gndim;
 
+		t_GeomLineFromFile _geom_line_from_file;
+
 		t_WCharsLoc _interpolate_next_wchars(const t_RecArray& wpline,
 			const mf::t_GeomPoint& new_xyz, const t_StabScales& new_scales) const;
 
-		void _calc_dr(double dt, const stab::t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr) const;
+		void _calc_dr(double dt, const stab::t_WPLineRec& rec, t_Vec3Dbl& v, t_Vec3Dbl& dr);
 
 		void _add_node(t_RecArray& add_to, const mf::t_Rec& fld_rec, 
 			const t_WCharsGlob& wave_chars, const t_WCharsLoc& wchars_loc);

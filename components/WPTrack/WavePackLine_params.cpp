@@ -32,6 +32,7 @@ t_WPLineParams::t_WPLineParams() {
 	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("GROUP_VELO")), t_WPLineParams::GROUP_VELO));
 	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("STREAMLINE")), t_WPLineParams::STREAMLINE));
 	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("FIXED_DIRECTION")), t_WPLineParams::FIXED_DIRECTION));
+	MARCH_OPTS_STR.insert(std::make_pair(wxString(_T("POINTS_FROM_FILE")), t_WPLineParams::POINTS_FROM_FILE));
 
 	SIGMA_TRUNC_MODES_STR.clear();
 	SIGMA_TRUNC_MODES_STR.insert(std::make_pair(
@@ -161,6 +162,9 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	case t_WPLineParams::FIXED_DIRECTION:
 		RetraceDir = t_WPLineParams::FIXED_DIRECTION;
 		read_parse_retrace_vec(g);
+		break;
+	case t_WPLineParams::POINTS_FROM_FILE:
+		RetraceDir = t_WPLineParams::POINTS_FROM_FILE;
 		break;
 	default:
 		ssuGENTHROW(_T("Retracing Direction option not supported!"));

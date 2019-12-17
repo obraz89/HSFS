@@ -8,6 +8,93 @@ using namespace mf;
 using namespace pf;
 using namespace stab;
 
+// t_GeomLineFromFile 
+
+void t_GeomLineFromFile::init()	{
+		wxString fname(_T("ppoints_wpline.dat"));
+
+		std::wifstream f_cin(fname.ToAscii());
+
+		if (f_cin.fail()) {
+			wxLogMessage(_T("Error: File ppoints_wpline.dat not found, required for reading geom points!"));
+			return;
+		}
+
+		int n_points;
+
+		f_cin >> n_points;
+
+		if (n_points < 0 || n_points>10000)
+			wxLogMessage(_T("Error: failed to read number of points from ppoints_wpline.dat:%d"), n_points);
+
+		points.resize(n_points);
+
+		const int BufSize = 256;
+		wxChar line[BufSize];
+
+		double x, y, z;
+
+		for (int i = 0; i < n_points; i++) {
+
+			if (!f_cin.good()) {
+				wxString msg(_T("Error during reading of pave points"));
+				wxLogMessage(msg);
+			}
+
+			f_cin >> x >> y >> z;
+
+			points[i] = t_GeomPoint(x, y, z);
+		}
+};
+
+void t_GeomLineFromFile::set_ind_base(const mf::t_GeomPoint& pnt) {
+
+	// search nearest point
+	t_Vec3Dbl dr;
+	double min_dst = 1.0e+12;
+	double dst;
+
+	for (int i = 0; i < points.size(); i++) {
+		matrix::base::minus<double, double>(points[i], pnt, dr);
+		dst = dr.norm();
+		if (dst < min_dst) {
+			min_dst = dst;
+			ind = i;
+		}
+	}
+};
+
+void t_GeomLineFromFile::calc_dr_and_move(double dir, t_Vec3Dbl& dr) {
+
+	int s = points.size();
+
+	int ind_s = ind;
+	int ind_e;
+
+	if (dir > 0.0) {
+		if (ind >= s - 1) {
+			wxLogMessage(_T("Warning: t_GeomLinePointer: point is outside, using bound points at the end of line"));
+			ind_s = s - 2;
+		}
+		ind_e = ind_s + 1;
+	}
+
+	if (dir < 0.0) {
+		if (ind <= 1) {
+			wxLogMessage(_T("Warning: t_GeomLinePointer: point is outside, using bound points at the start of line"));
+			ind_s = 1;
+		}
+		ind_e = ind_s - 1;
+	}
+
+	matrix::base::minus<double, double>(points[ind_e], points[ind_s], dr);
+
+	ind = ind_e;
+
+};
+
+// t_WavePackLine
+
 t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):_rFldMF(a_fld), 
 _s(NMAX_WPRECS), _sigma(NMAX_WPRECS), _nfact(NMAX_WPRECS), _params(){};
 
@@ -59,7 +146,15 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 
 	_params.init_wpline_base_params(g);
 
+	if (_params.RetraceDir == t_WPLineParams::t_MarchAlong::POINTS_FROM_FILE) {
+
+		_geom_line_from_file.init();
+
+	}
+
 }
+
+
 
 t_WavePackLine::~t_WavePackLine(){};
 
@@ -161,7 +256,7 @@ void t_WavePackLine::_add_node(
 
 };
 
-void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir, t_Vec3Dbl& dr) const{
+void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir, t_Vec3Dbl& dr){
 
 	mf::t_Rec outer_rec;
 	t_GeomPoint xyz = rec.mean_flow.get_xyz();
@@ -209,8 +304,15 @@ void t_WavePackLine::_calc_dr(double dt, const t_WPLineRec& rec, t_Vec3Dbl& dir,
 		matrix::base::mul(dt, dir, dr);
 
 		break;
+
+	case t_WPLineParams::POINTS_FROM_FILE:
+		_geom_line_from_file.calc_dr_and_move(dt_dir, dr);
+
+		dir = dr; dir.normalize();
+		break;
+
 	default:
-		wxString msg(_T("Unsupported retrace dir option"));
+		wxString msg(_T("Error:Unsupported retrace dir option"));
 		wxLogError(msg);
 		ssuGENTHROW(msg);
 		break;
@@ -574,8 +676,6 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 	loc_solver.setContext(start_xyz);
 	gs_solver.setContext(start_xyz);
 
-
-
 	init_wave.set_scales(loc_solver.get_stab_scales());
 
 	const t_WCharsLocDim wchars_dim_cnd = init_wave.make_dim();
@@ -594,6 +694,11 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 time_direction = -1.0;
 
 	 };
+
+	 // initialize geom line when retrace must be done along it
+	 if (_params.RetraceDir == t_WPLineParams::t_MarchAlong::POINTS_FROM_FILE) {
+		 _geom_line_from_file.set_ind_base(start_xyz);
+	 }
 
 	 // march until proceed condition break
 	 // or field boundary is reached

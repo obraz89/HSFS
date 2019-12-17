@@ -4,8 +4,6 @@
 #include "PluginBase.h"
 #include "WPTrackBase.h"
 
-
-
 namespace pf{
 
 	struct t_WPLineParams{
@@ -23,7 +21,7 @@ namespace pf{
 	    double TimeStep;
 	    stab::t_WPRetraceMode RetraceMode;
 
-	    enum t_MarchAlong{GROUP_VELO, STREAMLINE, FIXED_DIRECTION};
+	    enum t_MarchAlong{GROUP_VELO, STREAMLINE, FIXED_DIRECTION, POINTS_FROM_FILE};
 	    t_MarchAlong RetraceDir;
 
 		// stopping conditions for retrace
