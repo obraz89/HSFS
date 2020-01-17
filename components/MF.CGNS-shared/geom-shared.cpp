@@ -391,6 +391,46 @@ double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	return get_mf_params().L_ref;
 };
 
+// calculate abs value of variation of full velocity magnitude over cell, and cell size dd
+void TDomain::_calc_du_abs(const std::vector<t_ZoneNode>& data_grdline, int ind, double& du_abs, double& dd) const{
+
+	int is = 0;
+	int ie = data_grdline.size() - 2;
+
+	if (ind<is || ind>ie) {
+
+		wxLogMessage(_T("Error: _calc_specifid_velo_deriv: index is out of range: i=%d"), ind);
+		return;
+
+	}
+
+	mf::t_Rec cur_rec, nxt_rec;
+	t_GeomPoint wall_xyz, cur_xyz, nxt_xyz, dr;
+	t_Vec3Dbl cur_uvw, nxt_uvw, du;
+
+	get_rec(data_grdline[ind], cur_rec);
+
+	cur_xyz.set(cur_rec);
+
+	cur_uvw.set(cur_rec.u, cur_rec.v, cur_rec.w);
+
+	double cur_uvw_abs = cur_uvw.norm();
+
+	get_rec(data_grdline[ind + 1], nxt_rec);
+
+	nxt_xyz.set(nxt_rec);
+
+	nxt_uvw.set(nxt_rec.u, nxt_rec.v, nxt_rec.w);
+
+	double nxt_uvw_abs = nxt_uvw.norm();
+
+	matrix::base::minus<double, double>(nxt_xyz, cur_xyz, dr);
+
+	du_abs =  std::abs(cur_uvw_abs - nxt_uvw_abs);
+	dd = dr.norm();
+
+}
+
 // calculate derivative of velocity vs y like:
 // U={u,v,w}
 // d|U|/dy
@@ -469,6 +509,66 @@ double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 	
 }
 
+// new method to get characteristic |du/dy| in boundary layer
+// compute averaged |dy/dy| over thickness Y for all Y in range from 0 to Y_max
+// and choose max
+void TDomain::_calc_max_averaged_vderiv_abs(const std::vector<t_ZoneNode>& data_grdline, double& a_du_dd_avg_max) const{
+
+	int nnodes = data_grdline.size();
+
+	double dd, du_abs;
+
+	double du_sum = 0.0;
+	
+	double dd_sum = 0.0;
+
+	double du_dd_avg;
+
+	a_du_dd_avg_max = 0.0;
+
+	for (int j = 0; j < nnodes -1; j++) {
+		
+		_calc_du_abs(data_grdline, j, du_abs, dd);
+
+		du_sum+= du_abs;
+
+		dd_sum+= dd;
+
+		du_dd_avg = du_sum / dd_sum;
+
+		if (du_dd_avg > a_du_dd_avg_max) { 
+			a_du_dd_avg_max = du_dd_avg; 
+		}
+
+	}
+
+}
+
+void TDomain::_calc_dd_distribution(const std::vector<t_ZoneNode>& data_grdline, std::vector<double>& dd_vec) const {
+
+	int nnodes = data_grdline.size();
+
+	if (dd_vec.size() != nnodes) wxLogMessage(_T("TDomain::_calc_dd_distribution error: size mismatch"));
+
+	dd_vec[0] = 0.0;
+
+	mf::t_Rec rec_l, rec_r;
+	t_GeomPoint xyz_l, xyz_r;
+	t_Vec3Dbl dr;
+
+	for (int i = 1; i < nnodes; i++) {
+		get_rec(data_grdline[i-1], rec_l);
+		get_rec(data_grdline[i], rec_r);
+
+		xyz_l.set(rec_l);
+		xyz_r.set(rec_r);
+
+		matrix::base::minus<double, double>(xyz_r, xyz_l, dr);
+		dd_vec[i] = dd_vec[i - 1] + dr.norm();
+	}
+
+}
+
 // TODO: works only for grids nearly orthogonal to viscous wall 
 // input: data_grdline - for now just an extracted domain gridline
 // output: bl_thick & raw_profile (truncated data_grdline)
@@ -494,6 +594,11 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	wxLogMessage(_T("surf node xyz:%s"), wall_xyz.to_wxstr());
 
+	// get dd distribution
+	std::vector<double> dd_vec(data_grdline.size());
+
+	_calc_dd_distribution(data_grdline, dd_vec);
+
 	double du_dy = 0.0;
 	double du_dy_max = 0.0;
 	double du_dy_base = 0.0;
@@ -517,67 +622,19 @@ void TDomain::_calc_bl_thick_vderiv(
 
 	// step1 - find du_dy_base
 
-	// this value is used to calculate max velo deriv: first N_BL_MAX_DERIV_POINTS are used
-	// IMPORTANT TODO: all points should be below shock!
-	const int& N_BL_MAX_DERIV_POINTS = vd_params.N_BL_MAX_DERIV_POINTS;
+	double du_dd_avg_max; 
+	
+	_calc_max_averaged_vderiv_abs(data_grdline, du_dd_avg_max);
 
-	// index of point at which max deriv is reached
-	int j_max_deriv = 0;
+	wxLogMessage(_T("_calc_bl_thick_vderiv:: max averaged full velocity derivative abs:%lf"), du_dd_avg_max);
 
-	for (int m = 0; m < data_grdline.size() - 1; m++)
-	{
-
-		du_dy = _calc_specific_velo_deriv_abs(data_grdline, m, vd_params);
-
-		//wxLogMessage(_T("du_dy=%lf; dutau_dy=%lf"), du_dy, dutau_dy);
-
-		if (vd_params.vd_place == t_VDParams::VD_WALL) {
-
-				if (m == 0) {
-
-					// debug 
-					wxLogMessage(_T("_calc_bl_thick_vderiv:: wall deriv = %lf"), du_dy);
-
-					du_dy_base = du_dy;
-
-					break;
-
-				}
-
-			}
-
-		// find first max deriv value moving from the wall to outside
-		if (vd_params.vd_place == t_VDParams::VD_MAX) {
-
-			if (du_dy > du_dy_max) {
-
-				du_dy_max = du_dy;
-				j_max_deriv = m;
-
-			}
-
-			if (m >= N_BL_MAX_DERIV_POINTS) {
-
-				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv calculated using first %d points"), N_BL_MAX_DERIV_POINTS);
-				wxLogMessage(_T("_calc_bl_thick_vderiv:: max tang-velo deriv = %lf"), du_dy_max);
-
-				du_dy_base = du_dy_max;
-
-				break;
-			}
-
-		}
-	} 
+	du_dy_base = du_dd_avg_max;
 
 	// step 2 - find bl bound rec
 
 	int ind_ref;
 
-	// do not start from surface, start from j_max_deriv
-	// because for the flows where velocity deriv at the wall is small
-	// bl thickness will be zero if started from the wall 
-
-	for (int m = j_max_deriv; m < data_grdline.size() - 1; m++) {
+	for (int m = 0; m < data_grdline.size() - 1; m++) {
 
 		du_dy = _calc_specific_velo_deriv_abs(data_grdline, m, vd_params);
 
@@ -585,28 +642,27 @@ void TDomain::_calc_bl_thick_vderiv(
 
 		if (du_dy<eps*du_dy_base) {
 
-			get_rec(data_grdline[m], cur_rec);
-
-			cur_xyz.set(cur_rec);
-
-			matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-			y_ref = dr.norm();
+			y_ref = dd_vec[m];
 
 			// additional check required that from y_ref to 
 			// y_ref*ThickCoef the derivative is below tolerance
+
+			// count number of cells where condition is violated
+			// if the number is small, maybe it's a shock
+			// then take a domain from surface to shock
+			int n_cells_cnd_violated = 0;
+
+			// index where condition is violated for the first time
+			// if shock detected, this is shock position, and take it as boundary
+			// for extracted profile
+			bool is_cnd_violated = false;
+			int j_cnd_first_violated = 0;
 
 			bool deriv_check = true;
 
 			for (int j = m; j < data_grdline.size() - 1; j++) {
 
-				get_rec(data_grdline[j], cur_rec);
-
-				cur_xyz.set(cur_rec);
-
-				matrix::base::minus<double, double>(cur_xyz, wall_xyz, dr);
-
-				double cur_y = dr.norm();
+				double cur_y = dd_vec[j];
 
 				// TODO: ThickCoef should be here
 				if (cur_y < _profile_cfg.ThickCoefDefault*y_ref) {
@@ -614,8 +670,12 @@ void TDomain::_calc_bl_thick_vderiv(
 					double du_dy_up = _calc_specific_velo_deriv_abs(data_grdline, j, vd_params);
 
 					if (du_dy_up > eps*du_dy_base) {
-						deriv_check = false;
-						break;
+						n_cells_cnd_violated++;
+
+						if (!is_cnd_violated) {
+							is_cnd_violated = true;
+							j_cnd_first_violated = j;
+						}
 					}
 
 				}
@@ -623,10 +683,37 @@ void TDomain::_calc_bl_thick_vderiv(
 
 			}
 
+			wxLogMessage(_T("n_cells_cnd_violated=%d, j_frst=%d"), n_cells_cnd_violated, j_cnd_first_violated);
+
+			// empirics to detect shock
+			// if condition violated in less then 10 points
+			if (n_cells_cnd_violated > 10) {
+				deriv_check = false;
+			}
+
 			if (deriv_check) {
-				ind_ref = m;
-				bl_thick_scales.thick_scale = y_ref;
-				break;
+				// normal situation
+				if (n_cells_cnd_violated == 0) {
+					ind_ref = m;
+					bl_thick_scales.thick_scale = y_ref;
+					break;
+				}
+				else {
+					// we reached shock while searching outer boundary, crop domain
+					// outer rec should be just below shock
+					wxLogMessage(_T("TDomain::_calc_bl_thick_vderiv:: shock reached while searching outer rec( in profile extraction)"));
+					double full_thick = dd_vec[j_cnd_first_violated];
+					double thick_scale_raw = full_thick/_profile_cfg.ThickCoefDefault;
+					// find ind_ref
+					for (int k = 0; k < dd_vec.size()-1; k++) {
+						if (thick_scale_raw < dd_vec[k + 1]) {
+							ind_ref = k;
+							bl_thick_scales.thick_scale = dd_vec[k];
+							break;
+						}
+					}
+					break;
+				}
 			}
 
 		}

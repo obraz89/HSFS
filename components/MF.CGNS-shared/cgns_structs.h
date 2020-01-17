@@ -590,6 +590,13 @@ namespace mf{
 			double _calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
 				int ind, const t_VDParams& vd_params) const;
 
+			void _calc_du_abs(const std::vector<t_ZoneNode>& data_grdline,
+				int ind, double& du_abs, double& dd) const;
+
+			void _calc_max_averaged_vderiv_abs(const std::vector<t_ZoneNode>& data_grdline, double& du_dd_avg_max) const;
+
+			void _calc_dd_distribution(const std::vector<t_ZoneNode>& data_grdline, std::vector<double>& dd_vec) const;
+
 			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile, const t_VDParams& vd_params) const;
 
