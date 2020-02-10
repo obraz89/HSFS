@@ -62,6 +62,9 @@ void task::init_glob_solvers(){
 	g_pGSSolverSpat = caps_gs.create_gs_solver(*g_pMFDomain, stab::t_TaskTreat::SPAT);
 	g_pGSSolverSpat->init(G_Plugins.get_plugin(plgGS));
 
+	g_pGSSolverSpat->bind_loc_solver(*g_pStabSolver);
+	g_pGSSolverSpat->bind_loc_solver(*g_pStabSolver);
+
 	g_pWPLine = caps_wp.create_wp_track(*g_pMFDomain);
 	g_pWPLine->init(G_Plugins.get_plugin(plgWPTrack));	
 

@@ -437,138 +437,7 @@ void t_StabSolver::_setScalProdMatrix(const double& a_y){
 
 }
 
-// TODO: to speed up - rewrite to "_setAsymptotcs" 
-// and write directly to destination formal param
-
-void t_StabSolver::_setAsymptotics(t_MatCmplx& asym_vecs){
-
-	const int dim = getTaskDim();
-
-	t_SqMatCmplx b_coef(dim);
-	t_VecCmplx lambda(dim,0.0);
-
-	// TODO: function for simplified asymp: u=1.0, u'=0, u''=0, ... ?
-	t_ProfRec out_rec = _profStab.get_last_rec();
-
-	if (_ls_mode.is_flag_on(stab::t_LSMode::ASYM_HOMOGEN)){
-		// modify ... a little
-		// this is how AVF did it
-		out_rec.t1=0.0;
-		out_rec.t2=0.0;
-		out_rec.u1=0.0;
-		out_rec.u2=0.0;
-		out_rec.w1=0.0;
-		out_rec.w2=0.0;
-	}
-	_setStabMatrix3D(out_rec);
-	// to shorten 
-	t_SqMatCmplx& _sm = _stab_matrix;
-
-	// det(H - lambda*E)=0 <=> lambda1, lambda2... lambda8
-	// choose l1,l3,l5,l7 : Re(l1,l3,l5,l7)<0
-
-	// eigen vectors h1 for l1 eigenvalue, h3 for l3, h5 for l5, h7 for l7 are used as initials
-
-	b_coef[0][0]=_stab_matrix[0][1];
-	b_coef[1][0]=_stab_matrix[3][1];
-	b_coef[2][0]=_stab_matrix[4][1];
-
-	b_coef[1][1]=_sm[3][1]*_sm[1][3]+_sm[3][2]*_sm[2][3]+
-		_sm[3][5]*_sm[5][3]+_sm[3][7]*_sm[7][3];
-
-	b_coef[2][1]=_sm[4][1]*_sm[1][3]+_sm[4][2]*_sm[2][3]+
-		_sm[5][3]*_sm[4][5]+_sm[7][3]*_sm[4][7];
-
-	b_coef[1][2]=_sm[3][5];
-	b_coef[2][2]=_sm[4][5];
-
-	b_coef[1][3]=_sm[3][7];
-	b_coef[2][3]=_sm[4][7];
-
-	b_coef[3][3] = _stab_matrix[0][1];
-	//
-
-	t_CompVal s1 = 0.5*(b_coef[1][1]+b_coef[2][2]);
-	t_CompVal s2 = sqrt(
-		0.25*std::pow(b_coef[1][1]-b_coef[2][2],2)+
-		b_coef[2][1]*b_coef[1][2]
-	);
-	lambda[0] = -sqrt(b_coef[0][0]);
-	lambda[1] = -sqrt(s1+s2);
-	lambda[2] = -sqrt(s1-s2);
-	lambda[3] = lambda[0];
-
-	b_coef[0][0] = 1.0;
-	b_coef[1][0] = 0.0;
-	b_coef[2][0] = 0.0;
-	b_coef[3][0] = 0.0;
-	for (int i=1; i<3; i++){
-		t_CompVal L2 = std::pow(lambda[i],2);
-		t_CompVal denom = _stab_matrix[0][1] - L2;
-		b_coef[0][i] = (
-			(L2 - _stab_matrix[4][5])*_stab_matrix[3][1]+
-			_stab_matrix[4][1]*_stab_matrix[3][5]
-		)/denom;
-
-		b_coef[1][i] = _stab_matrix[4][5] - L2;
-		b_coef[2][i] = -_stab_matrix[3][5];
-		b_coef[3][i] = (
-			_stab_matrix[3][5]*_stab_matrix[4][7]+
-			(L2 - _stab_matrix[4][5])*_stab_matrix[3][7]
-		)/denom;
-	};
-
-	b_coef[0][3]=0.0;
-	b_coef[1][3]=0.0;
-	b_coef[2][3]=0.0;
-	b_coef[3][3]=1.0;
-
-	for (int i=0; i<4; i++){	
-		asym_vecs[i][0] = b_coef[0][i];
-		asym_vecs[i][1] = lambda[i]*b_coef[0][i];
-		asym_vecs[i][2] = (
-			_stab_matrix[0][2]*b_coef[0][i]+
-			_stab_matrix[3][2]*b_coef[1][i]+
-			_stab_matrix[4][2]*b_coef[2][i]+
-			_stab_matrix[6][2]*b_coef[3][i]
-		)/lambda[i];
-
-		asym_vecs[i][3] = b_coef[1][i];
-		asym_vecs[i][4] = b_coef[2][i];
-		asym_vecs[i][5] = lambda[i]*b_coef[2][i];
-		asym_vecs[i][6] = b_coef[3][i];
-		asym_vecs[i][7] = (
-			_stab_matrix[3][7]*b_coef[1][i]+
-			_stab_matrix[4][7]*b_coef[2][i]+
-			_stab_matrix[6][7]*b_coef[3][i]
-		)/lambda[i];
-	}
-
-	// verification of asymptotics, enable when debug needed
-	
-	t_VecCmplx asym_resid_v(2*dim, 0.0), init_vec(2*dim, 0.0);
-	t_VecCmplx v1(2*dim, 0.0), v2(2*dim, 0.0), v3(2*dim, 0.0);
-	double resid=0.0;
-
-	for (int i=0; i<dim; i++){
-
-			asym_vecs.col_to_vec(i, init_vec);
-			//asym_resid_v = _stab_matrix*init_vec - lambda[i]*init_vec;		
-			matrix::base::mat_mul<t_Complex, t_Complex>(_stab_matrix, init_vec, v1);
-			matrix::base::mul<t_Complex, t_Complex>(lambda[i], init_vec, v2);
-			matrix::base::minus<t_Complex, t_Complex>(v1, v2, asym_resid_v);
-
-			resid = resid + asym_resid_v.norm().real();
-	}
-
-	//wxLogMessage(_T("Verify asymptotics v1: resid = %f"), resid);
-	//if (resid>ASYM_TOL_DEFAULT)
-	//	ssuGENTHROW(_T("StabSolver Error: Verification of Asymptotics failed"));
-	
-	// asym_vecs are set
-}
-
-void t_StabSolver::_setAsymptotics_v2(t_MatCmplx& asym_vecs){
+void t_StabSolver::setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* a_lambdas /*=NULL*/){
 
 	const int dim = getTaskDim();
 	t_SqMatCmplx b_coef(dim);
@@ -630,6 +499,10 @@ void t_StabSolver::_setAsymptotics_v2(t_MatCmplx& asym_vecs){
 		lambda[1] = -sqrt(s1+s2);
 		lambda[2] = -sqrt(s1-s2);
 		lambda[3] = lambda[0];
+
+		if (a_lambdas != NULL) {
+			for (int i = 0; i < 4; i++) a_lambdas[i] = lambda[i];
+		}
 
 		for (int i=0; i<dim; i++) lambda[i+dim] = -lambda[i];
 
@@ -979,7 +852,7 @@ t_Complex t_StabSolver::solve(t_WCharsLoc& stab_point){
 	this->_waveChars = stab_point;
 	this->_math_solver.clean();
 
-	_setAsymptotics_v2(_math_solver.solution[0]);
+	setAsymptotics(_math_solver.solution[0]);
 
 	_math_solver.solve();
 	t_Complex resid = _calcResidual();

@@ -22,6 +22,8 @@ static const double SECOND_VISC_RATIO_DEFAULT = -2./3.;
 
 #define CURV_TERMS_FLAG_DEFAULT_STR _("NO")
 
+#define BC_OUT_KIND_DEFAULT_STR _("HOMOGEN")
+
 t_EigenGSParams::t_EigenGSParams(){	init_supported_options();}
 
 void t_EigenGSParams::init_supported_options(){
@@ -58,7 +60,10 @@ void t_EigenGSParams::init_supported_options(){
 		std::make_pair(_T("YES"), true)
 	);
 
+	BC_OUT_KIND_STR.clear();
 
+	BC_OUT_KIND_STR.insert(std::make_pair(BC_OUT_KIND_DEFAULT_STR, t_BCOutKind::BC_OUT_HOMOGEN));
+	BC_OUT_KIND_STR.insert(std::make_pair(_("P_ASYM"), t_BCOutKind::BC_OUT_P_ASYM));
 
 }
 
@@ -82,6 +87,8 @@ void t_EigenGSParams::default_settings(hsstab::TPluginParamsGroup& g){
 	g.add("ProfStabNonDimType", PROFSTAB_NDIM_TYPE_DEFAULT_STR, _T("Use this non-dim for stability profiles"));
 
 	g.add("CurvTermsEnabled", CURV_TERMS_FLAG_DEFAULT_STR, _T("Enable/disable curvature terms in stability computations"));
+
+	g.add("BCOutKind", BC_OUT_KIND_DEFAULT_STR, _T("BC kind at the top of comp domain"));
 
 }
 
@@ -145,23 +152,6 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 
 	NondimScaleType = static_cast<t_ProfStabCfg::t_Nondim>(rmode);
 
-	/*
-	switch (rmode)
-	{
-	case (t_ProfStabCfg::NONDIM_BY_CFD_SCALE):
-		NondimScaleType = t_ProfStabCfg::NONDIM_BY_CFD_SCALE;
-		break;
-	case (t_ProfStabCfg::NONDIM_BY_X_SELFSIM):
-		NondimScaleType = t_ProfStabCfg::NONDIM_BY_X_SELFSIM;
-		break;
-	case (t_ProfStabCfg::NONDIM_BY_FIXED_VAL):
-		NondimScaleType = t_ProfStabCfg::NONDIM_BY_FIXED_VAL;
-		break;
-	default:
-		wxLogError(_("PF.EigenGS: failed to read prf stab nondim type"));
-
-	}*/
-
 	wxString curv_terms_flag_str = g.get_string_param("CurvTermsEnabled");
 
 	curv_terms_flag_str.Trim(true); curv_terms_flag_str.Trim(false);
@@ -176,6 +166,14 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 	}
 
 	CurvTermsOn = it_b->second;
+
+	wxString bc_out_str = g.get_string_param("BCOutKind");
+
+	it = BC_OUT_KIND_STR.find(bc_out_str);
+
+	if (it == BC_OUT_KIND_STR.end()) wxLogMessage(_T("PF.EigenGS: unknown option for BC out kind, supported options HOMOGEN, P_ASYM"));
+
+	BCOutKind = static_cast<t_BCOutKind>(it->second);
 
 }
 

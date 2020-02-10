@@ -52,8 +52,8 @@ void t_GlobSrchSpat::init(const hsstab::TPlugin& g_plug){
 
 	// container for insert vals
 	// dim is max insert dim
-	_insert_vals = new MKL_Complex16[GS_SO_INS_SIZE];
-	_insert_inds = new MKL_INT[GS_SO_INS_SIZE];
+	_insert_vals = new MKL_Complex16[GS_SO_BC_OUT_INS_SIZE];
+	_insert_inds = new MKL_INT[GS_SO_BC_OUT_INS_SIZE];
 
 	// global matrices & vectors
 
@@ -573,6 +573,120 @@ void t_GlobSrchSpat::fill_SO_row(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx&
 		_insert_inds[s_base+i] = l_base + i;
 	};
 };
+
+t_CompVal t_GlobSrchSpat::_calc_p_out_eigval() {
+
+	// NSOL_VECS_ODES and STAB_MATRIX_DIM
+	t_MatCmplx vecs(4,8);
+	t_CompVal lambdas[4];
+
+	t_WCharsLoc wave;
+	wave.b = this->_beta;
+	wave.w = this->_w;
+	// tricky part 
+	// a = 0.0 worked for M=3 parab wing test
+	wave.a = wave.w;
+	_p_loc_solver->setWave(wave);
+
+	_p_loc_solver->setAsymptotics(vecs, &lambdas[0]);
+
+	const t_StabScales& ls_scales = _p_loc_solver->get_stab_scales();
+
+	const t_StabScales& gs_scales = this->_profStab.scales();
+
+	wxLogMessage(_T("Debug: ls Dels=%lf, gs Dels=%lf"), ls_scales.Dels, gs_scales.Dels);
+
+	// 
+	t_CompVal p_eig_val = lambdas[2];
+
+	t_CompVal ret = p_eig_val * gs_scales.Dels / ls_scales.Dels;
+	wxLogMessage(_T("Debug: computed p eigval: (%lf, %lf)"), ret.real(), ret.imag());
+
+	return ret;
+}
+
+void t_GlobSrchSpat::fill_SO_row_BC_out(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat,
+	const t_SqMatCmplx& a_RMat, const int a_nnode, const int a_eq_id, int& a_ins_nvals) {
+
+	// large and small index bases
+	int l_base = (a_nnode - 3)*GS_NVARS_SPAT;
+	int s_base = 0;
+	// uniform grid
+	const double step = _deta;
+	const double inv_step = 1.0 / step;
+	const double inv_step2 = inv_step*inv_step;
+	double f1, f2, f3;
+	getMetricCoefs(a_nnode, f1, f2, f3, false);
+
+	a_ins_nvals = GS_SO_BC_OUT_INS_SIZE;
+
+	// first five elements in inserts: f~[j-3] and f^[j-5/2]
+	// f~<=>{u,v,o,w,t} ; f^<=>{0,0,p,0,0}
+	for (int i = 0; i<GS_NVARS_SPAT; i++) {
+		if (i == 2) {
+			_insert_vals[s_base + i] = getMKLCmplx(0.0);
+		}
+		else {
+			_insert_vals[s_base + i] = getMKLCmplx(
+				(-f1*inv_step2/3.0)*a_LMat[i][a_eq_id]);
+		};
+		_insert_inds[s_base + i] = l_base + i;
+	};
+	l_base += _params.NVars;
+	s_base += _params.NVars;
+
+	// next five elements in inserts: f~[j-2] and f^[j-3/2]
+	// f~<=>{u,v,o,w,t} ; f^<=>{0,0,p,0,0}
+	for (int i = 0; i<GS_NVARS_SPAT; i++) {
+		if (i == 2) {
+			_insert_vals[s_base + i] = getMKLCmplx(0.0);
+		}
+		else {
+			_insert_vals[s_base + i] = getMKLCmplx(
+				(2.0*f1*inv_step2+0.5*f2*inv_step)*a_LMat[i][a_eq_id]
+			+0.5*f3*inv_step*a_MMat[i][a_eq_id]);
+		};
+		_insert_inds[s_base + i] = l_base + i;
+	};
+	l_base += _params.NVars;
+	s_base += _params.NVars;
+
+	// next five elements in inserts: f~[j-1] and f^[j-1/2]
+	// f~<=>{u,v,o,w,t} ; f^<=>{0,0,p,0,0}
+
+	t_CompVal lambda = _calc_p_out_eigval();
+	t_CompVal eps = (2.0*f3 + lambda*step) / (2.0*f3 - lambda*step);
+
+	for (int i = 0; i<GS_NVARS_SPAT; i++) {
+		if (i == 2) {
+			_insert_vals[s_base + i] = getMKLCmplx(
+				(eps-1.0)*f3*inv_step*a_MMat[i][a_eq_id] + 0.5*(eps+1.0)*a_RMat[i][a_eq_id]);
+		}
+		else {
+			_insert_vals[s_base + i] = getMKLCmplx(
+				(-3.0*f1*inv_step2 - 2.0*f2*inv_step)*a_LMat[i][a_eq_id]
+				- 2.0*f3*inv_step*a_MMat[i][a_eq_id]);
+		};
+		_insert_inds[s_base + i] = l_base + i;
+	};
+	l_base += _params.NVars;
+	s_base += _params.NVars;
+
+	// last five elements in inserts: f~[j] and f^[j+1/2]
+	// f~<=>{u,v,o,w,t} ; f^<=>{0,0,p,0,0}
+	for (int i = 0; i<GS_NVARS_SPAT; i++) {
+		if (i == 2) {
+			_insert_vals[s_base + i] = getMKLCmplx(0.0);
+		}
+		else {
+			_insert_vals[s_base + i] = getMKLCmplx(
+				(4.0/3.0*f1*inv_step2 + 1.5*f2*inv_step)*a_LMat[i][a_eq_id]
+				+ 1.5*f3*inv_step*a_MMat[i][a_eq_id] + a_RMat[i][a_eq_id]);
+		};
+		_insert_inds[s_base + i] = l_base + i;
+	};
+}
+
 // the only first order continuity equation 
 void t_GlobSrchSpat::fill_FO_row(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 								 const int a_nnode, int& a_ins_nvals){
@@ -730,16 +844,52 @@ int t_GlobSrchSpat::_solve(){
 	// last block 5x5
 	// just set blocks to unity matrices
 	{
-		for (int j=0; j<GS_NVARS_SPAT; j++){
+		if (_params.BCOutKind==t_EigenGSParams::t_BCOutKind::BC_OUT_HOMOGEN){
 
-			row_num=(_params.NNodes-1)*GS_NVARS_SPAT + j;
+			wxLogMessage(_T("homogen"));
 
-			int g_ind = calcPlainIndByIJ(row_num, row_num, _NDIM_G);
+			for (int j = 0; j<GS_NVARS_SPAT; j++) {
 
-			MKL_Complex16 one; one.real = 1.0; one.imag = 0.0;
+				row_num = (_params.NNodes - 1)*GS_NVARS_SPAT + j;
 
-			_A_G[g_ind] = one;
-			_B_G[g_ind] = one;
+				int g_ind = calcPlainIndByIJ(row_num, row_num, _NDIM_G);
+
+				MKL_Complex16 one; one.real = 1.0; one.imag = 0.0;
+
+				_A_G[g_ind] = one;
+				_B_G[g_ind] = one;
+
+			}
+		}
+		
+		if (_params.BCOutKind == t_EigenGSParams::t_BCOutKind::BC_OUT_P_ASYM) {
+			wxLogMessage(_T("p_asym"));
+
+			int i = _params.NNodes - 1;
+
+			for (int j = 0; j<GS_NVARS_SPAT; j++) {
+
+				row_num = GS_NVARS_SPAT*i + j;
+
+				if (j == 2) {
+
+					int g_ind = calcPlainIndByIJ(row_num, row_num, _NDIM_G);
+
+					MKL_Complex16 one; one.real = 1.0; one.imag = 0.0;
+
+					_A_G[g_ind] = one;
+					_B_G[g_ind] = one;
+
+				}else {
+					setMatrices(i, false);
+
+					fill_SO_row_BC_out(_A, _B, _C, i, j, n_inserts);
+					insertValsToMat(_A_G, _NDIM_G, row_num, _insert_vals, _insert_inds, n_inserts);
+
+					fill_SO_row_BC_out(_A_AL, _B_AL, _C_AL, i, j, n_inserts);
+					insertValsToMat(_B_G, _NDIM_G, row_num, _insert_vals, _insert_inds, n_inserts);
+				};
+			}
 
 		}
 

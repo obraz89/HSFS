@@ -28,6 +28,10 @@ namespace pf{
 		t_MapWxStrInt PROFSTAB_NONDIM_TYPES_STR;
 		t_ProfStabCfg::t_Nondim NondimScaleType;
 
+		t_MapWxStrInt BC_OUT_KIND_STR;
+		enum t_BCOutKind {BC_OUT_HOMOGEN=0, BC_OUT_P_ASYM};
+		t_BCOutKind BCOutKind;
+
 		t_EigenGSParams();
 
 		void init_supported_options();

@@ -224,6 +224,12 @@ void t_StabSolver::setContext(const t_ProfileStab* a_prof_stab){
 	
 }
 
+/************************************************************************/
+// set the candidate wave
+//
+/************************************************************************/
+void t_StabSolver::setWave(const t_WCharsLoc& wave) { _waveChars = wave; }
+
 /************************************************************************/   
 //COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) 
 //
@@ -678,6 +684,10 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 		try
 		{
 
+			wxLogMessage(_T("=============GS============="));
+
+			wxLogMessage(_T("GS Estimate:%s"), &cur_wave.to_wstr()[0]);
+
 			// first make raw estimate - good wave or not
 			if (!( stab::check_wchars_c_phase(cur_wave) && 
 				stab::check_wchars_increment(cur_wave)
@@ -685,8 +695,8 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 
 			good_init = searchWave(cur_wave, cond, stab::t_TaskTreat::SPAT);
 
-			if (good_init && cur_wave.a.real()>=0)
-				std::wcout<<_T("Discrete mode found:")<<cur_wave;
+			if (good_init && cur_wave.a.real() >= 0)
+				wxLogMessage(_T("Discrete mode candidate:%s"), &cur_wave.to_wstr()[0]);
 
 			if (good_init && stab::check_wchars_c_phase(cur_wave) && 
 				stab::check_wchars_increment(cur_wave)){
@@ -701,10 +711,11 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 					stab::check_wchars_increment(cur_wave)
 					){
 
-					std::wcout<<_T("Instab found:")<<cur_wave;
+					wxLogMessage(_T("Checks for group velocity & increment: ok"));
 
 					ret_waves.push_back(cur_wave);
-				}
+				}else
+					wxLogMessage(_T("Checks for group velocity & increment: failed (!)"));
 			}
 		}
 		catch (...)

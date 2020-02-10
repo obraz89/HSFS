@@ -29,6 +29,8 @@ namespace pf{
 	// 2-point vector stencil or 10-point expanded
 	static const int GS_FO_INS_SIZE = 2*GS_NVARS_SPAT;
 
+	static const int GS_SO_BC_OUT_INS_SIZE = 4 * GS_NVARS_SPAT;
+
 	class  t_GlobSrchSpat: public stab::t_GSBase{
 
 		const mf::t_DomainBase& _rBlk;
@@ -78,8 +80,13 @@ namespace pf{
 		void fill_SO_row(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat, 
 			const t_SqMatCmplx& a_RMat, const int a_nnode, const int a_eq_id, int& a_ins_nvals);
 
+		void fill_SO_row_BC_out(const t_SqMatCmplx& a_LMat, const t_SqMatCmplx& a_MMat,
+			const t_SqMatCmplx& a_RMat, const int a_nnode, const int a_eq_id, int& a_ins_nvals);
+
 		void fill_FO_row(const t_SqMatCmplx& a_MMat, const t_SqMatCmplx& a_RMat, 
 			const int a_nnode, int& a_ins_nvals);
+
+		t_CompVal _calc_p_out_eigval();
 
 		void _set_curv_coefs_xyz(const mf::t_GeomPoint& a_xyz);
 

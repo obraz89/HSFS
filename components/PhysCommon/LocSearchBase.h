@@ -99,9 +99,13 @@ namespace stab{
 		virtual int getTaskDim() const = 0;
 		virtual int getNNodes() const = 0;
 
+		virtual void setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* lambdas = NULL)=0;
+
 		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
+
+		virtual void setWave(const t_WCharsLoc& wave)=0;
 
 		virtual t_Complex solve(t_WCharsLoc& a_wave_chars)=0;
 
@@ -148,11 +152,18 @@ namespace stab{
 /************************************************************************/
 
 	class IMPEXP_PHYSCOMMON t_GSBase: public hsstab::TPlugPhysPart{
+
+	protected:
+
+		t_LSBase* _p_loc_solver;
+
 	public:
 
 		virtual void setContext(const mf::t_GeomPoint& a_xyz)=0;
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
+
+		void bind_loc_solver(t_LSBase& ls) { _p_loc_solver = &ls; }
 
 		virtual int getSpectrum(const t_WCharsLoc& init_wave)=0;
 

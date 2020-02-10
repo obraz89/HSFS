@@ -76,11 +76,6 @@ class  t_StabSolver: public stab::t_LSBase{
 	// rhs function by stab matrix
 	// input for ODES
 	void _formRHS3D(const double& a_y, const t_VecCmplx& a_var, t_VecCmplx& dest);
-	// first version, asymptotics fron AVF code
-	void _setAsymptotics(t_MatCmplx& asym_vecs);
-
-	// second version of asymptotics, from Forgoston disser
-	void _setAsymptotics_v2(t_MatCmplx& asym_vecs);
 
 	// set curvature coefs
 	void _setCurvCoefs(const mf::t_GeomPoint& a_xyz);
@@ -116,6 +111,8 @@ public:
 	t_WCharsGlob popGlobalWCharsSpat(const mf::t_GeomPoint a_xyz);
 
 	//========================
+	void setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* lambdas = NULL);
+
 	bool searchWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
 
 	std::vector<t_WCharsLoc> filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond);
@@ -130,6 +127,8 @@ public:
 	void setContext(const mf::t_GeomPoint a_xyz);
 
 	void setContext(const t_ProfileStab* prof_stab);
+
+	void setWave(const t_WCharsLoc& wave);
 
 	void calcGroupVelocity(t_WCharsLoc& wchars);
 
