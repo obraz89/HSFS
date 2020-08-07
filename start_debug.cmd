@@ -17,7 +17,7 @@
 
 ::@set MPICH2_DIR=%HSFSRoot%/lib_vc14/msmpi-win64
 ::@set MPICH2_DIR=E:\lib\MSMPI_v8
-@set MPICH2_DIR=E:\lib\MSMPI_v8
+@set MPI_DIR=E:\lib\msmpi_10.1.2
 
 @set HDF5_DIR=%HSFSRoot%/lib_vc14/hdf5_1.1
 

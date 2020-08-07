@@ -10,7 +10,9 @@
 @set WX_DIR=%HSFSRoot%\lib_vc14\wx-vc14-rlz-win64
 @set WX_ARCH=vc140_x64_dll
 
-@set PATH=%PATH%;%INTEL_COMPILERS%/bin/intel64/;%WX_DIR%/lib/%WX_ARCH%;E:\lib\MSMPI_v8\bin
+@set HDF5_BIN=E:\lib\hdf5\bin
+
+@set PATH=%PATH%;%INTEL_COMPILERS%/bin/intel64/;%WX_DIR%/lib/%WX_ARCH%;%HDF5_BIN%
 
 ::@if %HSSTAB_CASE_DIR%.==. set HSSTAB_CASE_DIR=%CD% 
 

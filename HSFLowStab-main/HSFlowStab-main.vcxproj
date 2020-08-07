@@ -109,7 +109,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(WX_DIR)/include;$(SolutionDir)/shared;$(SolutionDir)/components/Profile;$(SolutionDir)/components/SmallMat;$(HDF5_DIR)/include;$(SolutionDir)/components/PhysCommon;$(MPICH2_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WX_DIR)/include;$(SolutionDir)/shared;$(SolutionDir)/components/Profile;$(SolutionDir)/components/SmallMat;$(HDF5_DIR)/include;$(SolutionDir)/components/PhysCommon;$(MPI_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -120,7 +120,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;msmpi.lib;libhdf5.lib;szip.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPICH2_DIR)/lib;$(HDF5_DIR)/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPI_DIR)/lib/x64;$(HDF5_DIR)/lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
@@ -152,7 +152,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(WX_DIR)/include;$(SolutionDir)/shared;$(SolutionDir)/components/Profile;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/PhysCommon;$(MPICH2_DIR)/include;$(HDF5_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WX_DIR)/include;$(SolutionDir)/shared;$(SolutionDir)/components/Profile;$(SolutionDir)/components/SmallMat;$(SolutionDir)/components/PhysCommon;$(MPI_DIR)/include;$(HDF5_DIR)/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;__WXMSW__;WXUSINGDLL;UNICODE;_UNICODE;__WXDEBUG__;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -162,7 +162,7 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>wxbase28u.lib;shared.lib;PhysCommon.lib;Profile.lib;SmallMat.lib;msmpi.lib;libhdf5.lib;szip.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPICH2_DIR)\lib;$(HDF5_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(WX_DIR)/lib/$(WX_ARCH);$(OutDir);$(MPI_DIR)\lib\x64;$(HDF5_DIR)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
