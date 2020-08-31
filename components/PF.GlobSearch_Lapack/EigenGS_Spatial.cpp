@@ -585,7 +585,7 @@ t_CompVal t_GlobSrchSpat::_calc_p_out_eigval() {
 	wave.w = this->_w;
 	// tricky part 
 	// a = 0.0 worked for M=3 parab wing test
-	wave.a = wave.w;
+	wave.a = 0.0;//t_CompVal(0.023531, -0.001602);// wave.w;
 	_p_loc_solver->setWave(wave);
 
 	_p_loc_solver->setAsymptotics(vecs, &lambdas[0]);
