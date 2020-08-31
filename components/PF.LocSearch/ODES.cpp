@@ -55,28 +55,25 @@ void t_ODES::stepRK3D(const int& ind, const t_VecCmplx& h, t_VecCmplx& dest){
 
 	formRHS3D(x, h, _rk1);
 
-	matrix::base::mul<t_Complex, t_Complex>(0.5*step, _rk1, _hr);
-	matrix::base::plus<t_Complex, t_Complex>(h, _hr, _h_res);
+	for (int i = 0; i < _SolVecDim; i++)
+		_h_res[i] = h[i] + 0.5*step*_rk1[i];	
+
 	formRHS3D(x + 0.5*step, _h_res, _rk2);
 
-	matrix::base::mul<t_Complex, t_Complex>(0.5*step, _rk2, _hr);
-	matrix::base::plus<t_Complex, t_Complex>(h, _hr, _h_res);
+	for (int i = 0; i < _SolVecDim; i++)
+		_h_res[i] = h[i] + 0.5*step*_rk2[i];
+
 	formRHS3D(x + 0.5*step, _h_res, _rk3);
 
-	matrix::base::mul<t_Complex, t_Complex>(step, _rk3, _hr);
-	matrix::base::plus<t_Complex, t_Complex>(h, _hr, _h_res);
+	for (int i = 0; i < _SolVecDim; i++)
+		_h_res[i] = h[i] + step*_rk3[i];
+
 	formRHS3D(x + step, _h_res, _rk4);
 
-	// calc (k1+k4)+(k2+k3)+(k2+k3)
-	matrix::base::plus<t_Complex, t_Complex>(_rk1, _rk4, _hl);
-	matrix::base::plus<t_Complex, t_Complex>(_rk2, _rk3, _hr);
-	matrix::base::plus<t_Complex, t_Complex>(_hl, _hr, _h_res);
-	matrix::base::plus<t_Complex, t_Complex>(_h_res, _hr, _hl);
+	double c = 1.0 / 6.0*step;
 
-	matrix::base::mul<t_Complex, t_Complex>(1.0/6.0*step, _hl, _hr);
-
-	// update destination vector
-	matrix::base::plus<t_Complex, t_Complex>(h, _hr, dest);
+	for (int i = 0; i < _SolVecDim; i++)
+		dest[i] = h[i] + c*(_rk1[i] + 2.0*_rk2[i] + 2.0*_rk3[i] + _rk4[i]);
 
 };
 

@@ -33,6 +33,7 @@ protected:
 	// needOrtho - check if orthogonalization is needed for current basis
 	virtual bool needOrtho(const t_MatCmplx& vecs)=0; 
 
+	// old methods to calc orth matrix, not used now
 	t_Complex detGS(const t_MatCmplx& sol, const int& rank) const;
 	t_Complex minorGS(const t_MatCmplx& sol, const int& dim, const int& nExcludeCol) const; // rank = dim+1 
 	void ortho(const int& nnode);	
