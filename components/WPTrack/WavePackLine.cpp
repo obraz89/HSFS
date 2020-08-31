@@ -451,11 +451,23 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 		wxLogMessage(_T("ls-gs: local search checks failed"));
 	}
 
-	if (false){
+	if (true){
 		// testing the multimode hell for nramp case
 		wxLogMessage(_T("testing new mode for retrace, remove it when done (!), check search_instab_ls_gs"));
 		//w_ls.a = t_Complex(0.4211, 0.00428);
-		w_ls.a = t_Complex(0.275, 0.00037);
+		w_ls.a = t_Complex(0.393, 0.00354);
+		if (false) {
+			for (int i = 0; i < 200; i++) {
+
+				double da_r = 0.7 / 200;
+				double da_i = 0.1 / 200;
+				w_ls.a = t_Complex(0.3 + da_r*i, da_i*i);
+
+				loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT);
+				std::wcout << _T("additional  Loc search ls-gs:") << w_ls;
+				getchar();
+			}
+		}
 
 		ok_ls = true;
 
