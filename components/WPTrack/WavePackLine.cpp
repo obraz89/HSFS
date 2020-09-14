@@ -440,9 +440,66 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	// we want only instabilities here
 	// stable modes are considered below...
 	ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
-	//ok_ls = ok_ls && stab::check_wchars_c_phase(w_ls);
 
-	//if (ok_ls && (w_ls.a.imag()<0.0)) {
+	// count modes when reaching certain x station
+	static bool do_count_modes = true;
+	const double x_station_count_modes = 0.05;
+	{
+		if (cur_xyz.x()>x_station_count_modes && do_count_modes) {
+
+			t_WCharsLoc w_cm = w_init;
+
+			do_count_modes = false;
+
+			std::vector<t_WCharsLoc> modes;
+			int N = 50;
+			double DR = 0.1;
+			double da_r = DR / N;
+			double DI = 0.01;
+			double da_i = DI / N;
+
+			double ar_base = w_init.a.real();
+			double ai_base = 0.0;//w_init.a.imag();
+
+			for (int ir = 0; ir<N; ir++)
+				for (int ii = 0; ii < N; ii++) {
+
+					w_cm.a = t_Complex(
+						ar_base - DR / 2 + da_r*ir,
+						ai_base - DI / 2 + da_i*ii);
+					wxLogMessage(_T("ir=%d, ii=%d"), ir, ii);
+					wxLogMessage(_T("a_init=(%lf, %lf)"), w_cm.a.real(), w_cm.a.imag());
+
+					try {
+						loc_solver.searchWave(w_cm, srch_cond, stab::t_TaskTreat::SPAT);
+					}
+					catch (...) {
+						wxLogMessage(_T("search wave failed"));
+					}
+
+					wxLogMessage(_T("a_conv=(%lf, %lf)"), w_cm.a.real(), w_cm.a.imag());
+
+					// simple check that converged to something feasible
+					if (fabs(w_cm.a.imag()) < 0.1) {
+						bool is_already_counted = false;
+						for (int j = 0; j < modes.size(); j++)
+							if (smat::norm(w_cm.a - modes[j].a) < 1.0e-06) {
+								is_already_counted = true;
+								break;
+							}
+						if (!is_already_counted)
+							modes.push_back(w_cm);
+					}
+
+				} // loop over eigval candidates
+			wxLogMessage(_T("Number of modes:%d"), modes.size());
+			for (int j = 0; j < modes.size(); j++) {
+				wxLogMessage(_T("mode_%d:(%lf, %lf)"), j, modes[j].a.real(), modes[j].a.imag());
+			}
+			getchar();
+		}
+	}
+
 	if (ok_ls && (w_ls.a.real()>0.0)){
 		w_exact = w_ls;
 		return true;
@@ -454,16 +511,24 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	if (true){
 		// testing the multimode hell for nramp case
 		wxLogMessage(_T("testing new mode for retrace, remove it when done (!), check search_instab_ls_gs"));
-		//w_ls.a = t_Complex(0.4211, 0.00428);
-		w_ls.a = t_Complex(0.393, 0.00354);
-		if (false) {
-			for (int i = 0; i < 200; i++) {
+		getchar();
 
-				double da_r = 0.7 / 200;
-				double da_i = 0.1 / 200;
+		//w_ls.a = t_Complex(0.4211, 0.00428);
+		w_ls.a = t_Complex(0.3195, -0.007697);
+		
+
+		if (false) {
+			for (int i = 0; i < 100; i++) {
+
+				double da_r = 0.35 / 100;
+				double da_i = 0.1 / 100;
 				w_ls.a = t_Complex(0.3 + da_r*i, da_i*i);
 
-				loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT);
+				try{ loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT); 
+				}
+				catch (...) {
+					wxLogMessage(_T("search wave failed"));
+				}
 				std::wcout << _T("additional  Loc search ls-gs:") << w_ls;
 				getchar();
 			}
