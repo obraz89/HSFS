@@ -442,9 +442,11 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	ok_ls = ok_ls && stab::check_wchars_increment(w_ls);
 
 	// count modes when reaching certain x station
-	static bool do_count_modes = true;
-	const double x_station_count_modes = 0.05;
+	static bool do_count_modes = false;
+	static bool do_modify_mode_val = true;
+	const double x_station_count_modes = 0.103;
 	{
+		// count modes
 		if (cur_xyz.x()>x_station_count_modes && do_count_modes) {
 
 			t_WCharsLoc w_cm = w_init;
@@ -496,8 +498,22 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 			for (int j = 0; j < modes.size(); j++) {
 				wxLogMessage(_T("mode_%d:(%lf, %lf)"), j, modes[j].a.real(), modes[j].a.imag());
 			}
+			wxLogMessage(_T("w=%lf"), w_cm.w.real());
 			getchar();
 		}
+
+		// modify mode by hand at particular station
+		if (cur_xyz.x() > x_station_count_modes && do_modify_mode_val) {
+			do_modify_mode_val = false;
+			ok_ls = false;
+		}
+	}
+
+	// tmp
+	static bool do_pause = true;
+	if (cur_xyz.x() > 1.1 && do_pause) {
+		getchar();
+		do_pause = false;
 	}
 
 	if (ok_ls && (w_ls.a.real()>0.0)){
@@ -508,31 +524,13 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 		wxLogMessage(_T("ls-gs: local search checks failed"));
 	}
 
+	// testing the multimode hell for nramp case
+	// particular mode is picked by hand after modes are counted
 	if (true){
-		// testing the multimode hell for nramp case
 		wxLogMessage(_T("testing new mode for retrace, remove it when done (!), check search_instab_ls_gs"));
 		getchar();
 
-		//w_ls.a = t_Complex(0.4211, 0.00428);
-		w_ls.a = t_Complex(0.3195, -0.007697);
-		
-
-		if (false) {
-			for (int i = 0; i < 100; i++) {
-
-				double da_r = 0.35 / 100;
-				double da_i = 0.1 / 100;
-				w_ls.a = t_Complex(0.3 + da_r*i, da_i*i);
-
-				try{ loc_solver.searchWave(w_ls, srch_cond, stab::t_TaskTreat::SPAT); 
-				}
-				catch (...) {
-					wxLogMessage(_T("search wave failed"));
-				}
-				std::wcout << _T("additional  Loc search ls-gs:") << w_ls;
-				getchar();
-			}
-		}
+		w_ls.a = t_Complex(0.432986, 0.005961);
 
 		ok_ls = true;
 
