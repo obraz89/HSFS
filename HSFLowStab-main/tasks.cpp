@@ -366,7 +366,12 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 			w_init.set_scales(g_pStabSolver->get_stab_scales());
 
 			// TODO: WPLine ids
-			if (w_init.a.imag()<0.0){
+			//if (w_init.a.imag()<0.0){
+
+			if (true){
+
+				if (w_init.a.imag() < 0.0)
+					wxLogMessage(_T("Warning: initial wave for wpline is stable"));
 
 				int perc_complete = double(pid)/double(pid_e-pid_s+1)*100.;
 				wxLogMessage(_T("start retrace WPLine for point = %d, completed %d perc"), pid, perc_complete);
