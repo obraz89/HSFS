@@ -39,6 +39,8 @@ namespace pf{
 
 		bool CalcDispTermsNeutPoint;
 
+		bool UpdateDelsAtRStart;
+
 		// empiric constants, steps to vary nondim w and beta in
 		// dispersion calculations
 		double dw_disp, db_disp;

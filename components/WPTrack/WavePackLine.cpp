@@ -530,7 +530,7 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 		wxLogMessage(_T("testing new mode for retrace, remove it when done (!), check search_instab_ls_gs"));
 		getchar();
 
-		w_ls.a = t_Complex(0.432986, 0.005961);
+		//w_ls.a = t_Complex(0.432986, 0.005961);
 
 		ok_ls = true;
 
@@ -742,11 +742,16 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 	// TODO: tmp way to write dels
 	// single proc retrace
-	wxLogMessage(_T("Using d1 at starting point as fixed val for profiles nondim, check t_WavePackLine::_retrace_dir_cond"));
-	std::ofstream ofstr("tmp/Dels_fixed_val_0.dat");
-	mf::t_ProfScales prof_scales = _rFldMF.calc_bl_thick_scales(start_xyz);
-	ofstr << prof_scales.d1*_rFldMF.get_mf_params().L_ref;
-	ofstr.close();
+	if (_params.UpdateDelsAtRStart) {
+		wxLogMessage(_T("Using d1 at starting point as fixed val for profiles nondim, check t_WavePackLine::_retrace_dir_cond"));
+		std::ofstream ofstr("tmp/Dels_fixed_val_0.dat");
+		mf::t_ProfScales prof_scales = _rFldMF.calc_bl_thick_scales(start_xyz);
+		ofstr << prof_scales.d1*_rFldMF.get_mf_params().L_ref;
+		ofstr.close();
+	}
+	else {
+		wxLogMessage(_T("Starting retrace with dels fixed val unchanged"));
+	}
 
 	loc_solver.setContext(start_xyz);
 	gs_solver.setContext(start_xyz);

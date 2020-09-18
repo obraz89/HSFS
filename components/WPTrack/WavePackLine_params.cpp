@@ -73,6 +73,9 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 	g.add("DbDisp", 0.5e-03, _T("Non-dim step to vary b in dispersion calculations"));
 
+	g.add("UpdateDelsAtRetraceStart", 1, 
+		_T("Rewrite dels file with dels at first point when starting retrace (used by ProfileStab to initialize)"));
+
 }
 
 void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g){
@@ -203,6 +206,8 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	default:
 		ssuGENTHROW(_T("Sigma Trunc Mode not supported!"));
 	}
+
+	UpdateDelsAtRStart = g.get_int_param("UpdateDelsAtRetraceStart");
 }
 
 // ~t_WPLineParams
