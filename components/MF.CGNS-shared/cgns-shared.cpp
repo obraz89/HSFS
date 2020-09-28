@@ -231,6 +231,11 @@ void t_DomainGrdLine::dump(std::string fname) const{
 
 static int g_time = 0.0;
 
+mf::cg::TDomain::TDomain() {
+	_pGrdLine = new t_GrdLineFullCashed();
+	_pProfRaw = new t_ProfileRawCashed();
+}
+
 
 void mf::cg::TDomain::_read_parse_bc_wall_names(const wxString& strBCWallFamNames){
 
@@ -671,6 +676,9 @@ bool mf::cg::TDomain::readCGNSZone(
 
 mf::cg::TDomain::~TDomain(){
 	delete[] Zones;
+
+	delete _pGrdLine;
+	delete _pProfRaw;
 }
 
 // TODO: make less restrictive comparison (case insensitive maybe, trimming)
@@ -703,17 +711,23 @@ void TDomain::get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const{
 void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz, 
 				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec> &data) const{
 
+	wxLogMessage(_T("Extracting profile data"));
+
+	t_ZoneNode surf_znode;
+
+	_extract_profile_data_grdline(xyz, surf_znode);
+
 	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
 
-		_extract_profile_data_blbound(xyz, init_cfg, data);
+		_extract_profile_data_blbound(surf_znode, init_cfg, data);
 		break;
 
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
 
-		_extract_profile_data_grdline(xyz, data);
+		_get_profile_data_grdline(data);
 		break;
 
 	default:
@@ -723,15 +737,15 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz,
 }
 
 // IMPORTANT TODO: this only works for ortho grids (see eta calculations)
-void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz, 
+void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode, 
 				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
 
 		t_ProfScales bl_scales;
-		t_ZoneNode surf_znode, outer_znode;
+		t_ZoneNode outer_znode;
 
 		std::vector<t_ZoneNode> raw_profile;
 
-		_calc_bl_thick(xyz, bl_scales, raw_profile);
+		_calc_bl_thick(surf_znode, bl_scales, raw_profile);
 
 		const double total_thick = bl_scales.thick_scale * init_cfg.ThickCoef;
 
@@ -747,7 +761,7 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 
 		bool thick_ok = false;
 
-		for (int m=0; m<raw_profile.size(); m++){
+		for (int m = 0; m < raw_profile.size(); m++) {
 
 			get_rec(raw_profile[m], cur_rec);
 			cur_xyz.set(cur_rec);
@@ -760,35 +774,35 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 				thick_ok = true;
 
 				break;
-			} 
+			}
 
 		}
 
 		data.resize(total_nodes);
 
-		if (!thick_ok){
+		if (!thick_ok) {
 			wxLogError(_T("Error in _extract_profile_data_blbound: Requested thickness \
 						  is greater than extracted from cgns domain"));
 
-			for (int p = 0; p<total_nodes; p++) get_rec(raw_profile[p], data[p]);
+			for (int p = 0; p < total_nodes; p++) get_rec(raw_profile[p], data[p]);
 		}
 		else {
 
-			for (int p = 0; p<total_nodes-1; p++) get_rec(raw_profile[p], data[p]);
+			for (int p = 0; p < total_nodes - 1; p++) get_rec(raw_profile[p], data[p]);
 
 			// do some interpolation for the last point
 			// we want thickness to be exactly total_thick
 			t_GeomPoint xyz1, xyz2;
 			mf::t_Rec r1, r2;
 
-			get_rec(raw_profile[total_nodes-2], r1);
+			get_rec(raw_profile[total_nodes - 2], r1);
 			xyz1.set(r1);
 
 			matrix::base::minus<double, double>(xyz1, surf_xyz, rvec);
 
 			double d1 = rvec.norm();
 
-			get_rec(raw_profile[total_nodes-1], r2);
+			get_rec(raw_profile[total_nodes - 1], r2);
 			xyz2.set(r2);
 
 			matrix::base::minus<double, double>(xyz2, surf_xyz, rvec);
@@ -797,53 +811,61 @@ void TDomain::_extract_profile_data_blbound(const mf::t_GeomPoint& xyz,
 
 			double coef = (total_thick - d1) / (d2 - d1);
 
-			if (coef<0.0 || coef>1.0) 
+			if (coef<0.0 || coef>1.0)
 				wxLogMessage(_T("Error in _extract_profile_data_blbound: interpolation coef is %lf, should be between 0 and 1"), coef);
 
-			mf::t_Rec rec_intp = mf::t_Rec::lin_comb(1.0-coef, r1, coef, r2);
+			mf::t_Rec rec_intp = mf::t_Rec::lin_comb(1.0 - coef, r1, coef, r2);
 
 			data[total_nodes - 1] = rec_intp;
-			
+
 		}
 
 }
 
 // Extract full domain gridline as a profile
-void TDomain::_extract_profile_data_grdline(
-	const mf::t_GeomPoint& xyz, std::vector<mf::t_Rec>& data) const{
+void TDomain::_get_profile_data_grdline(std::vector<mf::t_Rec>& data) const{
 
-	t_DomainGrdLine grd_line(*this);
-
-	t_ZoneNode surf_znode;
-
-	surf_znode = _get_nrst_node_surf(xyz);
-
-	grd_line.init(surf_znode);
-
-	const int nnodes = grd_line.znodes.size();
+	const int nnodes = _pGrdLine->znodes.size();
 
 	data.resize(nnodes);
 
-	for (int p=0; p<nnodes; p++) get_rec(grd_line.znodes[p], data[p]);
+	for (int p=0; p<nnodes; p++) get_rec(_pGrdLine->znodes[p], data[p]);
+
+}
+
+void TDomain::_extract_profile_data_grdline(const t_ZoneNode& surf_znode) const{
+
+	if (surf_znode != _pGrdLine->surf_znode) {
+
+		wxLogMessage(_T("Extract full gridline"));
+
+		t_DomainGrdLine grd_line(*this);
+
+		grd_line.init(surf_znode);
+
+		_pGrdLine->set(surf_znode, grd_line);
+	}
+	else {
+		wxLogMessage(_T("Gridline already extracted, using cashed data"));
+	}
 
 }
 
 // Extract full domain gridline as a set of indexes
-void TDomain::_extract_profile_data_grdline(
-	const mf::t_GeomPoint& xyz, std::vector<t_ZoneNode>& data) const{
-
-	t_DomainGrdLine grd_line(*this);
-
-	t_ZoneNode surf_znode;
+void TDomain::_extract_profile_data_grdline(const mf::t_GeomPoint& xyz, t_ZoneNode& surf_znode) const{
 
 	surf_znode = _get_nrst_node_surf(xyz);
 
-	grd_line.init(surf_znode);
-
-	const int nnodes = grd_line.znodes.size();
-
-	data.resize(nnodes);
-
-	for (int p=0; p<nnodes; p++) data[p] = grd_line.znodes[p];
-
+	_extract_profile_data_grdline(surf_znode);
 }
+
+void t_GrdLineFullCashed::set(const t_ZoneNode& a_surf_znode, const t_DomainGrdLine& grd_line) {
+
+	surf_znode = a_surf_znode;
+
+	const int nnodes_new = grd_line.znodes.size();
+
+	if (nnodes_new != znodes.size()) znodes.resize(nnodes_new);
+
+	for (int p = 0; p<nnodes_new; p++) znodes[p] = grd_line.znodes[p];
+};

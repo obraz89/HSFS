@@ -570,17 +570,15 @@ void TDomain::_calc_dd_distribution(const std::vector<t_ZoneNode>& data_grdline,
 }
 
 // TODO: works only for grids nearly orthogonal to viscous wall 
-// input: data_grdline - for now just an extracted domain gridline
+// input: cashed grid line data _grdLine
 // output: bl_thick & raw_profile (truncated data_grdline)
-void TDomain::_calc_bl_thick_vderiv(
-		const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
+// raw profile is computed, then cashed into _profileRaw for reusage
+void TDomain::_calc_bl_thick_vderiv(const t_ZoneNode& surf_znode, t_ProfScales& bl_thick_scales,
 		std::vector<t_ZoneNode>& out_raw_profile, const t_VDParams& vd_params) const{
 
-	t_ZoneNode surf_znode, outer_znode;
-
-	surf_znode = _get_nrst_node_surf(data_grdline[0]);
-
 	t_GeomPoint wall_xyz, cur_xyz;
+
+	t_ZoneNode outer_znode;
 
 	t_Vec3Dbl surf_norm, dr;
 	calc_surf_norm(surf_znode, surf_norm);
@@ -593,6 +591,8 @@ void TDomain::_calc_bl_thick_vderiv(
 	wall_xyz.set(wall_rec);
 
 	wxLogMessage(_T("surf node xyz:%s"), wall_xyz.to_wxstr());
+
+	const std::vector<t_ZoneNode>& data_grdline = _pGrdLine->znodes;
 
 	// get dd distribution
 	std::vector<double> dd_vec(data_grdline.size());
@@ -781,6 +781,8 @@ void TDomain::_calc_bl_thick_vderiv(
 
 			for (int p = 0; p < m + 1; p++) out_raw_profile[p] = data_grdline[p];
 
+			_pProfRaw->set(surf_znode, out_raw_profile, bl_thick_scales);
+
 			return;
 
 		}
@@ -793,12 +795,12 @@ void TDomain::_calc_bl_thick_vderiv(
 
 // TODO : works only for grids nearly orthogonal to viscous wall
 void TDomain::_calc_bl_thick_enthalpy(
-	const std::vector<t_ZoneNode>& data_grdline, t_ProfScales& bl_thick_scales, 
+	const t_ZoneNode& surf_znode, t_ProfScales& bl_thick_scales, 
 	std::vector<t_ZoneNode>& out_profile_data) const{
 
-	t_ZoneNode surf_znode, outer_znode;
+	t_ZoneNode outer_znode;
 
-	surf_znode = data_grdline[0];
+	const std::vector<t_ZoneNode>& data_grdline = _pGrdLine->znodes;
 
 	outer_znode = data_grdline.back();
 
@@ -844,15 +846,17 @@ void TDomain::_calc_bl_thick_enthalpy(
 
 	for (int p=0; p<m+1; p++) out_profile_data[p] = data_grdline[p];
 
+	_pProfRaw->set(surf_znode, out_profile_data, bl_thick_scales);
+
 };
 
 void TDomain::_calc_bl_thick_full_gridline(
-	const std::vector<t_ZoneNode>& data_grdline,
+	const t_ZoneNode& surf_znode,
 	t_ProfScales& bl_thick_scales, std::vector<t_ZoneNode>& out_raw_profile) const{
 
-	t_ZoneNode surf_znode, outer_znode;
+	t_ZoneNode outer_znode;
 
-	surf_znode = data_grdline[0];
+	const std::vector<t_ZoneNode>& data_grdline = _pGrdLine->znodes;
 
 	outer_znode = data_grdline.back();
 
@@ -871,27 +875,48 @@ void TDomain::_calc_bl_thick_full_gridline(
 	bl_thick_scales.thick_scale = dr.norm();
 
 	out_raw_profile = data_grdline;
+
+	_pProfRaw->set(surf_znode, out_raw_profile, bl_thick_scales);
 	
 }
 
-inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_thick_scales, 
+inline void TDomain::_calc_bl_thick(const t_ZoneNode& surf_znode, t_ProfScales& bl_thick_scales, 
 									std::vector<t_ZoneNode>& raw_profile) const{
 
-	std::vector<t_ZoneNode> data_grdline;
+//	_extract_profile_data_grdline(surf_znode);
 
-	_extract_profile_data_grdline(xyz, data_grdline);
+	if (surf_znode != _pGrdLine->surf_znode) {
+		wxLogMessage(_T("Error:_calc_bl_thick:surf_znode mismatch, _grdLine must be computed before!"));
+		wxLogMessage(_T("input    surf_znode: %s"), surf_znode.str().c_str());
+		wxLogMessage(_T("_grdLine surf_znode: %s"), _pGrdLine->surf_znode.str().c_str());
+	}
+
+	// raw profile already computed & cashed, just copy data
+	if (surf_znode == _pProfRaw->surf_znode) {
+
+		int nnodes = _pProfRaw->znodes.size();
+
+		raw_profile.resize(nnodes);
+
+		for (int i = 0; i < nnodes; i++)
+			raw_profile[i] = _pProfRaw->znodes[i];
+
+		bl_thick_scales = _pProfRaw->profScales;
+
+		return;
+	}
 
 	switch (_profile_cfg.BLThickCalcType)
 	{
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
-		_calc_bl_thick_vderiv(data_grdline, bl_thick_scales, raw_profile, get_vd_params());
+		_calc_bl_thick_vderiv(surf_znode, bl_thick_scales, raw_profile, get_vd_params());
 		break;
 
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
-		_calc_bl_thick_enthalpy(data_grdline, bl_thick_scales, raw_profile);
+		_calc_bl_thick_enthalpy(surf_znode, bl_thick_scales, raw_profile);
 		break;
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
-		_calc_bl_thick_full_gridline(data_grdline, bl_thick_scales, raw_profile);
+		_calc_bl_thick_full_gridline(surf_znode, bl_thick_scales, raw_profile);
 		break;
 
 	default:
@@ -899,6 +924,12 @@ inline void TDomain::_calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_thi
 		wxLogError(msg); ssuGENTHROW(msg);
 	}
 
+	t_Rec bound_rec;
+	get_rec(raw_profile.back(), bound_rec);
+
+	wxLogMessage(_T("bound rec xyz:%s"), bound_rec.get_xyz().to_wxstr());
+	wxLogMessage(_T("bound rec UVW:%s"), bound_rec.get_uvw().to_wxstr());
+	//wxLogMessage(_T("Jac to loc rf:%s"), jac.to_wxstr());
 
 }
 
@@ -908,7 +939,9 @@ t_ProfScales TDomain::calc_bl_thick_scales(const t_GeomPoint& xyz) const{
 	std::vector<t_ZoneNode> raw_profile;
 	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
+	t_ZoneNode surf_znode = _get_nrst_node_surf(xyz);
+
+	_calc_bl_thick(surf_znode, bl_thick_scales, raw_profile);
 	return bl_thick_scales;
 
 };
@@ -930,7 +963,11 @@ void TDomain::calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec
 	std::vector<t_ZoneNode> raw_profile;
 	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
+	t_ZoneNode surf_znode;
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	_calc_bl_thick(surf_znode, bl_thick_scales, raw_profile);
 
 	get_rec(raw_profile.back(), outer_rec);
 
@@ -941,7 +978,11 @@ int TDomain::estim_num_bl_nodes(const t_GeomPoint& xyz) const{
 	std::vector<t_ZoneNode> raw_profile;
 	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
+	t_ZoneNode surf_znode;
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	_calc_bl_thick(surf_znode, bl_thick_scales, raw_profile);
 
 	return raw_profile.size();
 }
@@ -951,7 +992,11 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	std::vector<t_ZoneNode> raw_profile;
 	t_ProfScales bl_thick_scales;
 
-	_calc_bl_thick(xyz, bl_thick_scales, raw_profile);
+	t_ZoneNode surf_znode;
+
+	surf_znode = _get_nrst_node_surf(xyz);
+
+	_calc_bl_thick(surf_znode, bl_thick_scales, raw_profile);
 
 	t_SqMat3Dbl jac;
 
@@ -992,10 +1037,6 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	jac.set_col(0, e1);
 	jac.set_col(1, e2);
 	jac.set_col(2, e3);
-
-	wxLogMessage(_T("bound rec xyz:%s"), bound_rec.get_xyz().to_wxstr());
-	wxLogMessage(_T("bound rec UVW:%s"), bound_rec.get_uvw().to_wxstr());
-	wxLogMessage(_T("Jac to loc rf:%s"), jac.to_wxstr());
 	
 	return jac;
 

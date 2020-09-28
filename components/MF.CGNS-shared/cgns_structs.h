@@ -465,6 +465,10 @@ namespace mf{
 				k = _ind.k + dk;
 			};
 
+			bool operator==(const t_BlkInd& r) const{
+				return ((i == r.i) && (j == r.j) && (k == r.k));
+			}
+
 		};
 
 		// zoneid, 1-based + local index of real node inside that zone 
@@ -481,6 +485,18 @@ namespace mf{
 				:iZone(_iZone), iNode(i,j,k), iFacePos(fpos){}
 			t_ZoneNode(int _iZone, const t_BlkInd& ind, TZoneFacePos fpos = faceNone)
 				:iZone(_iZone), iNode(ind), iFacePos(fpos){}
+			bool operator==(const t_ZoneNode& r) const{
+				return ((iZone == r.iZone) && (iNode == r.iNode));
+			}
+			bool operator!=(const t_ZoneNode& r) const {
+				return !(*this == (r));
+			}
+
+			std::wstring str() const { 
+				std::wstringstream wstr;
+				wstr << _T("iZone=") << iZone << _T("Ind=") << iNode.i << _T(",") << iNode.j << _T(",") << iNode.k << _T("\n");
+				return wstr.str();
+			}
 		};
 
 
@@ -509,6 +525,41 @@ namespace mf{
 			t_VeloDerivPlace vd_place;
 
 			int N_BL_MAX_DERIV_POINTS;
+
+		};
+		struct t_DomainGrdLine;
+		// cashed full grid line
+		struct t_GrdLineFullCashed {
+
+			t_ZoneNode surf_znode;
+			std::vector<t_ZoneNode> znodes;
+
+			t_GrdLineFullCashed(){}
+
+			void set(const t_ZoneNode& a_surf_znode, const t_DomainGrdLine& grd_line);
+		};
+		// cashed raw profile
+		struct t_ProfileRawCashed {
+
+			t_ZoneNode surf_znode;
+			std::vector<t_ZoneNode> znodes;
+
+			t_ProfScales profScales;
+
+			t_ProfileRawCashed(){}
+
+			void set(const t_ZoneNode& a_surf_znode, const std::vector<t_ZoneNode>& vec, const t_ProfScales& scales) {
+
+				surf_znode = a_surf_znode;
+
+				int nnodes_new = vec.size();
+
+				if (nnodes_new != znodes.size()) znodes.resize(nnodes_new);
+
+				for (int p = 0; p < nnodes_new; p++) znodes[p] = vec[p];
+
+				profScales = scales;
+			}
 
 		};
 
@@ -546,6 +597,10 @@ namespace mf{
 			// BC names defined on viscous wall
 
 			std::vector<std::string>  _vecBCWallNames;
+
+			// raw profile extracted from gridline
+			t_GrdLineFullCashed* _pGrdLine;
+			t_ProfileRawCashed* _pProfRaw;
 			
 			// this funcs can be shared by 2D and 3D domains
 			bool initField(const wxString& fldFName);
@@ -573,18 +628,17 @@ namespace mf{
 
 			bool _is_point_inside(const t_GeomPoint& xyz) const;
 
-			void _extract_profile_data_blbound(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+			void _extract_profile_data_blbound(const t_ZoneNode& surf_znode, const mf::t_ProfDataCfg& init_cfg,
 				std::vector<t_Rec>& data) const;
 
-			// get gridline as set of mf::t_Rec
-			void _extract_profile_data_grdline(const t_GeomPoint& xyz, 
-				std::vector<t_Rec>& data) const;
+			// get set of mf::t_Rec from _profRaw
+			void _get_profile_data_grdline(std::vector<t_Rec>& data) const;
 
 			// get gridline as set of indexes t_ZoneNode
-			void _extract_profile_data_grdline(const t_GeomPoint& xyz, 
-				std::vector<t_ZoneNode>& data) const;
+			void _extract_profile_data_grdline(const t_ZoneNode& surf_znode) const;
+			void _extract_profile_data_grdline(const t_GeomPoint& xyz, t_ZoneNode& surf_znode) const;
 
-			void _calc_bl_thick(const t_GeomPoint& xyz, t_ProfScales& bl_scales, 
+			void _calc_bl_thick(const t_ZoneNode& surf_znode, t_ProfScales& bl_scales, 
 				std::vector<t_ZoneNode>& raw_profile) const;
 
 			double _calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& data_grdline,
@@ -597,13 +651,13 @@ namespace mf{
 
 			void _calc_dd_distribution(const std::vector<t_ZoneNode>& data_grdline, std::vector<double>& dd_vec) const;
 
-			void _calc_bl_thick_vderiv(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
+			void _calc_bl_thick_vderiv(const t_ZoneNode& surf_znode, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile, const t_VDParams& vd_params) const;
 
-			void _calc_bl_thick_enthalpy(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales,
+			void _calc_bl_thick_enthalpy(const t_ZoneNode& surf_znode, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
 
-			void _calc_bl_thick_full_gridline(const std::vector<t_ZoneNode>& data, t_ProfScales& bl_scales, 
+			void _calc_bl_thick_full_gridline(const t_ZoneNode& surf_znode, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
 
 			// TDomainBase interface realization
@@ -664,7 +718,7 @@ namespace mf{
 
 			virtual t_SqMat3Dbl calc_jac_to_loc_rf(const t_GeomPoint& xyz) const;
 
-			void calc_jac_to_loc_rf(const t_GeomPoint& xyz, t_SqMat3Dbl& jac) const;
+			void calc_jac_to_loc_rf(const t_GeomPoint& xyz, t_SqMat3Dbl& jac);
 
 			// calc character length scale
 			virtual double calc_x_scale(const t_GeomPoint& xyz) const;
@@ -675,7 +729,7 @@ namespace mf{
 
 			void calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const;
 
-			void extract_profile_data(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg, 
+			void extract_profile_data(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg,
 				std::vector<t_Rec>& data) const;
 
 			// tmp, while i don't have good interpolators
@@ -683,7 +737,7 @@ namespace mf{
 
 			// tmp, to test enthalpy criteria
 			void dump_full_enthalpy_profile(const t_GeomPoint& xyz, int pid) const;
-
+			TDomain();
 			virtual ~TDomain();
 		};
 		//-----------------------------------------------------------------------------
