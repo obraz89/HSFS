@@ -4,7 +4,7 @@
 # Author: Andrey V. Novikov
 #
 
-OUTDIR := bin-lnx64-impi-AVX
+OUTDIR := bin-lnx64-impi
 
 #-------------------------
 
@@ -13,9 +13,6 @@ CFLAGS = -D linux -xHost -O3 -DNDEBUG
 
 MPICC := mpiicpc
 CFLAGS := -xAVX -O3 -DNDEBUG -std=c++0x
-MPI_INC :=
-MPI_LIBS :=
-
 
 #-------------------------
 
@@ -33,6 +30,9 @@ HDF5_LFLAGS := -L$(CGNS_LIB_DIR) -lhdf5 -lz
 MKL_INC_DIR := $(MKLROOT)/include
 MKL_LIB_DIR := $(MKLROOT)/lib/em64t
 MKL_LFLAGS := -L$(MKL_LIB_DIR) -lmkl_intel_lp64 -lmkl_sequential -lmkl_core
+
+MPI_INC_DIR :=  /opt/intel/impi_5.0.1/include64
+MPI_LIB_DIR := /opt/intel/impi/5.0.1.035/intel64/lib
 
 #-------------------------
 
