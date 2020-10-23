@@ -883,12 +883,13 @@ void TDomain::_calc_bl_thick_full_gridline(
 inline void TDomain::_calc_bl_thick(const t_ZoneNode& surf_znode, t_ProfScales& bl_thick_scales, 
 									std::vector<t_ZoneNode>& raw_profile) const{
 
-//	_extract_profile_data_grdline(surf_znode);
-
 	if (surf_znode != _pGrdLine->surf_znode) {
-		wxLogMessage(_T("Error:_calc_bl_thick:surf_znode mismatch, _grdLine must be computed before!"));
-		wxLogMessage(_T("input    surf_znode: %s"), surf_znode.str().c_str());
-		wxLogMessage(_T("_grdLine surf_znode: %s"), _pGrdLine->surf_znode.str().c_str());
+
+		_extract_profile_data_grdline(surf_znode);
+
+		//wxLogMessage(_T("Error:_calc_bl_thick:surf_znode mismatch, _grdLine must be computed before!"));
+		//wxLogMessage(_T("input    surf_znode: %s"), surf_znode.str().c_str());
+		//wxLogMessage(_T("_grdLine surf_znode: %s"), _pGrdLine->surf_znode.str().c_str());
 	}
 
 	// raw profile already computed & cashed, just copy data
