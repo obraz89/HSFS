@@ -227,6 +227,31 @@ void t_DomainGrdLine::dump(std::string fname) const{
 
 }
 
+void t_DomainGrdLine::dump_as_ppoints(std::string fname) const {
+
+	std::ofstream ofstr(fname);
+
+	ofstr.setf(std::ios_base::left, std::ios_base::adjustfield);
+	ofstr.setf(std::ios_base::scientific, std::ios_base::floatfield);
+
+	ofstr.width(12);
+	ofstr.precision(6);
+
+	mf::t_Rec rec;
+
+	ofstr << znodes.size() << "\n";
+
+	for (int i = 0; i < znodes.size(); i++) {
+
+		const t_ZoneNode& z = znodes[i];
+		dom.get_rec(z, rec);
+		ofstr <<rec.x << "\t" << rec.y << "\t" << rec.z << "\n";
+
+	}
+	ofstr.flush();
+
+}
+
 // Computational domain composed of blocks with own grid and field
 
 static int g_time = 0.0;
@@ -858,6 +883,29 @@ void TDomain::_extract_profile_data_grdline(const mf::t_GeomPoint& xyz, t_ZoneNo
 
 	_extract_profile_data_grdline(surf_znode);
 }
+
+void TDomain::get_wall_gridline(const mf::t_GeomPoint& xyz) {
+
+	t_DomainGrdLine grdLine(*this);
+
+	mf::t_Rec rec;
+
+	t_ZoneNode znode = _get_nrst_node_surf(xyz);
+
+	wxLogMessage(_T("GetWallGridLine: starting from zone #%d, [i,j,k]=[%d, %d, %d]"),
+		znode.iZone, znode.iNode.i, znode.iNode.j, znode.iNode.k);
+
+	wxLogMessage(_T("GetWallGridLine: assuming wall grid line is along Xaxis (FacePos=Xmin)!!!"));
+
+	znode.iFacePos = mf::cg::TZoneFacePos::faceXmin;
+
+	grdLine.init(znode);
+
+	wxLogMessage(_T("Writing wall gridline to output/ppoints_wall_grdline.dat"));
+
+	grdLine.dump_as_ppoints("output/ppoints_wall_grdline.dat");
+
+};
 
 void t_GrdLineFullCashed::set(const t_ZoneNode& a_surf_znode, const t_DomainGrdLine& grd_line) {
 

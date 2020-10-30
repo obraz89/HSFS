@@ -737,6 +737,9 @@ namespace mf{
 
 			// tmp, to test enthalpy criteria
 			void dump_full_enthalpy_profile(const t_GeomPoint& xyz, int pid) const;
+
+			void get_wall_gridline(const t_GeomPoint& xyz);
+
 			TDomain();
 			virtual ~TDomain();
 		};
@@ -784,6 +787,7 @@ namespace mf{
 			void _add(const t_ZoneGrdLine& grd_line);
 
 			void dump(std::string fname) const;
+			void dump_as_ppoints(std::string fname) const;
 
 		};
 

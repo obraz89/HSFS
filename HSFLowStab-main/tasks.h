@@ -35,6 +35,10 @@ namespace task{
 
 	void retrace_streamlines();
 
+	// get merged wall gridline
+
+	void get_wall_gridline();
+
 	void postproc_retrace();
 
 	void get_amplitude_funcs();

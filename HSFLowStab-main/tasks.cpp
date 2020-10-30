@@ -474,6 +474,12 @@ void task::retrace_streamlines() {
 
 }
 
+void task::get_wall_gridline() {
+	wxLogMessage(_T("GetWallGridLine: starting from pave point with id 0 - modify it accordingly to match starting point!"));
+	g_pMFDomain->get_wall_gridline(g_pStabDB->get_pave_pt(0).xyz);
+
+};
+
 void task::get_amplitude_funcs(){
 
 	int npave_pts = g_pStabDB->get_npoints();

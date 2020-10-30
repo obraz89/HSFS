@@ -134,6 +134,8 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::RetraceMPI] = _T("RetraceMPI");
 	task::TaskNames[task::RetraceStreamlines] = _T("RetraceStreamlines");
 
+	task::TaskNames[task::GetWallGridLine] = _T("GetWallGridLine");
+
 	task::TaskNames[task::PostProcRetrace] = _T("PostProcRetrace");
 	task::TaskNames[task::MaxInstabLine] = _T("MaxInstabLine");
 	task::TaskNames[task::AnalyzeWChars] = _T("AnalyzeWChars");

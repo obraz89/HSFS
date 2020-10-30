@@ -118,6 +118,9 @@ int main(int argc, char* argv[]){
 		case task::RetraceStreamlines:
 			task::retrace_streamlines();
 			break;
+		case task::GetWallGridLine:
+			task::get_wall_gridline();
+			break;
 		case task::PostProcRetrace:
 			task::postproc_retrace();
 			break;

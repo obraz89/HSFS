@@ -37,6 +37,9 @@ namespace task{
 		// retrace external (inviscid) streamlines only
 		RetraceStreamlines,
 
+		// "retrace" wall gridline
+		GetWallGridLine,
+
 		// posprocess data obtained in retraceMPI
 		PostProcRetrace,
 

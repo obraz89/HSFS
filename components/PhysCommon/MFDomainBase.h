@@ -153,6 +153,10 @@ namespace mf{
 			// tmp, to test enthalpy criteria
 			virtual void dump_full_enthalpy_profile(const t_GeomPoint& xyz, int pid) const=0;
 
+			// get wall gridline through all blocks and write to file
+			// structured grid only!
+			virtual void get_wall_gridline(const t_GeomPoint& xyz) = 0;
+
 	};	// ~t_DomainBase
 }	// ~namespace mf
 
