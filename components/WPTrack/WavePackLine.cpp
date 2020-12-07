@@ -443,8 +443,8 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 	// count modes when reaching certain x station
 	static bool do_count_modes = false;
-	static bool do_modify_mode_val = true;
-	const double x_station_count_modes = 0.103;
+	static bool do_modify_mode_val = false;
+	const double x_station_count_modes = 1.0;
 	{
 		// count modes
 		if (cur_xyz.x()>x_station_count_modes && do_count_modes) {
@@ -461,7 +461,11 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 			double da_i = DI / N;
 
 			double ar_base = w_init.a.real();
-			double ai_base = 0.0;//w_init.a.imag();
+			double ai_base = w_init.a.imag();
+
+			int ir_opt, ii_opt;
+			t_CompVal a_opt;
+			double resid_min = HUGE_VAL;
 
 			for (int ir = 0; ir<N; ir++)
 				for (int ii = 0; ii < N; ii++) {
@@ -473,12 +477,28 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 					wxLogMessage(_T("a_init=(%lf, %lf)"), w_cm.a.real(), w_cm.a.imag());
 
 					try {
-						loc_solver.searchWave(w_cm, srch_cond, stab::t_TaskTreat::SPAT);
+						loc_solver.solve(w_cm);
 					}
 					catch (...) {
 						wxLogMessage(_T("search wave failed"));
 					}
 
+					double resid = smat::norm(w_cm.resid);
+					if (resid < resid_min) {
+						resid_min = resid;
+						ir_opt = ir;
+						ii_opt = ii;
+						a_opt = w_cm.a;
+					}
+
+					wxLogMessage(_T("Resid=%lf"), resid);
+
+					if ( resid > 3.0) {
+						wxLogMessage(_T("Resid>3.0, skipping"), resid);
+						continue;
+					}
+
+					loc_solver.searchWave(w_cm, srch_cond, stab::t_TaskTreat::SPAT);
 					wxLogMessage(_T("a_conv=(%lf, %lf)"), w_cm.a.real(), w_cm.a.imag());
 
 					// simple check that converged to something feasible
@@ -494,6 +514,10 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 					}
 
 				} // loop over eigval candidates
+			// residual min & nearest a without locSearch
+			wxLogMessage(_T("Resid min: %lf"), resid_min);
+			wxLogMessage(_T("Nearest a: (%lf, %lf)"), a_opt.real(), a_opt.imag());
+			// counting modes
 			wxLogMessage(_T("Number of modes:%d"), modes.size());
 			for (int j = 0; j < modes.size(); j++) {
 				wxLogMessage(_T("mode_%d:(%lf, %lf)"), j, modes[j].a.real(), modes[j].a.imag());
@@ -510,7 +534,7 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 	}
 
 	// tmp
-	static bool do_pause = true;
+	static bool do_pause = false;
 	if (cur_xyz.x() > 1.1 && do_pause) {
 		getchar();
 		do_pause = false;
@@ -521,7 +545,8 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 		return true;
 	}
 	else {
-		wxLogMessage(_T("ls-gs: local search checks failed"));
+		wxLogMessage(_T("ls-gs: local search checks failed: w_ls="));
+		wxLogMessage(w_ls.to_wstr().c_str());
 	}
 
 	// testing the multimode hell for nramp case

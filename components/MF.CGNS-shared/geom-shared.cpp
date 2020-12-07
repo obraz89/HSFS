@@ -512,6 +512,7 @@ double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 // new method to get characteristic |du/dy| in boundary layer
 // compute averaged |dy/dy| over thickness Y for all Y in range from 0 to Y_max
 // and choose max
+// TODO: works BAD when du/dy is huge at wall (in small region)
 void TDomain::_calc_max_averaged_vderiv_abs(const std::vector<t_ZoneNode>& data_grdline, double& a_du_dd_avg_max) const{
 
 	int nnodes = data_grdline.size();
@@ -541,6 +542,35 @@ void TDomain::_calc_max_averaged_vderiv_abs(const std::vector<t_ZoneNode>& data_
 		}
 
 	}
+
+}
+
+// calculate average |du/dy| over given thickness Y 
+// (default is N_BL_MAX_DERIV_POINTS from the wall)
+// and choose max
+void TDomain::_calc_average_vderiv_abs(const std::vector<t_ZoneNode>& data_grdline, double& a_du_dd_avg) const {
+
+	int nnodes = data_grdline.size();
+
+	double dd, du_abs;
+
+	double du_sum = 0.0;
+
+	double dd_sum = 0.0;
+
+	int JMax = get_vd_params().N_BL_MAX_DERIV_POINTS;
+
+	for (int j = 0; j < JMax - 1; j++) {
+
+		_calc_du_abs(data_grdline, j, du_abs, dd);
+
+		du_sum += du_abs;
+
+		dd_sum += dd;
+
+	}
+
+	a_du_dd_avg = du_sum / dd_sum;
 
 }
 
@@ -626,9 +656,25 @@ void TDomain::_calc_bl_thick_vderiv(const t_ZoneNode& surf_znode, t_ProfScales& 
 	
 	_calc_max_averaged_vderiv_abs(data_grdline, du_dd_avg_max);
 
-	wxLogMessage(_T("_calc_bl_thick_vderiv:: max averaged full velocity derivative abs:%lf"), du_dd_avg_max);
+	double du_dd_avg;
 
-	du_dy_base = du_dd_avg_max;
+	_calc_average_vderiv_abs(data_grdline, du_dd_avg);
+
+	wxLogMessage(_T("_calc_bl_thick_vderiv:: max (dynamic averaged) full velocity derivative abs:%lf"), du_dd_avg_max);
+	wxLogMessage(_T("_calc_bl_thick_vderiv:: averaged full velocity derivative abs:%lf"), du_dd_avg);
+
+	double order_of_discrep = std::fabs(std::log10(du_dd_avg_max / du_dd_avg));
+	
+	// derivatives differ more then 10 times
+	if (order_of_discrep > 1.0) wxLogWarning(_T("_calc_bl_thick_vderiv:: derivatives differ, order_of_discrep=%lf"), 
+		order_of_discrep);
+
+	// TODO: this is an experimental empirical formula
+	// 
+	const double POW_MAX = 0.25;
+	du_dy_base = pow(du_dd_avg_max,POW_MAX)*pow(du_dd_avg, 1.0-POW_MAX);
+
+	wxLogMessage(_T("_calc_bl_thick_vderiv:: using geom average of derivatives, du_dy_base=%lf"), du_dy_base);
 
 	// step 2 - find bl bound rec
 

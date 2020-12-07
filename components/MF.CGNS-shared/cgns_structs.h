@@ -649,6 +649,8 @@ namespace mf{
 
 			void _calc_max_averaged_vderiv_abs(const std::vector<t_ZoneNode>& data_grdline, double& du_dd_avg_max) const;
 
+			void _calc_average_vderiv_abs(const std::vector<t_ZoneNode>& data_grdline, double& du_dd_avg_max) const;
+
 			void _calc_dd_distribution(const std::vector<t_ZoneNode>& data_grdline, std::vector<double>& dd_vec) const;
 
 			void _calc_bl_thick_vderiv(const t_ZoneNode& surf_znode, t_ProfScales& bl_scales,
