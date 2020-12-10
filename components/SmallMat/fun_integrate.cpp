@@ -91,3 +91,14 @@ IMPEXP_SMALLMAT void smat::integrate_over_range(
 	}
 
 }
+
+IMPEXP_SMALLMAT void smat::integrate_over_range(
+	const std::vector<double>& x, const std::vector<t_Complex>& y, std::vector<t_Complex>& ff) {
+
+	ff[0] = 0;
+
+	for (int i = 1; i<x.size(); i++) {
+		ff[i] = smat::fun_integrate(x, y, i);
+	}
+
+}

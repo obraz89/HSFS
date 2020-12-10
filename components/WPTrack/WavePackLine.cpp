@@ -1220,6 +1220,9 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
 	calc_n_factor();
+
+	if (_params.WriteDisturbanceField)
+		dump_wpline_as_field(loc_solver);
 };
 
 void t_WavePackLine::retrace_streamline(t_GeomPoint a_xyz, stab::t_LSBase& loc_solver) {
@@ -1651,6 +1654,122 @@ void t_WavePackLine::calc_n_factor(){
 	for (int i=0; i<_line.size(); i++)	_line[i].n_factor = _nfact[i];
 
 	if (_params.CalcWPDispersion) calc_d2N_dxx();
+
+}
+
+void t_WavePackLine::get_amp_funcs(int iNode, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& amp_funcs) {
+
+	t_GeomPoint test_xyz = _line[iNode].mean_flow.get_xyz();
+
+	t_WCharsLoc w_init = _line[iNode].wchars_loc;
+
+	loc_solver.setContext(test_xyz);
+
+	stab::t_LSCond cond;
+	cond.set(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED, w_init);
+
+	loc_solver.searchWave(w_init, cond, stab::t_TaskTreat::SPAT);
+
+	// debug
+
+	wxLogMessage(_T("wave:%s"), w_init.to_wstr().c_str());
+
+	loc_solver.getAmpFuncs(amp_funcs);
+
+}
+
+void t_WavePackLine::dump_wpline_as_field(stab::t_LSBase& loc_solver) {
+
+	std::vector<t_VecCmplx> amp_funcs(loc_solver.getNNodes(), t_VecCmplx(8));
+
+	t_Vec3Dbl cur_dr;
+
+	const mf::t_FldParams& MFParams = _rFldMF.get_mf_params();
+	const double LRef = MFParams.L_ref;
+
+	// integral of alpha vs x
+	t_Complex alpha_int_dim = 0.0;
+
+	// TODO: params
+	const double Xs = 2.0;
+	const double Xe = 2.5;
+
+	const double DxRecalcAmpFuncs = 0.015;
+	const double DxSave = 0.015;
+
+	double dx_no_recalc = HUGE_VAL;
+	double dx_sum = HUGE_VAL;
+
+	std::ofstream ofstr("output/wp_field.dat");
+
+	for (int i = 0; i<_line.size() - 1; i++) {
+
+		const t_WPLineRec& rec = _line[i];
+
+		const double x_cur = rec.mean_flow.get_xyz().x();
+
+		if (x_cur <= Xs) continue;
+		if (x_cur >= Xe) break;
+
+		t_WCharsGlob spat_wave = rec.wave_chars;
+
+		const t_WCharsGlobDim& dim_wave = spat_wave.to_dim();
+
+		// calculate dI = alpha*dx
+
+		cur_dr = (_line[i + 1].mean_flow.get_xyz() - _line[i].mean_flow.get_xyz());
+
+		double dr_abs = cur_dr.norm();
+
+		//wxLogMessage(_T("dbg:a_r=%lf, ai=%lf, dx_dim=%lf"), dim_wave.a.real(), dim_wave.a.imag(), dr_abs*LRef);
+		alpha_int_dim += dim_wave.a*(dr_abs*LRef);
+
+		// calculate amp funcs 
+
+		dx_no_recalc += dr_abs;
+
+		if (dx_no_recalc > DxRecalcAmpFuncs) {
+			wxLogMessage(_T("Getting amp funcs at station x=%lf"), x_cur);
+			dx_no_recalc = 0.0;
+
+			get_amp_funcs(i, loc_solver, amp_funcs);
+
+			// IMPORTANT TODO: normalization of amplitude functions 
+			// e.g P_wall = 1 (?)
+		}
+
+		dx_sum += dr_abs;
+
+		if (dx_sum > DxSave) {
+
+			wxLogMessage(_T("Writing disturbance field at station x=%lf"), x_cur);
+			dx_sum = 0.0;
+
+			// writing data for a particular disturbance
+			// indices: u:0, v:2, p:3, t:4, w:6
+			const int IndF = 2;
+			// order: from wall to outer region
+
+			// value for normalization:
+
+			t_Complex val_p_wall = amp_funcs[loc_solver.getNNodes() - 1][3];
+
+			const t_Complex im_unity(0.0, 1.0);
+
+			for (int j = loc_solver.getNNodes() - 1; j >=0 ; j--) {
+
+				t_Complex& val_c = amp_funcs[j][IndF] * exp(im_unity*alpha_int_dim); // / val_p_wall;
+				double val = val_c.real();
+
+				// non-dim value of y
+				double y_cur = loc_solver.get_y_distrib()[j] * loc_solver.get_stab_scales().Dels / LRef;
+
+				ofstr << x_cur << "\t" << y_cur << "\t" << val << "\n";
+			}
+		}
+	}
+
+	ofstr.close();
 
 }
 

@@ -41,6 +41,8 @@ namespace pf{
 
 		bool UpdateDelsAtRStart;
 
+		bool WriteDisturbanceField;
+
 		// empiric constants, steps to vary nondim w and beta in
 		// dispersion calculations
 		double dw_disp, db_disp;

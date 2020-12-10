@@ -27,6 +27,9 @@ namespace smat{
 	IMPEXP_SMALLMAT void integrate_over_range(
 		const std::vector<double>& x, const std::vector<double>& y, std::vector<double>& ff);
 
+	IMPEXP_SMALLMAT void integrate_over_range(
+		const std::vector<double>& x, const std::vector<t_Complex>& y, std::vector<t_Complex>& ff);
+
 }
 
 #endif

@@ -76,6 +76,8 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 	g.add("UpdateDelsAtRetraceStart", 1, 
 		_T("Rewrite dels file with dels at first point when starting retrace (used by ProfileStab to initialize)"));
 
+	g.add("WriteDisturbanceField", 0, _T("Write wave pack line as disturbance field"));
+
 }
 
 void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g){
@@ -110,6 +112,8 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	CalcWPDispersion = g.get_int_param("CalcWPDispersion");
 
 	CalcDispTermsNeutPoint = g.get_int_param("CalcDispTermsNeutPoint");
+
+	WriteDisturbanceField = g.get_int_param("WriteDisturbanceField");
 
 	dw_disp = g.get_real_param("DwDisp");
 
