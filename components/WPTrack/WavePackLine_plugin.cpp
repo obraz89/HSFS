@@ -23,6 +23,11 @@ void TPluginWPLine::default_settings(){
 
 	_mapParamsGrps.insert( std::make_pair(g.get_name(), g) );
 
+	TPluginParamsGroup g_wp_as_fld("WriteWPAsFld");
+
+	pf::wpline_write_wp_as_fld_settings(g_wp_as_fld);
+
+	_mapParamsGrps.insert(std::make_pair(g_wp_as_fld.get_name(), g_wp_as_fld));
 }
 
 //-----------------------------------------------------------------------------

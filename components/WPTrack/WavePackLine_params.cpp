@@ -80,6 +80,20 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 }
 
+void pf::wpline_write_wp_as_fld_settings(hsstab::TPluginParamsGroup& g) {
+
+	g.add("Xs", 0.0, _T("Starting station to write disturbance field"));
+	g.add("Xe", 1.0, _T("Ending station to write disturbance field"));
+
+	g.add("DxRecalcAmpFuncs", 0.01, _T("Recalculate amplitude function every DxRecalcAmpFuncs along wpline"));
+	g.add("DxSave", 0.01, _T("Save disturbance profile every DxSave along wpline"));
+
+	g.add("FuncName", _T("p"), _T("name of function to save: u,v,p,t,w allowed"));
+
+	g.add("NormalizeAmpFuncs", 1, _T("Normalize amp funcs at each station by certain value"));
+
+}
+
 void t_WPLineParams::read_parse_retrace_vec(const hsstab::TPluginParamsGroup& g){
 
 	wxString rvec_str = g.get_string_param("RetraceVec");
@@ -212,6 +226,31 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	}
 
 	UpdateDelsAtRStart = g.get_int_param("UpdateDelsAtRetraceStart");
+}
+
+void t_WPLineParams::init_wpline_write_as_fld_params(const hsstab::TPluginParamsGroup& g) {
+
+	WriteAsFldParams.Xs = g.get_real_param("Xs");
+	WriteAsFldParams.Xe = g.get_real_param("Xe");
+
+	WriteAsFldParams.DxRecalcAmpFuncs = g.get_real_param("DxRecalcAmpFuncs");
+	WriteAsFldParams.DxSave = g.get_real_param("DxSave");
+
+	WriteAsFldParams.FuncName = g.get_string_param("FuncName").ToAscii()[0];
+
+	WriteAsFldParams.NormalizeAmpFuncs = g.get_int_param("NormalizeAmpFuncs");
+
+	// debug
+	//wxLogMessage(_T("Param Xs=%lf"), WriteAsFldParams.Xs);
+	//wxLogMessage(_T("Param Xe=%lf"), WriteAsFldParams.Xe);
+
+	//wxLogMessage(_T("Param DxRecalc=%lf"), WriteAsFldParams.DxRecalcAmpFuncs);
+	//wxLogMessage(_T("Param DxSave=%lf"), WriteAsFldParams.DxSave);
+
+	//wchar_t wchar;
+	//mbstowcs(&wchar, &WriteAsFldParams.FuncName, 1);
+	//wxLogMessage(_T("Param FuncName=%s"), wxString(1, wchar));
+
 }
 
 // ~t_WPLineParams

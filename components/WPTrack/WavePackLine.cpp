@@ -146,6 +146,10 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 
 	_params.init_wpline_base_params(g);
 
+	const hsstab::TPluginParamsGroup& g1 = g_plug.get_settings_grp_const("WriteWPAsFld");
+
+	_params.init_wpline_write_as_fld_params(g1);
+
 	if (_params.RetraceDir == t_WPLineParams::t_MarchAlong::POINTS_FROM_FILE) {
 
 		_geom_line_from_file.init();
@@ -1691,16 +1695,19 @@ void t_WavePackLine::dump_wpline_as_field(stab::t_LSBase& loc_solver) {
 	t_Complex alpha_int_dim = 0.0;
 
 	// TODO: params
-	const double Xs = 2.0;
-	const double Xe = 2.5;
+	const double Xs = _params.WriteAsFldParams.Xs;
+	const double Xe = _params.WriteAsFldParams.Xe;
 
-	const double DxRecalcAmpFuncs = 0.015;
-	const double DxSave = 0.015;
+	const double DxRecalcAmpFuncs = _params.WriteAsFldParams.DxRecalcAmpFuncs;
+	const double DxSave = _params.WriteAsFldParams.DxSave;
 
 	double dx_no_recalc = HUGE_VAL;
 	double dx_sum = HUGE_VAL;
 
 	std::ofstream ofstr("output/wp_field.dat");
+	// dbg
+	if (_params.WriteAsFldParams.NormalizeAmpFuncs)
+		wxLogMessage(_T("Normalization of amplitude funcs is on!"));
 
 	for (int i = 0; i<_line.size() - 1; i++) {
 
@@ -1745,20 +1752,23 @@ void t_WavePackLine::dump_wpline_as_field(stab::t_LSBase& loc_solver) {
 			wxLogMessage(_T("Writing disturbance field at station x=%lf"), x_cur);
 			dx_sum = 0.0;
 
-			// writing data for a particular disturbance
-			// indices: u:0, v:2, p:3, t:4, w:6
-			const int IndF = 2;
-			// order: from wall to outer region
 
 			// value for normalization:
-
 			t_Complex val_p_wall = amp_funcs[loc_solver.getNNodes() - 1][3];
 
 			const t_Complex im_unity(0.0, 1.0);
 
+			// writing data for a particular disturbance
+			const int IndFuncInAmpFuncs = loc_solver.getFuncIndInAmpFuncs(_params.WriteAsFldParams.FuncName);
+
 			for (int j = loc_solver.getNNodes() - 1; j >=0 ; j--) {
 
-				t_Complex& val_c = amp_funcs[j][IndF] * exp(im_unity*alpha_int_dim); // / val_p_wall;
+				t_Complex val_c = amp_funcs[j][IndFuncInAmpFuncs] * exp(im_unity*alpha_int_dim); // / val_p_wall;
+				// amp funcs can be multiplied by arbitrary complex value...
+				// one option is to divide everything by value of pressure at wall 
+				// then for each station p_wall = 1
+				if (_params.WriteAsFldParams.NormalizeAmpFuncs)
+					val_c /= val_p_wall;
 				double val = val_c.real();
 
 				// non-dim value of y

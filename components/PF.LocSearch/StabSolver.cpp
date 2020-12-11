@@ -797,6 +797,18 @@ void t_StabSolver::getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs){
 
 	}
 }
+// get index of amplitude function in amp funcs array by the name of function
+int t_StabSolver::getFuncIndInAmpFuncs(char func_name) {
+
+	if (func_name == 'u') return 0;
+	if (func_name == 'v') return 2;
+	if (func_name == 'p') return 3;
+	if (func_name == 't') return 4;
+	if (func_name == 'w') return 6;
+
+	wxLogError(_T("Wrong func_name in t_StabSolver::getFuncIndInAmpFuncs: only u,v,w,p,t supported!"));
+	return 0;
+}
 
 t_Complex t_StabSolver::calcScalarProd(
 	const t_WCharsLoc& wchars_A_in, const t_WCharsLoc& wchars_B_in,

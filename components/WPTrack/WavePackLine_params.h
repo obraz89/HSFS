@@ -17,6 +17,7 @@ namespace pf{
 		t_WPLineParams();
 
 	    void init_wpline_base_params(const hsstab::TPluginParamsGroup& g);
+		void init_wpline_write_as_fld_params(const hsstab::TPluginParamsGroup& g);
 
 	    double TimeStep;
 	    stab::t_WPRetraceMode RetraceMode;
@@ -46,9 +47,18 @@ namespace pf{
 		// empiric constants, steps to vary nondim w and beta in
 		// dispersion calculations
 		double dw_disp, db_disp;
+
+		struct {
+			double Xs, Xe;
+			double DxRecalcAmpFuncs;
+			double DxSave;
+			char FuncName;
+			bool NormalizeAmpFuncs;
+		} WriteAsFldParams;
 	};
 
 	void wpline_default_settings(hsstab::TPluginParamsGroup& g);
+	void wpline_write_wp_as_fld_settings(hsstab::TPluginParamsGroup& g);
 
 
 
