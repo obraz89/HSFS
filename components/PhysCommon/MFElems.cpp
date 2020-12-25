@@ -35,6 +35,30 @@ std::wostream& operator<<(std::wostream& os, const t_Rec& rec){
 	return os;
 };
 
+double t_Rec::get_val(char name) {
+	if (name == 'x')
+		return x;
+	if (name == 'y')
+		return y;
+	if (name == 'z')
+		return z;
+	if (name == 'u')
+		return u;
+	if (name == 'v')
+		return v;
+	if (name == 'w')
+		return w;
+	if (name == 'p')
+		return p;
+	if (name == 't')
+		return t;
+	if (name == 'r')
+		return r;
+
+	wxLogError(_T("mf::t_Rec::get_val: unknown name"));
+	return 0.0;
+}
+
 //---------------------------------------------------------------------operators
 
 t_Rec t_Rec::lin_comb(double c1, const t_Rec& rec1, double c2, const t_Rec& rec2) {
@@ -66,3 +90,31 @@ t_Rec mf::operator-(const t_Rec& rec1, const t_Rec& rec2){
 	res.r = rec1.r - rec2.r;
 	return res;
 };
+
+// RecGradKed
+
+t_Vec3Dbl& t_RecGradKed::get_vec(char name) {
+
+	if (name == 'x')
+		return xked;
+	if (name == 'y')
+		return yked;
+	if (name == 'z')
+		return zked;
+	if (name == 'u')
+		return uked;
+	if (name == 'v')
+		return vked;
+	if (name == 'w')
+		return wked;
+	if (name == 'p')
+		return pked;
+	if (name == 't')
+		return tked;
+	if (name == 'r')
+		return rked;
+
+	wxLogError(_T("mf::t_RecGradKed::get_val: unknown name"));
+	return t_Vec3Dbl();
+
+}

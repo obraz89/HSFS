@@ -148,6 +148,9 @@ int main(int argc, char* argv[]){
 		case task::GetBLSpectrum:
 			task::get_bl_spectrum();
 			break;
+		case task::CalcMeanFlowRecDerivs:
+			task::calc_mean_flow_rec_derivs();
+			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));
 			wxLogError(errMsg);

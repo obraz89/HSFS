@@ -72,6 +72,9 @@ namespace task{
 
 		CalcScalProd_DNS_test,
 
+		// test: calculate derivs of primitive variables at particular point
+		CalcMeanFlowRecDerivs,
+
 		TaskNum};
 
 	extern wxString TaskNames[TaskNum];

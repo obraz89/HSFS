@@ -21,6 +21,8 @@ struct IMPEXP_PHYSCOMMON t_Rec{
 	void set_xyz(const t_GeomPoint& point);
 	void set_uvw(const t_Vec3Dbl& vec);
 
+	double get_val(char name);
+
 	t_GeomPoint get_xyz() const;
 	t_Vec3Dbl get_uvw() const;
 
@@ -29,6 +31,34 @@ struct IMPEXP_PHYSCOMMON t_Rec{
 	static t_Rec lin_comb(double c1, const t_Rec& r1, double c2, const t_Rec& r2);
 
 };
+/************************************************************************/
+/* Derivatives of mean flow record                                      */
+/************************************************************************/
+// gradients of mean flow vars in mathematical reference frame (ksi, eta, dzeta)
+struct IMPEXP_PHYSCOMMON t_RecGradKed {
+	t_Vec3Dbl xked, yked, zked, uked, vked, wked, pked, tked, rked;
+
+	t_Vec3Dbl& get_vec(char name);
+};
+
+
+/************************************************************************/
+/* Derivatives of mean flow                                             */
+/************************************************************************/
+// gradients of primitive variables
+// in cartesian reference frame (nondim, used in mean flow computations)
+// ug = grad u = (du/dx, du/dy, du/dz)
+struct IMPEXP_PHYSCOMMON t_RecGrad {
+
+	t_Vec3Dbl ug, vg, wg, pg, tg;
+
+	wxString to_wxstr() { return wxString(_T("ug:")) + ug.to_wxstr() + 
+		wxString(_T("\nvg:")) + vg.to_wxstr() +
+		wxString(_T("\nwg:")) + wg.to_wxstr() +
+		wxString(_T("\npg:")) + pg.to_wxstr() +
+		wxString(_T("\ntg:")) + tg.to_wxstr(); }
+};
+
 
 /************************************************************************/
 /* Cartesian geometry point (vector)                                    */

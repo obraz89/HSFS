@@ -55,15 +55,15 @@ namespace mf{
 			double x, y;
 
 			// Direct 2D metric coefficients d{x,y}/d{ksi,eta}
-			//double x_dksi, x_deta;
-			//double y_dksi, y_deta;
+			double x_dksi, x_deta;
+			double y_dksi, y_deta;
 
-			//double jac;  // transformation Jacobian det[d(x,y)/d(ksi,eta)]
+			double jac;  // transformation Jacobian det[d(x,y)/d(ksi,eta)]
 
 			//double Rw;   // distance to the nearest wall
 
 			// Inverse 2D metric coefficients d{ksi,eta}/d{x,y}
-			/*
+			
 			struct inv
 			{
 				double ksi_dx, ksi_dy;
@@ -81,7 +81,7 @@ namespace mf{
 					x_dksi / jac   // eta_dy
 				};
 				return D;
-			}*/
+			}
 		};
 
 		// Data for a 2D grid cell
@@ -99,21 +99,27 @@ namespace mf{
 			double x, y, z;
 
 			// Direct 3D metric coefficients d{x,y,z}/d{ksi,eta,zeta}
-			//double x_dksi, x_deta, x_dzet;
-			//double y_dksi, y_deta, y_dzet;
-			//double z_dksi, z_deta, z_dzet;
+			double x_dksi, x_deta, x_dzet;
+			double y_dksi, y_deta, y_dzet;
+			double z_dksi, z_deta, z_dzet;
 
-			//double jac;  // transformation Jacobian
+			double jac;  // transformation Jacobian
 
 			//double Rw;   // distance to the nearest wall
 
 			// Inverse 3D metric coefficients d{ksi,eta}/d{x,y}
-			/*
+			
 			struct inv
 			{
 				double ksi_dx, ksi_dy, ksi_dz;
 				double eta_dx, eta_dy, eta_dz;
 				double zet_dx, zet_dy, zet_dz;
+
+				void calc_xyz_deriv(const t_Vec3Dbl& v_ked, t_Vec3Dbl& v_xyz) {
+					v_xyz[0] = v_ked[0] * ksi_dx + v_ked[1] * eta_dx + v_ked[2] * zet_dx;
+					v_xyz[1] = v_ked[0] * ksi_dy + v_ked[1] * eta_dy + v_ked[2] * zet_dy;
+					v_xyz[2] = v_ked[0] * ksi_dz + v_ked[1] * eta_dz + v_ked[2] * zet_dz;
+				}
 			};
 			inv  getInverseMetric() const
 			{
@@ -133,8 +139,19 @@ namespace mf{
 					( x_dksi*y_deta - x_deta*y_dksi)/jac   // zet_dz 
 				};
 				return D;
-			}*/
+			}
 		};
+
+		inline double jacobian(const Tmtr3D& v)
+		{
+			return
+				v.x_dksi * v.y_deta * v.z_dzet
+				- v.x_deta * v.y_dksi * v.z_dzet
+				- v.x_dksi * v.y_dzet * v.z_deta
+				+ v.x_dzet * v.y_dksi * v.z_deta
+				+ v.x_deta * v.y_dzet * v.z_dksi
+				- v.x_dzet * v.y_deta * v.z_dksi;
+		}
 
 		// Data for a 3D grid cell
 		struct TgridCell3D
@@ -662,6 +679,8 @@ namespace mf{
 			void _calc_bl_thick_full_gridline(const t_ZoneNode& surf_znode, t_ProfScales& bl_scales,
 				std::vector<t_ZoneNode>& raw_profile) const;
 
+			void _calc_scalar_ked_deriv(const t_ZoneNode& znode, char fun_name, t_Vec3Dbl& df_dked) const;
+
 			// TDomainBase interface realization
 
 			// go along local normal to a surface
@@ -681,6 +700,9 @@ namespace mf{
 			void get_rec(const TZone& zone, const t_BlkInd& ind, mf::t_Rec& rec) const;
 
 			void get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const;
+
+			// calculate metric coefs for a given node
+			void calc_rec_grad(const t_ZoneNode& znode, t_RecGrad& rec_grad) const;
 
 			// grid funcs are different for 2D and 3D
 			virtual bool loadGrid( const wxString& gridFN )=0;
@@ -741,6 +763,8 @@ namespace mf{
 			void dump_full_enthalpy_profile(const t_GeomPoint& xyz, int pid) const;
 
 			void get_wall_gridline(const t_GeomPoint& xyz);
+
+			void dump_rec_derivs(const t_GeomPoint& xyz) const;
 
 			TDomain();
 			virtual ~TDomain();

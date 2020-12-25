@@ -147,6 +147,8 @@ bool load_Settings_n_Plugins()
 	task::TaskNames[task::CalcScalProd_DNS_test] = _T("CalcScalProd_DNS_test");
 	task::TaskNames[task::GetBLSpectrum] = _T("GetBLSpectrum");
 
+	task::TaskNames[task::CalcMeanFlowRecDerivs] = _T("CalcMeanFlowRecDerivs");
+
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
 

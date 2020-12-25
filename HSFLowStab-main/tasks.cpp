@@ -673,3 +673,11 @@ void task::get_bl_spectrum(){
 
 
 }
+
+void task::calc_mean_flow_rec_derivs() {
+
+	const mf::t_GeomPoint& xyz = g_pStabDB->get_pave_pt(0).xyz;
+
+	g_pMFDomain->dump_rec_derivs(xyz);
+
+}

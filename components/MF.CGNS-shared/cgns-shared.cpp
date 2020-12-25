@@ -733,6 +733,203 @@ void TDomain::get_rec(const t_ZoneNode& znode, mf::t_Rec& rec) const{
 	get_rec(blk, znode.iNode.i, znode.iNode.j, znode.iNode.k, rec);
 }
 
+// calculate derivative of some flow field variable 
+// in mathematical reference frame (ksi, eta, dzeta)
+// flow var is get by name:(x,y,z,u,v,w,p,t,r)
+void TDomain::_calc_scalar_ked_deriv(const t_ZoneNode& znode, char fun_name, t_Vec3Dbl& df_dked) const {
+
+	const int i = znode.iNode.i;
+	const int j = znode.iNode.j;
+	const int k = znode.iNode.k;
+
+	const t_BlkInd ijk = znode.iNode;
+
+	const TZone& zne = Zones[znode.iZone -1];
+
+	//IMPORTANT TODO: ask Nova about globInd check (see HSFlow grid-data-3d.cpp)
+	const bool noBakI = (i == 1);//|| (globInd(i - 1, j, k) == -1);
+	const bool noBakJ = (j == 1);//|| (globInd(i, j - 1, k) == -1);
+	const bool noBakK = (k == 1);//|| (globInd(i, j, k - 1) == -1);
+
+	// Can't go forward
+	const bool noFwdI = (i == zne.nx);// || (globInd(i + 1, j, k) == -1);
+	const bool noFwdJ = (j == zne.ny);// || (globInd(i, j + 1, k) == -1);
+	const bool noFwdK = (k == zne.nz);// || (globInd(i, j, k + 1) == -1);
+
+	mf::t_Rec r0, r1, r2;
+	double df_dksi, df_deta, df_ddze;
+	//
+	// d?_dksi
+	//
+	if (noBakI)
+	{
+		get_rec(zne, i + 0, j, k, r0);
+		get_rec(zne, i + 1, j, k, r1);
+		get_rec(zne, i + 2, j, k, r2);
+
+		double v0 = r0.get_val(fun_name);
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_dksi = 0.5*(-3.*v0 + 4.*v1 - v2);
+	}
+	else if (noFwdI)
+	{
+		get_rec(zne, i - 0, j, k, r0);
+		get_rec(zne, i - 1, j, k, r1);
+		get_rec(zne, i - 2, j, k, r2);
+
+		double v0 = r0.get_val(fun_name);
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_dksi = 0.5*(3.*v0 - 4.*v1 + v2);
+	}
+	else
+	{
+
+		get_rec(zne, i - 1, j, k, r1);
+		get_rec(zne, i + 1, j, k, r2);
+
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_dksi = 0.5*(v2 - v1);
+
+		// Guard a point of tripple zones intersection
+		//assert(fabs(D.x_dksi) + fabs(D.y_dksi) + fabs(D.z_dksi) > 1e-10);
+	}
+	//
+	// d?_deta
+	//
+	if (noBakJ)
+	{
+		get_rec(zne, i, j + 0, k, r0);
+		get_rec(zne, i, j + 1, k, r1);
+		get_rec(zne, i, j + 2, k, r2);
+
+		double v0 = r0.get_val(fun_name);
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_deta = 0.5*(-3.*v0 + 4.*v1 - v2);
+	}
+	else if (noFwdJ)
+	{
+		get_rec(zne, i, j - 0, k, r0);
+		get_rec(zne, i, j - 1, k, r1);
+		get_rec(zne, i, j - 2, k, r2);
+
+		double v0 = r0.get_val(fun_name);
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_deta = 0.5*(3.*v0 - 4.*v1 + v2);
+	}
+	else
+	{
+		get_rec(zne, i, j - 1, k, r1);
+		get_rec(zne, i, j + 1, k, r2);
+
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_deta = 0.5*(v2 - v1);
+
+		// Guard a point of tripple zones intersection
+		// assert(fabs(D.x_deta) + fabs(D.y_deta) + fabs(D.z_deta) > 1e-10);
+	}
+	//
+	// d?_dzet
+	//
+	if (noBakK)
+	{
+		get_rec(zne, i, j, k + 0, r0);
+		get_rec(zne, i, j, k + 1, r1);
+		get_rec(zne, i, j, k + 2, r2);
+
+		double v0 = r0.get_val(fun_name);
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_ddze = 0.5*(-3.*v0 + 4.*v1 - v2);
+	}
+	else if (noFwdK)
+	{
+		get_rec(zne, i, j, k - 0, r0);
+		get_rec(zne, i, j, k - 1, r1);
+		get_rec(zne, i, j, k - 2, r2);
+
+		double v0 = r0.get_val(fun_name);
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_ddze = 0.5*(3.*v0 - 4.*v1 + v2);
+	}
+	else
+	{
+		get_rec(zne, i, j, k - 1, r1);
+		get_rec(zne, i, j, k + 1, r2);
+
+		double v1 = r1.get_val(fun_name);
+		double v2 = r2.get_val(fun_name);
+
+		df_ddze = 0.5*(v2 - v1);
+
+		// Guard a point of tripple zones intersection
+		//assert(fabs(D.x_dzet) + fabs(D.y_dzet) + fabs(D.z_dzet) > 1e-10);
+	}
+	//===================~calc deriv
+
+	df_dked.set(df_dksi, df_deta, df_ddze);
+
+}
+
+void TDomain::calc_rec_grad(const t_ZoneNode& znode, mf::t_RecGrad& rec_grad) const {
+
+	Tmtr3D mtr;
+
+	t_Vec3Dbl v;
+
+	_calc_scalar_ked_deriv(znode, 'x', v);
+	
+	mtr.x_dksi = v[0];
+	mtr.x_deta = v[1];
+	mtr.x_dzet = v[2];
+
+	_calc_scalar_ked_deriv(znode, 'y', v);
+
+	mtr.y_dksi = v[0];
+	mtr.y_deta = v[1];
+	mtr.y_dzet = v[2];
+
+	_calc_scalar_ked_deriv(znode, 'z', v);
+
+	mtr.z_dksi = v[0];
+	mtr.z_deta = v[1];
+	mtr.z_dzet = v[2];
+
+	mtr.jac = jacobian(mtr);
+
+	Tmtr3D::inv mtr_inv = mtr.getInverseMetric();
+
+	_calc_scalar_ked_deriv(znode, 'u', v);
+	mtr_inv.calc_xyz_deriv(v, rec_grad.ug);
+
+	_calc_scalar_ked_deriv(znode, 'v', v);
+	mtr_inv.calc_xyz_deriv(v, rec_grad.vg);
+
+	_calc_scalar_ked_deriv(znode, 'w', v);
+	mtr_inv.calc_xyz_deriv(v, rec_grad.wg);
+
+	_calc_scalar_ked_deriv(znode, 'p', v);
+	mtr_inv.calc_xyz_deriv(v, rec_grad.pg);
+
+	_calc_scalar_ked_deriv(znode, 't', v);
+	mtr_inv.calc_xyz_deriv(v, rec_grad.tg);
+
+}
+
 void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz, 
 				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec> &data) const{
 
@@ -904,6 +1101,27 @@ void TDomain::get_wall_gridline(const mf::t_GeomPoint& xyz) {
 	wxLogMessage(_T("Writing wall gridline to output/ppoints_wall_grdline.dat"));
 
 	grdLine.dump_as_ppoints("output/ppoints_wall_grdline.dat");
+
+};
+
+void TDomain::dump_rec_derivs(const mf::t_GeomPoint& xyz) const {
+
+	t_ZoneNode znode = _get_nrst_node_raw(xyz);
+
+	mf::t_Rec rec;
+
+	get_rec(znode, rec);
+
+	mf::t_GeomPoint xyz_node = rec.get_xyz();
+
+	double dst = (xyz - xyz_node).norm();
+
+	wxLogMessage(_T("distance to node:%lf"), dst);
+
+	t_RecGrad rec_grad;
+	calc_rec_grad(znode, rec_grad);
+
+	wxLogMessage(rec_grad.to_wxstr());
 
 };
 

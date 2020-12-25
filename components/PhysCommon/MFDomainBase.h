@@ -157,6 +157,9 @@ namespace mf{
 			// structured grid only!
 			virtual void get_wall_gridline(const t_GeomPoint& xyz) = 0;
 
+			// test function, to calculate and dump rec derivatives at particular point
+			virtual void dump_rec_derivs(const t_GeomPoint& xyz) const = 0;
+
 	};	// ~t_DomainBase
 }	// ~namespace mf
 
