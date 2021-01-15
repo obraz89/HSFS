@@ -10,8 +10,12 @@
 
 /************************************************************************/
 //
-// virtual base profile 
-// for full 3D laminar vars set
+// virtual base profile for full 3D laminar vars set
+// main arrays (_u, _u1, _u2 etc) contain all main variables and their derivs along main coordinate (d_dy),
+// the derivs are computed via splines;
+// _prof_derivs contains additional derivs (d_dx, d_dy, d_dz),
+// here the derivs are extracted from mf and computed directly by mf domain
+// TODO : good check is to compare 2 methods for d_dy calcs
 /************************************************************************/
 class IMPEXP_PROFILE  t_Profile{
 	typedef std::vector<double> t_DblVec;
@@ -33,6 +37,8 @@ protected:
 				 _p, _r, _v;
 
 	std::vector<t_DblVec*> _profiles;
+
+	std::vector<mf::t_RecGrad> _prof_derivs;
 
 	int _nnodes;
 

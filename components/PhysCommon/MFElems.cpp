@@ -118,3 +118,15 @@ t_Vec3Dbl& t_RecGradKed::get_vec(char name) {
 	return t_Vec3Dbl();
 
 }
+
+t_RecGrad t_RecGrad::lin_comb(double c1, const t_RecGrad& r1, double c2, const t_RecGrad& r2) {
+	t_RecGrad ret;
+
+	ret.ug = c1*r1.ug + c2*r2.ug;
+	ret.vg = c1*r1.vg + c2*r2.vg;
+	ret.wg = c1*r1.wg + c2*r2.wg;
+	ret.pg = c1*r1.pg + c2*r2.pg;
+	ret.tg = c1*r1.tg + c2*r2.tg;
+
+	return ret;
+}

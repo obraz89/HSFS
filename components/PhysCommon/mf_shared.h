@@ -52,6 +52,8 @@ struct IMPEXP_PHYSCOMMON t_RecGrad {
 
 	t_Vec3Dbl ug, vg, wg, pg, tg;
 
+	static t_RecGrad lin_comb(double c1, const t_RecGrad& r1, double c2, const t_RecGrad& r2);
+
 	wxString to_wxstr() { return wxString(_T("ug:")) + ug.to_wxstr() + 
 		wxString(_T("\nvg:")) + vg.to_wxstr() +
 		wxString(_T("\nwg:")) + wg.to_wxstr() +

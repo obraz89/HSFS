@@ -646,10 +646,10 @@ namespace mf{
 			bool _is_point_inside(const t_GeomPoint& xyz) const;
 
 			void _extract_profile_data_blbound(const t_ZoneNode& surf_znode, const mf::t_ProfDataCfg& init_cfg,
-				std::vector<t_Rec>& data) const;
+				std::vector<t_Rec>& data, std::vector<t_RecGrad>& data_derivs) const;
 
 			// get set of mf::t_Rec from _profRaw
-			void _get_profile_data_grdline(std::vector<t_Rec>& data) const;
+			void _get_profile_data_grdline(std::vector<t_Rec>& data, std::vector<t_RecGrad>& data_derivs) const;
 
 			// get gridline as set of indexes t_ZoneNode
 			void _extract_profile_data_grdline(const t_ZoneNode& surf_znode) const;
@@ -754,7 +754,7 @@ namespace mf{
 			void calc_nearest_inviscid_rec(const t_GeomPoint& xyz, t_Rec& outer_rec) const;
 
 			void extract_profile_data(const t_GeomPoint& xyz, const mf::t_ProfDataCfg& init_cfg,
-				std::vector<t_Rec>& data) const;
+				std::vector<t_Rec>& data, std::vector<t_RecGrad>& data_derivs) const;
 
 			// tmp, while i don't have good interpolators
 			int estim_num_bl_nodes(const t_GeomPoint& xyz) const;

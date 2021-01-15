@@ -63,6 +63,8 @@ void t_Profile::_resize(int new_nnodes){
 
 		}
 
+		_prof_derivs.resize(new_nnodes);
+
 		_nnodes = new_nnodes;
 
 	}

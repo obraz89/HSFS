@@ -145,7 +145,7 @@ namespace mf{
 			// extract raw profile data if possible, index from wall to outer flow
 			// type of calculation is controlled via set_bl_thick_calc_type method
 			virtual void extract_profile_data(const t_GeomPoint& xyz, const t_ProfDataCfg& data_cfg, 
-				std::vector<t_Rec>& data) const=0;
+				std::vector<t_Rec>& data, std::vector<t_RecGrad>& data_derivs) const=0;
 
 			// tmp, while i don't have good interpolators
 			virtual int estim_num_bl_nodes(const t_GeomPoint& xyz) const=0;

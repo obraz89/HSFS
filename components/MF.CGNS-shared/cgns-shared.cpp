@@ -930,8 +930,8 @@ void TDomain::calc_rec_grad(const t_ZoneNode& znode, mf::t_RecGrad& rec_grad) co
 
 }
 
-void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz, 
-				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec> &data) const{
+void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz, const mf::t_ProfDataCfg& init_cfg, 
+	std::vector<mf::t_Rec> &data, std::vector<mf::t_RecGrad> &data_derivs) const{
 
 	wxLogMessage(_T("Extracting profile data"));
 
@@ -944,12 +944,12 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz,
 	case t_BLThickCalcType::BLTHICK_BY_VDERIV:
 	case t_BLThickCalcType::BLTHICK_BY_ENTHALPY:
 
-		_extract_profile_data_blbound(surf_znode, init_cfg, data);
+		_extract_profile_data_blbound(surf_znode, init_cfg, data, data_derivs);
 		break;
 
 	case t_BLThickCalcType::BLTHICK_FULL_GRIDLINE:
 
-		_get_profile_data_grdline(data);
+		_get_profile_data_grdline(data, data_derivs);
 		break;
 
 	default:
@@ -959,8 +959,8 @@ void TDomain::extract_profile_data(const mf::t_GeomPoint &xyz,
 }
 
 // IMPORTANT TODO: this only works for ortho grids (see eta calculations)
-void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode, 
-				const mf::t_ProfDataCfg& init_cfg, std::vector<mf::t_Rec>& data) const{
+void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode, const mf::t_ProfDataCfg& init_cfg, 
+	std::vector<mf::t_Rec>& data, std::vector<mf::t_RecGrad>& data_derivs) const{
 
 		t_ProfScales bl_scales;
 		t_ZoneNode outer_znode;
@@ -1001,24 +1001,36 @@ void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode,
 		}
 
 		data.resize(total_nodes);
+		data_derivs.resize(total_nodes);
 
 		if (!thick_ok) {
 			wxLogError(_T("Error in _extract_profile_data_blbound: Requested thickness \
 						  is greater than extracted from cgns domain"));
 
-			for (int p = 0; p < total_nodes; p++) get_rec(raw_profile[p], data[p]);
+			for (int p = 0; p < total_nodes; p++) {
+
+				get_rec(raw_profile[p], data[p]);
+				calc_rec_grad(raw_profile[p], data_derivs[p]);
+			} 
 		}
 		else {
 
-			for (int p = 0; p < total_nodes - 1; p++) get_rec(raw_profile[p], data[p]);
+			for (int p = 0; p < total_nodes - 1; p++) {
+
+				get_rec(raw_profile[p], data[p]);
+				calc_rec_grad(raw_profile[p], data_derivs[p]);
+
+			} 
 
 			// do some interpolation for the last point
 			// we want thickness to be exactly total_thick
 			t_GeomPoint xyz1, xyz2;
 			mf::t_Rec r1, r2;
+			mf::t_RecGrad r1_d, r2_d;
 
 			get_rec(raw_profile[total_nodes - 2], r1);
 			xyz1.set(r1);
+			calc_rec_grad(raw_profile[total_nodes - 2], r1_d);
 
 			matrix::base::minus<double, double>(xyz1, surf_xyz, rvec);
 
@@ -1026,6 +1038,7 @@ void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode,
 
 			get_rec(raw_profile[total_nodes - 1], r2);
 			xyz2.set(r2);
+			calc_rec_grad(raw_profile[total_nodes - 1], r2_d);
 
 			matrix::base::minus<double, double>(xyz2, surf_xyz, rvec);
 
@@ -1037,21 +1050,28 @@ void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode,
 				wxLogMessage(_T("Error in _extract_profile_data_blbound: interpolation coef is %lf, should be between 0 and 1"), coef);
 
 			mf::t_Rec rec_intp = mf::t_Rec::lin_comb(1.0 - coef, r1, coef, r2);
+			mf::t_RecGrad rec_derivs_intp = mf::t_RecGrad::lin_comb(1.0 - coef, r1_d, coef, r2_d);
 
 			data[total_nodes - 1] = rec_intp;
+			data_derivs[total_nodes - 1] = rec_derivs_intp;
 
 		}
 
 }
 
 // Extract full domain gridline as a profile
-void TDomain::_get_profile_data_grdline(std::vector<mf::t_Rec>& data) const{
+void TDomain::_get_profile_data_grdline(std::vector<mf::t_Rec>& data, std::vector<mf::t_RecGrad> & data_derivs) const{
 
 	const int nnodes = _pGrdLine->znodes.size();
 
 	data.resize(nnodes);
+	data_derivs.resize(nnodes);
 
-	for (int p=0; p<nnodes; p++) get_rec(_pGrdLine->znodes[p], data[p]);
+	for (int p = 0; p < nnodes; p++) {
+
+		get_rec(_pGrdLine->znodes[p], data[p]);
+		calc_rec_grad(_pGrdLine->znodes[p], data_derivs[p]);
+	}
 
 }
 

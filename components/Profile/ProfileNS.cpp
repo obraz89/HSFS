@@ -15,7 +15,9 @@ void t_ProfileNS::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 
 	std::vector<mf::t_Rec> raw_profile;
 
-	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile);
+	std::vector<mf::t_RecGrad> prof_derivs;
+
+	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile, prof_derivs);
 
 	_resize(raw_profile.size());
 
@@ -472,7 +474,9 @@ void t_ProfMFGlob::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfD
 
 	std::vector<mf::t_Rec> raw_profile;
 
-	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile);
+	std::vector<mf::t_RecGrad> profile_derivs;
+
+	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile, profile_derivs);
 
 	_resize(raw_profile.size());
 
@@ -588,7 +592,9 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 
 	std::vector<mf::t_Rec> raw_profile;
 
-	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile);
+	std::vector<mf::t_RecGrad> prof_derivs;
+
+	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile, prof_derivs);
 
 	_resize(raw_profile.size());
 
