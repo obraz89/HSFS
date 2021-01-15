@@ -48,7 +48,7 @@ class IMPEXP_PROFILE t_ProfileStab : public t_Profile{
 
 	t_StabScales _scales;
 
-	void _initialize(t_ProfileNS& a_rProfNS, 
+	void _initialize(t_ProfMFLoc& a_rProfNS, 
 		const std::vector<double>& y_distrib, t_ProfStabCfg cfg);
 
 public:
@@ -57,12 +57,12 @@ public:
 
 	t_ProfileStab();
 
-	void initialize(t_ProfileNS& a_rProfNS, t_ProfStabCfg cfg);
+	void initialize(t_ProfMFLoc& a_rProfNS, t_ProfStabCfg cfg);
 
-	void initialize(t_ProfileNS& a_rProfNS, 
+	void initialize(t_ProfMFLoc& a_rProfNS,
 		const std::vector<double>& y_distrib, t_ProfStabCfg cfg);
 
-	void initialize_dist_DNS(t_ProfileNS& a_rProfNS, t_ProfStabCfgDNSDisturb cfg);
+	void initialize_dist_DNS(t_ProfMFLoc& a_rProfNS, t_ProfStabCfgDNSDisturb cfg);
 
 	// for testing with AVF code
 	// w=0

@@ -23,7 +23,7 @@ const t_StabScales& t_ProfileStab::scales() const{return _scales;};
 /************************************************************************/
 // interpolate to uniform grid
 /************************************************************************/
-void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, t_ProfStabCfg cfg){
+void t_ProfileStab::initialize(t_ProfMFLoc& a_rProfNS, t_ProfStabCfg cfg){
 
 	if (cfg.NNodes>0){
 		_resize(cfg.NNodes);
@@ -44,7 +44,7 @@ void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, t_ProfStabCfg cfg){
 // interpolate to a grid with given distribution of nodes
 // y_distrib is scaled as all mf data (just as all values in t_ProfileNS)
 /************************************************************************/
-void t_ProfileStab::initialize(t_ProfileNS& a_rProfNS, 
+void t_ProfileStab::initialize(t_ProfMFLoc& a_rProfNS,
 			const std::vector<double>& y_distrib ,t_ProfStabCfg cfg){
 
 	if (cfg.NNodes>0){
@@ -74,7 +74,7 @@ double read_fixed_scale_from_file() {
 }
 
 /************************************************************************/
-void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS, 
+void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 			const std::vector<double>& a_y_distrib, t_ProfStabCfg cfg){
 
 	t_Profile::t_Rec ns_outer_rec = a_rProfNS.get_bound_rec();
@@ -98,34 +98,28 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 
 	// old selfsim scale, TODO: keep as option to nondim ?
 	double x_scale = a_rProfNS.get_x_scale();
-	double y_scale_selfsim = sqrt(mu_e*x_scale/(u_e*rho_e));
-	double y_scale_bl = bl_thick_scale*sqrt(Params.Re);
-
-	double y_scale;
+	double y_scale_selfsim = sqrt(mu_e*x_scale/(u_e*rho_e))/sqrt(Params.Re);
 
 	switch (cfg.NondimScaleType)
 	{
 	case t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE:
 		bl_thick_scale = bl_thick_scales.thick_scale;
-		y_scale = bl_thick_scale*sqrt(Params.Re);
 		_scales.ReStab = rho_e*u_e*bl_thick_scale/mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_DISP_THICK:
 		bl_thick_scale = bl_thick_scales.d1;
-		y_scale = bl_thick_scale*sqrt(Params.Re);
 		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_X_SELFSIM:
-		y_scale = y_scale_selfsim;
+		bl_thick_scale = y_scale_selfsim;
 		_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x_scale/mu_e);
-		_scales.Dels = Params.L_ref*y_scale/sqrt(Params.Re);
+		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_FIXED_VAL:
 		// reading Dels (dimensional)
 		bl_thick_scale = read_fixed_scale_from_file()/Params.L_ref;
-		y_scale = bl_thick_scale*sqrt(Params.Re);
 		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
@@ -149,20 +143,20 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 		set_rec(a_rProfNS.get_rec(cur_y), i);
 
 		//nondim
-		_y[i] = _y[i]/y_scale;
+		_y[i] = _y[i]/bl_thick_scale;
 
 		_u[i] =_u[i]/u_e;
-		_u1[i]=_u1[i]*y_scale/u_e;
-		_u2[i]=_u2[i]*pow(y_scale,2)/u_e;
+		_u1[i]=_u1[i]* bl_thick_scale /u_e;
+		_u2[i]=_u2[i]*pow(bl_thick_scale,2)/u_e;
 
 		_t[i]=_t[i]/t_e;
-		_t1[i]=_t1[i]*y_scale/t_e;
-		_t2[i]=_t2[i]*pow(y_scale,2)/t_e;
+		_t1[i]=_t1[i]* bl_thick_scale /t_e;
+		_t2[i]=_t2[i]*pow(bl_thick_scale,2)/t_e;
 
 		// IMPORTANT TODO: why isn't w nondim by u_e in orig solver?
 		_w[i]=_w[i]/u_e;
-		_w1[i]=_w1[i]*y_scale/u_e;
-	    _w2[i]=_w2[i]*pow(y_scale,2)/u_e;
+		_w1[i]=_w1[i]* bl_thick_scale /u_e;
+	    _w2[i]=_w2[i]*pow(bl_thick_scale,2)/u_e;
 
 		// for viscosity we store dmu/dt and d2mu/dt2
 		_mu[i]=_mu[i]/mu_e;
@@ -195,7 +189,7 @@ void t_ProfileStab::_initialize(t_ProfileNS& a_rProfNS,
 	}
 };
 
-void t_ProfileStab::initialize_dist_DNS(t_ProfileNS& a_rProfNS, t_ProfStabCfgDNSDisturb cfg){
+void t_ProfileStab::initialize_dist_DNS(t_ProfMFLoc& a_rProfNS, t_ProfStabCfgDNSDisturb cfg){
 
 	_resize(cfg.NNodes);
 

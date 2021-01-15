@@ -285,10 +285,10 @@ void _get_DNS_amp_vecs_from_file(std::string fname_re, std::string fname_im, std
 
 	data_cfg.ThickCoef = pstab_cfg.Ymax / pstab_cfg.Dels_gndim;
 
-	t_ProfileNS prof_ns_re(*g_pMFDomain);
+	t_ProfMFLoc prof_ns_re(*g_pMFDomain);
 	prof_ns_re.initialize_extract(fname_re, data_cfg);
 
-	t_ProfileNS prof_ns_im(*g_pMFDomain);
+	t_ProfMFLoc prof_ns_im(*g_pMFDomain);
 	prof_ns_im.initialize_extract(fname_im, data_cfg);
 
 	t_ProfileStab ps_re, ps_im;

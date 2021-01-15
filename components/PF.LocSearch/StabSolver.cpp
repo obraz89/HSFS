@@ -156,7 +156,7 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 
 	_math_solver.setContext(nnodes_stab);
 
-	t_ProfileNS profNS(_rFldNS);
+	t_ProfMFLoc profNS(_rFldNS);
 
 	mf::t_ProfDataCfg prof_cfg;
 	prof_cfg.ThickCoef = _params.ThickCoef;
