@@ -45,6 +45,8 @@ protected:
 	double _interpolate(const double& y, const t_DblVec& arg, 
 		const t_DblVec& fun, const int& a_size) const;
 
+	mf::t_RecGrad _interpolate_prof_derivs(const double y) const;
+
 	int _getNearestInd(const double& a_y, const t_DblVec& a_vec) const;
 
 	void _resize(int new_nnodes);

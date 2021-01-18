@@ -139,8 +139,11 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 
 		double cur_y = a_y_distrib[i];
 
-		// interpolate
+		// interpolate prof record
 		set_rec(a_rProfNS.get_rec(cur_y), i);
+
+		// interpolate non-par derivs
+		_prof_derivs[i] = _interpolate_prof_derivs(cur_y);
 
 		//nondim
 		_y[i] = _y[i]/bl_thick_scale;
@@ -185,6 +188,16 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 			_mu1[i] = _mu[i]*d;
 			_mu2[i] = _mu1[i]*d-_mu[i]/lt*(d+t_suth/pow(lt+t_suth,2));
 
+		}
+
+		// non-dim nonparallel derivatives
+		for (int k = 0; k < 3; k++) {
+			_prof_derivs[i].ug[k] *= bl_thick_scale / u_e;
+			_prof_derivs[i].vg[k] *= bl_thick_scale / u_e;
+			_prof_derivs[i].wg[k] *= bl_thick_scale / u_e;
+
+			_prof_derivs[i].pg[k] *= bl_thick_scale / (rho_e* u_e * u_e);
+			_prof_derivs[i].tg[k] *= bl_thick_scale / t_e;
 		}
 	}
 };

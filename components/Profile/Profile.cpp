@@ -178,6 +178,65 @@ double t_Profile::_interpolate(const double& a_y, const t_DblVec& arg, const t_D
 								   arg_rgt, fun[rgt_ind], a_y);
 };
 
+mf::t_RecGrad t_Profile::_interpolate_prof_derivs(const double a_y) const{
+
+	mf::t_RecGrad ret;
+
+	int k = _getNearestInd(a_y, _y);
+	int lft_ind, mid_ind, rgt_ind;
+	if (k == 0) {
+		lft_ind = 0;
+		mid_ind = 1;
+		rgt_ind = 2;
+	}
+	else {
+		if (k == (_nnodes - 1)) {
+			lft_ind = _nnodes - 3;
+			mid_ind = _nnodes - 2;
+			rgt_ind = _nnodes - 1;
+		}
+		else {
+			lft_ind = k - 1;
+			mid_ind = k;
+			rgt_ind = k + 1;
+		};
+	};
+
+	const double& arg_lft = _y[lft_ind];
+	const double& arg_mid = _y[mid_ind];
+	const double& arg_rgt = _y[rgt_ind];
+
+	for (int i = 0; i < 3; i++) {
+		ret.ug[i] = smat::interpolate_parab(
+			arg_lft, _prof_derivs[lft_ind].ug[i],
+			arg_mid, _prof_derivs[mid_ind].ug[i],
+			arg_rgt, _prof_derivs[rgt_ind].ug[i], a_y);
+
+		ret.vg[i] = smat::interpolate_parab(
+			arg_lft, _prof_derivs[lft_ind].vg[i],
+			arg_mid, _prof_derivs[mid_ind].vg[i],
+			arg_rgt, _prof_derivs[rgt_ind].vg[i], a_y);
+
+		ret.wg[i] = smat::interpolate_parab(
+			arg_lft, _prof_derivs[lft_ind].wg[i],
+			arg_mid, _prof_derivs[mid_ind].wg[i],
+			arg_rgt, _prof_derivs[rgt_ind].wg[i], a_y);
+
+		ret.pg[i] = smat::interpolate_parab(
+			arg_lft, _prof_derivs[lft_ind].pg[i],
+			arg_mid, _prof_derivs[mid_ind].pg[i],
+			arg_rgt, _prof_derivs[rgt_ind].pg[i], a_y);
+
+		ret.tg[i] = smat::interpolate_parab(
+			arg_lft, _prof_derivs[lft_ind].tg[i],
+			arg_mid, _prof_derivs[mid_ind].tg[i],
+			arg_rgt, _prof_derivs[rgt_ind].tg[i], a_y);
+	}
+
+	return ret;
+
+}
+
 int t_Profile::_getNearestInd(const double &a_y, const t_DblVec& a_vec) const{
 	if (a_y<=a_vec[0]) return 0;
 	if (a_y>=a_vec.back()) return a_vec.size()-1;
