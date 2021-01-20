@@ -170,12 +170,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="NonParSM.cpp" />
     <ClCompile Include="WavePackLine.cpp" />
     <ClCompile Include="WavePackLine_io.cpp" />
     <ClCompile Include="WavePackLine_params.cpp" />
     <ClCompile Include="WavePackLine_plugin.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="NonParSM.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="WavePackLine.h" />
     <ClInclude Include="WavePackLine_params.h" />
