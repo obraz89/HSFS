@@ -75,6 +75,9 @@ namespace task{
 		// test: calculate derivs of primitive variables at particular point
 		CalcMeanFlowRecDerivs,
 
+		// calculate neutral curve
+		CalcNeutralCurve,
+
 		TaskNum};
 
 	extern wxString TaskNames[TaskNum];

@@ -151,6 +151,10 @@ int main(int argc, char* argv[]){
 		case task::CalcMeanFlowRecDerivs:
 			task::calc_mean_flow_rec_derivs();
 			break;
+
+		case task::CalcNeutralCurve:
+			task::calc_neutral_curve();
+			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));
 			wxLogError(errMsg);

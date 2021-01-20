@@ -60,6 +60,8 @@ namespace task{
 	void get_bl_spectrum();
 
 	void calc_mean_flow_rec_derivs();
+
+	void calc_neutral_curve();
 }
 
 bool read_max_wave_pid(int pid, const std::wstring& fname_max_waves, t_WCharsLoc& wave);

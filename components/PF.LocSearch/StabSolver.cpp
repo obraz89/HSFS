@@ -916,3 +916,44 @@ t_Complex t_StabSolver::calcScalarProd(
 	return smat::fun_integrate(arg, fun);
 
 }
+
+/************************************************************************/
+// Search for lower and upper points of neutral curve at given xyz
+// for now beta = fixed and seek for a = a(w), im(a)=0, lower and upper
+// starting wchars must be unstable (usually most unstable wave from global search)
+/************************************************************************/
+void t_StabSolver::calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc& wave_start, 
+	t_WCharsLoc& wave_lower, t_WCharsLoc& wave_upper) {
+
+	setContext(xyz);
+
+	int n_max_steps = 100000;
+
+	stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
+
+	const double eps = 0.005;
+
+	double dw = 0.0;
+	double dw_calc = 0.0;
+
+	t_WCharsLoc wave = wave_start;
+
+	// search upper point of neutral curve
+	while (wave.a.imag() < 0.0) {
+
+		searchWave(wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+		dw_calc = eps*wave.w.real();
+		// when w is nearly zero relative step is too small, use absolute step
+		dw = (abs(dw_calc) > 1.0e-05) ? dw_calc : 1.0e-05;
+
+		wave.w += eps*wave.w.real();
+
+		// debug
+		wxLogMessage(_T("w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
+
+	}
+
+	wxLogMessage(_T("Raw upper neut point:w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
+
+};

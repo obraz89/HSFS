@@ -681,3 +681,30 @@ void task::calc_mean_flow_rec_derivs() {
 	g_pMFDomain->dump_rec_derivs(xyz);
 
 }
+
+void task::calc_neutral_curve() {
+
+	int npave_pts = g_pStabDB->get_npoints();
+
+	t_WCharsLoc w_init, w_lower, w_upper;
+
+	for (int pid = 0; pid < npave_pts; pid++) {
+
+			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+			w_init.set_treat(stab::t_TaskTreat::SPAT);
+
+			bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
+
+			if (!read_ok) {
+				wxLogMessage(_T("Failed to read max wave chars, skipping wpline"));
+				return;
+			}
+			else
+				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
+
+			g_pStabSolver->calcNeutPoints(test_xyz, w_init, w_lower, w_upper);
+	}
+
+
+}

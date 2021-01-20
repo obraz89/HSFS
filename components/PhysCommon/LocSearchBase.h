@@ -123,6 +123,9 @@ namespace stab{
 
 		virtual void calcGroupVelocity(t_WCharsLoc& wchars)=0;
 
+		virtual void calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc& wave_start, 
+			t_WCharsLoc& wave_lower, t_WCharsLoc& wave_upper) = 0;
+
 		virtual bool checkWCharsByGroupV(t_WCharsLoc& wchars)=0;
 
 		virtual const t_StabScales& get_stab_scales() const =0;

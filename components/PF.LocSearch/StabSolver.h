@@ -124,6 +124,9 @@ public:
 
 	void calcAiDbDerivs(t_WCharsLoc& wave, double& dai_dbr, double& d2ai_dbr2, double a_darg);
 
+	void calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc& wave_start, 
+		t_WCharsLoc& wave_lower, t_WCharsLoc& wave_upper);
+
 	void setContext(const mf::t_GeomPoint a_xyz);
 
 	void setContext(const t_ProfileStab* prof_stab);
