@@ -56,7 +56,8 @@ class  t_StabSolver: public stab::t_LSBase{
 	// scalar product of 2 amplitude functions Phi, Psi: 
 	// c = (Hx*Phi, Psi)
 	// keep this matrix Hx
-	t_SqMatCmplx _scal_prod_matrix;
+	t_SqMatCmplx _scal_prod_matrix_H1;
+	t_SqMatCmplx _scal_prod_matrix_H2;
 	const mf::t_DomainBase& _rFldNS; // to get global field params
 	mf::t_GeomPoint _cur_xyz;
 	t_ProfileStab _profStab; // current profile
@@ -69,8 +70,11 @@ class  t_StabSolver: public stab::t_LSBase{
 	void _setStabMatrix3D(const double& a_y);
 	void _setStabMatrix3D(const t_ProfRec& rec);
 
-	void _setScalProdMatrix(const t_ProfRec& rec);
-	void _setScalProdMatrix(const double& a_y);
+	void _setScalProdMatrix_H1(const t_ProfRec& rec);
+	void _setScalProdMatrix_H1(const double& a_y);
+
+	void _setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad);
+	void _setScalProdMatrix_H2(const double& a_y);
 
 	//t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
 	// rhs function by stab matrix
@@ -142,6 +146,10 @@ public:
 	t_Complex calcScalarProd_H1(
 		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B,
 		std::vector<t_VecCmplx>* dns_vec_ptr = NULL);
+
+	t_Complex calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
+
+	t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
 
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 

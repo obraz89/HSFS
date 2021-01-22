@@ -54,6 +54,10 @@ namespace stab{
 		double dN_dw_gndim, dN_db_gndim;
 		double d2N_dw2_gndim, d2N_db2_gndim, d2N_dwb_gndim;
 
+		// addition to eigenvalue a from non-parallel effects
+		// local reference frame so a = wchars_loc.a + da_nonpar
+		t_Complex da_nonpar;
+
 		t_WPLineRec();
 		t_WPLineRec(const mf::t_Rec& rMF, const t_WCharsGlob& rWC);
 

@@ -148,6 +148,10 @@ namespace stab{
 			const t_WCharsLoc& w1, const t_WCharsLoc& w2,
 			std::vector<t_VecCmplx>* dns_vec_ptr=NULL) = 0;
 
+		virtual t_Complex calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
+
+		virtual t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
+
 	};
 
 /************************************************************************/

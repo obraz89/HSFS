@@ -319,7 +319,7 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 
 // Mack recommends (bulk viscosity)/(viscosity)=0.8, then parameter K=1.2
 // TODO: cases where bv/v=0.8 ?
-void t_StabSolver::_setScalProdMatrix(const t_ProfRec& rec){
+void t_StabSolver::_setScalProdMatrix_H1(const t_ProfRec& rec){
 	//void set_stab_h(int i,const t_AmpVec<double>& vec_mf, t_SqMatCmplx& h_mat){
 
 		t_CompVal E(0.0,1.0);
@@ -341,7 +341,7 @@ void t_StabSolver::_setScalProdMatrix(const t_ProfRec& rec){
 
 		double MG = (Gamma-1.0)*Mach*Mach;
 
-		_scal_prod_matrix.setToZero();
+		_scal_prod_matrix_H1.setToZero();
 
 		const t_CompVal W = _waveChars.w;
 		const t_CompVal A = _waveChars.a;
@@ -376,59 +376,69 @@ void t_StabSolver::_setScalProdMatrix(const t_ProfRec& rec){
 
 		// fill non-zero elements
 
-		_scal_prod_matrix[0][1] = U*R*M1*TD-2.*E*A;
+		_scal_prod_matrix_H1[0][1] = U*R*M1*TD-2.*E*A;
 
-		_scal_prod_matrix[2][1]=-F*T1*TD-MY*M1;
+		_scal_prod_matrix_H1[2][1]=-F*T1*TD-MY*M1;
 
-		_scal_prod_matrix[3][1]=R*M1-E*F*M2*(WA-A*U);
+		_scal_prod_matrix_H1[3][1]=R*M1-E*F*M2*(WA-A*U);
 
-		_scal_prod_matrix[4][1]=E*F*TD*(WA-A*U);
+		_scal_prod_matrix_H1[4][1]=E*F*TD*(WA-A*U);
 
-		_scal_prod_matrix[0][2]=-1.;
+		_scal_prod_matrix_H1[0][2]=-1.;
 
-		_scal_prod_matrix[3][2]=-M2*U;
+		_scal_prod_matrix_H1[3][2]=-M2*U;
 
-		_scal_prod_matrix[4][2]=U*TD;
+		_scal_prod_matrix_H1[4][2]=U*TD;
 
-		_scal_prod_matrix[0][3]=-(XI+A*DXI)*(RM*T1*TD+2.*MY*M1);
+		_scal_prod_matrix_H1[0][3]=-(XI+A*DXI)*(RM*T1*TD+2.*MY*M1);
 
-		_scal_prod_matrix[1][3]=-XI-A*DXI;
+		_scal_prod_matrix_H1[1][3]=-XI-A*DXI;
 
-		_scal_prod_matrix[2][3]=-E*(
+		_scal_prod_matrix_H1[2][3]=-E*(
 			DXI*(E*WA*R*M1*TD-A*A-B*B+RM*(T2*TD+MY*T1*M1*TD))
 			-XI*(2.*A+E*R*U*M1*TD));
 
-		_scal_prod_matrix[3][3]=-RM*M2*
+		_scal_prod_matrix_H1[3][3]=-RM*M2*
 			(DXI*(A*U1+B*WS1)+XI*U1+(T1*TD+MY*M1)*(XI*U-DXI*WA));
 
-		_scal_prod_matrix[4][3]=DXI*((A*U1+B*WS1)*(RM*TD+MU1*M1)-RM*WA*MY*M1*TD)
+		_scal_prod_matrix_H1[4][3]=DXI*((A*U1+B*WS1)*(RM*TD+MU1*M1)-RM*WA*MY*M1*TD)
 			+XI*(RM*U1*TD+MU1*U1*M1+RM*U*MY*M1*TD);
 
-		_scal_prod_matrix[5][3]=RM*TD*(U*XI-WA*DXI);
+		_scal_prod_matrix_H1[5][3]=RM*TD*(U*XI-WA*DXI);
 
-		_scal_prod_matrix[6][3]=-DXI*B*(RM*T1*TD+2.*MY*M1);
+		_scal_prod_matrix_H1[6][3]=-DXI*B*(RM*T1*TD+2.*MY*M1);
 
-		_scal_prod_matrix[7][3]=-B*DXI;
+		_scal_prod_matrix_H1[7][3]=-B*DXI;
 
-		_scal_prod_matrix[2][5]=-2.*MG*Pr*U1;
+		_scal_prod_matrix_H1[2][5]=-2.*MG*Pr*U1;
 
-		_scal_prod_matrix[3][5]=-MG*Pr*R*U*M1;
+		_scal_prod_matrix_H1[3][5]=-MG*Pr*R*U*M1;
 
-		_scal_prod_matrix[4][5]=R*Pr*U*M1*TD-2.*E*A;
+		_scal_prod_matrix_H1[4][5]=R*Pr*U*M1*TD-2.*E*A;
 
-		_scal_prod_matrix[3][7]=E*F*M2*B*U;
+		_scal_prod_matrix_H1[3][7]=E*F*M2*B*U;
 
-		_scal_prod_matrix[4][7]=-E*F*B*U*TD;
+		_scal_prod_matrix_H1[4][7]=-E*F*B*U*TD;
 
-		_scal_prod_matrix[6][7]=R*U*M1*TD-2.*E*A;
+		_scal_prod_matrix_H1[6][7]=R*U*M1*TD-2.*E*A;
 
 }
 
-void t_StabSolver::_setScalProdMatrix(const double& a_y){
+void t_StabSolver::_setScalProdMatrix_H1(const double& a_y){
 
 	const t_ProfRec& rec = _profStab.get_rec(a_y);
-	_setScalProdMatrix(rec);
+	_setScalProdMatrix_H1(rec);
 
+}
+
+// matrix required by 
+void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad) {
+	wxLogMessage(_T("Implement me!"));
+}
+
+void t_StabSolver::_setScalProdMatrix_H2(const double& a_y) {
+	const t_ProfRec& rec = _profStab.get_rec(a_y);
+	wxLogMessage(_T("Implement me!"));
 }
 
 void t_StabSolver::setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* a_lambdas /*=NULL*/){

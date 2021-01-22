@@ -118,19 +118,10 @@ namespace pf{
 
 		std::wostream& _print_line(std::wostream& str) const;
 
-		/*
-
-		void _retrace_dir_w_spat(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-		stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver, t_Direction direction);
-
-		void _retrace_dir_wb(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-		stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
-
-		void _retrace_dir_wb_rad(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 
-		stab::t_LSBase& loc_solver, stab::t_GSBase& gs_solver,	t_Direction direction);
-
-
-		*/
+		// non-parallel additions to increment
+		void _calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& fun_l,
+			std::vector<t_VecCmplx>& fun_r, std::vector<t_VecCmplx>& amp_funcs_deriv);
+		void _calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver);
 
 	public:
 		t_WavePackLine(const mf::t_DomainBase& a_mf);
