@@ -931,29 +931,74 @@ void t_StabSolver::calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc&
 
 	stab::t_LSCond srch_cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
 
-	const double eps = 0.005;
+	const double eps = 0.0025;
 
 	double dw = 0.0;
 	double dw_calc = 0.0;
 
 	t_WCharsLoc wave = wave_start;
+	t_WCharsLoc wave_prv;
 
 	// search upper point of neutral curve
 	while (wave.a.imag() < 0.0) {
-
-		searchWave(wave, srch_cond, stab::t_TaskTreat::SPAT);
 
 		dw_calc = eps*wave.w.real();
 		// when w is nearly zero relative step is too small, use absolute step
 		dw = (abs(dw_calc) > 1.0e-05) ? dw_calc : 1.0e-05;
 
+		wave_prv = wave;
+
 		wave.w += eps*wave.w.real();
+		searchWave(wave, srch_cond, stab::t_TaskTreat::SPAT);
 
 		// debug
 		wxLogMessage(_T("w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
 
 	}
+	double slope = (wave.a.imag() - wave_prv.a.imag()) / (wave.w.real() - wave_prv.w.real());
+	double darg = -1.0/slope*wave_prv.a.imag();
+	double val = wave_prv.a.imag() + slope*darg;
 
-	wxLogMessage(_T("Raw upper neut point:w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
+	wxLogMessage(_T("Left point:w=%lf, -Im(a)=%lf"), wave_prv.w.real(), -1.0*wave_prv.a.imag());
+	wxLogMessage(_T("right point:w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
+	wxLogMessage(_T("Zero:w=%lf, -Im(a)=%lf"), wave_prv.w.real() + darg, val);
+
+	wave_upper = wave_prv;
+	// linear interpolation for frequency
+	wave_upper.w = t_Complex(wave_prv.w.real() + darg, val);
+
+	wave_upper.set_scales(get_stab_scales());
+
+	wave = wave_start;
+
+	// search upper point of neutral curve
+	while (wave.a.imag() < 0.0) {
+
+		dw_calc = eps*wave.w.real();
+		// when w is nearly zero relative step is too small, use absolute step
+		dw = (abs(dw_calc) > 1.0e-05) ? dw_calc : 1.0e-05;
+
+		wave_prv = wave;
+
+		wave.w -= eps*wave.w.real();
+		searchWave(wave, srch_cond, stab::t_TaskTreat::SPAT);
+
+		// debug
+		wxLogMessage(_T("w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
+
+	}
+	slope = (wave.a.imag() - wave_prv.a.imag()) / (wave.w.real() - wave_prv.w.real());
+	darg = -1.0 / slope*wave_prv.a.imag();
+	val = wave_prv.a.imag() + slope*darg;
+
+	wxLogMessage(_T("Left point:w=%lf, -Im(a)=%lf"), wave_prv.w.real(), -1.0*wave_prv.a.imag());
+	wxLogMessage(_T("right point:w=%lf, -Im(a)=%lf"), wave.w.real(), -1.0*wave.a.imag());
+	wxLogMessage(_T("Zero:w=%lf, -Im(a)=%lf"), wave_prv.w.real() + darg, val);
+
+	wave_lower = wave_prv;
+	// linear interpolation for frequency
+	wave_lower.w = t_Complex(wave_prv.w.real() + darg, val);
+
+	wave_lower.set_scales(get_stab_scales());
 
 };

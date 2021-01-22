@@ -688,6 +688,10 @@ void task::calc_neutral_curve() {
 
 	t_WCharsLoc w_init, w_lower, w_upper;
 
+	std::ofstream ofstr("output/neutral_curve.dat");
+
+	ofstr << "x\ty\tz\tfreq_min\tfreq_max\n";
+
 	for (int pid = 0; pid < npave_pts; pid++) {
 
 			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
@@ -704,7 +708,13 @@ void task::calc_neutral_curve() {
 				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
 
 			g_pStabSolver->calcNeutPoints(test_xyz, w_init, w_lower, w_upper);
+
+			t_WCharsLocDim w_lower_dim = w_lower.make_dim();
+			t_WCharsLocDim w_upper_dim = w_upper.make_dim();
+
+			ofstr << test_xyz.x() << "\t" << test_xyz.y() << "\t" << test_xyz.z() << "\t"
+				  << w_lower_dim.w.real() << "\t" << w_upper_dim.w.real() << "\n";
 	}
 
-
+	ofstr.close();
 }
