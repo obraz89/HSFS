@@ -303,6 +303,11 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 };
 
 // Matrix Hx for scalar product of 2 amplitude functions
+
+// The matrix of scalar product is H1 = -i*dH0/da
+// H0 is the basic stability matrix
+// so this is to prepare calculations of <H1*x, z>
+// x - direct amplitude vector, z - conjugate amplitude vector
 // 
 // Stability matrix corresponds to Nayfeh A.H., Stability of Three-Dimensional
 // Boundary Layers," AIAA J., Vol. 18, No. 4, pp. 406-416, 1980.
@@ -314,17 +319,6 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 
 // Mack recommends (bulk viscosity)/(viscosity)=0.8, then parameter K=1.2
 // TODO: cases where bv/v=0.8 ?
-//
-//
-//	N = number of points in Y-grid of constant step (N should be smaller than parameter NY) 
-//	Y1 = upper boundary (real)
-//	Basic flow profiles in COMMON/BASIC1/
-//	Basic flow parameters in COMMON/BASIC2/
-//	DZ(8,N) = vector of conjugate stability problem (complex) (in COMMON/SCAL1/)
-//	A,B,W = wavenumbers and frequency of stability problem (complex) (in COMMON/SCAL2/)
-//	R = Reynolds number (complex) (in COMMON/SCAL2/)
-//	A0(8,N) vector of disturbance (complex) (in COMMON/FIELD/)
-
 void t_StabSolver::_setScalProdMatrix(const t_ProfRec& rec){
 	//void set_stab_h(int i,const t_AmpVec<double>& vec_mf, t_SqMatCmplx& h_mat){
 
