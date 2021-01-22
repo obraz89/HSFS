@@ -810,12 +810,18 @@ int t_StabSolver::getFuncIndInAmpFuncs(char func_name) {
 	return 0;
 }
 
-t_Complex t_StabSolver::calcScalarProd(
+// compute <H1x, z>
+// notation is according to AIAA-2002-2846 : 
+// H1 = -i*dH0/da
+// x - amp fun of direct problem (eigenval wchars_A_in)
+// z - amp fun of conjugate problem (eigenval wchars_B_in)
+t_Complex t_StabSolver::calcScalarProd_H1(
 	const t_WCharsLoc& wchars_A_in, const t_WCharsLoc& wchars_B_in,
 	std::vector<t_VecCmplx>* dns_vec_ptr){
 
 	// important - first solve conjugate problem, then direct
-	// because matrix of scalar prod should be computed for a direct task !!! (?)
+	// because matrix of scalar prod should be computed for a direct task:
+	// H1 = -i*dH0/da - for direct problem
 
 	int nnodes = _math_solver.getNNodes();
 

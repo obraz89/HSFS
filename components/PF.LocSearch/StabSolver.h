@@ -138,8 +138,8 @@ public:
 	// testing
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
 	int getFuncIndInAmpFuncs(char func_name);
-	// order important
-	t_Complex calcScalarProd(
+	
+	t_Complex calcScalarProd_H1(
 		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B,
 		std::vector<t_VecCmplx>* dns_vec_ptr = NULL);
 

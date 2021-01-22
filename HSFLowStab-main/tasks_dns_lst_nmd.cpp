@@ -206,7 +206,7 @@ void task::calc_scal_prod_self() {
 
 	g_pStabSolver->dumpEigenFuctions("output/mode_B.dat");
 
-	t_Complex val = g_pStabSolver->calcScalarProd(wchars_A, wchars_B);
+	t_Complex val = g_pStabSolver->calcScalarProd_H1(wchars_A, wchars_B);
 
 	wxLogMessage(_("Scalar product result:(%f,%f)"), val.real(), val.imag());
 
@@ -430,11 +430,11 @@ void _do_calc_scal_prod_spctr_max_point() {
 	}
 	ofstr.close();
 
-	t_Complex val_lst = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, NULL);
+	t_Complex val_lst = g_pStabSolver->calcScalarProd_H1(wchars_A, wchars_A, NULL);
 
 	wxLogMessage(_T("LST <A_lst_scaled2dns_p, A_lst_conj>=%lf"), smat::norm(coef_p*val_lst));
 
-	t_Complex val_dns = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, &amp_fun_DNS);
+	t_Complex val_dns = g_pStabSolver->calcScalarProd_H1(wchars_A, wchars_A, &amp_fun_DNS);
 
 	wxLogMessage(_T("DNS <Q_dns, A_lst_conj>=%lf"), smat::norm(val_dns));
 
@@ -621,9 +621,9 @@ void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>&
 
 		// version 2 - calculate (<Q_DNS, A_conj>/<A, A_conj>)*A
 
-		t_Complex val_lst = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, NULL);
+		t_Complex val_lst = g_pStabSolver->calcScalarProd_H1(wchars_A, wchars_A, NULL);
 
-		t_Complex val_dns = g_pStabSolver->calcScalarProd(wchars_A, wchars_A, &amp_fun_DNS);
+		t_Complex val_dns = g_pStabSolver->calcScalarProd_H1(wchars_A, wchars_A, &amp_fun_DNS);
 
 		//wxLogMessage(_T("LST <A_lst_scaled2dns_p, A_lst_conj>=%lf"), smat::norm(coef_p*val_lst));
 
@@ -989,7 +989,7 @@ void task::calc_scal_prod_dns_test() {
 
 	t_Complex val;
 
-	val = g_pStabSolver->calcScalarProd(wchars_A, wchars_B, &sol_dir_A);
+	val = g_pStabSolver->calcScalarProd_H1(wchars_A, wchars_B, &sol_dir_A);
 
 	wxLogMessage(_("Scalar product result:(%f,%f)"), val.real(), val.imag());
 

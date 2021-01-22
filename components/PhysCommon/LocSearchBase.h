@@ -144,7 +144,7 @@ namespace stab{
 
 		virtual int getFuncIndInAmpFuncs(char func_name) = 0;
 
-		virtual t_Complex calcScalarProd(
+		virtual t_Complex calcScalarProd_H1(
 			const t_WCharsLoc& w1, const t_WCharsLoc& w2,
 			std::vector<t_VecCmplx>* dns_vec_ptr=NULL) = 0;
 
