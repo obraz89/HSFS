@@ -76,6 +76,10 @@ public:
 
 	t_Rec get_rec(int a_j) const;
 
+	mf::t_RecGrad& get_rec_grad(int a_j);
+
+	const mf::t_RecGrad& get_rec_grad(int a_j) const;
+
 	t_Rec get_last_rec() const;
 
 	t_Rec get_rec(double a_y) const;

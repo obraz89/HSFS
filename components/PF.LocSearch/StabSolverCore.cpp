@@ -320,7 +320,6 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 // Mack recommends (bulk viscosity)/(viscosity)=0.8, then parameter K=1.2
 // TODO: cases where bv/v=0.8 ?
 void t_StabSolver::_setScalProdMatrix_H1(const t_ProfRec& rec){
-	//void set_stab_h(int i,const t_AmpVec<double>& vec_mf, t_SqMatCmplx& h_mat){
 
 		t_CompVal E(0.0,1.0);
 
@@ -431,14 +430,92 @@ void t_StabSolver::_setScalProdMatrix_H1(const double& a_y){
 
 }
 
-// matrix required by 
-void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad) {
-	wxLogMessage(_T("Implement me!"));
-}
+// calculate H2*z = {G1, ..., G8} - vector of non-par effects of mean flow
+// H2*z must be computed explicitly as {G1, ..., G8} as it contains non-homogen part (dz3/dy and dz4/dy terms)
+// NB : dz1/dy = z2, dz5/dy = z6, dz7/dy = z8
+// dz3/dy and dz4/dy must be computed
+// NB : rec_grad.ug[1] and rec.u1 are the same value : dU_dy, check for verification
+// NB : currently terms d_dz not included (non-par effects for 2D flow)
+void t_StabSolver::_calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCmplx& H2z) {
 
-void t_StabSolver::_setScalProdMatrix_H2(const double& a_y) {
-	const t_ProfRec& rec = _profStab.get_rec(a_y);
-	wxLogMessage(_T("Implement me!"));
+	// amp funcs in reverse order, get
+	int nnodes = _math_solver.getNNodes();
+	int ind_r = nnodes - 1 - i;
+
+	const std::vector<double>& y_distrib = get_y_distrib();
+
+	const t_ProfRec& rec = _profStab.get_rec(i);
+	const mf::t_RecGrad& rec_grad = _profStab.get_rec_grad(i);
+
+	const t_CompVal R = _profStab.scales().ReStab;
+	
+	t_CompVal E(0.0, 1.0);
+
+	t_CompVal z1 = fun_direct[ind_r][0];
+	t_CompVal z2 = fun_direct[ind_r][1];
+	t_CompVal z3 = fun_direct[ind_r][2];
+	t_CompVal z4 = fun_direct[ind_r][3];
+	t_CompVal z5 = fun_direct[ind_r][4];
+	t_CompVal z6 = fun_direct[ind_r][5];
+	t_CompVal z7 = fun_direct[ind_r][6];
+	t_CompVal z8 = fun_direct[ind_r][7];
+
+	t_CompVal z1_y = z2;
+
+	t_CompVal z3_y, z4_y;
+	_calc_dv_dy_dp_dy(ind_r, fun_direct, z3_y, z4_y);
+
+	t_CompVal z5_y = z6;
+	t_CompVal z7_y = z8;
+
+	const mf::t_FldParams& Params = _rFldNS.get_mf_params();
+
+	const double Gamma = Params.Gamma;
+	const double Mach = Params.Mach;
+
+	const double Pr = Params.Pr;
+
+	double M2 = Gamma*Mach*Mach;
+
+	double MG = (Gamma - 1.0)*Mach*Mach;
+
+	double U = rec.u;
+	double V = rec.v;
+	double W = rec.w;
+
+	double T = rec.t;
+	double T_inv = 1.0 / T;
+	double T_inv2 = T_inv*T_inv;
+
+	double Mu = rec.mu;
+	double Mu_inv = 1.0 / Mu;
+
+	double dU_dx = rec_grad.ug[0];
+	double dU_dy = rec_grad.ug[1];
+
+	double dV_dy = rec_grad.vg[1];
+
+	double dP_dx = rec_grad.pg[0];
+
+	double dT_dx = rec_grad.tg[0];
+	double dT_dy = rec_grad.tg[1];
+
+	t_Complex Fun1 = M2*T_inv*z4 - T_inv2*z5;
+
+	H2z.setToZero();
+	// first row - zero
+	 
+	H2z[1] = R*Mu_inv*(z1*T_inv*dU_dx + V*T_inv*z2 + Fun1*(U*dU_dx + V*dU_dy));
+	 
+	H2z[2] = z1*T_inv*dT_dx + U*M2*z4*T_inv*dT_dx - 2*U*z5*T_inv2*dT_dx - (dU_dx + dV_dy)*Fun1 
+		- V*(M2*z4_y - M2*T_inv*z4*dT_dy - T_inv*z5_y + 2.0 * z5*T_inv2*dT_dy);
+	
+	H2z[3] = -T_inv*(V*z3_y + z3*dV_dy);
+
+	H2z[5] = -R*Pr*Mu_inv*(-V*T_inv*z5_y - Fun1*(U*dT_dx + V + dT_dy) + MG*(dP_dx*z1 + V*z4_y - z1*T_inv*dT_dx));
+
+	H2z[7] = R*Mu_inv*V*T_inv*z7_y;
+
 }
 
 void t_StabSolver::setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* a_lambdas /*=NULL*/){

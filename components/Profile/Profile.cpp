@@ -117,6 +117,32 @@ t_Profile::t_Rec t_Profile::get_rec(int j) const{
 	return _extract(j);
 };
 
+mf::t_RecGrad& t_Profile::get_rec_grad(int j) {
+	if (j<0) {
+		wxLogMessage(_T("ERROR: getting rec grad in profile under surface!\n"));
+		return _prof_derivs[0];
+	};
+	if (j >= get_nnodes()) {
+		wxLogMessage(_T("ERROR: getting rec grad in profile above boundary!\n"));
+		return _prof_derivs[get_nnodes() - 1];
+	};
+
+	return _prof_derivs[j];
+}
+
+const mf::t_RecGrad& t_Profile::get_rec_grad(int j) const{
+	if (j<0) {
+		wxLogMessage(_T("ERROR: getting rec grad in profile under surface!\n"));
+		return _prof_derivs[0];
+	};
+	if (j >= get_nnodes()) {
+		wxLogMessage(_T("ERROR: getting rec grad in profile above boundary!\n"));
+		return _prof_derivs[get_nnodes() - 1];
+	};
+
+	return _prof_derivs[j];
+}
+
 t_Profile::t_Rec t_Profile::get_last_rec() const{
 	return get_rec(get_nnodes()-1);
 }
