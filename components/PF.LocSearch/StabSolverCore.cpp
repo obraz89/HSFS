@@ -445,6 +445,7 @@ void t_StabSolver::_calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCm
 	const std::vector<double>& y_distrib = get_y_distrib();
 
 	const t_ProfRec& rec = _profStab.get_rec(i);
+
 	const mf::t_RecGrad& rec_grad = _profStab.get_rec_grad(i);
 
 	const t_CompVal R = _profStab.scales().ReStab;
@@ -463,7 +464,7 @@ void t_StabSolver::_calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCm
 	t_CompVal z1_y = z2;
 
 	t_CompVal z3_y, z4_y;
-	_calc_dv_dy_dp_dy(ind_r, fun_direct, z3_y, z4_y);
+	_calc_amp_fun_dv_dy_dp_dy(ind_r, fun_direct, z3_y, z4_y);
 
 	t_CompVal z5_y = z6;
 	t_CompVal z7_y = z8;
@@ -512,7 +513,7 @@ void t_StabSolver::_calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCm
 	
 	H2z[3] = -T_inv*(V*z3_y + z3*dV_dy);
 
-	H2z[5] = -R*Pr*Mu_inv*(-V*T_inv*z5_y - Fun1*(U*dT_dx + V + dT_dy) + MG*(dP_dx*z1 + V*z4_y - z1*T_inv*dT_dx));
+	H2z[5] = -R*Pr*Mu_inv*(-V*T_inv*z5_y - Fun1*(U*dT_dx + V*dT_dy) + MG*(dP_dx*z1 + V*z4_y - z1*T_inv*dT_dx));
 
 	H2z[7] = R*Mu_inv*V*T_inv*z7_y;
 
