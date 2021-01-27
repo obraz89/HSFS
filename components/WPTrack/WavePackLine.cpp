@@ -1222,6 +1222,11 @@ void t_WavePackLine::retrace(t_GeomPoint a_start_from, t_WCharsLoc a_init_wave,
 	if (_params.CalcWPDispersion && _params.CalcDispTermsNeutPoint)
 		calc_neut_point_derivs_indirect(loc_solver);
 
+	if (_params.CalcNonParallelEffects) {
+		wxLogMessage(_T("Calculating additions due to non-parallel effects"));
+		_calc_nonpar_sigma_additions(loc_solver);
+	}
+
 	wxLogMessage(_T("Retrace done, calculating N factor..."));
 	calc_n_factor();
 

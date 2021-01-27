@@ -78,6 +78,8 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 	g.add("WriteDisturbanceField", 0, _T("Write wave pack line as disturbance field"));
 
+	g.add("CalcNonParallelEffects", 0, _T("Calculate addition to increment due to mf non-parallel effects"));
+
 }
 
 void pf::wpline_write_wp_as_fld_settings(hsstab::TPluginParamsGroup& g) {
@@ -128,6 +130,8 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	CalcDispTermsNeutPoint = g.get_int_param("CalcDispTermsNeutPoint");
 
 	WriteDisturbanceField = g.get_int_param("WriteDisturbanceField");
+
+	CalcNonParallelEffects = g.get_int_param("CalcNonParallelEffects");
 
 	dw_disp = g.get_real_param("DwDisp");
 
