@@ -72,7 +72,9 @@ class  t_StabSolver: public stab::t_LSBase{
 	void _setScalProdMatrix_H1(const t_ProfRec& rec);
 	void _setScalProdMatrix_H1(const double& a_y);
 
-	void _calc_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_Complex& dv_dy, t_Complex& dp_dy) const;
+	void _calc_amp_fun_dv_dy_dp_dy(
+		int i, std::vector<t_VecCmplx>& amp_fun, t_Complex& dv_dy, t_Complex& dp_dy) const;
+
 	void _calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCmplx& H2z);
 
 	//t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);

@@ -152,6 +152,8 @@ namespace stab{
 
 		virtual t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
 
+		virtual void normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs) = 0;
+
 	};
 
 /************************************************************************/

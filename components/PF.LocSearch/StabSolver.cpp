@@ -1081,7 +1081,7 @@ void t_StabSolver::calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc&
 // calculate dv_dy and dp_dy for an amplitude function
 // i is index in numeration from outer to wall : i = 0 - outer rec, i = nnodes - 1 - wall rec
 // second order approximation
-void t_StabSolver::_calc_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_Complex& dv_dy, t_Complex& dp_dy) const {
+void t_StabSolver::_calc_amp_fun_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_Complex& dv_dy, t_Complex& dp_dy) const {
 
 	double dx_inv = 1.0/(_math_solver.varRange[1] - _math_solver.varRange[0]);
 	t_Complex f0, f1, f2;
