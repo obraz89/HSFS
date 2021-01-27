@@ -140,6 +140,8 @@ public:
 
 	// testing
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
+
+	void normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs);
 	int getFuncIndInAmpFuncs(char func_name);
 	
 	t_Complex calcScalarProd_H1(

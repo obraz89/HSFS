@@ -1087,11 +1087,13 @@ void t_StabSolver::_calc_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_
 	t_Complex f0, f1, f2;
 	t_Complex f_r[2];
 
+	// indices of v and p are 2 and 3
+	// (u, u', v, p ,t, t', w, w')
 	if (i == 0) {
-		for (int k = 2; k < 4; k++) {
-			f0 = amp_fun[0][k];
-			f1 = amp_fun[1][k];
-			f2 = amp_fun[2][k];
+		for (int k = 0; k < 2; k++) {
+			f0 = amp_fun[0][2+k];
+			f1 = amp_fun[1][2+k];
+			f2 = amp_fun[2][2+k];
 
 			f_r[k] = 0.5*dx_inv*(-3.0 * f0 + 4.0*f1 - f2);
 		}
@@ -1101,10 +1103,10 @@ void t_StabSolver::_calc_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_
 	}
 	int imax = _math_solver.getNNodes() - 1;
 	if (i == imax) {
-		for (int k = 2; k < 4; k++) {
-			f0 = amp_fun[imax - 0][k];
-			f1 = amp_fun[imax - 1][k];
-			f2 = amp_fun[imax - 2][k];
+		for (int k = 0; k < 2; k++) {
+			f0 = amp_fun[imax - 0][2+k];
+			f1 = amp_fun[imax - 1][2+k];
+			f2 = amp_fun[imax - 2][2+k];
 
 			f_r[k] = 0.5*dx_inv*(3.0 * f0 - 4.0*f1 + f2);
 		}
@@ -1113,9 +1115,9 @@ void t_StabSolver::_calc_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_
 		return;
 	}
 
-	for (int k = 2; k < 4; k++) {
-		f0 = amp_fun[i - 1][k];
-		f1 = amp_fun[i + 1][k];
+	for (int k = 0; k < 2; k++) {
+		f0 = amp_fun[i - 1][2+k];
+		f1 = amp_fun[i + 1][2+k];
 
 		f_r[k] = 0.5*dx_inv*(f1 - f0);
 	}
@@ -1124,3 +1126,15 @@ void t_StabSolver::_calc_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_
 	return;
 
 };
+
+void t_StabSolver::normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs){
+
+	int nnodes = amp_funcs.size();
+
+	t_Complex pw = amp_funcs[nnodes - 1][3];
+
+	for (int i = 0; i < nnodes; i++)
+		for (int j = 0; j < STAB_MATRIX_DIM; j++)
+			amp_funcs[i][j] /= pw;
+
+}
