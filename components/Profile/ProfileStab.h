@@ -70,6 +70,8 @@ public:
 	// w!=0
 	void initialize_3D(const std::string& fname, const t_StabScales& a_scales);
 
+	virtual void dump(const std::string& fname) const;
+
 	~t_ProfileStab();
 };
 

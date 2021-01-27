@@ -45,8 +45,6 @@ protected:
 	double _interpolate(const double& y, const t_DblVec& arg, 
 		const t_DblVec& fun, const int& a_size) const;
 
-	mf::t_RecGrad _interpolate_prof_derivs(const double y) const;
-
 	int _getNearestInd(const double& a_y, const t_DblVec& a_vec) const;
 
 	void _resize(int new_nnodes);
@@ -77,6 +75,8 @@ public:
 	t_Rec get_rec(int a_j) const;
 
 	mf::t_RecGrad& get_rec_grad(int a_j);
+
+	void interpolate_rec_grad(const double y, mf::t_RecGrad& rec_grad) const;
 
 	const mf::t_RecGrad& get_rec_grad(int a_j) const;
 
@@ -140,9 +140,7 @@ public:
 
 	double get_x_scale() const;
 
-	int get_bound_ind() const;
-
-	t_Rec get_bound_rec() const;
+	virtual void dump(const std::string& fname) const;
 
 };
 

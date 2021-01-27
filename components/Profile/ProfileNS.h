@@ -25,8 +25,6 @@ public:
 	// read DNS disturbance profile from file
 	void initialize_extract(const std::string fname, const mf::t_ProfDataCfg& data_cfg);
 
-	void dump(const std::string& fname) const;
-
 	t_ProfMFLoc(const mf::t_DomainBase& rDomain);
 
 };

@@ -74,10 +74,14 @@ double read_fixed_scale_from_file() {
 }
 
 /************************************************************************/
+// 1) interpolate profile from a_rProfNS distribution (as in mean flow) into grid a_y_distrib
+// a_y_distrib non-dim as a_rPorfNS (mean-flow non-dim)
+// 2) non-dim : y by some delta (usually boundary layer thickness)
+// velocity, temperature, viscosity by values at profile edge (outer region)
 void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 			const std::vector<double>& a_y_distrib, t_ProfStabCfg cfg){
 
-	t_Profile::t_Rec ns_outer_rec = a_rProfNS.get_bound_rec();
+	t_Profile::t_Rec ns_outer_rec = a_rProfNS.get_last_rec();
 
 	double mu_e = ns_outer_rec.mu;
 
@@ -142,8 +146,8 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 		// interpolate prof record
 		set_rec(a_rProfNS.get_rec(cur_y), i);
 
-		// interpolate non-par derivs
-		_prof_derivs[i] = _interpolate_prof_derivs(cur_y);
+		// interpolate prof derivs
+		a_rProfNS.interpolate_rec_grad(cur_y, _prof_derivs[i]);
 
 		//nondim
 		_y[i] = _y[i]/bl_thick_scale;
@@ -200,6 +204,7 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 			_prof_derivs[i].tg[k] *= bl_thick_scale / t_e;
 		}
 	}
+
 };
 
 void t_ProfileStab::initialize_dist_DNS(t_ProfMFLoc& a_rProfNS, t_ProfStabCfgDNSDisturb cfg){
@@ -374,4 +379,54 @@ void t_ProfileStab::initialize_3D(const std::string& wfname,
 		n_line++;
 	}
 }
+
+void t_ProfileStab::dump(const std::string& fname) const {
+	std::wofstream fstr(&fname[0], std::ios::out);
+	t_Rec rec;
+
+	const t_Rec rec_out = get_last_rec();
+
+	const double rue_1 = 1.0 / (rec_out.r*rec_out.u);
+
+	fstr << _T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\tv\tdelta**\tdu_dy_rec_grad\tdt_dy_rec_grad\n");
+
+	double dd;
+
+	mf::t_Rec mf_rec;
+	mf::t_RecGrad mf_rec_grad;
+
+	std::vector<double> dd_v(get_nnodes());
+	std::vector<double> mthick_v(get_nnodes());
+
+	// for momentum thickness calculations
+	for (int i = 0; i<get_nnodes(); i++) {
+
+		rec = get_rec(i);
+
+		dd_v[i] = rec.r *rec.u*rue_1*(1.0 - rec.u / rec_out.u);
+	}
+
+	smat::integrate_over_range(_y, dd_v, mthick_v);
+
+	for (int i = 0; i<get_nnodes(); i++) {
+
+		rec = get_rec(i);
+
+		mf_rec = rec.make_mf_rec();
+
+		mf_rec_grad = _prof_derivs[i];
+
+		fstr << rec.y << _T("\t") <<
+			rec.u << _T("\t") << rec.u1 << _T("\t") << rec.u2 << _T("\t") <<
+			rec.t << _T("\t") << rec.t1 << _T("\t") << rec.t2 << _T("\t") << rec.r << _T("\t") <<
+			rec.mu << _T("\t") << rec.mu1 << _T("\t") << rec.mu2 << _T("\t") <<
+			rec.w << _T("\t") << rec.w1 << _T("\t") << rec.w2 << _T("\t") << rec.v << _T("\t") <<
+			mthick_v[i] << _T("\t") <<
+			// debug, to compare calculated du_dy and dT_dy with values extracted from mf domain
+			mf_rec_grad.ug[1] << _T("\t") << mf_rec_grad.tg[1] <<
+			_T("\n");
+
+
+	}
+};
 
