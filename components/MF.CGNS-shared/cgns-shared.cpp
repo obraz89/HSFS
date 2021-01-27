@@ -747,14 +747,14 @@ void TDomain::_calc_scalar_ked_deriv(const t_ZoneNode& znode, char fun_name, t_V
 	const TZone& zne = Zones[znode.iZone -1];
 
 	//IMPORTANT TODO: ask Nova about globInd check (see HSFlow grid-data-3d.cpp)
-	const bool noBakI = (i == 1);//|| (globInd(i - 1, j, k) == -1);
-	const bool noBakJ = (j == 1);//|| (globInd(i, j - 1, k) == -1);
-	const bool noBakK = (k == 1);//|| (globInd(i, j, k - 1) == -1);
+	const bool noBakI = (i == zne.is);//|| (globInd(i - 1, j, k) == -1);
+	const bool noBakJ = (j == zne.js);//|| (globInd(i, j - 1, k) == -1);
+	const bool noBakK = (k == zne.ks);//|| (globInd(i, j, k - 1) == -1);
 
 	// Can't go forward
-	const bool noFwdI = (i == zne.nx);// || (globInd(i + 1, j, k) == -1);
-	const bool noFwdJ = (j == zne.ny);// || (globInd(i, j + 1, k) == -1);
-	const bool noFwdK = (k == zne.nz);// || (globInd(i, j, k + 1) == -1);
+	const bool noFwdI = (i == zne.ie);// || (globInd(i + 1, j, k) == -1);
+	const bool noFwdJ = (j == zne.je);// || (globInd(i, j + 1, k) == -1);
+	const bool noFwdK = (k == zne.ke);// || (globInd(i, j, k + 1) == -1);
 
 	mf::t_Rec r0, r1, r2;
 	double df_dksi, df_deta, df_ddze;
@@ -880,7 +880,10 @@ void TDomain::_calc_scalar_ked_deriv(const t_ZoneNode& znode, char fun_name, t_V
 		//assert(fabs(D.x_dzet) + fabs(D.y_dzet) + fabs(D.z_dzet) > 1e-10);
 	}
 	//===================~calc deriv
-
+	if (isnan(df_dksi) || isnan(df_deta) || isnan(df_ddze)) {
+		wxLogError(_T("Error:TDomain::_calc_scalar_ked_deriv:Izone=%d, node=(%d, %d, %d)"),
+			znode.iZone, i, j, k);
+	}
 	df_dked.set(df_dksi, df_deta, df_ddze);
 
 }
