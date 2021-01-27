@@ -204,9 +204,7 @@ double t_Profile::_interpolate(const double& a_y, const t_DblVec& arg, const t_D
 								   arg_rgt, fun[rgt_ind], a_y);
 };
 
-mf::t_RecGrad t_Profile::_interpolate_prof_derivs(const double a_y) const{
-
-	mf::t_RecGrad ret;
+void t_Profile::interpolate_rec_grad(const double a_y, mf::t_RecGrad& rec_grad) const{
 
 	int k = _getNearestInd(a_y, _y);
 	int lft_ind, mid_ind, rgt_ind;
@@ -233,33 +231,31 @@ mf::t_RecGrad t_Profile::_interpolate_prof_derivs(const double a_y) const{
 	const double& arg_rgt = _y[rgt_ind];
 
 	for (int i = 0; i < 3; i++) {
-		ret.ug[i] = smat::interpolate_parab(
+		rec_grad.ug[i] = smat::interpolate_parab(
 			arg_lft, _prof_derivs[lft_ind].ug[i],
 			arg_mid, _prof_derivs[mid_ind].ug[i],
 			arg_rgt, _prof_derivs[rgt_ind].ug[i], a_y);
 
-		ret.vg[i] = smat::interpolate_parab(
+		rec_grad.vg[i] = smat::interpolate_parab(
 			arg_lft, _prof_derivs[lft_ind].vg[i],
 			arg_mid, _prof_derivs[mid_ind].vg[i],
 			arg_rgt, _prof_derivs[rgt_ind].vg[i], a_y);
 
-		ret.wg[i] = smat::interpolate_parab(
+		rec_grad.wg[i] = smat::interpolate_parab(
 			arg_lft, _prof_derivs[lft_ind].wg[i],
 			arg_mid, _prof_derivs[mid_ind].wg[i],
 			arg_rgt, _prof_derivs[rgt_ind].wg[i], a_y);
 
-		ret.pg[i] = smat::interpolate_parab(
+		rec_grad.pg[i] = smat::interpolate_parab(
 			arg_lft, _prof_derivs[lft_ind].pg[i],
 			arg_mid, _prof_derivs[mid_ind].pg[i],
 			arg_rgt, _prof_derivs[rgt_ind].pg[i], a_y);
 
-		ret.tg[i] = smat::interpolate_parab(
+		rec_grad.tg[i] = smat::interpolate_parab(
 			arg_lft, _prof_derivs[lft_ind].tg[i],
 			arg_mid, _prof_derivs[mid_ind].tg[i],
 			arg_rgt, _prof_derivs[rgt_ind].tg[i], a_y);
 	}
-
-	return ret;
 
 }
 
@@ -405,12 +401,6 @@ double t_ProfMF::get_x_scale() const{
 
 const mf::t_DomainBase& t_ProfMF::getMFDomain() const{return _rDomain;};
 
-int t_ProfMF::get_bound_ind() const{return get_nnodes()-1;};
-
-t_ProfRec t_ProfMF::get_bound_rec() const{
-	return get_rec(get_bound_ind());
-}
-
 void t_ProfMF::_calc_derivs(){
 	// SMOOTHING
 	// FORTRAN CALLING CONVENTION
@@ -426,4 +416,56 @@ void t_ProfMF::_calc_derivs(){
 	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
 	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
 }
+
+void t_ProfMF::dump(const std::string& fname) const {
+	std::wofstream fstr(&fname[0], std::ios::out);
+	t_Rec rec;
+
+	const t_Rec rec_out = get_last_rec();
+
+	const double rue_1 = 1.0 / (rec_out.r*rec_out.u);
+
+	fstr << _T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\tv\tMach\tdelta**\tdu_dy_rec_grad\tdt_dy_rec_grad\n");
+
+	double mach, dd;
+
+	mf::t_Rec mf_rec;
+	mf::t_RecGrad mf_rec_grad;
+
+	std::vector<double> dd_v(get_nnodes());
+	std::vector<double> mthick_v(get_nnodes());
+
+	// for momentum thickness calculations
+	for (int i = 0; i<get_nnodes(); i++) {
+
+		rec = get_rec(i);
+
+		dd_v[i] = rec.r *rec.u*rue_1*(1.0 - rec.u / rec_out.u);
+	}
+
+	smat::integrate_over_range(_y, dd_v, mthick_v);
+
+	for (int i = 0; i<get_nnodes(); i++) {
+
+		rec = get_rec(i);
+
+		mf_rec = rec.make_mf_rec();
+
+		mf_rec_grad = _prof_derivs[i];
+
+		mach = _rDomain.calc_mach(mf_rec);
+
+		fstr << rec.y << _T("\t") <<
+			rec.u << _T("\t") << rec.u1 << _T("\t") << rec.u2 << _T("\t") <<
+			rec.t << _T("\t") << rec.t1 << _T("\t") << rec.t2 << _T("\t") << rec.r << _T("\t") <<
+			rec.mu << _T("\t") << rec.mu1 << _T("\t") << rec.mu2 << _T("\t") <<
+			rec.w << _T("\t") << rec.w1 << _T("\t") << rec.w2 << _T("\t") << rec.v << _T("\t") <<
+			mach << _T("\t") << mthick_v[i] << _T("\t") <<
+			// debug, to compare calculated du_dy and dT_dy with values extracted from mf domain
+			mf_rec_grad.ug[1] << _T("\t") << mf_rec_grad.tg[1] <<
+			_T("\n");
+
+
+	}
+};
 
