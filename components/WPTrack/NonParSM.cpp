@@ -53,7 +53,8 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 // Z = C(x)*dze(y;x)*exp(iS)
 // dC/dx = WC
 // W = -(<H1*dze_dx, ksi> + <H2*dze, ksi>)/<H1*dze, ksi>
-// W is thus addition to eigenvalue a
+// C = C_0*exp(Wx) => da = -i*W
+// -i*W is thus addition to eigenvalue a
 // NB : dze_dx is computed with amp func normalization, so dze must be normalized here too!
 // NB : ksi has arbitrary normalization
 void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
@@ -71,6 +72,12 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 	t_WCharsLoc wchars;
 
 	t_Complex v1, v2, v3;
+
+	t_Complex W;
+
+	const t_Complex E = t_Complex(0.0, 1.0);
+
+	t_Complex da_ratio;
 
 	for (int i = 0; i < _line.size(); i++) {
 
@@ -115,16 +122,27 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		wxLogMessage(_T("v2=(%lf, %lf)"), v2.real(), v2.imag());
 		wxLogMessage(_T("v3=(%lf, %lf)"), v3.real(), v3.imag());
 
-		_line[i].da_nonpar = -(v1 + v2) / v3;
+		W = -(v1 + v2) / v3;
+
+		_line[i].da_nonpar = -1.0*E*W;
 
 		// debug 
 		wxLogMessage(_T("da_nonpar = (%lf, %lf)"), 
 			_line[i].da_nonpar.real(), _line[i].da_nonpar.imag());
-		wxLogMessage(_T("da_ratio = (%lf, %lf)"), 
-			_line[i].da_nonpar.real()/wchars.a.real(), _line[i].da_nonpar.imag()/wchars.a.imag());
 
-		// debug
-		getchar();
+		da_ratio = _line[i].da_nonpar / wchars.a;
+
+		wxLogMessage(_T("da_ratio = da/a = (%lf, %lf)"), 
+			da_ratio.real(), da_ratio.imag());
+
+		// modify wave chars
+		_line[i].wchars_loc.a += _line[i].da_nonpar;
+
+		t_WCharsGlob wchars_glob(_line[i].wchars_loc, _rFldMF.calc_jac_to_loc_rf(xyz),
+			loc_solver.get_stab_scales());
+
+		_line[i].wave_chars = wchars_glob;	
+
 	}
 
 }
