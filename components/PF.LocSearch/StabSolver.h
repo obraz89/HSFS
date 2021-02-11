@@ -55,8 +55,10 @@ class  t_StabSolver: public stab::t_LSBase{
 
 	// scalar product of 2 amplitude functions Phi, Psi: 
 	// c = (Hx*Phi, Psi)
-	// keep this matrix Hx
+	// H1 = -i*dH/da
 	t_SqMatCmplx _scal_prod_matrix_H1;
+	// HW = +i*dH/dw
+	t_SqMatCmplx _scal_prod_matrix_HW;
 	const mf::t_DomainBase& _rFldNS; // to get global field params
 	mf::t_GeomPoint _cur_xyz;
 	t_ProfileStab _profStab; // current profile
@@ -151,6 +153,8 @@ public:
 		std::vector<t_VecCmplx>* dns_vec_ptr = NULL);
 
 	t_Complex calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
+
+	t_Complex calcScalarProd_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
 
 	t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
 

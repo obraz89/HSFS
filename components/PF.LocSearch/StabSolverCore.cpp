@@ -302,13 +302,16 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 	_setStabMatrix3D(rec);
 };
 
-// Matrix Hx for scalar product of 2 amplitude functions
+// Matrices HA and HW for scalar product of 2 amplitude functions
 
-// The matrix of scalar product is H1 = -i*dH0/da
+// The first matrix of scalar product is H1 = -i*dH0/da
 // H0 is the basic stability matrix
 // so this is to prepare calculations of <H1*x, z>
 // x - direct amplitude vector, z - conjugate amplitude vector
-// 
+
+// Addition matrix of scalar product is HW = +i*dH0/dw
+// it is used in group velo calcs etc 
+
 // Stability matrix corresponds to Nayfeh A.H., Stability of Three-Dimensional
 // Boundary Layers," AIAA J., Vol. 18, No. 4, pp. 406-416, 1980.
 // In this matrix:
@@ -373,7 +376,7 @@ void t_StabSolver::_setScalProdMatrix_H1(const t_ProfRec& rec){
 
 		const t_CompVal DXI = -E*RM*M2*U*XI*XI;
 
-		// fill non-zero elements
+		// fill non-zero elements of H1 (HA)
 
 		_scal_prod_matrix_H1[0][1] = U*R*M1*TD-2.*E*A;
 
@@ -420,6 +423,12 @@ void t_StabSolver::_setScalProdMatrix_H1(const t_ProfRec& rec){
 		_scal_prod_matrix_H1[4][7]=-E*F*B*U*TD;
 
 		_scal_prod_matrix_H1[6][7]=R*U*M1*TD-2.*E*A;
+
+		// set HW
+
+
+
+
 
 }
 

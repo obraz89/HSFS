@@ -11,7 +11,9 @@ using namespace pf;
 
 t_StabSolver::t_StabSolver(const mf::t_DomainBase& a_rFldNS):
 _rFldNS(a_rFldNS), _profStab(), _math_solver(), 
-_stab_matrix(STAB_MATRIX_DIM),_scal_prod_matrix_H1(STAB_MATRIX_DIM), _params(){
+_stab_matrix(STAB_MATRIX_DIM),
+_scal_prod_matrix_H1(STAB_MATRIX_DIM), _scal_prod_matrix_HW(STAB_MATRIX_DIM),
+_params(){
 
 	_math_solver._pStab_solver = this;
 
@@ -923,6 +925,7 @@ t_Complex t_StabSolver::calcScalarProd_H1(
 
 }
 // compute <H1*fun_direct, fun_conj>
+// H1 = -i*dH/da
 // NB:do not forget to set context of loc solver before
 t_Complex t_StabSolver::calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) {
 
@@ -947,6 +950,40 @@ t_Complex t_StabSolver::calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, s
 			for (int k = 0; k<STAB_MATRIX_DIM; k++)
 				// using plain product because sol_conj is already a conjugated vector of conjugate task (!)
 				fun[i] = fun[i] + _scal_prod_matrix_H1[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
+
+
+	}
+
+	return smat::fun_integrate(arg, fun);
+
+}
+
+// compute <HW*fun_direct, fun_conj>
+// HW = i*dH/dw
+// NB:do not forget to set context of loc solver before
+t_Complex t_StabSolver::calcScalarProd_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) {
+
+	int nnodes = _math_solver.getNNodes();
+
+	if (nnodes != fun_direct.size() || nnodes != fun_conj.size())
+		wxLogError(_T("t_StabSolver::calcScalarProd_H1: wrong size of amplitude functions"));
+
+	std::vector<t_Complex> fun(nnodes, 0.0);
+	std::vector<double>arg(nnodes, 0.0);
+
+	for (int i = 0; i<nnodes; i++) {
+
+		int ind_r = nnodes - 1 - i;
+		arg[i] = _math_solver.varRange[ind_r];
+
+		const t_ProfRec& rec = _profStab.get_rec(i);
+		_setScalProdMatrix_H1(rec);
+
+		fun[i] = 0.0;
+		for (int j = 0; j<STAB_MATRIX_DIM; j++)
+			for (int k = 0; k<STAB_MATRIX_DIM; k++)
+				// using plain product because sol_conj is already a conjugated vector of conjugate task (!)
+				fun[i] = fun[i] + _scal_prod_matrix_HW[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
 
 
 	}
