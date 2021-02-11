@@ -99,6 +99,7 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		loc_solver.setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
 
+		wchars = _line[i].wchars_loc;
 		loc_solver.searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
 			stab::t_TaskTreat::SPAT);
 
@@ -106,14 +107,21 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
 
 		// get deriv of amp_fun along x
-
 		_calc_amp_fun_deriv_dx(i, loc_solver, fun_l, fun_r, dze_ddx);
+
+		// restore context at this point after d_dx computations
+		loc_solver.setContext(xyz);
+
+		wchars = _line[i].wchars_loc;
+
+		loc_solver.searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
+			stab::t_TaskTreat::SPAT);
 
 		// calc <H1*dze_ddx, ksi>
 		v1 = loc_solver.calcScalarProd_H1(dze_ddx, ksi);
 
 		// calc <H2*dze, ksi>
-		v2 = loc_solver.calcScalarProd_H2(dze, ksi);
+		v2 = 0.0;// loc_solver.calcScalarProd_H2(dze, ksi);
 
 		// calc <H1*dze, ksi>
 		v3 = loc_solver.calcScalarProd_H1(dze, ksi);

@@ -439,44 +439,14 @@ void t_StabSolver::_setScalProdMatrix_H1(const double& a_y){
 
 }
 
-// calculate H2*z = {G1, ..., G8} - vector of non-par effects of mean flow
-// H2*z must be computed explicitly as {G1, ..., G8} as it contains non-homogen part (dz3/dy and dz4/dy terms)
-// NB : dz1/dy = z2, dz5/dy = z6, dz7/dy = z8
-// dz3/dy and dz4/dy must be computed
-// NB : rec_grad.ug[1] and rec.u1 are the same value : dU_dy, check for verification
-// NB : currently terms d_dz not included (non-par effects for 2D flow)
-void t_StabSolver::_calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCmplx& H2z) {
+// calculate H2 - matrix of non-parallel effects
+// H2*z = H2_h*z + H2_i*dz/dy
+// dz/dy = H0*z => H2 = H2_h + H2_i*H0
+void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad) {
 
-	// amp funcs in reverse order, get
-	int nnodes = _math_solver.getNNodes();
-	int ind_r = nnodes - 1 - i;
+	_setStabMatrix3D(rec);
 
-	const std::vector<double>& y_distrib = get_y_distrib();
-
-	const t_ProfRec& rec = _profStab.get_rec(i);
-
-	const mf::t_RecGrad& rec_grad = _profStab.get_rec_grad(i);
-
-	const t_CompVal R = _profStab.scales().ReStab;
-	
-	t_CompVal E(0.0, 1.0);
-
-	t_CompVal z1 = fun_direct[ind_r][0];
-	t_CompVal z2 = fun_direct[ind_r][1];
-	t_CompVal z3 = fun_direct[ind_r][2];
-	t_CompVal z4 = fun_direct[ind_r][3];
-	t_CompVal z5 = fun_direct[ind_r][4];
-	t_CompVal z6 = fun_direct[ind_r][5];
-	t_CompVal z7 = fun_direct[ind_r][6];
-	t_CompVal z8 = fun_direct[ind_r][7];
-
-	t_CompVal z1_y = z2;
-
-	t_CompVal z3_y, z4_y;
-	_calc_amp_fun_dv_dy_dp_dy(ind_r, fun_direct, z3_y, z4_y);
-
-	t_CompVal z5_y = z6;
-	t_CompVal z7_y = z8;
+	const double R = _profStab.scales().ReStab;
 
 	const mf::t_FldParams& Params = _rFldNS.get_mf_params();
 
@@ -502,30 +472,92 @@ void t_StabSolver::_calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCm
 
 	double dU_dx = rec_grad.ug[0];
 	double dU_dy = rec_grad.ug[1];
+	double dU_dz = rec_grad.ug[2];
 
 	double dV_dy = rec_grad.vg[1];
 
 	double dP_dx = rec_grad.pg[0];
+	double dP_dz = rec_grad.pg[2];
 
 	double dT_dx = rec_grad.tg[0];
 	double dT_dy = rec_grad.tg[1];
+	double dT_dz = rec_grad.tg[2];
 
-	t_Complex Fun1 = M2*T_inv*z4 - T_inv2*z5;
+	double dW_dx = rec_grad.wg[0];
+	double dW_dy = rec_grad.wg[1];
+	double dW_dz = rec_grad.wg[2];
 
-	H2z.setToZero();
-	// first row - zero
-	 
-	H2z[1] = R*Mu_inv*(z1*T_inv*dU_dx + V*T_inv*z2 + Fun1*(U*dU_dx + V*dU_dy));
-	 
-	H2z[2] = z1*T_inv*dT_dx + U*M2*z4*T_inv*dT_dx - 2*U*z5*T_inv2*dT_dx - (dU_dx + dV_dy)*Fun1 
-		- V*(M2*z4_y - M2*T_inv*z4*dT_dy - T_inv*z5_y + 2.0 * z5*T_inv2*dT_dy);
-	
-	H2z[3] = -T_inv*(V*z3_y + z3*dV_dy);
+	t_SqMatCmplx& H2 = _scal_prod_matrix_H2;
 
-	H2z[5] = -R*Pr*Mu_inv*(-V*T_inv*z5_y - Fun1*(U*dT_dx + V*dT_dy) + MG*(dP_dx*z1 + V*z4_y - z1*T_inv*dT_dx));
+	t_SqMatCmplx& H2hom = _mat_tmp1;
+	t_SqMatCmplx& H2inh = _mat_tmp2;
 
-	H2z[7] = R*Mu_inv*V*T_inv*z7_y;
+	H2.setToZero();
+	H2hom.setToZero();
+	H2inh.setToZero();
 
+	double xii = U*dT_dx + V*dT_dy + W*dT_dz;
+
+	// second row of homogen & non-homogen parts
+	{
+		double psi = U*dU_dx + V*dU_dy + W*dU_dz;
+
+		double rmt = R*Mu_inv*T_inv;
+
+		H2hom[0][1] = rmt*dU_dx;
+		H2hom[3][1] = rmt*M2*psi;
+		H2hom[4][1] = -1.0*rmt*T_inv*psi;
+		H2hom[6][1] = rmt*dU_dz;
+
+		H2inh[0][1] = rmt*V;
+	}
+
+	// third
+	{
+		double div = dU_dx + dV_dy + dW_dz;
+
+		H2hom[0][2] = T_inv*dT_dx;
+		H2hom[3][2] = M2*(U*T_inv*dT_dx - div + V*T_inv*dT_dy + W*T_inv*dT_dz);
+		H2hom[4][2] = T_inv2*(-2.0*xii + T*div);
+		H2hom[6][2] = T_inv*dT_dz;
+
+		H2inh[3][2] = -1.0*V*M2;
+		H2inh[4][2] = T_inv*V;
+	}
+
+	// fourth
+	H2hom[2][3] = -1.0*T_inv*dV_dy;
+	H2inh[2][3] = -1.0*T_inv*V;
+
+	// sixth
+	{
+		double rpm = R*Pr*Mu_inv;
+
+		H2hom[0][5] = -1.0*rpm*MG*(dP_dx - T_inv*dT_dx);
+		H2hom[3][5] = rpm*M2*T_inv*xii;
+		H2hom[4][5] = -1.0*rpm*T_inv2*xii;
+		H2hom[6][5] = -1.0*rpm*MG*(dP_dz - T_inv*dT_dz);
+
+		H2inh[3][5] = -1.0*rpm*MG*V;
+		H2inh[4][5] = rpm*T_inv*V;
+	}
+	// 8
+	{
+		double rmt = R*Mu_inv*T_inv;
+
+		double eta = U*dW_dx + V*dW_dy + W*dW_dz;
+
+		H2hom[0][7] = rmt*dW_dx;
+		H2hom[3][7] = rmt*M2*T_inv*eta;
+		H2hom[4][7] = -1.0*rmt*T_inv*eta;
+		H2hom[6][7] = rmt*dW_dz;
+
+		H2inh[6][7] = rmt*V;
+	}
+	// m3 = H2inv*H0
+	matrix::base::mat_mul<t_Complex, t_Complex>(H2inh, _stab_matrix, _mat_tmp3);
+	// H2 = H2hom + m3
+	matrix::base::plus<t_Complex, t_Complex>(H2hom, _mat_tmp3, _scal_prod_matrix_H2);
 }
 
 void t_StabSolver::setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* a_lambdas /*=NULL*/){

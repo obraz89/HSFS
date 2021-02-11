@@ -59,6 +59,10 @@ class  t_StabSolver: public stab::t_LSBase{
 	t_SqMatCmplx _scal_prod_matrix_H1;
 	// HW = +i*dH/dw
 	t_SqMatCmplx _scal_prod_matrix_HW;
+	// H2 - matrix of non-parallel effects
+	t_SqMatCmplx _scal_prod_matrix_H2;
+	// tmp matrices for matrix operations
+	t_SqMatCmplx _mat_tmp1, _mat_tmp2, _mat_tmp3;
 	const mf::t_DomainBase& _rFldNS; // to get global field params
 	mf::t_GeomPoint _cur_xyz;
 	t_ProfileStab _profStab; // current profile
@@ -74,10 +78,7 @@ class  t_StabSolver: public stab::t_LSBase{
 	void _setScalProdMatrix_H1(const t_ProfRec& rec);
 	void _setScalProdMatrix_H1(const double& a_y);
 
-	void _calc_amp_fun_dv_dy_dp_dy(
-		int i, std::vector<t_VecCmplx>& amp_fun, t_Complex& dv_dy, t_Complex& dp_dy) const;
-
-	void _calc_H2z(int i, std::vector<t_VecCmplx>& fun_direct, t_VecCmplx& H2z);
+	void _setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad);
 
 	//t_VecCmplx _formRHS2D(const double& a_y, const t_VecCmplx& a_var);
 	// rhs function by stab matrix

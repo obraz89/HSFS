@@ -13,6 +13,8 @@ t_StabSolver::t_StabSolver(const mf::t_DomainBase& a_rFldNS):
 _rFldNS(a_rFldNS), _profStab(), _math_solver(), 
 _stab_matrix(STAB_MATRIX_DIM),
 _scal_prod_matrix_H1(STAB_MATRIX_DIM), _scal_prod_matrix_HW(STAB_MATRIX_DIM),
+_scal_prod_matrix_H2(STAB_MATRIX_DIM),
+_mat_tmp1(STAB_MATRIX_DIM), _mat_tmp2(STAB_MATRIX_DIM), _mat_tmp3(STAB_MATRIX_DIM),
 _params(){
 
 	_math_solver._pStab_solver = this;
@@ -1005,23 +1007,22 @@ t_Complex t_StabSolver::calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, s
 	std::vector<t_Complex> fun(nnodes, 0.0);
 	std::vector<double>arg(nnodes, 0.0);
 
-	t_VecCmplx H2z(STAB_MATRIX_DIM);
-
 	for (int i = 0; i<nnodes; i++) {
 
 		int ind_r = nnodes - 1 - i;
 		arg[i] = _math_solver.varRange[ind_r];
 
-		_calc_H2z(i, fun_direct, H2z);
+		const t_ProfRec& rec = _profStab.get_rec(i);
+		const mf::t_RecGrad& rec_grad = _profStab.get_rec_grad(i);
+
+		_setScalProdMatrix_H2(rec, rec_grad);
 
 		fun[i] = 0.0;
-		//for (int j = 0; j<STAB_MATRIX_DIM; j++)
-		//	for (int k = 0; k<STAB_MATRIX_DIM; k++)
+		for (int j = 0; j<STAB_MATRIX_DIM; j++)
+			for (int k = 0; k<STAB_MATRIX_DIM; k++)
 				// using plain product because sol_conj is already a conjugated vector of conjugate task (!)
-		//		fun[i] = fun[i] + _scal_prod_matrix_H2[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
+				fun[i] = fun[i] + _scal_prod_matrix_H1[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
 
-		for (int j = 0; j < STAB_MATRIX_DIM; j++)
-			fun[i] = fun[i] + H2z[j] * fun_conj[ind_r][j];
 
 	}
 
@@ -1112,55 +1113,6 @@ void t_StabSolver::calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc&
 	wave_lower.w = t_Complex(wave_prv.w.real() + darg, val);
 
 	wave_lower.set_scales(get_stab_scales());
-
-};
-
-// calculate dv_dy and dp_dy for an amplitude function
-// i is index in numeration from outer to wall : i = 0 - outer rec, i = nnodes - 1 - wall rec
-// second order approximation
-void t_StabSolver::_calc_amp_fun_dv_dy_dp_dy(int i, std::vector<t_VecCmplx>& amp_fun, t_Complex& dv_dy, t_Complex& dp_dy) const {
-
-	double dx_inv = 1.0/(_math_solver.varRange[1] - _math_solver.varRange[0]);
-	t_Complex f0, f1, f2;
-	t_Complex f_r[2];
-
-	// indices of v and p are 2 and 3
-	// (u, u', v, p ,t, t', w, w')
-	if (i == 0) {
-		for (int k = 0; k < 2; k++) {
-			f0 = amp_fun[0][2+k];
-			f1 = amp_fun[1][2+k];
-			f2 = amp_fun[2][2+k];
-
-			f_r[k] = 0.5*dx_inv*(-3.0 * f0 + 4.0*f1 - f2);
-		}
-		dv_dy = f_r[0];
-		dp_dy = f_r[1];
-		return;
-	}
-	int imax = _math_solver.getNNodes() - 1;
-	if (i == imax) {
-		for (int k = 0; k < 2; k++) {
-			f0 = amp_fun[imax - 0][2+k];
-			f1 = amp_fun[imax - 1][2+k];
-			f2 = amp_fun[imax - 2][2+k];
-
-			f_r[k] = 0.5*dx_inv*(3.0 * f0 - 4.0*f1 + f2);
-		}
-		dv_dy = f_r[0];
-		dp_dy = f_r[1];
-		return;
-	}
-
-	for (int k = 0; k < 2; k++) {
-		f0 = amp_fun[i - 1][2+k];
-		f1 = amp_fun[i + 1][2+k];
-
-		f_r[k] = 0.5*dx_inv*(f1 - f0);
-	}
-	dv_dy = f_r[0];
-	dp_dy = f_r[1];
-	return;
 
 };
 
