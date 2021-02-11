@@ -356,10 +356,10 @@ namespace matrix{
 					ssuTHROW(matrix::t_SizeMismatch, _T("Mat mul error: destination matrix has wrong size"));
 				}
 #endif
-				type* tmp = new type[nrows];
-				type val; 
+				//type* tmp = new type[nrows];
+				//type val; 
 				ret.setToZero();
-
+				/*
 				for (int i=0; i<r.nCols(); i++){
 					for (int j=0; j<l.nCols(); j++){
 						val = r[i][j];
@@ -375,6 +375,11 @@ namespace matrix{
 				};
 				delete[] tmp;
 				return;
+				*/
+				for (int i = 0; i < nrows; i++)
+					for (int j = 0; j < ncols; j++)
+						for (int k = 0; k < l.nCols(); k++)
+							ret[j][i] += l[k][i] * r[j][k];
 		};
 		
 		template<typename t1, typename t2> void mat_mul
