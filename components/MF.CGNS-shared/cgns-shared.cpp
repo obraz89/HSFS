@@ -1116,6 +1116,7 @@ void TDomain::get_wall_gridline(const mf::t_GeomPoint& xyz) {
 		znode.iZone, znode.iNode.i, znode.iNode.j, znode.iNode.k);
 
 	wxLogMessage(_T("GetWallGridLine: assuming wall grid line is along Xaxis (FacePos=Xmin)!!!"));
+	wxLogMessage(_T("GetWallGridLine: marching from starting point in i+ direction ('downstream')!!!"));
 
 	znode.iFacePos = mf::cg::TZoneFacePos::faceXmin;
 
