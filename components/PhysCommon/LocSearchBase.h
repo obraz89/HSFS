@@ -99,9 +99,11 @@ namespace stab{
 		virtual int getTaskDim() const = 0;
 		virtual int getNNodes() const = 0;
 
+		virtual double getThickMF() const = 0;
+
 		virtual void setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* lambdas = NULL)=0;
 
-		virtual void setContext(const mf::t_GeomPoint a_xyz)=0;
+		virtual void setContext(const mf::t_GeomPoint a_xyz, mf::t_ProfDataCfg* pProfCfg = NULL)=0;
 
 		virtual void setContext(const t_ProfileStab* prof_stab)=0;
 

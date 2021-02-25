@@ -134,7 +134,8 @@ namespace pf{
 		void retrace_streamline(mf::t_GeomPoint start_from, stab::t_LSBase& loc_solver);
 
 		void calc_n_factor();
-		void get_amp_funcs(int iNode, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& amp_funcs);
+		void get_amp_funcs(int iNode, stab::t_LSBase& loc_solver, 
+			std::vector<t_VecCmplx>& amp_funcs, mf::t_ProfDataCfg* pProfCfg = NULL);
 		void dump_wpline_as_field(stab::t_LSBase& loc_solver);
 
 		void calc_d2N_dxx();

@@ -69,6 +69,8 @@ class  t_StabSolver: public stab::t_LSBase{
 
 	t_WCharsLoc _waveChars;  // to keep current state of wave 
 
+	double _y_max_mf;	// thickness of profMF, nondim by Lref
+
 	// prepare calculations
 	void _init();
 
@@ -113,6 +115,8 @@ public:
 	int getTaskDim() const{return _math_solver.getTaskDim();};
 	int getNNodes() const{return _math_solver.getNNodes();}; 
 
+	double getThickMF() const;
+
 	inline const t_StabSolverParams& getParams() const{return _params;};
 
 	t_WCharsGlob popGlobalWCharsTime(const mf::t_GeomPoint a_xyz);
@@ -135,7 +139,7 @@ public:
 	void calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc& wave_start, 
 		t_WCharsLoc& wave_lower, t_WCharsLoc& wave_upper);
 
-	void setContext(const mf::t_GeomPoint a_xyz);
+	void setContext(const mf::t_GeomPoint a_xyz, mf::t_ProfDataCfg* pProfCfg = NULL);
 
 	void setContext(const t_ProfileStab* prof_stab);
 

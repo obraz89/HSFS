@@ -9,8 +9,8 @@ using namespace stab;
 // calculate derivative of amplitude function along wpline
 // (usually in 2d task it is just deriv along x)
 // i - index of record in wpline
-// IMPORTANT TODO: this is slightly incorrect way to compute deriv
-// because the physical grids of adjacent profiles are different in normal direction (correct this !)
+// IMPORTANT: grids of y distribution in physical space must exactly coincide
+// for points in the stencil (x+dx and x-dx)
 // IMPORTANT: here x must be non-dim by stab scale
 void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& fun_l,
 	std::vector<t_VecCmplx>& fun_r, std::vector<t_VecCmplx>& amp_funcs_deriv) {
@@ -21,17 +21,29 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	if (i == 0) i = 1;
 	if (i == _line.size() - 1) i = _line.size() - 2;
 
-	t_GeomPoint p1, p2;
+	t_GeomPoint pp, p1, p2;
 
+	pp = _line[i].mean_flow.get_xyz();
 	p1 = _line[i - 1].mean_flow.get_xyz();
 	p2 = _line[i + 1].mean_flow.get_xyz();
 
 	double coef = _line[i].wchars_loc.scales().Dels/_rFldMF.get_mf_params().L_ref;
 	//t_StabScales scales = loc
-	double dx = (p2 - p1).norm()/coef;
+	const double dx = (p2 - p1).norm()/coef;
+	const double c = 0.5 / dx;
 
-	get_amp_funcs(i - 1, loc_solver, fun_l);
-	get_amp_funcs(i + 1, loc_solver, fun_r);
+	// set context to get thickness to be used as thick for +- calcs
+	loc_solver.setContext(pp);
+
+	double y_thick = loc_solver.getThickMF();
+
+	mf::t_ProfDataCfg prof_cfg;
+
+	prof_cfg.ThickFixed = y_thick;
+
+	// get amp funcs with fixed thickness of prof stab
+	get_amp_funcs(i - 1, loc_solver, fun_l, &prof_cfg);
+	get_amp_funcs(i + 1, loc_solver, fun_r, &prof_cfg);
 
 	loc_solver.normalizeAmpFuncsByPressureAtWall(fun_l);
 	loc_solver.normalizeAmpFuncsByPressureAtWall(fun_r);
@@ -42,7 +54,7 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 
 	for (int j = 0; j < nnodes_stab; j++) {
 		for (int i = 0; i < stab_matrix_dim; i++)
-			amp_funcs_deriv[j][i] = 0.5*(fun_r[j][i] - fun_l[j][i]) / dx;
+			amp_funcs_deriv[j][i] = c*(fun_r[j][i] - fun_l[j][i]);
 	}
 	
 

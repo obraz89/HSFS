@@ -972,7 +972,16 @@ void TDomain::_extract_profile_data_blbound(const t_ZoneNode& surf_znode, const 
 
 		_calc_bl_thick(surf_znode, bl_scales, raw_profile);
 
-		const double total_thick = bl_scales.thick_scale * init_cfg.ThickCoef;
+
+		//const double total_thick = 
+		//	(init_cfg.ThickFixed >0.0) ? init_cfg.ThickFixed : bl_scales.thick_scale * init_cfg.ThickCoef;
+
+		double total_thick = bl_scales.thick_scale * init_cfg.ThickCoef;
+		if (init_cfg.ThickFixed > 0.0) total_thick = init_cfg.ThickFixed;
+
+		// debug
+		wxLogMessage(_T("Thick fixed = %lf"), init_cfg.ThickFixed);
+		wxLogMessage(_T("Total thick = %lf"), total_thick);
 
 		t_GeomPoint cur_xyz, surf_xyz;
 		t_Rec cur_rec;

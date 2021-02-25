@@ -1666,13 +1666,14 @@ void t_WavePackLine::calc_n_factor(){
 
 }
 
-void t_WavePackLine::get_amp_funcs(int iNode, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& amp_funcs) {
+void t_WavePackLine::get_amp_funcs(int iNode, stab::t_LSBase& loc_solver, 
+	std::vector<t_VecCmplx>& amp_funcs, mf::t_ProfDataCfg* pProfCfg) {
 
 	t_GeomPoint test_xyz = _line[iNode].mean_flow.get_xyz();
 
 	t_WCharsLoc w_init = _line[iNode].wchars_loc;
 
-	loc_solver.setContext(test_xyz);
+	loc_solver.setContext(test_xyz, pProfCfg);
 
 	stab::t_LSCond cond;
 	cond.set(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED, w_init);

@@ -40,11 +40,14 @@ namespace mf{
 	};
 // Type to control extracted profile data 
 // ThickCoef - total thickness is scale*ThickCoef
+// ThickFixed - force fixed total thickness
 // NNodes - use later with interpolators
 /************************************************************************/
 	struct IMPEXP_PHYSCOMMON t_ProfDataCfg{
 
 		double ThickCoef;
+
+		double ThickFixed = -1.0;
 
 		int NNodes;
 

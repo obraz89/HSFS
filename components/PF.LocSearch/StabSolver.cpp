@@ -33,6 +33,21 @@ void t_StabSolver::init(const hsstab::TPlugin& g_plug){
 
 }
 
+double t_StabSolver::getThickMF() const {
+
+	// debug
+	double coef = get_stab_scales().Dels / _rFldNS.get_mf_params().L_ref;
+
+	const std::vector<double> yv = get_y_distrib();
+
+	double y_calc = std::abs(yv.back() - yv[0])*coef;
+
+	wxLogMessage(_T("t_StabSolver::getThickMF check: y_calc = %lf, y_mf = %lf"), y_calc, _y_max_mf);
+
+	return _y_max_mf;
+
+};
+
 const t_StabScales& t_StabSolver::get_stab_scales() const{
 	return _profStab.scales();
 };
@@ -152,7 +167,7 @@ t_WCharsGlob t_StabSolver::popGlobalWCharsSpat(const mf::t_GeomPoint a_xyz){
 // 
 /************************************************************************/
 
-void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
+void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz, mf::t_ProfDataCfg* pProfCfg /* = NULL*/){
 
 	_cur_xyz = a_xyz;
 
@@ -168,6 +183,11 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 	// NNodes can be used in INTERPOLATE types of initialization
 	prof_cfg.NNodes = _params.NNodes;
 
+	// override extraction or interpolation configure 
+	if (pProfCfg) {
+		prof_cfg.ThickFixed = pProfCfg->ThickFixed;
+	}
+
 	switch (_params.NSProfInit)
 	{
 	case (blp::NSINIT_EXTRACT):
@@ -180,6 +200,9 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz){
 		wxString msg(_T("PF.LocSearch: ProfNS Initialization type not supported"));
 		wxLogError(msg); ssuGENTHROW(msg);
 	}
+
+	// store thickness of extracted profile
+	_y_max_mf = profNS.get_thick();
 
 	t_ProfStabCfg pstb_cfg;
 
