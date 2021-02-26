@@ -63,6 +63,8 @@ class  t_StabSolver: public stab::t_LSBase{
 	t_SqMatCmplx _scal_prod_matrix_H2;
 	// tmp matrices for matrix operations
 	t_SqMatCmplx _mat_tmp1, _mat_tmp2, _mat_tmp3;
+	// tmp amplitude functions, usually direct & conjugate
+	std::vector<t_VecCmplx> _amp_fun_tmp1, _amp_fun_tmp2;
 	const mf::t_DomainBase& _rFldNS; // to get global field params
 	mf::t_GeomPoint _cur_xyz;
 	t_ProfileStab _profStab; // current profile
@@ -77,8 +79,8 @@ class  t_StabSolver: public stab::t_LSBase{
 	void _setStabMatrix3D(const double& a_y);
 	void _setStabMatrix3D(const t_ProfRec& rec);
 
-	void _setScalProdMatrix_H1(const t_ProfRec& rec);
-	void _setScalProdMatrix_H1(const double& a_y);
+	void _setScalProdMatrix_H1_HW(const t_ProfRec& rec);
+	void _setScalProdMatrix_H1_HW(const double& a_y);
 
 	void _setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad);
 
@@ -147,6 +149,8 @@ public:
 
 	void calcGroupVelocity(t_WCharsLoc& wchars);
 
+	void calcGroupVelocity_ScalProd(t_WCharsLoc& wchars);
+
 	// testing
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
 
@@ -157,9 +161,8 @@ public:
 		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B,
 		std::vector<t_VecCmplx>* dns_vec_ptr = NULL);
 
-	t_Complex calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
-
-	t_Complex calcScalarProd_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
+	void calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj,
+		t_Complex& scal_prod_H1, t_Complex& scal_prod_HW);
 
 	t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
 

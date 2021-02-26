@@ -175,6 +175,12 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz, mf::t_ProfDataCfg* pP
 
 	_math_solver.setContext(nnodes_stab);
 
+	if (_amp_fun_tmp1.size() != nnodes_stab) {
+		_amp_fun_tmp1.resize(nnodes_stab, t_VecCmplx(STAB_MATRIX_DIM));
+		_amp_fun_tmp2.resize(nnodes_stab, t_VecCmplx(STAB_MATRIX_DIM));
+	}
+
+
 	t_ProfMFLoc profNS(_rFldNS);
 
 	mf::t_ProfDataCfg prof_cfg;
@@ -267,8 +273,7 @@ void t_StabSolver::setWave(const t_WCharsLoc& wave) { _waveChars = wave; }
 //
 /************************************************************************/
 
-void t_StabSolver::calcGroupVelocity
-(t_WCharsLoc &a_wave_chars){
+void t_StabSolver::calcGroupVelocity(t_WCharsLoc &a_wave_chars){
 	// empiric constant - tolerance
 	const double dd = 0.001*a_wave_chars.a.real();//DELTA_SMALL;
 	// ensure that we are in eigen 
@@ -297,6 +302,39 @@ void t_StabSolver::calcGroupVelocity
 	a_wave_chars.vgb = 0.5*(rght_chars.w - left_chars.w)/dd;
 }
 
+/************************************************************************/
+//COMPUTATION OF GROUP VELOCITY (VA,VB)=(DW/DA,DW/DB) 
+// Via scalar products : 
+// VA = <HA*dze, ksi>/<HW*dze, ksi> 
+// VB = <HB*dze, ksi>/<HW*dze, ksi> 
+// IMPORTANT: currently only VA is computed, VB = 0
+/************************************************************************/
+void t_StabSolver::calcGroupVelocity_ScalProd(t_WCharsLoc &a_wave_chars) {
+
+	// direct amp fun
+	std::vector<t_VecCmplx>& dze = _amp_fun_tmp1;
+	// conj amp fun
+	std::vector<t_VecCmplx>& ksi = _amp_fun_tmp2;
+
+	// get conjugate amp fun
+	setLSMode(stab::t_LSMode(stab::t_LSMode::CONJUGATE | stab::t_LSMode::ASYM_HOMOGEN));
+
+	getAmpFuncs(ksi);
+
+	// get direct amp fun
+
+	setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
+
+	getAmpFuncs(dze);
+
+	t_Complex va, vw;
+
+	calcScalarProd_H1_HW(dze, ksi, va, vw);
+
+	a_wave_chars.vga = va / vw;
+	a_wave_chars.vgb = 0.0;
+
+}
 
 /************************************************************************/   
 //Check wave chars - if wave is physical, group velo is good
@@ -932,7 +970,7 @@ t_Complex t_StabSolver::calcScalarProd_H1(
 		arg[i] = _math_solver.varRange[ind_r];
 
 		const t_ProfRec& rec = _profStab.get_rec(i);
-		_setScalProdMatrix_H1(rec);
+		_setScalProdMatrix_H1_HW(rec);
 		//matrix::base::mat_mul(_scal_prod_matrix, sol_dir[ind_r], v1);
 		// using plain product because sol_conj is already a conjugated vector of conjugate task
 		//fun[i] = vector::plain_prod<t_Complex, t_Complex>(v1, sol_conj[ind_r]);
@@ -957,14 +995,16 @@ t_Complex t_StabSolver::calcScalarProd_H1(
 // compute <H1*fun_direct, fun_conj>
 // H1 = -i*dH/da
 // NB:do not forget to set context of loc solver before
-t_Complex t_StabSolver::calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) {
+void t_StabSolver::calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj, 
+	t_Complex& scal_prod_H1, t_Complex& scal_prod_HW) {
 
 	int nnodes = _math_solver.getNNodes();
 
 	if (nnodes != fun_direct.size() || nnodes != fun_conj.size())
 		wxLogError(_T("t_StabSolver::calcScalarProd_H1: wrong size of amplitude functions"));
 
-	std::vector<t_Complex> fun(nnodes, 0.0);
+	std::vector<t_Complex> fun_H1(nnodes, 0.0);
+	std::vector<t_Complex> fun_HW(nnodes, 0.0);
 	std::vector<double>arg(nnodes, 0.0);
 
 	for (int i = 0; i<nnodes; i++) {
@@ -973,52 +1013,22 @@ t_Complex t_StabSolver::calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, s
 		arg[i] = _math_solver.varRange[ind_r];
 
 		const t_ProfRec& rec = _profStab.get_rec(i);
-		_setScalProdMatrix_H1(rec);
+		_setScalProdMatrix_H1_HW(rec);
 
-		fun[i] = 0.0;
+		fun_H1[i] = 0.0;
+		fun_HW[i] = 0.0;
 		for (int j = 0; j<STAB_MATRIX_DIM; j++)
-			for (int k = 0; k<STAB_MATRIX_DIM; k++)
+			for (int k = 0; k < STAB_MATRIX_DIM; k++) {
 				// using plain product because sol_conj is already a conjugated vector of conjugate task (!)
-				fun[i] = fun[i] + _scal_prod_matrix_H1[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
+				fun_H1[i] = fun_H1[i] + _scal_prod_matrix_H1[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
+				fun_HW[i] = fun_HW[i] + _scal_prod_matrix_HW[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
+			}
 
 
 	}
 
-	return smat::fun_integrate(arg, fun);
-
-}
-
-// compute <HW*fun_direct, fun_conj>
-// HW = i*dH/dw
-// NB:do not forget to set context of loc solver before
-t_Complex t_StabSolver::calcScalarProd_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) {
-
-	int nnodes = _math_solver.getNNodes();
-
-	if (nnodes != fun_direct.size() || nnodes != fun_conj.size())
-		wxLogError(_T("t_StabSolver::calcScalarProd_H1: wrong size of amplitude functions"));
-
-	std::vector<t_Complex> fun(nnodes, 0.0);
-	std::vector<double>arg(nnodes, 0.0);
-
-	for (int i = 0; i<nnodes; i++) {
-
-		int ind_r = nnodes - 1 - i;
-		arg[i] = _math_solver.varRange[ind_r];
-
-		const t_ProfRec& rec = _profStab.get_rec(i);
-		_setScalProdMatrix_H1(rec);
-
-		fun[i] = 0.0;
-		for (int j = 0; j<STAB_MATRIX_DIM; j++)
-			for (int k = 0; k<STAB_MATRIX_DIM; k++)
-				// using plain product because sol_conj is already a conjugated vector of conjugate task (!)
-				fun[i] = fun[i] + _scal_prod_matrix_HW[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
-
-
-	}
-
-	return smat::fun_integrate(arg, fun);
+	scal_prod_H1 = smat::fun_integrate(arg, fun_H1);
+	scal_prod_HW = smat::fun_integrate(arg, fun_HW);
 
 }
 /************************************************************************/

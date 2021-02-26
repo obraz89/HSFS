@@ -322,7 +322,7 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 
 // Mack recommends (bulk viscosity)/(viscosity)=0.8, then parameter K=1.2
 // TODO: cases where bv/v=0.8 ?
-void t_StabSolver::_setScalProdMatrix_H1(const t_ProfRec& rec){
+void t_StabSolver::_setScalProdMatrix_H1_HW(const t_ProfRec& rec){
 
 		t_CompVal E(0.0,1.0);
 
@@ -426,16 +426,30 @@ void t_StabSolver::_setScalProdMatrix_H1(const t_ProfRec& rec){
 
 		// set HW
 
+		_scal_prod_matrix_HW[0][1] = R*M1*TD;
 
+		_scal_prod_matrix_HW[3][1] = E*A*F*M2;
 
+		_scal_prod_matrix_HW[4][1] = -E*F*TD*A;
 
+		_scal_prod_matrix_HW[3][2] = -M2;
+
+		_scal_prod_matrix_HW[4][2] = TD;
+
+		const t_Complex XI_W = E*RM*M2*XI*XI;
+
+		_scal_prod_matrix_HW[0][3] = A*(2 * M1*MY + RM*T1*TD);
+
+		_scal_prod_matrix_HW[1][3] = A*XI_W;
+
+		//_scal_prod_matrix_HW[2][3] = E*XI_W*(-A*A-B*B+RM*MY*T1*M1*TD + RM*T2*TD - E*R*M1*TD)
 
 }
 
-void t_StabSolver::_setScalProdMatrix_H1(const double& a_y){
+void t_StabSolver::_setScalProdMatrix_H1_HW(const double& a_y){
 
 	const t_ProfRec& rec = _profStab.get_rec(a_y);
-	_setScalProdMatrix_H1(rec);
+	_setScalProdMatrix_H1_HW(rec);
 
 }
 

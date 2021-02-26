@@ -83,7 +83,8 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 	t_WCharsLoc wchars;
 
-	t_Complex v1, v2, v3;
+	t_Complex v1_a, v2_a, v3_a;
+	t_Complex v1_w, v2_w, v3_w;
 
 	t_Complex W;
 
@@ -116,6 +117,13 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 			stab::t_TaskTreat::SPAT);
 
 		loc_solver.getAmpFuncs(dze);
+
+		// test group velo calcs
+		loc_solver.calcGroupVelocity(wchars);
+		wxLogMessage(_T("Vga_direct = (%lf, %lf)"), wchars.vga.real(), wchars.vga.imag());
+		loc_solver.calcGroupVelocity_ScalProd(wchars);
+		wxLogMessage(_T("Vga_scalpr = (%lf, %lf)"), wchars.vga.real(), wchars.vga.imag());
+		getchar();
 		loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
 
 		// get deriv of amp_fun along x
@@ -130,19 +138,19 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 			stab::t_TaskTreat::SPAT);
 
 		// calc <H1*dze_ddx, ksi>
-		v1 = loc_solver.calcScalarProd_H1(dze_ddx, ksi);
+		loc_solver.calcScalarProd_H1_HW(dze_ddx, ksi, v1_a, v1_w);
 
 		// calc <H2*dze, ksi>
-		v2 = 0.0;// loc_solver.calcScalarProd_H2(dze, ksi);
+		v2_a = 0.0;// loc_solver.calcScalarProd_H2(dze, ksi);
 
 		// calc <H1*dze, ksi>
-		v3 = loc_solver.calcScalarProd_H1(dze, ksi);
+		loc_solver.calcScalarProd_H1_HW(dze, ksi, v3_a, v3_w);
 
-		wxLogMessage(_T("v1=(%lf, %lf)"), v1.real(), v1.imag());
-		wxLogMessage(_T("v2=(%lf, %lf)"), v2.real(), v2.imag());
-		wxLogMessage(_T("v3=(%lf, %lf)"), v3.real(), v3.imag());
+		wxLogMessage(_T("v1=(%lf, %lf)"), v1_a.real(), v1_a.imag());
+		wxLogMessage(_T("v2=(%lf, %lf)"), v2_a.real(), v2_a.imag());
+		wxLogMessage(_T("v3=(%lf, %lf)"), v3_a.real(), v3_a.imag());
 
-		W = -(v1 + v2) / v3;
+		W = -(v1_a + v2_a) / v3_a;
 
 		_line[i].da_nonpar = -1.0*E*W;
 

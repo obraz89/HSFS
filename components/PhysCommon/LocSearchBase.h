@@ -125,6 +125,8 @@ namespace stab{
 
 		virtual void calcGroupVelocity(t_WCharsLoc& wchars)=0;
 
+		virtual void calcGroupVelocity_ScalProd(t_WCharsLoc& wchars) = 0;
+
 		virtual void calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc& wave_start, 
 			t_WCharsLoc& wave_lower, t_WCharsLoc& wave_upper) = 0;
 
@@ -150,9 +152,8 @@ namespace stab{
 			const t_WCharsLoc& w1, const t_WCharsLoc& w2,
 			std::vector<t_VecCmplx>* dns_vec_ptr=NULL) = 0;
 
-		virtual t_Complex calcScalarProd_H1(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
-
-		virtual t_Complex calcScalarProd_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
+		virtual void calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj, 
+			t_Complex& scal_prod_H1, t_Complex& scal_prod_HW) = 0;
 
 		virtual t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
 
