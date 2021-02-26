@@ -111,9 +111,14 @@ void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 	// NNodes can be used in INTERPOLATE types of initialization
 	prof_cfg.NNodes = _params.NNodes;
 
+	if (_params.NSProfInit == blp::NSINIT_SELFSIM_FROM_FILE) {
+		prof_cfg.LoadFromAVFProfile = true;
+	}
+
 	switch (_params.NSProfInit)
 	{
 	case (blp::NSINIT_EXTRACT):
+	case (blp::NSINIT_SELFSIM_FROM_FILE):
 		profNS.initialize(a_xyz, prof_cfg, blp::NSINIT_EXTRACT);
 		break;
 	case (blp::NSINIT_INTERPOLATE):

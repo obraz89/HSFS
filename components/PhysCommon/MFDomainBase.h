@@ -37,11 +37,14 @@ namespace mf{
 
 		double ThickCoefDefault;
 
+		bool LoadFromAVFProfile = false;
+
 	};
 // Type to control extracted profile data 
 // ThickCoef - total thickness is scale*ThickCoef
 // ThickFixed - force fixed total thickness
 // NNodes - use later with interpolators
+// LoadFromAVFProfile - extract raw profile not from field, but from AVF self-sim data
 /************************************************************************/
 	struct IMPEXP_PHYSCOMMON t_ProfDataCfg{
 
@@ -50,6 +53,8 @@ namespace mf{
 		double ThickFixed = -1.0;
 
 		int NNodes;
+
+		bool LoadFromAVFProfile = false;
 
 	};
 
@@ -121,6 +126,8 @@ namespace mf{
 			virtual double calc_enthalpy(const t_GeomPoint& xyz) const;
 
 			virtual double calc_enthalpy_freestream() const;
+
+			virtual double calc_p_freestream() const;
 
 			virtual double calc_viscosity(const double t) const ;
 

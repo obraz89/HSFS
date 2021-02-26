@@ -20,6 +20,11 @@ class IMPEXP_PROFILE t_ProfMFLoc : public t_ProfMF{
 
 	void _initialize_interpolate(const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg);
 
+	// load raw profile from AVF self-sim data
+
+	void _read_avf_profile(const std::string& fname, const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg,
+		std::vector<mf::t_Rec>& raw_Profile, std::vector<mf::t_RecGrad>& prof_derivs);
+
 public:
 
 	// read DNS disturbance profile from file

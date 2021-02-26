@@ -117,6 +117,8 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("BLThickCoefDefault", 3.0, _T("Thick Coef to use in GetProfiles task"));
 
+	g.add("BLLoadFromAVFProfile", 0, _T("If true, load selfsim profile from file instead of domain"));
+
 	// bounding box
 
 	g.add("BBox_Xmin", -1.0, _T("Bounding box Xmin"));

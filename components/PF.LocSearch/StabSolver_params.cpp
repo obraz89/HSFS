@@ -55,6 +55,9 @@ void t_StabSolverParams::init_supported_options(){
 	PROFNS_INIT_TYPES_STR.insert(
 		std::make_pair(_T("INTERPOLATE"), blp::NSINIT_INTERPOLATE));
 
+	PROFNS_INIT_TYPES_STR.insert(
+		std::make_pair(_T("SELFSIM_FROM_FILE"), blp::NSINIT_SELFSIM_FROM_FILE));
+
 	CURV_TERMS_FLAGS_STR.clear();
 
 	CURV_TERMS_FLAGS_STR.insert(
@@ -111,7 +114,7 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 
 	if (it==PROFNS_INIT_TYPES_STR.end()){
 
-		wxString msg(_T("PF.LocSearch: ProfNS Initialization type not supported, supported options EXTRACT, INTERPOLATE"));
+		wxString msg(_T("PF.LocSearch: ProfNS Initialization type not supported, supported options EXTRACT, INTERPOLATE, SELFSIM_FROM_FILE"));
 		wxLogError(msg); ssuGENTHROW(msg);
 
 	}
@@ -126,6 +129,8 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 	case (blp::NSINIT_INTERPOLATE):
 		NSProfInit = blp::NSINIT_INTERPOLATE;
 		break;
+	case (blp::NSINIT_SELFSIM_FROM_FILE):
+		NSProfInit = blp::NSINIT_SELFSIM_FROM_FILE;
 	default:
 		wxLogError(_("PF.LocSearch: failed to read profNS init type"));
 	}

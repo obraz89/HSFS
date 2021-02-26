@@ -17,7 +17,14 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 
 	std::vector<mf::t_RecGrad> prof_derivs;
 
-	_rDomain.extract_profile_data(xyz, init_cfg, raw_profile, prof_derivs);
+	if (!init_cfg.LoadFromAVFProfile)
+		_rDomain.extract_profile_data(xyz, init_cfg, raw_profile, prof_derivs);
+	else {
+		std::string fname = "TESTBAS.DAT";
+		// calc Rex = ReL*x, it is used as non-dim parameter in AVF profiles
+		double Rex = _rDomain.get_mf_params().Re * xyz.x();
+		_read_avf_profile(fname, xyz, init_cfg, raw_profile, prof_derivs);
+	}
 
 	_resize(raw_profile.size());
 
@@ -102,6 +109,93 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 
 	_calc_derivs();
 
+}
+
+// read self-similar boundary layer profile of 2D flow
+// and convert it to profile stab using stab scales;
+// IMPORTANT: works only for plate, modifications must be made for general case (surface normal direction etc)
+// flow vars are Y, U, V0, T;
+// V0 is vertical velocity mul by eps, eps~sqrt(Re_x).
+// file structure: 1-st line header, 2-nd line number of prof rec
+// 3+ lines are prof recs
+// profile considered as 1 bl_thickness
+// so it is extended using last rec to bl_thickness * ThickCoef
+void t_ProfMFLoc::_read_avf_profile(const std::string& fname, const mf::t_GeomPoint& xyz, const mf::t_ProfDataCfg& data_cfg,
+	std::vector<mf::t_Rec>& raw_profile, std::vector<mf::t_RecGrad>& prof_derivs) {
+
+	const double x = xyz.x();
+
+	const double z = xyz.z();
+
+	// R = sqrt(Rex)
+	const double R = sqrt(_rDomain.get_mf_params().Re * x);
+	const double pinf = _rDomain.calc_p_freestream();
+
+	std::ifstream ifstr(fname.c_str());
+	std::stringstream istr;
+
+	int nnodes = 0;
+	const int max_lsize = 1000;
+	char line[max_lsize];
+	char ch;
+
+	// read and skip header
+	ifstr.get(line, max_lsize, '\n'); ifstr.get(ch);
+
+	// read-process profiles size
+	ifstr.get(line, max_lsize, '\n'); ifstr.get(ch);
+	istr.clear();
+	istr << line;
+	istr >> nnodes;
+	
+	// grid is uniform, just use ThickCoef*Nnodes roundoff for raw_profile & dummy prof_derivs
+
+	int nnodes_out = nnodes * int(data_cfg.ThickCoef);
+
+	raw_profile.resize(nnodes_out);
+	prof_derivs.resize(nnodes_out);
+
+	double eta;
+	double u, v0, t;
+
+	// read profiles
+	for (int i = 0; i < nnodes; i++) {
+		ifstr.get(line, max_lsize, '\n');
+		if (ifstr.get(ch) && ch != '\n') {
+			wxLogMessage(_T("failed to read AVF data: line exceeded"));
+		}
+		istr.clear();
+		istr << line;
+
+		// record : eta = y*sqrt(Rex)/x, U/Ue, V0, T/Te
+		io_hlp::write_to_val<double>(istr, eta);
+		io_hlp::write_to_val<double>(istr, u);
+		io_hlp::write_to_val<double>(istr, v0);
+		io_hlp::write_to_val<double>(istr, t);
+
+		raw_profile[i].x = x;
+		raw_profile[i].y = eta * x / R;
+		raw_profile[i].z = z;
+
+		raw_profile[i].u = u;
+		raw_profile[i].v = v0 / R;
+		raw_profile[i].w = 0.0;
+
+		raw_profile[i].p = pinf;
+		raw_profile[i].t = t;
+		raw_profile[i].r = 1.0 / t;
+	}
+
+	double dy_out = (raw_profile[nnodes - 1].y - raw_profile[0].y) / (nnodes - 1);
+
+	// add outer records by duplication of last record
+	for (int i = nnodes; i < nnodes_out; i++) {
+		raw_profile[i] = raw_profile[nnodes - 1];
+
+		raw_profile[i].y = raw_profile[i-1].y + dy_out;
+	}
+
+	// ignore prof derivs for now
 }
 
 void _read_crop_raw_profile_from_file(const std::string fname, const mf::t_ProfDataCfg& init_cfg, 

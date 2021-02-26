@@ -188,9 +188,14 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz, mf::t_ProfDataCfg* pP
 		prof_cfg.ThickFixed = pProfCfg->ThickFixed;
 	}
 
+	if (_params.NSProfInit == blp::NSINIT_SELFSIM_FROM_FILE) {
+		prof_cfg.LoadFromAVFProfile = true;
+	}
+
 	switch (_params.NSProfInit)
 	{
 	case (blp::NSINIT_EXTRACT):
+	case (blp::NSINIT_SELFSIM_FROM_FILE):
 		profNS.initialize(a_xyz, prof_cfg, blp::NSINIT_EXTRACT);
 		break;
 	case (blp::NSINIT_INTERPOLATE):
