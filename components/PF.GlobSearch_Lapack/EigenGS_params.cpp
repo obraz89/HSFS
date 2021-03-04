@@ -135,6 +135,7 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 		break;
 	case (blp::NSINIT_SELFSIM_FROM_FILE):
 		NSProfInit = blp::NSINIT_SELFSIM_FROM_FILE;
+		break;
 	default:
 		wxLogError(_("PF.EigenGS: Failed to read ProfNS init type"));
 		break;

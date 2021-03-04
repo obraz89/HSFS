@@ -131,6 +131,7 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 		break;
 	case (blp::NSINIT_SELFSIM_FROM_FILE):
 		NSProfInit = blp::NSINIT_SELFSIM_FROM_FILE;
+		break;
 	default:
 		wxLogError(_("PF.LocSearch: failed to read profNS init type"));
 	}
