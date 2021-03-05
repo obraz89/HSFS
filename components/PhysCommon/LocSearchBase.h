@@ -127,6 +127,8 @@ namespace stab{
 
 		virtual void calcGroupVelocity_ScalProd(t_WCharsLoc& wchars) = 0;
 
+		virtual t_Complex calcDaDwSpat(t_WCharsLoc& wchars) = 0;
+
 		virtual void calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc& wave_start, 
 			t_WCharsLoc& wave_lower, t_WCharsLoc& wave_upper) = 0;
 
@@ -160,6 +162,8 @@ namespace stab{
 		virtual void normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs) = 0;
 
 	};
+	// y and amp_funcs are in the order from outer rec to the wall
+	IMPEXP_PHYSCOMMON void dumpEigenFuncs(const std::string& fname, const int nnodes, const std::vector<double>& y_vec, const std::vector<t_VecCmplx>& amp_funcs);
 
 /************************************************************************/
 

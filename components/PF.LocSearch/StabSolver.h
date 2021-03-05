@@ -151,6 +151,8 @@ public:
 
 	void calcGroupVelocity_ScalProd(t_WCharsLoc& wchars);
 
+	t_Complex calcDaDwSpat(t_WCharsLoc& wchars);
+
 	// testing
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
 

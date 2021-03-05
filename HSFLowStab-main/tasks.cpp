@@ -719,3 +719,90 @@ void task::calc_neutral_curve() {
 
 	ofstr.close();
 }
+
+void task::test() {
+
+	int pid = 0;
+
+	const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+	g_pStabSolver->setContext(test_xyz);
+
+	stab::t_LSBase& loc_solver = *g_pStabSolver;
+
+	t_WCharsLoc w_init; w_init.set_treat(stab::t_TaskTreat::SPAT);
+
+	bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
+
+	if (!read_ok)
+		ssuGENTHROW(_T("Failed to read max wave chars, skipping wpline"));
+	else
+		wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
+
+
+	stab::t_LSCond cond;
+	stab::t_TaskTreat stab_treat;
+
+
+	cond.set(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED, w_init);
+
+	stab_treat = stab::t_TaskTreat::SPAT;
+
+	//sprintf(strFname, "output/amp_funcs_%d.dat", pid);
+
+	wxLogMessage(_T("initial wave:%s"), &w_init.to_wstr()[0]);
+
+	g_pStabSolver->searchWave(w_init, cond, stab_treat);
+
+	wxLogMessage(_T("converged to wave:%s"), &w_init.to_wstr()[0]);
+
+	//g_pStabSolver->dumpEigenFuctions(strFname);
+
+	// amp funcs
+	
+	t_WCharsLoc wchars = w_init;
+
+	std::vector<t_VecCmplx> dze(loc_solver.getNNodes(), t_VecCmplx(8));
+	// conjugate amplitude func 
+	std::vector<t_VecCmplx> ksi(loc_solver.getNNodes(), t_VecCmplx(8));
+
+	loc_solver.setLSMode(stab::t_LSMode(stab::t_LSMode::CONJUGATE | stab::t_LSMode::ASYM_HOMOGEN));
+
+	loc_solver.searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
+		stab::t_TaskTreat::SPAT);
+
+	loc_solver.getAmpFuncs(ksi);
+
+	stab::dumpEigenFuncs("output/amp_funcs_conjug.dat", loc_solver.getNNodes(), loc_solver.get_y_distrib(), ksi);
+
+	// get direct amp fun
+
+	wchars = w_init;
+
+	loc_solver.setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
+
+	loc_solver.searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
+		stab::t_TaskTreat::SPAT);
+
+	loc_solver.getAmpFuncs(dze);
+
+	stab::dumpEigenFuncs("output/amp_funcs_direct.dat", loc_solver.getNNodes(), loc_solver.get_y_distrib(), dze);
+
+	t_Complex sp_HA, sp_HW;
+
+	loc_solver.calcScalarProd_H1_HW(dze, ksi, sp_HA, sp_HW);
+	loc_solver.calcScalarProd_H1_HW(dze, ksi, sp_HA, sp_HW);
+
+	wxLogMessage(_T("sp_HA=(%lf, %lf)"), sp_HA.real(), sp_HA.imag());
+	wxLogMessage(_T("sp_HW=(%lf, %lf)"), sp_HW.real(), sp_HW.imag());
+
+	t_Complex da_dw = sp_HW / sp_HA;
+
+	wxLogMessage(_T("DA_DW=(%lf, %lf)"), da_dw.real(), da_dw.imag());
+
+	t_Complex da_dw_fd = loc_solver.calcDaDwSpat(wchars);
+
+	wxLogMessage(_T("DA_DW_fd=(%lf, %lf)"), da_dw_fd.real(), da_dw_fd.imag());
+
+
+}

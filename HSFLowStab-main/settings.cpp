@@ -151,6 +151,8 @@ bool load_Settings_n_Plugins()
 
 	task::TaskNames[task::CalcNeutralCurve] = _T("CalcNeutralCurve");
 
+	task::TaskNames[task::Test] = _T("Test");
+
 	task::SpatTimeNames[task::Spat] = _T("Spat");
 	task::SpatTimeNames[task::Time] = _T("Time");
 

@@ -78,6 +78,9 @@ namespace task{
 		// calculate neutral curve
 		CalcNeutralCurve,
 
+		// For current tests
+		Test, 
+
 		TaskNum};
 
 	extern wxString TaskNames[TaskNum];

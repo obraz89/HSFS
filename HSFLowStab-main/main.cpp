@@ -155,6 +155,9 @@ int main(int argc, char* argv[]){
 		case task::CalcNeutralCurve:
 			task::calc_neutral_curve();
 			break;
+		case task::Test:
+			task::test();
+			break;
 		default:
 			wxString errMsg(_T("Error: provided task not implemented"));
 			wxLogError(errMsg);

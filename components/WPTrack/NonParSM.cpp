@@ -92,6 +92,10 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 	t_Complex da_ratio;
 
+	// tmp, debug group velo
+	std::ofstream ofstr("output/wplines_group_velo.dat");
+	ofstr << "da_dw_fd_real, da_dw_fd_imag, da_dw_mat_real, da_dw_mat_imag\n";
+
 	for (int i = 0; i < _line.size(); i++) {
 
 		xyz = _line[i].mean_flow.get_xyz();
@@ -108,6 +112,11 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		loc_solver.getAmpFuncs(ksi);
 
+		// x=0.923
+		if (i==157)
+			stab::dumpEigenFuncs("output/amp_funcs_conjug.dat", loc_solver.getNNodes(), loc_solver.get_y_distrib(), ksi);
+			//loc_solver.dumpEigenFuctions("output/amp_funcs_conjug.dat");
+
 		// get direct amp fun
 
 		loc_solver.setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
@@ -118,12 +127,31 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		loc_solver.getAmpFuncs(dze);
 
+		// x=0.923
+		if (i == 157) {
+			wxLogMessage(_T("Current point x=%lf"), xyz.x());
+			loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
+			stab::dumpEigenFuncs("output/amp_funcs_direct.dat", loc_solver.getNNodes(), loc_solver.get_y_distrib(), dze);
+			getchar();
+		}
+
+		t_Complex da_dw, sp_hw, sp_ha;
 		// test group velo calcs
-		loc_solver.calcGroupVelocity(wchars);
-		wxLogMessage(_T("Vga_direct = (%lf, %lf)"), wchars.vga.real(), wchars.vga.imag());
+		da_dw = loc_solver.calcDaDwSpat(wchars);
+		wxLogMessage(_T("da_dw_fd = (%lf, %lf)"), da_dw.real(), da_dw.imag());
+		ofstr << xyz.x()<<"\t"<< da_dw.real() << "\t" << da_dw.imag() << "\t";
+
 		loc_solver.calcGroupVelocity_ScalProd(wchars);
-		wxLogMessage(_T("Vga_scalpr = (%lf, %lf)"), wchars.vga.real(), wchars.vga.imag());
+
+		t_Complex vga_inv = 1.0 / wchars.vga;
+		wxLogMessage(_T("da_dw_mat = (%lf, %lf)"), vga_inv.real(), vga_inv.imag());
+		loc_solver.calcScalarProd_H1_HW(dze, ksi, sp_ha, sp_hw);
+		t_Complex da_dw_mat = sp_hw/sp_ha;
+		wxLogMessage(_T("da_dw_mat = (%lf, %lf)"), da_dw_mat.real(), da_dw_mat.imag());
+		ofstr << da_dw_mat.real() << "\t" << da_dw_mat.imag() << "\n";
+
 		getchar();
+
 		loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
 
 		// get deriv of amp_fun along x

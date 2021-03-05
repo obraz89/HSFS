@@ -324,126 +324,153 @@ void t_StabSolver::_setStabMatrix3D(const double& a_y){
 // TODO: cases where bv/v=0.8 ?
 void t_StabSolver::_setScalProdMatrix_H1_HW(const t_ProfRec& rec){
 
-		t_CompVal E(0.0,1.0);
+	t_CompVal i(0.0, 1.0);
 
-		const mf::t_FldParams& Params = _rFldNS.get_mf_params();
+	const double& R = _profStab.scales().ReStab;
+	const double& Me = _profStab.scales().Me;
 
-		double MM = 2./3.*(Params.BulkViscRatio-1.0);
+	const mf::t_FldParams& Params = _rFldNS.get_mf_params();
 
-		double F = MM+1.0;
+	const double gMaMa = Params.Gamma*Me*Me;
+	const double g_1MaMa = (Params.Gamma - 1.0)*Me*Me;
+	const double Pr = Params.Pr;
 
-		double RM = 2./3.*(Params.BulkViscRatio+2.0);
+	const double inv_t = 1.0 / rec.t;
+	const double inv_mu = 1.0 / rec.mu;
 
-		const double Gamma = Params.Gamma;
-		const double Mach = Params.Mach;
+	const double vCoefL = 2.0 / 3.0*(Params.BulkViscRatio + 2.0);
+	const double vCoefS = 2.0 / 3.0*(Params.BulkViscRatio - 1.0);
+	const double vCoefM = 1.0 + vCoefS;
 
-		const double Pr = Params.Pr;
+	const t_CompVal& alpha = _waveChars.a;
+	const t_CompVal& beta = _waveChars.b;
+	const t_CompVal& freq = _waveChars.w;
 
-		double M2 = Gamma*Mach*Mach;
+	const double& u = rec.u;
+	const double& u1 = rec.u1;
 
-		double MG = (Gamma-1.0)*Mach*Mach;
+	const double& t = rec.t;
+	const double& t1 = rec.t1;
 
-		_scal_prod_matrix_H1.setToZero();
+	const double& w = rec.w;
+	const double& w1 = rec.w1;
 
-		const t_CompVal W = _waveChars.w;
-		const t_CompVal A = _waveChars.a;
-		const t_CompVal B = _waveChars.b;
-		const t_CompVal R = _profStab.scales().ReStab;
+	const t_CompVal E = alpha*u + beta*w - freq;
 
-		const double U = rec.u;
-		const double U1 = rec.u1;
-		const double U2 = rec.u2;
+	const double dMu1 = rec.mu1*t1;
+	const double dMu2 = rec.mu2*t1*t1 + rec.mu1*rec.t2;
+	const double dMu_U = rec.mu2*t1*u1 + rec.mu1*rec.u2;
 
-		const double T = rec.t;
-		const double T1 = rec.t1;
-		const double T2 = rec.t2;
+	const t_CompVal xi = 1.0 / (R*inv_mu + i*vCoefL*gMaMa*E);
 
-		const double MU = rec.mu;
-		const double MU1 = rec.mu1;
-		const double MU2 = rec.mu2;
+	const t_CompVal dxi_da = -i*xi*xi*vCoefL*gMaMa*u;
+	const t_CompVal dxi_dw = i*xi*xi*vCoefL*gMaMa;
 
-		const double WS = rec.w;
-		const double WS1 = rec.w1;
-		const double WS2 = rec.w2;
+	_scal_prod_matrix_H1.setToZero();
 
-		const t_CompVal WA = W - A*U - B*WS;
-		const double M1 = 1.0/MU;
-		const double MY = MU1*T1;
-		const double MYY = MU2*T1*T1+MU1*T2;
-		const t_CompVal XI = 1.0/(R*M1-E*RM*M2*WA);
-		const t_CompVal TD = 1.0/T;
-		const t_CompVal WB = E*(A*U-W);
+	_scal_prod_matrix_H1[0][1] = R*u*inv_t*inv_mu - 2.0*i*alpha;
 
-		const t_CompVal DXI = -E*RM*M2*U*XI*XI;
+	_scal_prod_matrix_H1[2][1] = -inv_mu*dMu1 - vCoefM*inv_t*rec.t1;
 
-		// fill non-zero elements of H1 (HA)
+	_scal_prod_matrix_H1[3][1] = R*inv_mu + i*vCoefM*gMaMa*(E + alpha*u);
 
-		_scal_prod_matrix_H1[0][1] = U*R*M1*TD-2.*E*A;
+	_scal_prod_matrix_H1[4][1] = -i*vCoefM*inv_t*(E + alpha*u);
 
-		_scal_prod_matrix_H1[2][1]=-F*T1*TD-MY*M1;
+	_scal_prod_matrix_H1[0][2] = -1.0;
 
-		_scal_prod_matrix_H1[3][1]=R*M1-E*F*M2*(WA-A*U);
+	_scal_prod_matrix_H1[3][2] = -gMaMa*u;
 
-		_scal_prod_matrix_H1[4][1]=E*F*TD*(WA-A*U);
+	_scal_prod_matrix_H1[4][2] = inv_t*u;
 
-		_scal_prod_matrix_H1[0][2]=-1.;
+	_scal_prod_matrix_H1[0][3] = -(2.0*inv_mu*dMu1 + vCoefL*inv_t*rec.t1)*(xi+ alpha*dxi_da);
 
-		_scal_prod_matrix_H1[3][2]=-M2*U;
+	_scal_prod_matrix_H1[1][3] = -xi - alpha*dxi_da;
 
-		_scal_prod_matrix_H1[4][2]=U*TD;
+	_scal_prod_matrix_H1[2][3] = -i*(dxi_da*(-alpha*alpha - beta*beta +
+		vCoefL*inv_t*(inv_mu*dMu1*rec.t1 + rec.t2) -
+		i*R*inv_t*inv_mu*E) - xi*(2.0 * alpha + i*R*inv_mu*inv_t*u));
 
-		_scal_prod_matrix_H1[0][3]=-(XI+A*DXI)*(RM*T1*TD+2.*MY*M1);
+	_scal_prod_matrix_H1[3][3] = -vCoefL*gMaMa*(
+		dxi_da*(alpha*u1 + beta*w1) + xi*u1 +
+		(inv_mu*dMu1 + inv_t*rec.t1)*(dxi_da*E + xi*u));
 
-		_scal_prod_matrix_H1[1][3]=-XI-A*DXI;
+	{
+		const t_Complex b1 = inv_mu*rec.mu1 + vCoefL*inv_t;
+		const t_Complex c1 = vCoefL*inv_t*inv_mu*dMu1;
+		_scal_prod_matrix_H1[4][3] = dxi_da*(b1*(alpha*rec.u1 + beta*rec.w1)+c1*E) +
+			xi*(b1*rec.u1 + c1*rec.u);
+	}
 
-		_scal_prod_matrix_H1[2][3]=-E*(
-			DXI*(E*WA*R*M1*TD-A*A-B*B+RM*(T2*TD+MY*T1*M1*TD))
-			-XI*(2.*A+E*R*U*M1*TD));
+	_scal_prod_matrix_H1[5][3] = vCoefL*inv_t*(dxi_da*E + xi*u);
 
-		_scal_prod_matrix_H1[3][3]=-RM*M2*
-			(DXI*(A*U1+B*WS1)+XI*U1+(T1*TD+MY*M1)*(XI*U-DXI*WA));
+	_scal_prod_matrix_H1[6][3] = -dxi_da*beta*(2.0*inv_mu*dMu1 + vCoefL*inv_t*t1);
 
-		_scal_prod_matrix_H1[4][3]=DXI*((A*U1+B*WS1)*(RM*TD+MU1*M1)-RM*WA*MY*M1*TD)
-			+XI*(RM*U1*TD+MU1*U1*M1+RM*U*MY*M1*TD);
+	_scal_prod_matrix_H1[7][3] = -dxi_da*beta;
 
-		_scal_prod_matrix_H1[5][3]=RM*TD*(U*XI-WA*DXI);
+	_scal_prod_matrix_H1[2][5] = -2 * Pr*g_1MaMa*u1;
 
-		_scal_prod_matrix_H1[6][3]=-DXI*B*(RM*T1*TD+2.*MY*M1);
+	_scal_prod_matrix_H1[3][5] = -R*Pr*inv_mu*g_1MaMa*u;
 
-		_scal_prod_matrix_H1[7][3]=-B*DXI;
+	_scal_prod_matrix_H1[4][5] = R*Pr*inv_mu*inv_t*u - 2.0*i*alpha;
 
-		_scal_prod_matrix_H1[2][5]=-2.*MG*Pr*U1;
+	_scal_prod_matrix_H1[3][7] = i*vCoefM*beta*gMaMa*u;
 
-		_scal_prod_matrix_H1[3][5]=-MG*Pr*R*U*M1;
+	_scal_prod_matrix_H1[4][7] = -i*vCoefM*beta*inv_t*u;
 
-		_scal_prod_matrix_H1[4][5]=R*Pr*U*M1*TD-2.*E*A;
+	_scal_prod_matrix_H1[6][7] = R*inv_mu*inv_t*u - 2.0*i*alpha;
 
-		_scal_prod_matrix_H1[3][7]=E*F*M2*B*U;
+	// set HW
 
-		_scal_prod_matrix_H1[4][7]=-E*F*B*U*TD;
+	_scal_prod_matrix_HW.setToZero();
 
-		_scal_prod_matrix_H1[6][7]=R*U*M1*TD-2.*E*A;
+	_scal_prod_matrix_HW[0][1] = R*inv_mu*inv_t;
 
-		// set HW
+	_scal_prod_matrix_HW[3][1] = i*alpha*vCoefM*gMaMa;
 
-		_scal_prod_matrix_HW[0][1] = R*M1*TD;
+	_scal_prod_matrix_HW[4][1] = -i*vCoefM*inv_t*alpha;
 
-		_scal_prod_matrix_HW[3][1] = E*A*F*M2;
+	_scal_prod_matrix_HW[3][2] = -gMaMa;
 
-		_scal_prod_matrix_HW[4][1] = -E*F*TD*A;
+	_scal_prod_matrix_HW[4][2] = inv_t;
 
-		_scal_prod_matrix_HW[3][2] = -M2;
+	_scal_prod_matrix_HW[0][3] = alpha*dxi_dw*(2.0*inv_mu*dMu1 + vCoefL*inv_t*rec.t1);
 
-		_scal_prod_matrix_HW[4][2] = TD;
+	_scal_prod_matrix_HW[1][3] = alpha*dxi_dw;
 
-		const t_Complex XI_W = E*RM*M2*XI*XI;
+	_scal_prod_matrix_HW[2][3] = i*dxi_dw*(-alpha*alpha - beta*beta +
+		vCoefL*inv_t*inv_mu*dMu1*rec.t1 + 
+		vCoefL*inv_t*rec.t2 - i*R*inv_t*inv_mu*E) - xi*R*inv_mu*inv_t;
 
-		_scal_prod_matrix_HW[0][3] = A*(2 * M1*MY + RM*T1*TD);
 
-		_scal_prod_matrix_HW[1][3] = A*XI_W;
+	{
+		t_Complex b1 = inv_mu*dMu1 + inv_t*rec.t1;
+		t_Complex c1 = alpha*rec.u1 + beta*rec.w1;
+		_scal_prod_matrix_HW[3][3] = vCoefL*gMaMa*(dxi_dw*(b1*E + c1) - xi*b1);
 
-		//_scal_prod_matrix_HW[2][3] = E*XI_W*(-A*A-B*B+RM*MY*T1*M1*TD + RM*T2*TD - E*R*M1*TD)
+	}
+	{
+		t_Complex c1 = (inv_mu*rec.mu1 + vCoefL*inv_t)*(alpha*rec.u1 + beta*rec.w1);
+		t_Complex b1 = vCoefL*inv_t*inv_mu*dMu1;
+		_scal_prod_matrix_HW[4][3] = -dxi_dw*c1 - b1*(dxi_dw*E - xi);
+	}
 
+	_scal_prod_matrix_HW[5][3] = vCoefL*inv_t*(xi - dxi_dw*E);
+
+	_scal_prod_matrix_HW[6][3] = beta*dxi_dw*(2.0*inv_mu*dMu1 + vCoefL*inv_t*rec.t1);
+
+	_scal_prod_matrix_HW[7][3] = dxi_dw*beta;
+
+	_scal_prod_matrix_HW[3][5] = -R*Pr*inv_mu*g_1MaMa;
+
+	_scal_prod_matrix_HW[4][5] = R*Pr*inv_t*inv_mu;
+
+	_scal_prod_matrix_HW[3][7] = i*vCoefM*beta*gMaMa;
+
+	_scal_prod_matrix_HW[4][7] = -i*vCoefM*beta*inv_t;
+
+	_scal_prod_matrix_HW[6][7] = R*inv_t*inv_mu;
+		//*******************
+		//*******************
 }
 
 void t_StabSolver::_setScalProdMatrix_H1_HW(const double& a_y){
@@ -1002,24 +1029,9 @@ void t_StabSolver::dumpEigenFuctions(const std::string& fname){
 
 	std::vector<t_VecCmplx> amp_funcs(getNNodes(), t_VecCmplx(STAB_MATRIX_DIM));
 
-	std::wofstream fstr(&fname[0]);
-	fstr<<_T("Y\tu_re\tu_im\tu'_re\tu'_im\tv_re\tv_im\tp_re\tp_im\tt_re\tt_im\tt'_re\tt'_im\tw_re\tw_im\tw'_re\tw'_im\n");
-
 	getAmpFuncs(amp_funcs);
 
-	// write out in reverse order (from wall to outer)
-	for (int j=getNNodes()-1; j>=0; j--){
-
-		fstr<<_math_solver.varRange[j]<<_T("\t");
-
-		for (int k=0; k<STAB_MATRIX_DIM; k++){
-			fstr<<std_manip::std_format_sci<double>(amp_funcs[j][k].real())
-				<<_T("\t")
-				<<std_manip::std_format_sci<double>(amp_funcs[j][k].imag())
-				<<_T("\t");
-		}
-		fstr<<_T("\n");
-	}
+	stab::dumpEigenFuncs(fname, getNNodes(), _math_solver.varRange, amp_funcs);
 
 }
 

@@ -316,14 +316,22 @@ void t_StabSolver::calcGroupVelocity_ScalProd(t_WCharsLoc &a_wave_chars) {
 	// conj amp fun
 	std::vector<t_VecCmplx>& ksi = _amp_fun_tmp2;
 
+	t_WCharsLoc wchars = a_wave_chars;
+
 	// get conjugate amp fun
 	setLSMode(stab::t_LSMode(stab::t_LSMode::CONJUGATE | stab::t_LSMode::ASYM_HOMOGEN));
+
+	searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
+		stab::t_TaskTreat::SPAT);
 
 	getAmpFuncs(ksi);
 
 	// get direct amp fun
 
 	setLSMode(stab::t_LSMode(stab::t_LSMode::DIRECT | stab::t_LSMode::ASYM_HOMOGEN));
+
+	searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
+		stab::t_TaskTreat::SPAT);
 
 	getAmpFuncs(dze);
 
@@ -334,6 +342,31 @@ void t_StabSolver::calcGroupVelocity_ScalProd(t_WCharsLoc &a_wave_chars) {
 	a_wave_chars.vga = va / vw;
 	a_wave_chars.vgb = 0.0;
 
+}
+
+/************************************************************************/
+// COMPUTATION OF derivative da/dw, in spatial approach  
+// compare this to <Hw*z,x>/<Ha*z,x>
+/************************************************************************/
+
+t_Complex t_StabSolver::calcDaDwSpat(t_WCharsLoc &a_wave_chars) {
+	// empiric constant - tolerance
+	double dd = 0.001*a_wave_chars.w.real(); //DELTA_SMALL;
+	if (std::fabs(dd) < 1.0e-06) {
+		dd = 1.0e-06;
+		wxLogMessage(_T("Warning: w is almost zero in da_dw calcs, using small value for increment dd=%lf"), dd);
+	}
+	adjustLocal(a_wave_chars, W_MODE);
+
+	t_WCharsLoc left_chars = a_wave_chars;
+	t_WCharsLoc rght_chars = a_wave_chars;
+	// dalpha
+	left_chars.w -= dd;
+	rght_chars.w += dd;
+	adjustLocal(left_chars, A_MODE);
+	adjustLocal(rght_chars, A_MODE);
+
+	return  (0.5*(rght_chars.a - left_chars.a) / dd);
 }
 
 /************************************************************************/   
