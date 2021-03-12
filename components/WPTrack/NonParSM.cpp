@@ -30,7 +30,7 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	double coef = _line[i].wchars_loc.scales().Dels/_rFldMF.get_mf_params().L_ref;
 	//t_StabScales scales = loc
 	const double dx = (p2 - p1).norm()/coef;
-	const double c = 0.5 / dx;
+	const double c = 1.0 / dx;
 
 	// set context to get thickness to be used as thick for +- calcs
 	loc_solver.setContext(pp);
@@ -128,12 +128,12 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		loc_solver.getAmpFuncs(dze);
 
 		// x=0.923
-		if (i == 157) {
-			wxLogMessage(_T("Current point x=%lf"), xyz.x());
-			loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
-			stab::dumpEigenFuncs("output/amp_funcs_direct.dat", loc_solver.getNNodes(), loc_solver.get_y_distrib(), dze);
-			getchar();
-		}
+//		if (i == 157) {
+//			wxLogMessage(_T("Current point x=%lf"), xyz.x());
+//			loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
+//			stab::dumpEigenFuncs("output/amp_funcs_direct.dat", loc_solver.getNNodes(), loc_solver.get_y_distrib(), dze);
+//			getchar();
+//		}
 
 		t_Complex da_dw, sp_hw, sp_ha;
 		// test group velo calcs
@@ -150,7 +150,7 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		wxLogMessage(_T("da_dw_mat = (%lf, %lf)"), da_dw_mat.real(), da_dw_mat.imag());
 		ofstr << da_dw_mat.real() << "\t" << da_dw_mat.imag() << "\n";
 
-		getchar();
+		//getchar();
 
 		loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
 
@@ -191,10 +191,12 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		wxLogMessage(_T("da_ratio = da/a = (%lf, %lf)"), 
 			da_ratio.real(), da_ratio.imag());
 
-		// modify wave chars
-		_line[i].wchars_loc.a += _line[i].da_nonpar;
+		// modify wave chars glob and DO NOT modify wchars loc!
+		t_WCharsLoc wchars_new;
+		wchars_new = _line[i].wchars_loc;
+		wchars_new.a = _line[i].wchars_loc.a + _line[i].da_nonpar;
 
-		t_WCharsGlob wchars_glob(_line[i].wchars_loc, _rFldMF.calc_jac_to_loc_rf(xyz),
+		t_WCharsGlob wchars_glob(wchars_new, _rFldMF.calc_jac_to_loc_rf(xyz),
 			loc_solver.get_stab_scales());
 
 		_line[i].wave_chars = wchars_glob;	

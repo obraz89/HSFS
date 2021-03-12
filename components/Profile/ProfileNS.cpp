@@ -150,6 +150,11 @@ void t_ProfMFLoc::_read_avf_profile(const std::string& fname, const mf::t_GeomPo
 	
 	// grid is uniform, just use ThickCoef*Nnodes roundoff for raw_profile & dummy prof_derivs
 
+	// if ThickFixed is provided, extracted profile must have exact that thickness
+	// in this casekeep number of grid points the same: nnodes_out
+
+	bool break_at_fixed_thick = data_cfg.ThickFixed > 0.0;
+
 	int nnodes_out = nnodes * int(data_cfg.ThickCoef);
 
 	raw_profile.resize(nnodes_out);
@@ -186,14 +191,33 @@ void t_ProfMFLoc::_read_avf_profile(const std::string& fname, const mf::t_GeomPo
 		raw_profile[i].r = 1.0 / t;
 	}
 
-	double dy_out = (raw_profile[nnodes - 1].y - raw_profile[0].y) / (nnodes - 1);
+	if (!break_at_fixed_thick) {
 
-	// add outer records by duplication of last record
-	for (int i = nnodes; i < nnodes_out; i++) {
-		raw_profile[i] = raw_profile[nnodes - 1];
+		double dy_out = (raw_profile[nnodes - 1].y - raw_profile[0].y) / (nnodes - 1);
+		// add outer records by duplication of last record
+		for (int i = nnodes; i < nnodes_out; i++) {
+			raw_profile[i] = raw_profile[nnodes - 1];
 
-		raw_profile[i].y = raw_profile[i-1].y + dy_out;
+			raw_profile[i].y = raw_profile[i - 1].y + dy_out;
+		}
 	}
+	else {
+		if (data_cfg.ThickFixed <= raw_profile[nnodes - 1].y)
+			wxLogMessage(_T("Error:_read_avf_profile: ThickFixed is less or equal extracted profile, must be grater"));
+
+		// debug
+		wxLogMessage(_T("ProfNS: making profile from self sim with fixed thicknes=%lf"), data_cfg.ThickFixed);
+
+		double dy_out = (data_cfg.ThickFixed - raw_profile[nnodes - 1].y) / (nnodes_out - nnodes);
+
+		for (int i = nnodes; i < nnodes_out; i++) {
+			raw_profile[i] = raw_profile[nnodes - 1];
+
+			raw_profile[i].y = raw_profile[i - 1].y + dy_out;
+		}
+
+	}
+	
 
 	// ignore prof derivs for now
 }
