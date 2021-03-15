@@ -169,7 +169,7 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		loc_solver.calcScalarProd_H1_HW(dze_ddx, ksi, v1_a, v1_w);
 
 		// calc <H2*dze, ksi>
-		v2_a = 0.0;// loc_solver.calcScalarProd_H2(dze, ksi);
+		v2_a = loc_solver.calcScalarProd_H2(dze, ksi);
 
 		// calc <H1*dze, ksi>
 		loc_solver.calcScalarProd_H1_HW(dze, ksi, v3_a, v3_w);

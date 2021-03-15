@@ -154,10 +154,10 @@ namespace stab{
 			const t_WCharsLoc& w1, const t_WCharsLoc& w2,
 			std::vector<t_VecCmplx>* dns_vec_ptr=NULL) = 0;
 
-		virtual void calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj, 
+		virtual void calcScalarProd_H1_HW(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj, 
 			t_Complex& scal_prod_H1, t_Complex& scal_prod_HW) = 0;
 
-		virtual t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) = 0;
+		virtual t_Complex calcScalarProd_H2(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj) = 0;
 
 		virtual void normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs) = 0;
 

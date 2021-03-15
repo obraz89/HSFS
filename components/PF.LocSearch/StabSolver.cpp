@@ -1028,7 +1028,7 @@ t_Complex t_StabSolver::calcScalarProd_H1(
 // compute <H1*fun_direct, fun_conj>
 // H1 = -i*dH/da
 // NB:do not forget to set context of loc solver before
-void t_StabSolver::calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj, 
+void t_StabSolver::calcScalarProd_H1_HW(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj, 
 	t_Complex& scal_prod_H1, t_Complex& scal_prod_HW) {
 
 	int nnodes = _math_solver.getNNodes();
@@ -1068,7 +1068,7 @@ void t_StabSolver::calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std
 // Calculate <H2*fun_direct, fun_conj>
 // context must be set before
 /************************************************************************/
-t_Complex t_StabSolver::calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj) {
+t_Complex t_StabSolver::calcScalarProd_H2(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj) {
 
 	int nnodes = _math_solver.getNNodes();
 
@@ -1092,7 +1092,7 @@ t_Complex t_StabSolver::calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, s
 		for (int j = 0; j<STAB_MATRIX_DIM; j++)
 			for (int k = 0; k<STAB_MATRIX_DIM; k++)
 				// using plain product because sol_conj is already a conjugated vector of conjugate task (!)
-				fun[i] = fun[i] + _scal_prod_matrix_H1[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
+				fun[i] = fun[i] + _scal_prod_matrix_H2[k][j] * fun_direct[ind_r][k] * fun_conj[ind_r][j];
 
 
 	}

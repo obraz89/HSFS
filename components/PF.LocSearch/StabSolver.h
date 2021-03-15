@@ -163,10 +163,10 @@ public:
 		const t_WCharsLoc& wchars_A, const t_WCharsLoc& wchars_B,
 		std::vector<t_VecCmplx>* dns_vec_ptr = NULL);
 
-	void calcScalarProd_H1_HW(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj,
+	void calcScalarProd_H1_HW(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj,
 		t_Complex& scal_prod_H1, t_Complex& scal_prod_HW);
 
-	t_Complex calcScalarProd_H2(std::vector<t_VecCmplx>& fun_direct, std::vector<t_VecCmplx>& fun_conj);
+	t_Complex calcScalarProd_H2(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj);
 
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 
