@@ -388,7 +388,7 @@ void t_ProfileStab::dump(const std::string& fname) const {
 
 	const double rue_1 = 1.0 / (rec_out.r*rec_out.u);
 
-	fstr << _T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\tv\tdelta**\tdu_dy_rec_grad\tdt_dy_rec_grad\n");
+	fstr << _T("y\tu\tu'\tu''\tt\tt'\tt''\tr\tmu\tmu'\tmu''\tw\tw'\tw''\tv\tdelta**\tdu_dy_rec_grad\tdt_dy_rec_grad\tdu_dx\tdv_dy\n");
 
 	double dd;
 
@@ -423,7 +423,8 @@ void t_ProfileStab::dump(const std::string& fname) const {
 			rec.w << _T("\t") << rec.w1 << _T("\t") << rec.w2 << _T("\t") << rec.v << _T("\t") <<
 			mthick_v[i] << _T("\t") <<
 			// debug, to compare calculated du_dy and dT_dy with values extracted from mf domain
-			mf_rec_grad.ug[1] << _T("\t") << mf_rec_grad.tg[1] <<
+			mf_rec_grad.ug[1] << _T("\t") << mf_rec_grad.tg[1] << _T("\t") <<
+			mf_rec_grad.ug[0] << _T("\t") << mf_rec_grad.vg[1] <<
 			_T("\n");
 
 

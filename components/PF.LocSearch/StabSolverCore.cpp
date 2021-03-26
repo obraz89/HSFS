@@ -483,6 +483,14 @@ void t_StabSolver::_setScalProdMatrix_H1_HW(const double& a_y){
 // calculate H2 - matrix of non-parallel effects
 // H2*z = H2_h*z + H2_i*dz/dy
 // dz/dy = H0*z => H2 = H2_h + H2_i*H0
+
+// here we use notation of Fedorov, AIAA-2002-2846
+// x1,y1, z1 - global reference frame, nondim by Lref
+// x,y,z - local reference frame, nondim by Dels
+
+// H2*f gives vector in global reference frame;
+// to get matrix in local rf, result is multiplied by dx/dx1 = L/Dels;
+// in this case <H2*dze, ksi> gives addition in local reference frame
 void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGrad& rec_grad) {
 
 	_setStabMatrix3D(rec);
@@ -500,8 +508,10 @@ void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGr
 
 	double MG = (Gamma - 1.0)*Mach*Mach;
 
+	const double dx_dx1 = Params.L_ref / _profStab.scales().Dels;
+
 	double U = rec.u;
-	double V = rec.v;
+	double V0 = rec.v * dx_dx1;
 	double W = rec.w;
 
 	double T = rec.t;
@@ -511,22 +521,22 @@ void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGr
 	double Mu = rec.mu;
 	double Mu_inv = 1.0 / Mu;
 
-	double dU_dx = rec_grad.ug[0];
+	double dU_dx1 = rec_grad.ug[0] * dx_dx1;
 	double dU_dy = rec_grad.ug[1];
-	double dU_dz = rec_grad.ug[2];
+	double dU_dz1 = rec_grad.ug[2] * dx_dx1;
 
 	double dV_dy = rec_grad.vg[1];
 
-	double dP_dx = rec_grad.pg[0];
-	double dP_dz = rec_grad.pg[2];
+	double dP_dx1 = rec_grad.pg[0] * dx_dx1;
+	double dP_dz1 = rec_grad.pg[2] * dx_dx1;
 
-	double dT_dx = rec_grad.tg[0];
+	double dT_dx1 = rec_grad.tg[0] * dx_dx1;
 	double dT_dy = rec_grad.tg[1];
-	double dT_dz = rec_grad.tg[2];
+	double dT_dz1 = rec_grad.tg[2] * dx_dx1;
 
-	double dW_dx = rec_grad.wg[0];
+	double dW_dx1 = rec_grad.wg[0] * dx_dx1;
 	double dW_dy = rec_grad.wg[1];
-	double dW_dz = rec_grad.wg[2];
+	double dW_dz1 = rec_grad.wg[2] * dx_dx1;
 
 	t_SqMatCmplx& H2 = _scal_prod_matrix_H2;
 
@@ -537,68 +547,74 @@ void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGr
 	H2hom.setToZero();
 	H2inh.setToZero();
 
-	double xii = U*dT_dx + V*dT_dy + W*dT_dz;
+	double xii = U*dT_dx1 + V0*dT_dy + W*dT_dz1;
 
 	// second row of homogen & non-homogen parts
 	{
-		double psi = U*dU_dx + V*dU_dy + W*dU_dz;
+		double psi = U*dU_dx1 + V0*dU_dy + W*dU_dz1;
 
 		double rmt = R*Mu_inv*T_inv;
 
-		H2hom[0][1] = rmt*dU_dx;
+		H2hom[0][1] = rmt*dU_dx1;
 		H2hom[3][1] = rmt*M2*psi;
 		H2hom[4][1] = -1.0*rmt*T_inv*psi;
-		H2hom[6][1] = rmt*dU_dz;
+		H2hom[6][1] = rmt*dU_dz1;
 
-		H2inh[0][1] = rmt*V;
+		H2inh[0][1] = rmt*V0;
 	}
 
 	// third
 	{
-		double div = dU_dx + dV_dy + dW_dz;
+		double div = dU_dx1 + dV_dy + dW_dz1;
 
-		H2hom[0][2] = T_inv*dT_dx;
-		H2hom[3][2] = M2*(U*T_inv*dT_dx - div + V*T_inv*dT_dy + W*T_inv*dT_dz);
+		H2hom[0][2] = T_inv*dT_dx1;
+		H2hom[3][2] = M2*(U*T_inv*dT_dx1 - div + V0*T_inv*dT_dy + W*T_inv*dT_dz1);
 		H2hom[4][2] = T_inv2*(-2.0*xii + T*div);
-		H2hom[6][2] = T_inv*dT_dz;
+		H2hom[6][2] = T_inv*dT_dz1;
 
-		H2inh[3][2] = -1.0*V*M2;
-		H2inh[4][2] = T_inv*V;
+		H2inh[3][2] = -1.0*V0*M2;
+		H2inh[4][2] = T_inv*V0;
 	}
 
 	// fourth
 	H2hom[2][3] = -1.0*T_inv*dV_dy;
-	H2inh[2][3] = -1.0*T_inv*V;
+	H2inh[2][3] = -1.0*T_inv*V0;
 
 	// sixth
 	{
 		double rpm = R*Pr*Mu_inv;
 
-		H2hom[0][5] = -1.0*rpm*MG*(dP_dx - T_inv*dT_dx);
+		H2hom[0][5] = -1.0*rpm*MG*(dP_dx1 - T_inv*dT_dx1);
 		H2hom[3][5] = rpm*M2*T_inv*xii;
 		H2hom[4][5] = -1.0*rpm*T_inv2*xii;
-		H2hom[6][5] = -1.0*rpm*MG*(dP_dz - T_inv*dT_dz);
+		H2hom[6][5] = -1.0*rpm*MG*(dP_dz1 - T_inv*dT_dz1);
 
-		H2inh[3][5] = -1.0*rpm*MG*V;
-		H2inh[4][5] = rpm*T_inv*V;
+		H2inh[3][5] = -1.0*rpm*MG*V0;
+		H2inh[4][5] = rpm*T_inv*V0;
 	}
 	// 8
 	{
 		double rmt = R*Mu_inv*T_inv;
 
-		double eta = U*dW_dx + V*dW_dy + W*dW_dz;
+		double eta = U*dW_dx1 + V0*dW_dy + W*dW_dz1;
 
-		H2hom[0][7] = rmt*dW_dx;
+		H2hom[0][7] = rmt*dW_dx1;
 		H2hom[3][7] = rmt*M2*T_inv*eta;
 		H2hom[4][7] = -1.0*rmt*T_inv*eta;
-		H2hom[6][7] = rmt*dW_dz;
+		H2hom[6][7] = rmt*dW_dz1;
 
-		H2inh[6][7] = rmt*V;
+		H2inh[6][7] = rmt*V0;
 	}
-	// m3 = H2inv*H0
+	// m3 = H2inh*H0
 	matrix::base::mat_mul<t_Complex, t_Complex>(H2inh, _stab_matrix, _mat_tmp3);
 	// H2 = H2hom + m3
 	matrix::base::plus<t_Complex, t_Complex>(H2hom, _mat_tmp3, _scal_prod_matrix_H2);
+
+	_scal_prod_matrix_H2.mul_by_factor(1.0/dx_dx1);
+
+	// debug, using only homogen part
+	//_scal_prod_matrix_H2 = H2hom;
+
 }
 
 void t_StabSolver::setAsymptotics(t_MatCmplx& asym_vecs, t_CompVal* a_lambdas /*=NULL*/){
