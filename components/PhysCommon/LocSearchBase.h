@@ -160,6 +160,7 @@ namespace stab{
 		virtual t_Complex calcScalarProd_H2(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj) = 0;
 
 		virtual void normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs) = 0;
+		virtual void normalizeAmpFuncsByFixedVal(std::vector<t_VecCmplx>& amp_funcs, const t_Complex& val) = 0;
 
 	};
 	// y and amp_funcs are in the order from outer rec to the wall

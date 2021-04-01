@@ -41,20 +41,43 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 
 	prof_cfg.ThickFixed = y_thick;
 
-	// get amp funcs with fixed thickness of prof stab
-	get_amp_funcs(i - 1, loc_solver, fun_l, &prof_cfg);
-	get_amp_funcs(i + 1, loc_solver, fun_r, &prof_cfg);
-
-	loc_solver.normalizeAmpFuncsByPressureAtWall(fun_l);
-	loc_solver.normalizeAmpFuncsByPressureAtWall(fun_r);
+	// get p wall to non dim amp funcs in left and right points
+	get_amp_funcs(i, loc_solver, fun_l, &prof_cfg);
 
 	int nnodes_stab = fun_l.size();
+	t_Complex pwall_mid = fun_l[nnodes_stab - 1][3];
+
+	// debug
+	std::vector<double> yy_l(nnodes_stab);
+	std::vector<double> yy_r(nnodes_stab);
+
+	// get amp funcs with fixed thickness of prof stab
+	get_amp_funcs(i - 1, loc_solver, fun_l, &prof_cfg);
+	yy_l = loc_solver.get_y_distrib();
+	get_amp_funcs(i + 1, loc_solver, fun_r, &prof_cfg);
+	yy_r = loc_solver.get_y_distrib();
+	// normalize both amp funcs by the same value
+
+	loc_solver.normalizeAmpFuncsByFixedVal(fun_l, pwall_mid);
+	loc_solver.normalizeAmpFuncsByFixedVal(fun_r, pwall_mid);
 
 	const int stab_matrix_dim = 8;
 
 	for (int j = 0; j < nnodes_stab; j++) {
+		//if (yy_l[j] != yy_r[j]) { wxLogMessage(_T("Error:y_l=%lf, y_r=%lf"), yy_l[j], yy_r[j]); getchar(); }
 		for (int i = 0; i < stab_matrix_dim; i++)
 			amp_funcs_deriv[j][i] = c*(fun_r[j][i] - fun_l[j][i]);
+	}
+
+	static bool do_write_ddx = true;
+
+	if (pp.x() > 0.649 && do_write_ddx) {
+		do_write_ddx = false;
+
+		std::ofstream ofstr();
+		dumpEigenFuncs("output/dze_l.dat", nnodes_stab, yy_l, fun_l);
+		dumpEigenFuncs("output/dze_r.dat", nnodes_stab, yy_r, fun_r);
+		dumpEigenFuncs("output/ddze_dx.dat", nnodes_stab, yy_l, amp_funcs_deriv);
 	}
 	
 
@@ -168,8 +191,12 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		// calc <H1*dze_ddx, ksi>
 		loc_solver.calcScalarProd_H1_HW(dze_ddx, ksi, v1_a, v1_w);
 
+		//v1_a = 0.0;
+
 		// calc <H2*dze, ksi>
 		v2_a = loc_solver.calcScalarProd_H2(dze, ksi);
+
+		//v2_a = 0.0;
 
 		// calc <H1*dze, ksi>
 		loc_solver.calcScalarProd_H1_HW(dze, ksi, v3_a, v3_w);

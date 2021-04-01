@@ -156,6 +156,7 @@ public:
 	// testing
 	void getAmpFuncs(std::vector<t_VecCmplx>& amp_funcs);
 
+	void normalizeAmpFuncsByFixedVal(std::vector<t_VecCmplx>& amp_funcs, const t_Complex& val);
 	void normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs);
 	int getFuncIndInAmpFuncs(char func_name);
 	

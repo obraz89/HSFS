@@ -1187,14 +1187,22 @@ void t_StabSolver::calcNeutPoints(const mf::t_GeomPoint& xyz, const t_WCharsLoc&
 
 };
 
+void t_StabSolver::normalizeAmpFuncsByFixedVal(std::vector<t_VecCmplx>& amp_funcs, const t_Complex& val) {
+
+	int nnodes = amp_funcs.size();
+
+	for (int i = 0; i < nnodes; i++)
+		for (int j = 0; j < STAB_MATRIX_DIM; j++)
+			amp_funcs[i][j] /= val;
+
+};
+
 void t_StabSolver::normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& amp_funcs){
 
 	int nnodes = amp_funcs.size();
 
-	t_Complex pw = amp_funcs[nnodes - 1][3];
+	const t_Complex pwall = amp_funcs[nnodes - 1][3];
 
-	for (int i = 0; i < nnodes; i++)
-		for (int j = 0; j < STAB_MATRIX_DIM; j++)
-			amp_funcs[i][j] /= pw;
+	normalizeAmpFuncsByFixedVal(amp_funcs, pwall);
 
 }
