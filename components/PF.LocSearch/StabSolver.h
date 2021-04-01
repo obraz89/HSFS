@@ -169,6 +169,8 @@ public:
 
 	t_Complex calcScalarProd_H2(const std::vector<t_VecCmplx>& fun_direct, const std::vector<t_VecCmplx>& fun_conj);
 
+	void calcQmAmpFun(const std::vector<t_VecCmplx>& amp_funcs, std::vector<t_Complex>& QmAmpFun);
+
 	bool checkWCharsByGroupV(t_WCharsLoc& wchars);
 
 	const t_StabScales& get_stab_scales() const;

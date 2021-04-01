@@ -1206,3 +1206,31 @@ void t_StabSolver::normalizeAmpFuncsByPressureAtWall(std::vector<t_VecCmplx>& am
 	normalizeAmpFuncsByFixedVal(amp_funcs, pwall);
 
 }
+
+// calculate mass flux disturbance via amplitude funcs
+void t_StabSolver::calcQmAmpFun(const std::vector<t_VecCmplx>& amp_funcs, std::vector<t_Complex>& QmAmpFun) {
+
+	const int nnodes = getNNodes();
+
+	if (amp_funcs.size() != nnodes || QmAmpFun.size() != nnodes)
+		wxLogMessage(_T("Error:t_StabSolver::calcQmAmpFun: size mismatch"));
+
+	t_ProfRec rec;
+
+	int j_inv;
+
+	const mf::t_FldParams& Params = _rFldNS.get_mf_params();
+
+	const double gMaMa = Params.Gamma*Params.Mach*Params.Mach;
+
+	for (int j = 0; j < nnodes; j++) {
+
+		j_inv = nnodes - 1 - j;
+
+		rec = _profStab.get_rec(j_inv);
+
+		QmAmpFun[j] = rec.r*amp_funcs[j][0] + rec.u / rec.t*(gMaMa*amp_funcs[j][3] - rec.r*amp_funcs[j][4]);
+
+	}
+
+};

@@ -36,6 +36,16 @@ namespace pf{
 
 	};	// ~t_GeomLinePointer
 
+	struct t_QmData {
+		std::vector<t_Complex> qm_l;
+		std::vector<t_Complex> qm_m;
+		std::vector<t_Complex> qm_r;
+		t_Complex qm_max;
+		t_Complex dqm_dx;
+
+		void resize(const int nnodes_stab) { qm_l.resize(nnodes_stab); qm_m.resize(nnodes_stab), qm_r.resize(nnodes_stab); }
+	};
+
 	class  t_WavePackLine: public stab::t_WPTrackBase{
 	protected:
 
@@ -120,7 +130,7 @@ namespace pf{
 
 		// non-parallel additions to increment
 		void _calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& fun_l,
-			std::vector<t_VecCmplx>& fun_r, std::vector<t_VecCmplx>& amp_funcs_deriv);
+			std::vector<t_VecCmplx>& fun_m, std::vector<t_VecCmplx>& fun_r, std::vector<t_VecCmplx>& amp_funcs_deriv, t_QmData& qm_data);
 		void _calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver);
 
 	public:

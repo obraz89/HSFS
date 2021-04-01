@@ -13,7 +13,7 @@ using namespace stab;
 // for points in the stencil (x+dx and x-dx)
 // IMPORTANT: here x must be non-dim by stab scale
 void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, std::vector<t_VecCmplx>& fun_l,
-	std::vector<t_VecCmplx>& fun_r, std::vector<t_VecCmplx>& amp_funcs_deriv) {
+	std::vector<t_VecCmplx>& fun_m, std::vector<t_VecCmplx>& fun_r, std::vector<t_VecCmplx>& amp_funcs_deriv, t_QmData& QmData) {
 
 	// TODO: correct expressions for first and last points
 	// for now using second-order approx from second and last but one derivs
@@ -42,10 +42,23 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	prof_cfg.ThickFixed = y_thick;
 
 	// get p wall to non dim amp funcs in left and right points
-	get_amp_funcs(i, loc_solver, fun_l, &prof_cfg);
+	get_amp_funcs(i, loc_solver, fun_m, &prof_cfg);
 
-	int nnodes_stab = fun_l.size();
-	t_Complex pwall_mid = fun_l[nnodes_stab - 1][3];
+	int nnodes_stab = fun_m.size();
+	t_Complex pwall_mid = fun_m[nnodes_stab - 1][3];
+	loc_solver.normalizeAmpFuncsByFixedVal(fun_m, pwall_mid);
+
+	loc_solver.calcQmAmpFun(fun_m, QmData.qm_m);
+
+	// find index where qm=max
+	int j_qm_max = 0;
+	QmData.qm_max = 0.0;
+	for (int j = 0; j < QmData.qm_m.size(); j++) {
+		if (smat::norm(QmData.qm_m[j]) > smat::norm(QmData.qm_max)) {
+			QmData.qm_max = QmData.qm_m[j];
+			j_qm_max = j;
+		}
+	}
 
 	// debug
 	std::vector<double> yy_l(nnodes_stab);
@@ -54,12 +67,21 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	// get amp funcs with fixed thickness of prof stab
 	get_amp_funcs(i - 1, loc_solver, fun_l, &prof_cfg);
 	yy_l = loc_solver.get_y_distrib();
+	loc_solver.normalizeAmpFuncsByFixedVal(fun_l, pwall_mid);
+	loc_solver.calcQmAmpFun(fun_l, QmData.qm_l);
+
+
 	get_amp_funcs(i + 1, loc_solver, fun_r, &prof_cfg);
 	yy_r = loc_solver.get_y_distrib();
-	// normalize both amp funcs by the same value
-
-	loc_solver.normalizeAmpFuncsByFixedVal(fun_l, pwall_mid);
 	loc_solver.normalizeAmpFuncsByFixedVal(fun_r, pwall_mid);
+	loc_solver.calcQmAmpFun(fun_r, QmData.qm_r);
+
+	// calculate qm deriv at point where qm=max 
+	{
+
+		QmData.dqm_dx = c*(QmData.qm_r[j_qm_max] - QmData.qm_l[j_qm_max]);
+
+	}
 
 	const int stab_matrix_dim = 8;
 
@@ -71,13 +93,17 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 
 	static bool do_write_ddx = true;
 
-	if (pp.x() > 0.649 && do_write_ddx) {
+	if (pp.x() > 0.44 && do_write_ddx) {
 		do_write_ddx = false;
 
-		std::ofstream ofstr();
 		dumpEigenFuncs("output/dze_l.dat", nnodes_stab, yy_l, fun_l);
 		dumpEigenFuncs("output/dze_r.dat", nnodes_stab, yy_r, fun_r);
 		dumpEigenFuncs("output/ddze_dx.dat", nnodes_stab, yy_l, amp_funcs_deriv);
+
+		// dump qm_mid distribution (from wall to outer rec)
+		std::ofstream ofstr("output/dze_qm.dat");
+		for (int j = 0; j < QmData.qm_m.size(); j++) 
+			ofstr << yy_l[QmData.qm_m.size() - 1 - j] << "\t" << smat::norm(QmData.qm_m[QmData.qm_m.size() - 1 - j]) << "\n";
 	}
 	
 
@@ -95,12 +121,16 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 	std::vector<t_VecCmplx> fun_l(loc_solver.getNNodes(), t_VecCmplx(8));
+	std::vector<t_VecCmplx> fun_m(loc_solver.getNNodes(), t_VecCmplx(8));
 	std::vector<t_VecCmplx> fun_r(loc_solver.getNNodes(), t_VecCmplx(8));
 	std::vector<t_VecCmplx> dze_ddx(loc_solver.getNNodes(), t_VecCmplx(8));
 	// direct amplitude func
 	std::vector<t_VecCmplx> dze(loc_solver.getNNodes(), t_VecCmplx(8));
 	// conjugate amplitude func 
 	std::vector<t_VecCmplx> ksi(loc_solver.getNNodes(), t_VecCmplx(8));
+
+	t_QmData qm_data;
+	qm_data.resize(loc_solver.getNNodes());
 
 	t_GeomPoint xyz;
 
@@ -178,7 +208,7 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		loc_solver.normalizeAmpFuncsByPressureAtWall(dze);
 
 		// get deriv of amp_fun along x
-		_calc_amp_fun_deriv_dx(i, loc_solver, fun_l, fun_r, dze_ddx);
+		_calc_amp_fun_deriv_dx(i, loc_solver, fun_l, fun_m, fun_r, dze_ddx, qm_data);
 
 		// restore context at this point after d_dx computations
 		loc_solver.setContext(xyz);
@@ -207,7 +237,9 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		W = -(v1_a + v2_a) / v3_a;
 
-		_line[i].da_nonpar = -1.0*E*W;
+		t_Complex W_Qm = 1.0 / qm_data.qm_max*qm_data.dqm_dx;
+
+		_line[i].da_nonpar = -1.0*E*(W + W_Qm);
 
 		// debug 
 		wxLogMessage(_T("da_nonpar = (%lf, %lf)"), 
