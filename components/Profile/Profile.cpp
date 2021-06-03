@@ -47,7 +47,10 @@ _nnodes(a_nnodes){
 
 	_profiles.push_back(&_p);
 	_profiles.push_back(&_r);
+
 	_profiles.push_back(&_v);
+	_profiles.push_back(&_v1);
+	_profiles.push_back(&_v2);
 
 	this->_resize(a_nnodes);
 	_init_extractor();
@@ -415,6 +418,8 @@ void t_ProfMF::_calc_derivs(){
 	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_w[0], nnodes, &_w1[0], &_w2[0]);
 	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_t[0], nnodes, &_t1[0], &_t2[0]);
 	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_mu[0], nnodes, &_mu1[0], &_mu2[0]);
+
+	smat::interpolate_profile_sm_deriv_cubic(&_y[0], &_v[0], nnodes, &_v1[0], &_v2[0]);
 }
 
 void t_ProfMF::dump(const std::string& fname) const {

@@ -30,11 +30,12 @@ public:
 
 	};
 protected:
-	t_DblVec _y, _u, _u1, _u2, 
+	t_DblVec _y, _u, _u1, _u2,  
 				 _w, _w1, _w2, 
 				 _t, _t1, _t2, 
 				 _mu, _mu1, _mu2, 
-				 _p, _r, _v;
+				 _p, _r,
+		         _v, _v1, _v2;
 
 	std::vector<t_DblVec*> _profiles;
 

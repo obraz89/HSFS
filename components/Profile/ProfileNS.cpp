@@ -35,16 +35,19 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 	r_xyz_base.set(raw_profile[0]);
 	_xyz = r_xyz_base;
 
-	t_SqMat3Dbl jac = _rDomain.calc_jac_to_loc_rf(r_xyz_base);
-	t_SqMat3Dbl jac_inv = jac.inverse();
+	t_SqMat3Dbl jac, jac_inv;
+	if (!init_cfg.LoadFromAVFProfile) {
+		jac = _rDomain.calc_jac_to_loc_rf(r_xyz_base);
+		jac_inv = jac.inverse();
+	}
+	else {
+		jac.setToUnity();
+		jac_inv.setToUnity();
+	}
 
 	const mf::t_FldParams& Params = _rDomain.get_mf_params();
 
-	t_SqMat3Dbl jac_t = jac; jac_t.transpose();
-	t_SqMat3Dbl jac_inv_t = jac_inv; jac_inv_t.transpose();
-	t_SqMat3Dbl du_dx, du1_dk, mat_tmp;
-
-	for (int j = 0; j<_nnodes; j++) {
+	for (int j = 0; j < _nnodes; j++) {
 
 		const mf::t_Rec& mf_rec = raw_profile[j];
 
@@ -75,39 +78,79 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 		double gMaMa = Params.Gamma*pow(Params.Mach, 2);
 		_r[j] = mf_rec.p / mf_rec.t*gMaMa;
 		_mu[j] = _rDomain.calc_viscosity(_t[j]);
-
-		// step 2 - rotate mf rec derivatives (extracted from mf domain)
-		// from global to local reference frame
-
-		// velocity component derivatives: 
-		// du1_dk - matrix of new velo derivs
-		// du1_dk = Jac_inv * du_dx * Jac
-		// it is convenient to transpose:
-		// du1_dk_T = Jac_T * (du_dx_T) * Jac_inv_T
-		// then columns of du1_dk_T are result vectors
-		du_dx.set_col(0, prof_derivs[j].ug);
-		du_dx.set_col(1, prof_derivs[j].vg);
-		du_dx.set_col(2, prof_derivs[j].wg);
-
-		matrix::base::mat_mul<double, double>(jac_t, du_dx, mat_tmp);
-		matrix::base::mat_mul<double, double>(mat_tmp, jac_inv_t, du1_dk);
-
-		// the result is du1_dk:
-		// (du1_dksi, du2_dksi, du3_dksi)
-		// (du1_deta, du2_deta, du3_deta)
-		// (du1_dzet, du2_dzet, du3_dzet)
-		// (u1, u2, u3) - components of velocity vector in local reference frame
-		du1_dk.col_to_vec(0, _prof_derivs[j].ug);
-		du1_dk.col_to_vec(1, _prof_derivs[j].vg);
-		du1_dk.col_to_vec(2, _prof_derivs[j].wg);
-
-		// rotate scalars - pressure and temperature
-		matrix::base::mat_mul<double, double>(jac_t, prof_derivs[j].pg, _prof_derivs[j].pg);
-		matrix::base::mat_mul<double, double>(jac_t, prof_derivs[j].tg, _prof_derivs[j].tg);
-
 	}
 
+	// calculate normal derivs
 	_calc_derivs();
+
+	// calculate d/dx and d/dz derivs for the mean flow record
+	// if using cfd field, compute with finite differences over flowfield
+	// if loading from selfsimilar (avf) file, compute with df/dx = -y/(2x)*df/dy 
+	if (!init_cfg.LoadFromAVFProfile) {
+
+		t_SqMat3Dbl jac_t = jac; jac_t.transpose();
+		t_SqMat3Dbl jac_inv_t = jac_inv; jac_inv_t.transpose();
+		t_SqMat3Dbl du_dx, du1_dk, mat_tmp;
+
+		for (int j = 0; j < _nnodes; j++) {
+
+			// step 2 - rotate mf rec derivatives (extracted from mf domain)
+			// from global to local reference frame
+
+			// velocity component derivatives: 
+			// du1_dk - matrix of new velo derivs
+			// du1_dk = Jac_inv * du_dx * Jac
+			// it is convenient to transpose:
+			// du1_dk_T = Jac_T * (du_dx_T) * Jac_inv_T
+			// then columns of du1_dk_T are result vectors
+			du_dx.set_col(0, prof_derivs[j].ug);
+			du_dx.set_col(1, prof_derivs[j].vg);
+			du_dx.set_col(2, prof_derivs[j].wg);
+
+			matrix::base::mat_mul<double, double>(jac_t, du_dx, mat_tmp);
+			matrix::base::mat_mul<double, double>(mat_tmp, jac_inv_t, du1_dk);
+
+			// the result is du1_dk:
+			// (du1_dksi, du2_dksi, du3_dksi)
+			// (du1_deta, du2_deta, du3_deta)
+			// (du1_dzet, du2_dzet, du3_dzet)
+			// (u1, u2, u3) - components of velocity vector in local reference frame
+			du1_dk.col_to_vec(0, _prof_derivs[j].ug);
+			du1_dk.col_to_vec(1, _prof_derivs[j].vg);
+			du1_dk.col_to_vec(2, _prof_derivs[j].wg);
+
+			// rotate scalars - pressure and temperature
+			matrix::base::mat_mul<double, double>(jac_t, prof_derivs[j].pg, _prof_derivs[j].pg);
+			matrix::base::mat_mul<double, double>(jac_t, prof_derivs[j].tg, _prof_derivs[j].tg);
+
+		}
+	}
+	else {
+
+		const double x = xyz.x();
+
+		for (int j = 0; j < _nnodes; j++) {
+
+			double c = -0.5*_y[j] / x;
+
+			//_prof_derivs[j].ug.set(c*_u1[j], _u1[j], 0.0);
+			_prof_derivs[j].ug.set(0.0, 0.0, 0.0);
+
+			//_prof_derivs[j].vg.set(c*_v1[j], _v1[j], 0.0);
+			_prof_derivs[j].vg.set(0.0, 0.0, 0.0);
+
+			//_prof_derivs[j].wg.set(c*_w1[j], _w1[j], 0.0);
+			_prof_derivs[j].wg.set(0.0, 0.0, 0.0);
+
+			_prof_derivs[j].pg.set(0.0, 0.0, 0.0);
+
+			//_prof_derivs[j].tg.set(c*_t1[j], _t1[j], 0.0);
+			_prof_derivs[j].tg.set(0.0, 0.0, 0.0);
+
+
+		}
+
+	}
 
 }
 
