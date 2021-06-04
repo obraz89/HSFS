@@ -156,6 +156,8 @@ namespace stab{
 		virtual void pack_to_arr(t_WPLine2H5Arr& arr) const=0;
 		virtual void unpack_from_arr(const t_WPLine2H5Arr& arr) = 0;
 
+		virtual bool is_update_dels_at_rstart() const = 0;
+
 		virtual ~t_WPTrackBase();
 	};
 

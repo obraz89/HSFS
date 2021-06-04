@@ -180,6 +180,8 @@ namespace pf{
 
 		void pack_to_arr(stab::t_WPLine2H5Arr& arr) const;
 		void unpack_from_arr(const stab::t_WPLine2H5Arr& arr);
+
+		bool is_update_dels_at_rstart() const { return _params.UpdateDelsAtRStart; };
 	};
 
 

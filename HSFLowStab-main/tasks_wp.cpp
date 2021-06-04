@@ -179,7 +179,7 @@ void task::retrace_MPI(stab::t_WPRetraceMode a_mode_retrace) {
 
 }
 
-bool search_init_wave(const int wpid, const int a_ppoint_id, const bool a_do_simple_retrace,
+bool search_init_wave(const int wpid, const int a_ppoint_id, const bool a_do_simple_retrace, const bool is_update_dels,
 	const stab::t_WPRetraceMode a_mode_retrace, t_WCharsLoc& a_wchars, mf::t_GeomPoint& a_start_xyz) {
 
 	bool gs_success = false;
@@ -226,14 +226,16 @@ bool search_init_wave(const int wpid, const int a_ppoint_id, const bool a_do_sim
 			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(npp).xyz;
 
 			// TODO: write fixed dels, multiproc variant
-			char ftmp_dels_fixed[64]; int mpi_rank;
-			MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
+			if (is_update_dels) {
+				char ftmp_dels_fixed[64]; int mpi_rank;
+				MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-			sprintf(ftmp_dels_fixed, "tmp/Dels_fixed_val_%d.dat", mpi_rank);
-			std::ofstream ofstr(ftmp_dels_fixed);
-			mf::t_ProfScales prof_scales = g_pMFDomain->calc_bl_thick_scales(test_xyz);
-			ofstr << prof_scales.d1*g_pMFDomain->get_mf_params().L_ref;
-			ofstr.close();
+				sprintf(ftmp_dels_fixed, "tmp/Dels_fixed_val_%d.dat", mpi_rank);
+				std::ofstream ofstr(ftmp_dels_fixed);
+				mf::t_ProfScales prof_scales = g_pMFDomain->calc_bl_thick_scales(test_xyz);
+				ofstr << prof_scales.d1*g_pMFDomain->get_mf_params().L_ref;
+				ofstr.close();
+			}
 
 			g_pGSSolverSpat->setContext(test_xyz);
 
@@ -323,7 +325,9 @@ void retrace_single_WP(const int wpid, const int ppid, const bool a_do_simple_re
 		mf::t_GeomPoint start_xyz;
 			try {
 
-				bool gs_ok = search_init_wave(wpid, ppid, a_do_simple_retrace, a_mode_retrace, wchars, start_xyz);
+				bool is_update_dels = wp_line->is_update_dels_at_rstart();
+
+				bool gs_ok = search_init_wave(wpid, ppid, a_do_simple_retrace, is_update_dels, a_mode_retrace, wchars, start_xyz);
 
 				// Init wave found, retrace WP
 				if (gs_ok) {
