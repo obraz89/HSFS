@@ -40,8 +40,8 @@ namespace pf{
 		std::vector<t_Complex> qm_l;
 		std::vector<t_Complex> qm_m;
 		std::vector<t_Complex> qm_r;
-		t_Complex qm_max;
-		t_Complex dqm_dx;
+		double qmabs_max;
+		double dqmabs_dx;
 
 		void resize(const int nnodes_stab) { qm_l.resize(nnodes_stab); qm_m.resize(nnodes_stab), qm_r.resize(nnodes_stab); }
 	};

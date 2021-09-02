@@ -495,8 +495,6 @@ void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGr
 
 	_setStabMatrix3D(rec);
 
-	const double R = _profStab.scales().ReStab;
-
 	const mf::t_FldParams& Params = _rFldNS.get_mf_params();
 
 	const double Gamma = Params.Gamma;
@@ -508,10 +506,12 @@ void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGr
 
 	double MG = (Gamma - 1.0)*Mach*Mach;
 
+	const double R = _profStab.scales().ReStab;
+
 	const double dx_dx1 = Params.L_ref / _profStab.scales().Dels;
 
 	double U = rec.u;
-	double V0 = rec.v * dx_dx1;
+	double V0 = rec.v *dx_dx1;
 	double W = rec.w;
 
 	double T = rec.t;
@@ -610,6 +610,7 @@ void t_StabSolver::_setScalProdMatrix_H2(const t_ProfRec& rec, const mf::t_RecGr
 	// H2 = H2hom + m3
 	matrix::base::plus<t_Complex, t_Complex>(H2hom, _mat_tmp3, _scal_prod_matrix_H2);
 
+	// computed matrix is for x1 reference frame, return to local (x) reference
 	_scal_prod_matrix_H2.mul_by_factor(1.0/dx_dx1);
 
 	// debug, using only homogen part

@@ -133,19 +133,21 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 
 			double c = -0.5*_y[j] / x;
 
-			//_prof_derivs[j].ug.set(c*_u1[j], _u1[j], 0.0);
-			_prof_derivs[j].ug.set(0.0, 0.0, 0.0);
+			// tmp, make v0 zero
 
-			//_prof_derivs[j].vg.set(c*_v1[j], _v1[j], 0.0);
-			_prof_derivs[j].vg.set(0.0, 0.0, 0.0);
+			_prof_derivs[j].ug.set(c*_u1[j], _u1[j], 0.0);
+			//_prof_derivs[j].ug.set(0.0, 0.0, 0.0);
 
-			//_prof_derivs[j].wg.set(c*_w1[j], _w1[j], 0.0);
-			_prof_derivs[j].wg.set(0.0, 0.0, 0.0);
+			_prof_derivs[j].vg.set(c*_v1[j], _v1[j], 0.0);
+			//_prof_derivs[j].vg.set(0.0, 0.0, 0.0);
+
+			_prof_derivs[j].wg.set(c*_w1[j], _w1[j], 0.0);
+			//_prof_derivs[j].wg.set(0.0, 0.0, 0.0);
 
 			_prof_derivs[j].pg.set(0.0, 0.0, 0.0);
 
-			//_prof_derivs[j].tg.set(c*_t1[j], _t1[j], 0.0);
-			_prof_derivs[j].tg.set(0.0, 0.0, 0.0);
+			_prof_derivs[j].tg.set(c*_t1[j], _t1[j], 0.0);
+			//_prof_derivs[j].tg.set(0.0, 0.0, 0.0);
 
 
 		}
@@ -175,6 +177,12 @@ void t_ProfMFLoc::_read_avf_profile(const std::string& fname, const mf::t_GeomPo
 	const double pinf = _rDomain.calc_p_freestream();
 
 	std::ifstream ifstr(fname.c_str());
+	
+	if (ifstr.fail()) {
+		std::wstring wstr(fname.begin(), fname.end());
+		ssuGENTHROW(_T("failed to open file %s with self-similar profiles!"), wstr.c_str());
+	}
+
 	std::stringstream istr;
 
 	int nnodes = 0;

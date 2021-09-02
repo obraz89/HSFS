@@ -18,6 +18,8 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	// TODO: correct expressions for first and last points
 	// for now using second-order approx from second and last but one derivs
 
+	if (_line.size() <= 1) wxLogMessage(_T("Error: can't calculate amp fun derivs with only one point in wpline!"));
+
 	if (i == 0) i = 1;
 	if (i == _line.size() - 1) i = _line.size() - 2;
 
@@ -33,6 +35,7 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	const double c = 1.0 / dx;
 
 	// set context to get thickness to be used as thick for +- calcs
+	wxLogMessage(_T("PP:x=%lf, y=%lf,z=%lf"), pp.x(), pp.y(), pp.z());
 	loc_solver.setContext(pp);
 
 	double y_thick = loc_solver.getThickMF();
@@ -52,13 +55,16 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 
 	// find index where qm=max
 	int j_qm_max = 0;
-	QmData.qm_max = 0.0;
+	QmData.qmabs_max = 0.0;
 	for (int j = 0; j < QmData.qm_m.size(); j++) {
-		if (smat::norm(QmData.qm_m[j]) > smat::norm(QmData.qm_max)) {
-			QmData.qm_max = QmData.qm_m[j];
+		if (smat::norm(QmData.qm_m[j]) > QmData.qmabs_max) {
+			QmData.qmabs_max = smat::norm(QmData.qm_m[j]);
 			j_qm_max = j;
 		}
 	}
+
+	// debug
+	wxLogMessage(_T("J where Qm is max:%d"), j_qm_max);
 
 	// debug
 	std::vector<double> yy_l(nnodes_stab);
@@ -76,10 +82,19 @@ void t_WavePackLine::_calc_amp_fun_deriv_dx(int i, stab::t_LSBase& loc_solver, s
 	loc_solver.normalizeAmpFuncsByFixedVal(fun_r, pwall_mid);
 	loc_solver.calcQmAmpFun(fun_r, QmData.qm_r);
 
+	// debug
+	if (i == 158) {
+		std::ofstream ofstr("output/qm_ddx.dat");
+		for (int j = 0; j < nnodes_stab; j++) {
+			double dqmabs_dx = c*(smat::norm(QmData.qm_r[j]) - smat::norm(QmData.qm_l[j]));
+			ofstr << yy_l[j] << "\t" << dqmabs_dx << "\n";
+		}
+	}
+
 	// calculate qm deriv at point where qm=max 
 	{
 
-		QmData.dqm_dx = c*(QmData.qm_r[j_qm_max] - QmData.qm_l[j_qm_max]);
+		QmData.dqmabs_dx = c*(smat::norm(QmData.qm_r[j_qm_max]) - smat::norm(QmData.qm_l[j_qm_max]));
 
 	}
 
@@ -237,9 +252,36 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		W = -(v1_a + v2_a) / v3_a;
 
-		t_Complex W_Qm = 1.0 / qm_data.qm_max*qm_data.dqm_dx;
+		wxLogMessage(_T("Uniform non par addition W=%lf"), W.real());
 
-		_line[i].da_nonpar = -1.0*E*(W + W_Qm);
+		double Da_Qm = 1.0 / qm_data.qmabs_max*qm_data.dqmabs_dx;
+
+		wxLogMessage(_T("Da_Qm=%lf"), Da_Qm);
+
+		// dump qm at station x=0.926 <=> i=158
+		if (i == 158) {
+
+			const std::vector<double>& y_vec = loc_solver.get_y_distrib();
+			// debug, dump qm
+			std::ofstream ofstr("output/qm.dat");
+			for (int j = 0; j < qm_data.qm_m.size(); j++) {
+
+				ofstr << y_vec[j] << "\t" << smat::norm(qm_data.qm_m[j]) << "\n";
+			}
+
+		}
+
+		// if true, calculate sigma addition at point where mass flux of disturbance is max (mass flux disturbance)
+		// otherwise calculate addition at wall (pressure disturbance)
+		// TODO: make parameter
+		bool is_non_par_addition_at_Qm = true;
+
+		if (is_non_par_addition_at_Qm) {
+			_line[i].da_nonpar = -1.0*E*(W + Da_Qm);
+		}
+		else {
+			_line[i].da_nonpar = -1.0*E*W;
+		}
 
 		// debug 
 		wxLogMessage(_T("da_nonpar = (%lf, %lf)"), 
@@ -247,8 +289,8 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		da_ratio = _line[i].da_nonpar / wchars.a;
 
-		wxLogMessage(_T("da_ratio = da/a = (%lf, %lf)"), 
-			da_ratio.real(), da_ratio.imag());
+		wxLogMessage(_T("Sigma addition (nondim local):%lf"), -1.0*_line[i].da_nonpar.imag());
+		getchar();
 
 		// modify wave chars glob and DO NOT modify wchars loc!
 		t_WCharsLoc wchars_new;

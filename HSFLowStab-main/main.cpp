@@ -165,7 +165,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	catch(t_GenException e){
-		wxLogError(e.what());
+		wxLogMessage(e.what());
 	}
 
 	catch (...) {
