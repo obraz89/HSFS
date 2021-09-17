@@ -7,6 +7,8 @@ bin_*/
 bin-*/
 lib/*
 lib_vc14/*
+#configures
+tools/**/*.ini
 # compiler generated & precomp
 *_mod.f90
 *.pchi
