@@ -46,6 +46,10 @@ namespace pf{
 
 		bool CalcNonParallelEffects;
 
+		// if true, calculate sigma addition at point where mass flux of disturbance is max (mass flux disturbance)
+		// otherwise calculate addition at wall (pressure disturbance)
+		bool CalcNonParEffectsAtQmax;
+
 		// empiric constants, steps to vary nondim w and beta in
 		// dispersion calculations
 		double dw_disp, db_disp;

@@ -271,12 +271,7 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		}
 
-		// if true, calculate sigma addition at point where mass flux of disturbance is max (mass flux disturbance)
-		// otherwise calculate addition at wall (pressure disturbance)
-		// TODO: make parameter
-		bool is_non_par_addition_at_Qm = true;
-
-		if (is_non_par_addition_at_Qm) {
+		if (_params.CalcNonParEffectsAtQmax) {
 			_line[i].da_nonpar = -1.0*E*(W + Da_Qm);
 		}
 		else {
@@ -290,6 +285,7 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		da_ratio = _line[i].da_nonpar / wchars.a;
 
 		wxLogMessage(_T("Sigma addition (nondim local):%lf"), -1.0*_line[i].da_nonpar.imag());
+		wxLogMessage(_T("Debug : current x=%lf"), xyz.x());
 		getchar();
 
 		// modify wave chars glob and DO NOT modify wchars loc!

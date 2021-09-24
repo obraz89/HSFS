@@ -80,6 +80,8 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 	g.add("CalcNonParallelEffects", 0, _T("Calculate addition to increment due to mf non-parallel effects"));
 
+	g.add("CalcNonParEffectsAtQmax", 0, _T("Calculate non par additions at point where disturbance mass flux is max, otherwise at wall"));
+
 }
 
 void pf::wpline_write_wp_as_fld_settings(hsstab::TPluginParamsGroup& g) {
@@ -132,6 +134,8 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	WriteDisturbanceField = g.get_int_param("WriteDisturbanceField");
 
 	CalcNonParallelEffects = g.get_int_param("CalcNonParallelEffects");
+
+	CalcNonParEffectsAtQmax = g.get_int_param("CalcNonParEffectsAtQmax");
 
 	dw_disp = g.get_real_param("DwDisp");
 
