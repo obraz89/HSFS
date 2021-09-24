@@ -27,6 +27,9 @@ namespace task{
 		// Test: do global search and find max with local search
 		SearchMaxInstabLoc,
 
+		// Search wchars (a_end, b_end, w_end) from (a_start, b_start, w_start)
+		SearchWCharsLoc, 
+
 		// get amplification rates over wave paths with various closures
 		Retrace, 
 

@@ -163,6 +163,10 @@ void task::search_max_instab_fixed_point_spat(int pid, t_GSWaveInfo& winfo){
 
 };
 
+void task::search_wchars_loc() {
+	wxLogMessage(_T("Implement me!"));
+}
+
 void write_wave_to_db(const t_GSWaveInfo& info){
 
 	char fname[33];

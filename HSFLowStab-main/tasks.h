@@ -27,6 +27,8 @@ namespace task{
 
 	void search_max_instab_fixed_point_time(int pid, t_GSWaveInfo& winfo);
 
+	void search_wchars_loc();
+
 	void analyze_wchars(const std::string& fname);
 
 	void retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace);
