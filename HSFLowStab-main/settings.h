@@ -28,7 +28,8 @@ namespace task{
 		SearchMaxInstabLoc,
 
 		// Search wchars (a_end, b_end, w_end) from (a_start, b_start, w_start)
-		SearchWCharsLoc, 
+		// keep br/ar fixed
+		SearchWCharsLocWVecFix, 
 
 		// get amplification rates over wave paths with various closures
 		Retrace, 

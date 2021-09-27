@@ -129,6 +129,10 @@ public:
 
 	bool searchWave(t_WCharsLoc&, stab::t_LSCond cond, stab::t_TaskTreat task_mode);
 
+	bool searchWaveDestSpat(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest);
+
+	bool searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest);
+
 	std::vector<t_WCharsLoc> filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond);
 	std::vector<t_WCharsLoc> filter_gs_waves_time(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond);
 

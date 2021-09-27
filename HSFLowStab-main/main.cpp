@@ -101,8 +101,8 @@ int main(int argc, char* argv[]){
 			// using fixed debug value of pid
 			task::do_global_search_find_max(0);
 			break;
-		case task::TTaskType::SearchWCharsLoc:
-			task::search_wchars_loc();
+		case task::TTaskType::SearchWCharsLocWVecFix:
+			task::search_wchars_loc_wvec_fix();
 			break;
 		case task::TTaskType::Retrace:
 			switch (g_taskParams.spattime){

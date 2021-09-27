@@ -671,6 +671,70 @@ bool t_StabSolver::searchWave
 
 };
 
+/************************************************************************/
+// search for a wave chars, moving from wchars_start towards wchars_dest
+// wchars_start is the exact mode (a1, b1, w1)
+// wchars_end is (a2, b2, w2), b2 and w2 are input values (fixed), and a2 is to be found
+// trying to move in the plane (b, w) with small step and keep local search converging
+// along path (b1, w1) => (b2, w2)
+/************************************************************************/
+
+bool t_StabSolver::searchWaveDestSpat(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) {
+
+	wxLogMessage(_T("Implement me"));
+
+	return true;
+
+};
+
+/************************************************************************/
+// search for a wave chars, moving from wchars_start towards wchars_dest
+// wchars_start is the exact mode (a1, b1, w1)
+// wchars_end is (a2, b2, w2), b2 and a2 are to be found
+// move in the plane (b, w) with small step and keep local search converging
+// keep the ratio br/ar fixed at every step, b2/a2r = b1/a1r
+/************************************************************************/
+bool t_StabSolver::searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) {
+
+	// TODO: make parameter to control number of steps
+	int NSteps = 100;
+
+	stab::t_LSCond cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
+	stab::t_TaskTreat treat(stab::t_TaskTreat::SPAT);
+
+	double dw = (wchars_dest.w.real() - wchars_start.w.real())/double(NSteps);
+
+	t_WCharsLoc wch = wchars_start;
+
+	searchWave(wch, cond, treat);
+	calcGroupVelocity(wch);
+
+	wxLogMessage(_T("Start wave:%s"), wch.to_wstr().c_str());
+
+	const double bar = wch.b.real() / wch.a.real();
+	double da;
+
+	for (int i = 0; i < NSteps; i++) {
+
+		wch.w += dw;
+
+		da = dw / (wch.vga.real() + bar*wch.vgb.real());
+		wch.a += da;
+		wch.b = bar*wch.a.real();
+
+		searchWave(wch, cond, treat);
+		calcGroupVelocity(wch);
+
+		wxLogMessage(_T("[i=%d] Cur wave:%s"),i, wch.to_wstr().c_str());
+	}
+
+	wxLogMessage(_T("freq residual: %lf"), wchars_dest.w.real() - wch.w.real());
+
+	wchars_dest = wch;
+
+	return true;
+};
+
 void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode){
 
 

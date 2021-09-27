@@ -27,7 +27,7 @@ namespace task{
 
 	void search_max_instab_fixed_point_time(int pid, t_GSWaveInfo& winfo);
 
-	void search_wchars_loc();
+	void search_wchars_loc_wvec_fix();
 
 	void analyze_wchars(const std::string& fname);
 
