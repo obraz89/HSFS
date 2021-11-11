@@ -35,6 +35,7 @@ namespace mf{
 		const mf::t_FldParams& get_mf_params() const;
 
 		const mf::t_CGNS3DParams& get_params() const;
+		const mf::t_DomainCGNSParams& get_cgns_params() const;
 
 		virtual mf::t_Rec interpolate_to_point(const t_GeomPoint& point) const;
 		// TODO: implement for optimization

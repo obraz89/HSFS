@@ -19,7 +19,26 @@ using namespace mf::cg;
   #define CG_MY_Vertex Vertex
 #endif
 
+#define OPT_FACE_POS_XMIN _T("Xmin")
+#define OPT_FACE_POS_XMAX _T("Xmax")
+#define OPT_FACE_POS_YMIN _T("Ymin")
+#define OPT_FACE_POS_YMAX _T("Ymax")
+#define OPT_FACE_POS_ZMIN _T("Zmin")
+#define OPT_FACE_POS_ZMAX _T("Zmax")
+
 static const char* g_cgCoordNames[] = { "CoordinateX", "CoordinateY", "CoordinateZ" };
+
+mf::t_DomainCGNSParams::t_DomainCGNSParams() :t_FldParams() {
+
+	FACE_POS_StART_STR.clear();
+
+	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_XMIN, mf::cg::TZoneFacePos::faceXmin));
+	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_XMAX, mf::cg::TZoneFacePos::faceXmax));
+	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_YMIN, mf::cg::TZoneFacePos::faceYmin));
+	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_YMAX, mf::cg::TZoneFacePos::faceYmax));
+	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_ZMIN, mf::cg::TZoneFacePos::faceZmin));
+	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_ZMAX, mf::cg::TZoneFacePos::faceZmax));
+}
 
 // full or truncated (in case surf_znode is internal but carries face_pos of starting face) 
 // grid line from a starting znode to its opposite face position;
@@ -1127,7 +1146,7 @@ void TDomain::get_wall_gridline(const mf::t_GeomPoint& xyz) {
 	wxLogMessage(_T("GetWallGridLine: assuming wall grid line is along Xaxis (FacePos=Xmin)!!!"));
 	wxLogMessage(_T("GetWallGridLine: marching from starting point in i+ direction ('downstream')!!!"));
 
-	znode.iFacePos = mf::cg::TZoneFacePos::faceXmin;
+	znode.iFacePos = get_cgns_params().FacePosStarting;
 
 	grdLine.init(znode);
 

@@ -23,7 +23,7 @@ typedef std::map<wxString,int> t_MapWxStrInt;
 
 #define OPT_VD_N_BL_MAX_DERIV_POINTS 50
 
-t_CGNS2DParams::t_CGNS2DParams():t_FldParams() {
+t_CGNS2DParams::t_CGNS2DParams():t_DomainCGNSParams() {
 
 	AXESYM_MODES_STR.clear();
 	AXESYM_MODES_STR.insert(std::make_pair(OPT_AXESYM_STR, mf::t_AxeSym::AxeSym));
@@ -45,6 +45,10 @@ t_CGNS2DParams::t_CGNS2DParams():t_FldParams() {
 const t_CGNS2DParams& t_MFCGNS2D::get_params() const{
 	return _base_params;
 };
+
+const t_DomainCGNSParams& t_MFCGNS2D::get_cgns_params() const {
+	return _base_params;
+}
 
 const t_FldParams& t_MFCGNS2D::get_mf_params() const{
 	return _base_params;
@@ -94,12 +98,6 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("RGas", 8.31e+00, _T("Dimensional universal gas constant [J/mol*K]"));
 
-	g.add("VD_TYPE", _T("VD_ABS"), _T("Reference velo deriv calc type"));
-
-	g.add("VD_PLACE", _T("VD_WALL or VD_MAX"), _T("Reference velo deriv place"));
-
-	g.add("VD_N_BL_MAX_DERIV_POINTS", OPT_VD_N_BL_MAX_DERIV_POINTS, _T("Number of cells from the wall to be used to compute max velo deriv"));
-
 	// 2D specific part
 	g.add("AxeSym_or_Plane", _T("AxeSym or Plane"), _T("Is Flow AxeSym? 0-axesym, 1-plane"));
 
@@ -127,6 +125,16 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 	g.add("BBox_Ymax", 1.0, _T("Bounding box Ymax"));
 	g.add("BBox_Zmin", -1.0, _T("Bounding box Zmin"));
 	g.add("BBox_Zmax", 1.0, _T("Bounding box Zmax"));
+
+	g.add("VD_TYPE", _T("VD_ABS"), _T("Reference velo deriv calc type"));
+
+	g.add("VD_PLACE", _T("VD_WALL or VD_MAX"), _T("Reference velo deriv place"));
+
+	g.add("VD_N_BL_MAX_DERIV_POINTS", OPT_VD_N_BL_MAX_DERIV_POINTS, _T("Number of cells from the wall to be used to compute max velo deriv"));
+
+	// cgns specific part
+
+	g.add("StartingFacePos", _T("Xmin"), _T("starting face position, if xmin GetWallGridLine will start in Xmin->Xmax direction"));
 
 }
 
@@ -209,5 +217,13 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 		wxLogError(_T("Error: Bad Nz value during CGNS2D fld initialization, check ini files"));
 		ssuTHROW(t_GenException, _T("Error: in CGNS2D init, see err log"));
 	}
+
+	wxString FacePosStr = g.get_string_param("StartingFacePos");
+	it = params.FACE_POS_StART_STR.find(FacePosStr);
+
+	if (it == params.FACE_POS_StART_STR.end())
+		ssuGENTHROW(_T("Unknown value provided for otion StartingFacePos"));
+
+	params.FacePosStarting = static_cast<mf::cg::TZoneFacePos>(it->second);
 
 }

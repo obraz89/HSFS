@@ -16,7 +16,7 @@ using namespace hsstab;
 
 #define OPT_VD_N_BL_MAX_DERIV_POINTS 50
 
-t_CGNS3DParams::t_CGNS3DParams() :t_FldParams() {
+t_CGNS3DParams::t_CGNS3DParams() :t_DomainCGNSParams() {
 
 	VD_TYPES_STR.clear();
 	VD_TYPES_STR.insert(std::make_pair(OPT_VD_ABS, mf::cg::t_VDParams::VD_ABS));
@@ -33,6 +33,8 @@ t_CGNS3DParams::t_CGNS3DParams() :t_FldParams() {
 const t_CGNS3DParams& t_MFCGNS3D::get_params() const{
 	return _base_params;
 };
+
+const t_DomainCGNSParams& t_MFCGNS3D::get_cgns_params() const { return _base_params; }
 
 const t_FldParams& t_MFCGNS3D::get_mf_params() const{return _base_params;}
 
@@ -101,6 +103,8 @@ void t_CGNS3DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("VD_N_BL_MAX_DERIV_POINTS", OPT_VD_N_BL_MAX_DERIV_POINTS, _T("Number of cells from the wall to be used to compute max velo deriv"));
 
+	g.add("StartingFacePos", _T("Xmin"), _T("starting face position, if xmin GetWallGridLine will start in Xmin->Xmax direction"));
+
 }
 
 void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginParamsGroup& g){
@@ -160,6 +164,14 @@ void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginP
 	params.vd_params.vd_place = static_cast<mf::cg::t_VDParams::t_VeloDerivPlace>(it->second);
 
 	params.vd_params.N_BL_MAX_DERIV_POINTS = g.get_int_param("VD_N_BL_MAX_DERIV_POINTS");
+
+	wxString FacePosStr = g.get_string_param("StartingFacePos");
+	it = params.FACE_POS_StART_STR.find(FacePosStr);
+
+	if (it == params.FACE_POS_StART_STR.end())
+		ssuGENTHROW(_T("Unknown value provided for otion StartingFacePos"));
+
+	params.FacePosStarting = static_cast<mf::cg::TZoneFacePos>(it->second);
 
 
 }

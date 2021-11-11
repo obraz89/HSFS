@@ -840,9 +840,10 @@ const TcgnsZone::TFacePatch& t_MFCGNS3D::get_face_patch(const t_ZoneNode& a_znod
 		kps = cgPatch.ks0 + cgZne.ks1 - 1;
 		kpe = cgPatch.ke0 + cgZne.ks1 - 1;
 
-		ok = ok && (nd_i >= ips) && (nd_i <= ipe);
-		ok = ok && (nd_j >= jps) && (nd_j <= jpe);
-		ok = ok && (nd_k >= kps) && (nd_k <= kpe);
+		// NB: ips and ipe can be in descending order, like ips=100, ipe=1
+		ok = ok && (nd_i >= std::min(ips, ipe)) && (nd_i <= std::max(ips, ipe));
+		ok = ok && (nd_j >= std::min(jps, jpe)) && (nd_j <= std::max(jps, jpe));
+		ok = ok && (nd_k >= std::min(kps, kpe)) && (nd_k <= std::max(kps, kpe));
 
 		if (ok) {
 

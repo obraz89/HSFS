@@ -55,6 +55,7 @@ namespace mf{
 		bool loadGrid(const wxString& gridFN );
 
 		const mf::t_CGNS2DParams& get_params() const;
+		const mf::t_DomainCGNSParams& get_cgns_params() const;
 }; 
 
 

@@ -20,6 +20,9 @@ typedef void TfuncPhys;
 
 // maybe use later
 namespace mf{
+
+	struct t_DomainCGNSParams;
+
 	namespace cg{
 
 		//-----------------------------------------------------------------------------
@@ -691,6 +694,8 @@ namespace mf{
 
 			virtual const t_VDParams& get_vd_params() const = 0;
 
+			virtual const mf::t_DomainCGNSParams& get_cgns_params() const = 0;
+
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block
 			// realizations are different for 2D and 3D
@@ -822,5 +827,21 @@ namespace mf{
 	//-----------------------------------------------------------------------------
 
 }	// ~namespace mf
+
+namespace mf {
+	//
+	// cgns specific params 
+	// for the tasks
+
+	struct t_DomainCGNSParams : public t_FldParams {
+
+		t_DomainCGNSParams();
+
+		std::map<wxString, int> FACE_POS_StART_STR;
+
+		mf::cg::TZoneFacePos FacePosStarting;
+
+	};
+}
 
 #endif // ~__CGNS_STRUCTS

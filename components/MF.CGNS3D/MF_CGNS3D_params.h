@@ -6,11 +6,13 @@
 
 #include "wx/fileconf.h"
 
+#include "cgns_structs.h"
+
 typedef std::map<wxString, int> t_MapWxStrInt;
 
 namespace mf{
 
-	struct t_CGNS3DParams: public t_FldParams{
+	struct t_CGNS3DParams: public t_DomainCGNSParams{
 
 		t_MapWxStrInt VD_TYPES_STR;
 		t_MapWxStrInt VD_PLACES_STR;
