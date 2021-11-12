@@ -140,4 +140,8 @@ t_Rec t_MFCGNS2D::interpolate_to_point(const t_GeomPoint& point) const{
 
 	}  // ~interpolate_to_point
 
+bool t_MFCGNS2D::recalc_nonorth_grid_line_y() const {
+	return _base_params.BLGridLineNonOrthRecalcY;
+}
+
 

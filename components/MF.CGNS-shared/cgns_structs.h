@@ -684,6 +684,8 @@ namespace mf{
 
 			void _calc_scalar_ked_deriv(const t_ZoneNode& znode, char fun_name, t_Vec3Dbl& df_dked) const;
 
+			bool _check_znode_is_real_cell(const t_ZoneNode& znode) const;
+
 			// TDomainBase interface realization
 
 			// go along local normal to a surface
@@ -743,7 +745,9 @@ namespace mf{
 
 			virtual void calc_surf_point(const t_GeomPoint& a_xyz, t_GeomPoint& surf_point, t_Vec3Dbl& norm) const;
 
-			virtual void calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
+			virtual void calc_surf_norm_from_grd_line(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
+
+			virtual void calc_surf_norm_corr(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
 
 			virtual t_SqMat3Dbl calc_jac_to_loc_rf(const t_GeomPoint& xyz) const;
 
@@ -840,6 +844,8 @@ namespace mf {
 		std::map<wxString, int> FACE_POS_StART_STR;
 
 		mf::cg::TZoneFacePos FacePosStarting;
+
+		bool BLGridLineNonOrthRecalcY;
 
 	};
 }

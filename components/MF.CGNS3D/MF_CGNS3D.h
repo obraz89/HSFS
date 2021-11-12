@@ -33,6 +33,7 @@ namespace mf{
 		const cg::t_VDParams& get_vd_params() const;
 
 		const mf::t_FldParams& get_mf_params() const;
+		bool recalc_nonorth_grid_line_y() const;
 
 		const mf::t_CGNS3DParams& get_params() const;
 		const mf::t_DomainCGNSParams& get_cgns_params() const;

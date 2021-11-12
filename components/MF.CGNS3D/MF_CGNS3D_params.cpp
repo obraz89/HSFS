@@ -105,6 +105,8 @@ void t_CGNS3DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("StartingFacePos", _T("Xmin"), _T("starting face position, if xmin GetWallGridLine will start in Xmin->Xmax direction"));
 
+	g.add("BLGridLineNonOrthRecalcY", 0, _T("if gridlines are not orthogonal to surface, try to recalc profiles"));
+
 }
 
 void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginParamsGroup& g){
@@ -169,9 +171,10 @@ void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginP
 	it = params.FACE_POS_StART_STR.find(FacePosStr);
 
 	if (it == params.FACE_POS_StART_STR.end())
-		ssuGENTHROW(_T("Unknown value provided for otion StartingFacePos"));
+		ssuGENTHROW(_T("Unknown value provided for option StartingFacePos"));
 
 	params.FacePosStarting = static_cast<mf::cg::TZoneFacePos>(it->second);
 
+	params.BLGridLineNonOrthRecalcY = g.get_int_param("BLGridLineNonOrthRecalcY");
 
 }

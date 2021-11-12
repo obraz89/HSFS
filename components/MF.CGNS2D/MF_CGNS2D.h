@@ -37,6 +37,8 @@ namespace mf{
 
 		const mf::t_FldParams& get_mf_params() const;
 
+		bool recalc_nonorth_grid_line_y() const;
+
 		const cg::t_VDParams& get_vd_params() const;
 
 		virtual mf::t_Rec interpolate_to_point(const t_GeomPoint& point) const;

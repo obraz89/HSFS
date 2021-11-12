@@ -7,6 +7,8 @@
 
 #include "wx/log.h"
 
+#include <algorithm>
+
 using namespace mf;
 
 t_ProfMFLoc::t_ProfMFLoc(const t_DomainBase& a_rDomain):t_ProfMF(a_rDomain){};
@@ -32,10 +34,13 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 	t_Vec3Dbl dr_xyz, r_ked;
 	t_Vec3Dbl u_xyz, u_ked;
 
+	t_Vec3Dbl dr_dir, surf_norm;
+
 	r_xyz_base.set(raw_profile[0]);
 	_xyz = r_xyz_base;
 
 	t_SqMat3Dbl jac, jac_inv;
+
 	if (!init_cfg.LoadFromAVFProfile) {
 		jac = _rDomain.calc_jac_to_loc_rf(r_xyz_base);
 		jac_inv = jac.inverse();
@@ -44,8 +49,15 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 		jac.setToUnity();
 		jac_inv.setToUnity();
 	}
+	// second column of rotation matrix (jac) is surface normal
+	jac.col_to_vec(1, surf_norm);
 
 	const mf::t_FldParams& Params = _rDomain.get_mf_params();
+
+	// debug
+	double y_nonorth_scale_coef; 
+	double y_nonorth_scale_coef_min = 1.0; 
+	double y_nonorth_scale_coef_max = 0.0;
 
 	for (int j = 0; j < _nnodes; j++) {
 
@@ -59,7 +71,25 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 			r_xyz_base.set(raw_profile[j - 1]);
 			matrix::base::minus<double, double>(r_xyz, r_xyz_base, dr_xyz);
 
-			_y[j] = _y[j - 1] + dr_xyz.norm();
+			// recalculate y profile for non-orthogonal grids
+			if (_rDomain.recalc_nonorth_grid_line_y()) {
+				dr_dir = dr_xyz;
+				dr_dir.normalize();
+				// multiply distance along grid line to this coef
+				// if grid is not orthogonal to wall
+				y_nonorth_scale_coef = vector::dot(dr_dir, surf_norm);
+				//_rDomain.calc_norm
+
+				_y[j] = _y[j - 1] + y_nonorth_scale_coef*dr_xyz.norm();
+
+				// debug
+				y_nonorth_scale_coef_max = std::max(y_nonorth_scale_coef_max, y_nonorth_scale_coef);
+				y_nonorth_scale_coef_min = std::min(y_nonorth_scale_coef_min, y_nonorth_scale_coef);
+
+			}
+			else {
+				_y[j] = _y[j - 1] + dr_xyz.norm();
+			}
 		}
 
 		// step 1 - rotate mf records
@@ -78,6 +108,11 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 		double gMaMa = Params.Gamma*pow(Params.Mach, 2);
 		_r[j] = mf_rec.p / mf_rec.t*gMaMa;
 		_mu[j] = _rDomain.calc_viscosity(_t[j]);
+	}
+
+	if (_rDomain.recalc_nonorth_grid_line_y()) {
+		wxLogMessage(_T("y_nonorth_scale_coef_max=%lf"), y_nonorth_scale_coef_max);
+		wxLogMessage(_T("y_nonorth_scale_coef_min=%lf"), y_nonorth_scale_coef_min);
 	}
 
 	// calculate normal derivs

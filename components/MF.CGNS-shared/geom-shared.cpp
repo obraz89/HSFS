@@ -155,7 +155,10 @@ void TDomain::calc_surf_point(const t_GeomPoint& a_xyz, t_GeomPoint& surf_point,
 	t_Rec surf_rec;
 	get_rec(surf_node, surf_rec);
 	surf_point.set(surf_rec);
-	calc_surf_norm(surf_node, norm);
+	if (recalc_nonorth_grid_line_y())
+		calc_surf_norm_corr(surf_node, norm);
+	else
+		calc_surf_norm_from_grd_line(surf_node, norm);
 	//wxLogError(_T("calc_surf_point not implemented"));
 	//ssuTHROW(t_GenException, _T("Not Implemented"));
 
@@ -348,7 +351,7 @@ bool TDomain::is_point_inside(const t_GeomPoint& xyz) const{
 }
 
 // TODO: current version works for ortho near-surface grids only
-void TDomain::calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const{
+void TDomain::calc_surf_norm_from_grd_line(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const{
 
 	t_GeomPoint wall_xyz, fld_xyz;
 	t_Rec wall_rec, fld_rec;
@@ -385,6 +388,122 @@ void TDomain::calc_surf_norm(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const
 	norm.normalize();
 
 };
+
+bool TDomain::_check_znode_is_real_cell(const t_ZoneNode& znode) const {
+
+	const TZone& b = Zones[znode.iZone - 1];
+
+	const int i = znode.iNode.i;
+	const int j = znode.iNode.j;
+	const int k = znode.iNode.k;
+	int ks, ke;
+
+	get_k_range(znode.iZone, ks, ke);
+
+	return ((i >= b.is) && (i <= b.ie) &&
+		    (j >= b.js) && (j <= b.je) &&
+		    (k >= ks) && (k <= ke));
+
+};
+
+void TDomain::calc_surf_norm_corr(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const {
+
+	const TZone& blk = Zones[surf_node.iZone - 1];
+
+	const int i_base = surf_node.iNode.i;
+	const int j_base = surf_node.iNode.j;
+	const int k_base = surf_node.iNode.k;
+
+	mf::cg::TZoneFacePos fp = surf_node.iFacePos;
+
+	// shifts from base ijk to get v1, v2 - surface vectors
+	int di1, dj1, dk1;
+	int di2, dj2, dk2;
+	// v3 - grid line direction pointing from surface 
+	// (if grid is orthogonal to surface v3 = norm)
+	// v3 is computed to check direction
+	int di3, dj3, dk3;
+
+	di1 = dj1 = dk1 = 0;
+	di2 = dj2 = dk2 = 0;
+	di3 = dj3 = dk3 = 0;
+	// keep all nodes inside the block (no ghosts)
+	if ((fp == mf::cg::TZoneFacePos::faceXmin) ||(fp ==mf::cg::TZoneFacePos::faceXmax)) {
+
+		dj1 = j_base != blk.je ? 1 : -1;
+
+		dk2 = k_base != blk.ke ? 1 : -1;
+
+		di3 = i_base != blk.ie ? 1 : -1;
+	}
+
+	if ((fp == mf::cg::TZoneFacePos::faceYmin) || (fp == mf::cg::TZoneFacePos::faceYmax)) {
+
+		di1 = i_base != blk.ie ? 1 : -1;
+
+		dk2 = k_base != blk.ke ? 1 : -1;
+
+		dj3 = j_base != blk.je ? 1 : -1;
+	}
+
+	if ((fp == mf::cg::TZoneFacePos::faceZmin) || (fp == mf::cg::TZoneFacePos::faceZmax)) {
+
+		di1 = i_base != blk.ie ? 1 : -1;
+
+		dj2 = j_base != blk.je ? 1 : -1;
+
+		dk3 = k_base != blk.ke ? 1 : -1;
+	}
+
+	// check that all indices are ok
+
+	if (!_check_znode_is_real_cell(surf_node))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p0 is not real cell"));
+
+	if (!_check_znode_is_real_cell(t_ZoneNode(surf_node.iZone, i_base + di1, j_base + dj1, k_base + dk1)))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p1 is not real cell"));
+
+	if (!_check_znode_is_real_cell(t_ZoneNode(surf_node.iZone, i_base + di2, j_base + dj2, k_base + dk2)))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p2 is not real cell"));
+
+	if (!_check_znode_is_real_cell(t_ZoneNode(surf_node.iZone, i_base + di3, j_base + dj3, k_base + dk3)))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p3 is not real cell"));
+
+	mf::t_Rec rec0, rec1, rec2, rec3;
+	mf::t_GeomPoint p0, p1, p2, p3;
+
+	get_rec(blk, i_base, j_base, k_base, rec0);
+	get_rec(blk, i_base + di1, j_base + dj1, k_base + dk1, rec1);
+	get_rec(blk, i_base + di2, j_base + dj2, k_base + dk2, rec2);
+	get_rec(blk, i_base + di3, j_base + dj3, k_base + dk3, rec3);
+
+	p0 = rec0.get_xyz();
+	p1 = rec1.get_xyz();
+	p2 = rec2.get_xyz();
+	p3 = rec3.get_xyz();
+
+	t_Vec3Dbl v1 = p1 - p0;
+	t_Vec3Dbl v2 = p2 - p0;
+	t_Vec3Dbl v3 = p3 - p0;
+
+	v1.normalize();
+	v2.normalize();
+	v3.normalize();
+
+	norm = vector::cross(v1, v2);
+
+	// choose correct direction
+
+	// grid-line direction
+
+	if (vector::dot(norm, v3) < 0.0) norm = -1.0*norm;
+
+	// debug messages
+	// for grid lines nearly orthogonal to wall v3 must be close to norm
+	wxLogMessage(_T("Computed norm:\n%s"), norm.to_wxstr());
+	wxLogMessage(_T("Grid line dir:\n%s"), v3.to_wxstr());
+
+}
 
 double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	wxLogMessage(_T("MF Domain Warning: LRef scale used as x scale"));
@@ -489,7 +608,7 @@ double TDomain::_calc_specific_velo_deriv_abs(const std::vector<t_ZoneNode>& dat
 		t_ZoneNode surf_znode = _get_nrst_node_surf(data_grdline[0]);
 
 		t_Vec3Dbl surf_norm;
-		calc_surf_norm(surf_znode, surf_norm);
+		calc_surf_norm_from_grd_line(surf_znode, surf_norm);
 
 		double un_cur = vector::dot(cur_uvw, surf_norm);
 		double ut_cur = sqrt(cur_uvw_abs*cur_uvw_abs - un_cur*un_cur);
@@ -611,7 +730,10 @@ void TDomain::_calc_bl_thick_vderiv(const t_ZoneNode& surf_znode, t_ProfScales& 
 	t_ZoneNode outer_znode;
 
 	t_Vec3Dbl surf_norm, dr;
-	calc_surf_norm(surf_znode, surf_norm);
+	if (recalc_nonorth_grid_line_y())
+		calc_surf_norm_corr(surf_znode, surf_norm);
+	else
+		calc_surf_norm_from_grd_line(surf_znode, surf_norm);
 
 	wxLogMessage(_T("norm:%s"), surf_norm.to_wxstr());
 
@@ -1056,14 +1178,14 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 	// for now we need gridline j=const to be normal to surface
 	// TODO: make interpolation of field to a normal for arbitrary grid
 	t_Vec3Dbl e1,e2,e3, u_e;
-	/*
-	e2[0] = bound_rec.x - surface_rec.x;
-	e2[1] = bound_rec.y - surface_rec.y;
-	e2[2] = bound_rec.z - surface_rec.z;
-	*/
-	e2 = bound_rec.get_xyz() - surface_rec.get_xyz();
+
+	if (recalc_nonorth_grid_line_y()) {
+		calc_surf_norm_corr(surf_znode, e2);
+	}else{
+		e2 = bound_rec.get_xyz() - surface_rec.get_xyz();
+		e2.normalize();
+	}
 	//double norm = two_norm(e2);
-	e2.normalize();
 	// construct e1': along inviscid streamline
 	// be sure e1'*e2'=0:
 	// e1' = norm(Ue - (e2'*Ue));

@@ -119,3 +119,7 @@ t_Rec t_MFCGNS3D::interpolate_to_point(const t_GeomPoint& point) const{
 	return TDomain::_interpolate_to_point_surf_raw(point);
 
 }  // ~interpolate_to_point
+
+bool t_MFCGNS3D::recalc_nonorth_grid_line_y() const {
+	return _base_params.BLGridLineNonOrthRecalcY;
+}

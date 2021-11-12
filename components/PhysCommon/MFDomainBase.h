@@ -106,6 +106,8 @@ namespace mf{
 
 			virtual const t_FldParams& get_mf_params() const=0;
 
+			virtual bool recalc_nonorth_grid_line_y() const = 0;
+
 			virtual t_Rec interpolate_to_point(const t_GeomPoint& point) const=0;
 			// TODO: implement for optimization
 			//virtual void interpolate_to_point(const t_GeomPoint& point, t_Rec& rec) const=0;
