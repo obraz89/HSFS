@@ -106,6 +106,8 @@ namespace mf{
 
 			virtual const t_FldParams& get_mf_params() const=0;
 
+			virtual double get_bl_y_selfsim_multiplier() const = 0;
+
 			virtual bool recalc_nonorth_grid_line_y() const = 0;
 
 			virtual t_Rec interpolate_to_point(const t_GeomPoint& point) const=0;

@@ -138,6 +138,8 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("BLGridLineNonOrthRecalcY", 0, _T("if gridlines are not orthogonal to surface, try to recalc profiles"));
 
+	g.add("BLYSelfsimMultiplier", 1.0, _T("dels = BLYSelfsimMultiplier * L_ref * sqrt(nue*x/Ue)"));
+
 }
 
 void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginParamsGroup& g){
@@ -229,5 +231,7 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 	params.FacePosStarting = static_cast<mf::cg::TZoneFacePos>(it->second);
 
 	params.BLGridLineNonOrthRecalcY = g.get_int_param("BLGridLineNonOrthRecalcY");
+
+	params.BLYSelfsimMultiplier = g.get_real_param("BLYSelfsimMultiplier");
 
 }

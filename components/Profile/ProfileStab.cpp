@@ -103,7 +103,7 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 	// old selfsim scale, TODO: keep as option to nondim ?
 	double x_scale = a_rProfNS.get_x_scale();
 	double y_scale_selfsim = sqrt(mu_e*x_scale/(u_e*rho_e))/sqrt(Params.Re);
-
+	double y_selfsim_multiplier = rMF.get_bl_y_selfsim_multiplier();
 	switch (cfg.NondimScaleType)
 	{
 	case t_ProfStabCfg::NONDIM_BY_BL_BOUND_SCALE:
@@ -117,8 +117,10 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_X_SELFSIM:
-		bl_thick_scale = y_scale_selfsim;
-		_scales.ReStab = sqrt(Params.Re*u_e*rho_e*x_scale/mu_e);
+		// multiply by fixed scalar value
+		// has effect on gs truncation sensitivity
+		bl_thick_scale = y_selfsim_multiplier * y_scale_selfsim;
+		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;
 	case t_ProfStabCfg::NONDIM_BY_FIXED_VAL:

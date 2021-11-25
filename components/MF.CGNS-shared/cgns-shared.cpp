@@ -280,6 +280,9 @@ mf::cg::TDomain::TDomain() {
 	_pProfRaw = new t_ProfileRawCashed();
 }
 
+double mf::cg::TDomain::get_bl_y_selfsim_multiplier() const {
+	return get_cgns_params().BLYSelfsimMultiplier;
+}
 
 void mf::cg::TDomain::_read_parse_bc_wall_names(const wxString& strBCWallFamNames){
 

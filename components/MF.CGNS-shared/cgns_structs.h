@@ -698,6 +698,8 @@ namespace mf{
 
 			virtual const mf::t_DomainCGNSParams& get_cgns_params() const = 0;
 
+			double get_bl_y_selfsim_multiplier() const;
+
 			// most low-level rec extractors
 			// i,j,k - local 1-based indices of the real node incide block
 			// realizations are different for 2D and 3D
@@ -846,6 +848,8 @@ namespace mf {
 		mf::cg::TZoneFacePos FacePosStarting;
 
 		bool BLGridLineNonOrthRecalcY;
+
+		double BLYSelfsimMultiplier;
 
 	};
 }
