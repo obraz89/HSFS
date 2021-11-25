@@ -57,22 +57,6 @@ void t_ProfileStab::initialize(t_ProfMFLoc& a_rProfNS,
 
 }
 
-double read_fixed_scale_from_file() {
-
-	char ftmp_dels_fixed[64]; int mpi_rank;
-	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
-	sprintf(ftmp_dels_fixed, "tmp/Dels_fixed_val_%d.dat", mpi_rank);
-
-	std::ifstream ifstr(ftmp_dels_fixed);
-
-	double val;
-
-	ifstr >> val;
-
-	return val;
-
-}
-
 /************************************************************************/
 // 1) interpolate profile from a_rProfNS distribution (as in mean flow) into grid a_y_distrib
 // a_y_distrib non-dim as a_rPorfNS (mean-flow non-dim)
@@ -125,7 +109,7 @@ void t_ProfileStab::_initialize(t_ProfMFLoc& a_rProfNS,
 		break;
 	case t_ProfStabCfg::NONDIM_BY_FIXED_VAL:
 		// reading Dels (dimensional)
-		bl_thick_scale = read_fixed_scale_from_file()/Params.L_ref;
+		bl_thick_scale = rMF.get_stored_dels()/Params.L_ref;
 		_scales.ReStab = rho_e*u_e*bl_thick_scale / mu_e*Params.Re;
 		_scales.Dels = Params.L_ref*bl_thick_scale;
 		break;

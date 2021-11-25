@@ -61,7 +61,7 @@ namespace hsstab
 
 	public:
 
-		virtual stab::t_WPTrackBase* create_wp_track(const mf::t_DomainBase& blk)=0;
+		virtual stab::t_WPTrackBase* create_wp_track(mf::t_DomainBase& blk)=0;
 
 	};
 }

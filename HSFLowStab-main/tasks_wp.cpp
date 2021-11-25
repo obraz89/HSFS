@@ -225,19 +225,13 @@ bool search_init_wave(const int wpid, const int a_ppoint_id, const bool a_do_sim
 
 			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(npp).xyz;
 
+			g_pGSSolverSpat->setContext(test_xyz);
+
 			// TODO: write fixed dels, multiproc variant
 			if (is_update_dels) {
-				char ftmp_dels_fixed[64]; int mpi_rank;
-				MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
-				sprintf(ftmp_dels_fixed, "tmp/Dels_fixed_val_%d.dat", mpi_rank);
-				std::ofstream ofstr(ftmp_dels_fixed);
-				mf::t_ProfScales prof_scales = g_pMFDomain->calc_bl_thick_scales(test_xyz);
-				ofstr << prof_scales.d1*g_pMFDomain->get_mf_params().L_ref;
-				ofstr.close();
+				g_pMFDomain->set_stored_dels(g_pGSSolverSpat->get_stab_scales().Dels);
 			}
-
-			g_pGSSolverSpat->setContext(test_xyz);
 
 			g_pStabSolver->setContext(test_xyz);
 

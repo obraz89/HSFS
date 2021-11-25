@@ -95,7 +95,7 @@ void t_GeomLineFromFile::calc_dr_and_move(double dir, t_Vec3Dbl& dr) {
 
 // t_WavePackLine
 
-t_WavePackLine::t_WavePackLine(const mf::t_DomainBase& a_fld):_rFldMF(a_fld), 
+t_WavePackLine::t_WavePackLine(mf::t_DomainBase& a_fld):_rFldMF(a_fld), 
 _s(NMAX_WPRECS), _sigma(NMAX_WPRECS), _nfact(NMAX_WPRECS), _params(){};
 
 t_WavePackLine::t_RecArray::t_RecArray():_cont(NMAX_WPRECS), _size(0){}
@@ -555,7 +555,7 @@ bool search_instab_ls_gs(const t_WCharsLoc& w_init, t_WCharsLoc& w_exact,
 
 	// testing the multimode hell for nramp case
 	// particular mode is picked by hand after modes are counted
-	if (true){
+	if (false){
 		wxLogMessage(_T("testing new mode for retrace, remove it when done (!), check search_instab_ls_gs"));
 		getchar();
 
@@ -769,21 +769,18 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 									   const stab::t_WPRetraceMode& retrace_mode, 
 									   t_Direction direction){
 
+	gs_solver.setContext(start_xyz);
+
 	// TODO: tmp way to write dels
 	// single proc retrace
 	if (_params.UpdateDelsAtRStart) {
-		wxLogMessage(_T("Using d1 at starting point as fixed val for profiles nondim, check t_WavePackLine::_retrace_dir_cond"));
-		std::ofstream ofstr("tmp/Dels_fixed_val_0.dat");
-		mf::t_ProfScales prof_scales = _rFldMF.calc_bl_thick_scales(start_xyz);
-		ofstr << prof_scales.d1*_rFldMF.get_mf_params().L_ref;
-		ofstr.close();
+		_rFldMF.set_stored_dels(gs_solver.get_stab_scales().Dels);
 	}
 	else {
 		wxLogMessage(_T("Starting retrace with dels fixed val unchanged"));
 	}
 
 	loc_solver.setContext(start_xyz);
-	gs_solver.setContext(start_xyz);
 
 	init_wave.set_scales(loc_solver.get_stab_scales());
 

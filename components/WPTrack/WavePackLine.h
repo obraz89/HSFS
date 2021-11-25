@@ -84,7 +84,7 @@ namespace pf{
 
 		enum t_Direction{UPSTREAM=0, DOWNSTREAM};
 
-		const mf::t_DomainBase& _rFldMF;
+		mf::t_DomainBase& _rFldMF;
 		t_WPLineParams _params;
 
 		t_RecArray _line;
@@ -134,7 +134,7 @@ namespace pf{
 		void _calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver);
 
 	public:
-		t_WavePackLine(const mf::t_DomainBase& a_mf);
+		t_WavePackLine(mf::t_DomainBase& a_mf);
 		void init(const hsstab::TPlugin& g_plug);
 
 		void retrace(mf::t_GeomPoint start_from, t_WCharsLoc init_wave, 

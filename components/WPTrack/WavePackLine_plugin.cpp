@@ -42,7 +42,7 @@ TPluginCaps* TPluginWPLine::get_caps(){
 	return &_caps;
 };
 
-stab::t_WPTrackBase* hsstab::TCapsWPLine::create_wp_track(const mf::t_DomainBase& dom){
+stab::t_WPTrackBase* hsstab::TCapsWPLine::create_wp_track(mf::t_DomainBase& dom){
 	return new pf::t_WavePackLine(dom);
 };
 

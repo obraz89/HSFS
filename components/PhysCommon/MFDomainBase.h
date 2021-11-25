@@ -84,6 +84,8 @@ namespace mf{
 
 			t_ProfExtrCfg _profile_cfg;
 
+			double _dels_stored;
+
 		public:
 
 			t_DomainBase();
@@ -173,6 +175,11 @@ namespace mf{
 
 			// test function, to calculate and dump rec derivatives at particular point
 			virtual void dump_rec_derivs(const t_GeomPoint& xyz) const = 0;
+
+			// store dels used to nondim profiles
+			virtual void set_stored_dels(double val) { _dels_stored = val; };
+			// get dels used to nondim profiles
+			virtual double get_stored_dels() const { return _dels_stored; };
 
 	};	// ~t_DomainBase
 }	// ~namespace mf
