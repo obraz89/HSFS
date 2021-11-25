@@ -260,10 +260,15 @@ bool search_init_wave(const int wpid, const int a_ppoint_id, const bool a_do_sim
 
 				if (init_waves_filtered.size()>0) {
 
-					gs_success = true;
-					a_wchars = t_WCharsLoc::find_max_instab_spat(init_waves_filtered);
-					a_start_xyz = test_xyz;
-					return true;
+					t_WCharsLoc wch_cand = t_WCharsLoc::find_max_instab_spat(init_waves_filtered);
+					// TODO: option to start retrace from stable regions
+					// for now, start only from unstable
+					if (wch_cand.a.imag() < 0.0) {
+						gs_success = true;
+						a_wchars = t_WCharsLoc::find_max_instab_spat(init_waves_filtered);
+						a_start_xyz = test_xyz;
+						return true;
+					}
 
 				}
 
