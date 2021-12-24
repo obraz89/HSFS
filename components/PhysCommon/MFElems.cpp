@@ -115,7 +115,7 @@ t_Vec3Dbl& t_RecGradKed::get_vec(char name) {
 		return rked;
 
 	wxLogError(_T("mf::t_RecGradKed::get_val: unknown name"));
-	return t_Vec3Dbl();
+	return xked;
 
 }
 
