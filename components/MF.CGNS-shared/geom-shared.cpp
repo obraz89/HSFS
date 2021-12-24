@@ -888,6 +888,11 @@ void TDomain::_calc_bl_thick_vderiv(const t_ZoneNode& surf_znode, t_ProfScales& 
 
 	}
 
+	// TODO: calcs with fixed thick_scale
+	// make parameter etc
+	//wxLogMessage(_T("======Using fixed bl scale 0.01==========FIXME"));
+	//bl_thick_scales.thick_scale = 0.01;
+
 	// step 3 - calculate new Dels via displacement thickness
 	double D1 = 0.0;
 	{
