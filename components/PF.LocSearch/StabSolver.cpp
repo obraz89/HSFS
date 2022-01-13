@@ -856,7 +856,7 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 			wxLogMessage(_T("GS Estimate:%s"), &cur_wave.to_wstr()[0]);
 
 			// first make raw estimate - good wave or not
-			if (!( stab::check_wchars_c_phase(cur_wave) && 
+			if ((_params.bCheckPhaseSpeedSSonic && !( stab::check_wchars_c_phase(cur_wave)) && 
 				stab::check_wchars_increment(cur_wave)
 				)) continue;
 
@@ -865,24 +865,36 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 			if (good_init && cur_wave.a.real() >= 0)
 				wxLogMessage(_T("Discrete mode candidate:%s"), &cur_wave.to_wstr()[0]);
 
-			if (good_init && stab::check_wchars_c_phase(cur_wave) && 
-				stab::check_wchars_increment(cur_wave)){
+			if (good_init){
 
 				cur_wave.set_scales(get_stab_scales());
 
 				t_WCharsLocDim dim_wave = cur_wave.make_dim();
 
 				// TODO: nice checking that wave is physical
-				if ( stab::check_wchars_c_phase(cur_wave) && 
-					this->checkWCharsByGroupV(cur_wave) &&
-					stab::check_wchars_increment(cur_wave)
-					){
+				if (stab::check_wchars_increment(cur_wave)) {
+					if (this->checkWCharsByGroupV(cur_wave)) {
+						// debug
+						if (!_params.bCheckPhaseSpeedSSonic)
+							wxLogMessage(_T("phase speed checks disabled"));
+						if (!_params.bCheckPhaseSpeedSSonic || 
+							(_params.bCheckPhaseSpeedSSonic && stab::check_wchars_c_phase(cur_wave))) {
+							wxLogMessage(_T("Filter gs waves: Checks for wave char candidate: ok"));
 
-					wxLogMessage(_T("Checks for group velocity & increment: ok"));
-
-					ret_waves.push_back(cur_wave);
-				}else
-					wxLogMessage(_T("Checks for group velocity & increment: failed (!)"));
+							ret_waves.push_back(cur_wave);
+						}
+						else {
+							wxLogMessage(_T("Filter gs waves: Checks for phase speed failed!"));
+						}
+					}
+					else {
+						wxLogMessage(_T("Filter gs waves: Checks for group velo failed!"));
+					}
+					
+				}
+				else {
+					wxLogMessage(_T("Filter gs waves: Checks for increment failed!"));
+				}
 			}
 		}
 		catch (...)

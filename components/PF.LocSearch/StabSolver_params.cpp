@@ -89,6 +89,8 @@ void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
 	g.add("ProfStabNonDimType", PROFSTAB_NDIM_TYPE_DEFAULT_STR, _T("Use this non-dim for stability profiles"));
 
 	g.add("CurvTermsEnabled", CURV_TERMS_FLAG_DEFAULT_STR, _T("Enable/disable curvature terms in stability computations"));
+
+	g.add("bCheckPhaseSpeedSSonic", 1, _T("Do fast check for phase speed to be between 1-1/Mx, 1+1/Mx"));
 }
 
 void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
@@ -182,6 +184,8 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 	}
 
 	CurvTermsOn = it_b->second;
+
+	bCheckPhaseSpeedSSonic = g.get_int_param("bCheckPhaseSpeedSSonic");
 
 }
 
