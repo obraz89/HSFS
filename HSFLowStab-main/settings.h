@@ -31,6 +31,10 @@ namespace task{
 		// keep br/ar fixed
 		SearchWCharsLocWVecFix, 
 
+		// Search wchars (a_end, b_end, w_end) from (a_start, b_start, w_start)
+		// move directly from (b_start, w_start) to (b_end, w_end)
+		SearchWCharsLocWBShift,
+
 		// get amplification rates over wave paths with various closures
 		Retrace, 
 

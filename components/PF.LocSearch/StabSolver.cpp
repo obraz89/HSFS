@@ -735,6 +735,52 @@ bool t_StabSolver::searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_W
 	return true;
 };
 
+/************************************************************************/
+// search for a wave chars, moving from wchars_start towards wchars_dest
+// wchars_start is the exact mode (a1, b1, w1)
+// wchars_end is (a2, b2, w2), a2 is to be found
+// move in the plane (b, w) with small step
+/************************************************************************/
+bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) {
+
+	// TODO: make parameter to control number of steps
+	int NSteps = 100;
+
+	stab::t_LSCond cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
+	stab::t_TaskTreat treat(stab::t_TaskTreat::SPAT);
+
+	double dw = (wchars_dest.w.real() - wchars_start.w.real()) / double(NSteps);
+	double db = (wchars_dest.b.real() - wchars_start.b.real()) / double(NSteps);
+
+	t_WCharsLoc wch = wchars_start;
+
+	searchWave(wch, cond, treat);
+	calcGroupVelocity(wch);
+
+	wxLogMessage(_T("Start wave:%s"), wch.to_wstr().c_str());
+	double da;
+
+	for (int i = 0; i < NSteps; i++) {
+
+		wch.w += dw;
+		wch.b += db;
+
+		da = dw / wch.vga.real();
+		wch.a += da;
+
+		searchWave(wch, cond, treat);
+		calcGroupVelocity(wch);
+
+		wxLogMessage(_T("[i=%d] Cur wave:%s"), i, wch.to_wstr().c_str());
+	}
+
+	wxLogMessage(_T("freq residual: %lf"), wchars_dest.w.real() - wch.w.real());
+
+	wchars_dest = wch;
+
+	return true;
+};
+
 void t_StabSolver::searchMaxWave(t_WCharsLoc& wchars, stab::t_LSCond cond, stab::t_TaskTreat task_mode){
 
 

@@ -104,6 +104,9 @@ int main(int argc, char* argv[]){
 		case task::TTaskType::SearchWCharsLocWVecFix:
 			task::search_wchars_loc_wvec_fix();
 			break;
+		case task::TTaskType::SearchWCharsLocWBShift:
+			task::search_wchars_loc_wb_shift();
+			break;
 		case task::TTaskType::Retrace:
 			switch (g_taskParams.spattime){
 

@@ -117,6 +117,8 @@ namespace stab{
 
 		virtual bool searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) = 0;
 
+		virtual bool searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) = 0;
+
 		virtual std::vector<t_WCharsLoc> filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond)=0;
 
 		virtual std::vector<t_WCharsLoc> filter_gs_waves_time(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond)=0;

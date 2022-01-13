@@ -222,6 +222,67 @@ void task::search_wchars_loc_wvec_fix() {
 
 }
 
+void task::search_wchars_loc_wb_shift() {
+
+	int npave_pts = g_pStabDB->get_npoints();
+
+	int pave_pnt_ind = g_taskParams.pave_point_id;
+	if (pave_pnt_ind >= g_pStabDB->get_npoints())
+	{
+		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
+		return;
+	}
+
+	int pid_s, pid_e;
+	if (pave_pnt_ind<0) {
+		pid_s = 0;
+		pid_e = g_pStabDB->get_npoints() - 1;
+	}
+	else {
+		pid_s = pave_pnt_ind;
+		pid_e = pave_pnt_ind;
+	}
+
+	wxLogMessage(_T("SearchWCharsLocBetaFix: point_id=%d"), pid_s);
+
+	// for now, working only with first pid = pid_s
+	for (int pid = pid_s; pid <= pid_s; pid++) {
+
+		try {
+			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+			g_pStabSolver->setContext(test_xyz);
+
+			t_WCharsLoc w_init; w_init.set_treat(stab::t_TaskTreat::SPAT);
+
+			bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
+
+			if (!read_ok)
+				ssuGENTHROW(_T("Failed to read max wave chars, skipping wpline"));
+			else
+				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
+
+			t_WCharsLoc w_dest = w_init;
+
+			wxLogMessage(_T("SearchWCharsLocWVecFix: using w_ndim_min as target freq value"));
+			w_dest.w = g_taskParams.w_ndim_min;
+
+			w_dest.b = g_taskParams.b_ndim_min;
+
+			g_pStabSolver->searchWaveWBShift(w_init, w_dest);
+
+		}
+		catch (t_GenException e) {
+			wxLogMessage(e.what());
+		}
+		catch (...) {
+			wxLogMessage(_T("Failed to find wave, pid=%d"), pid);
+		}
+
+	};
+
+}
+
 void write_wave_to_db(const t_GSWaveInfo& info){
 
 	char fname[33];

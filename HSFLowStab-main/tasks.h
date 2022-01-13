@@ -29,6 +29,8 @@ namespace task{
 
 	void search_wchars_loc_wvec_fix();
 
+	void search_wchars_loc_wb_shift();
+
 	void analyze_wchars(const std::string& fname);
 
 	void retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace);

@@ -129,7 +129,9 @@ bool load_Settings_n_Plugins()
 
 	task::TaskNames[task::SearchInstabLoc] = _T("SearchInstabLoc");
 	task::TaskNames[task::SearchMaxInstabLoc] = _T("SearchMaxInstabLoc");
+
 	task::TaskNames[task::SearchWCharsLocWVecFix] = _T("SearchWCharsLocWVecFix");
+	task::TaskNames[task::SearchWCharsLocWBShift] = _T("SearchWCharsLocWBShift");
 
 	task::TaskNames[task::Retrace] = _T("Retrace");
 	task::TaskNames[task::RetraceMPI] = _T("RetraceMPI");
