@@ -66,14 +66,7 @@ bool load_Settings_n_Plugins()
 			exit(EXIT_FAILURE);
 		}
 
-	if (!wxFileName::DirExists(_T("tmp")))
-		if (!wxFileName::Mkdir(_T("tmp"), 0755))
-		{
-			wxLogError(_("Can't create case tmp dir"));
-			exit(EXIT_FAILURE);
-		}
-
-		if( ! wxFileName::DirExists(OUTPUT_DIR) )
+	if( ! wxFileName::DirExists(OUTPUT_DIR) )
 			if( ! wxFileName::Mkdir(OUTPUT_DIR, 0755) )
 			{
 				wxLogError(_("Can't create output dir '%s'"), hsstab::OUTPUT_DIR.c_str());
