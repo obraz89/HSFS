@@ -25,6 +25,7 @@ namespace pf{
 	    enum t_MarchAlong{GROUP_VELO, STREAMLINE, FIXED_DIRECTION, POINTS_FROM_FILE};
 	    t_MarchAlong RetraceDir;
 
+		int IndexStepPointsFromFile;
 		// stopping conditions for retrace
 		// BOTH - stop retracing when increment becomes negative (most common option)
 		// DOWNSTREAM - keep calculating sigma in downstream dir even if it becomes negative

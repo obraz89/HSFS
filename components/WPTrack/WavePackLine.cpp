@@ -64,27 +64,41 @@ void t_GeomLineFromFile::set_ind_base(const mf::t_GeomPoint& pnt) {
 	}
 };
 
+void t_GeomLineFromFile::set_ind_inc(int is) {
+	if (is < 1) {
+		wxLogMessage(_T("Warning: wrong index increment t_GeomLineFromFile::set_ind_inc"));
+		return;
+	}
+	ind_inc = is;
+}
+
 void t_GeomLineFromFile::calc_dr_and_move(double dir, t_Vec3Dbl& dr) {
 
 	int s = points.size();
 
 	int ind_s = ind;
-	int ind_e;
+	int ind_e =  dir>0.0 ? ind+ind_inc : ind-ind_inc;
 
 	if (dir > 0.0) {
-		if (ind >= s - 1) {
-			wxLogMessage(_T("Warning: t_GeomLinePointer: point is outside, using bound points at the end of line"));
+		if (ind_s >= s - 1) {
 			ind_s = s - 2;
+			ind_e = s - 1;
+			wxLogMessage(_T("Warning: t_GeomLineFromFile::calc_dr_and_move: ind_e outside of range"));
 		}
-		ind_e = ind_s + 1;
+		if (ind_e > s - 1) {
+			ind_e = ind_s + 1;
+		}
 	}
 
 	if (dir < 0.0) {
-		if (ind <= 1) {
-			wxLogMessage(_T("Warning: t_GeomLinePointer: point is outside, using bound points at the start of line"));
+		if (ind_s <= 0) {
 			ind_s = 1;
+			ind_e = 0;
+			wxLogMessage(_T("Warning: t_GeomLineFromFile::calc_dr_and_move: ind_e outside of range"));
 		}
-		ind_e = ind_s - 1;
+		if (ind_e < 0) {
+			ind_e = ind_s - 1;
+		}
 	}
 
 	matrix::base::minus<double, double>(points[ind_e], points[ind_s], dr);
@@ -153,6 +167,7 @@ void t_WavePackLine::init(const hsstab::TPlugin& g_plug){
 	if (_params.RetraceDir == t_WPLineParams::t_MarchAlong::POINTS_FROM_FILE) {
 
 		_geom_line_from_file.init();
+		_geom_line_from_file.set_ind_inc(_params.IndexStepPointsFromFile);
 
 	}
 

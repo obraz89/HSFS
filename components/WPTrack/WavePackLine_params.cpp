@@ -82,6 +82,8 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 	g.add("CalcNonParEffectsAtQmax", 0, _T("Calculate non par additions at point where disturbance mass flux is max, otherwise at wall"));
 
+	g.add("IndexStepPointsFromFile", 1, _T("skip IndexStepPointsFromFile-1 points when moving along points from file"));
+
 }
 
 void pf::wpline_write_wp_as_fld_settings(hsstab::TPluginParamsGroup& g) {
@@ -234,6 +236,8 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	}
 
 	UpdateDelsAtRStart = g.get_int_param("UpdateDelsAtRetraceStart");
+
+	IndexStepPointsFromFile = g.get_int_param("IndexStepPointsFromFile");
 }
 
 void t_WPLineParams::init_wpline_write_as_fld_params(const hsstab::TPluginParamsGroup& g) {

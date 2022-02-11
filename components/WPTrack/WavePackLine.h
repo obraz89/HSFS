@@ -29,9 +29,13 @@ namespace pf{
 		// when iterating over points, keep current position (index)
 		int ind;
 
-		t_GeomLineFromFile():points(0){};
+		// index increment, 1 by default
+		int ind_inc;
+
+		t_GeomLineFromFile():points(0), ind_inc(1){};
 		void init();
 		void set_ind_base(const mf::t_GeomPoint& pnt);
+		void set_ind_inc(int inc);
 		void calc_dr_and_move(double dir, t_Vec3Dbl& dr);
 
 	};	// ~t_GeomLinePointer
