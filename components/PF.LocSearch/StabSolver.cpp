@@ -744,7 +744,7 @@ bool t_StabSolver::searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_W
 bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) {
 
 	// TODO: make parameter to control number of steps
-	int NSteps = 100;
+	int NSteps = 1001;
 
 	stab::t_LSCond cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
 	stab::t_TaskTreat treat(stab::t_TaskTreat::SPAT);
@@ -760,6 +760,8 @@ bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLo
 	wxLogMessage(_T("Start wave:%s"), wch.to_wstr().c_str());
 	double da;
 
+	std::wofstream ofstr("output/wchars_shift.dat");
+
 	for (int i = 0; i < NSteps; i++) {
 
 		wch.w += dw;
@@ -772,11 +774,15 @@ bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLo
 		calcGroupVelocity(wch);
 
 		wxLogMessage(_T("[i=%d] Cur wave:%s"), i, wch.to_wstr().c_str());
+
+		ofstr << wch.to_wstr_min().c_str();
 	}
 
 	wxLogMessage(_T("freq residual: %lf"), wchars_dest.w.real() - wch.w.real());
 
 	wchars_dest = wch;
+
+	ofstr.close();
 
 	return true;
 };

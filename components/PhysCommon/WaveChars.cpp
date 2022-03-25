@@ -370,6 +370,16 @@ std::wstring t_WaveChars::to_wstr() const{
 
 }
 
+std::wstring t_WaveChars::to_wstr_min() const {
+
+	std::wostringstream wostr;
+	wostr << a.real() << _T("\t") << a.imag() << _T("\t")
+		<< b.real() << _T("\t") << b.imag() << _T("\t")
+		<< w.real() << _T("\t") << w.imag() << _T("\n");
+	return wostr.str();
+
+}
+
 t_WaveChars::t_BadTreat::t_BadTreat(const wxString& what, const wxChar* szFile,  const int line):
 t_GenException(what, szFile, line){};
 

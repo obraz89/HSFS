@@ -267,6 +267,7 @@ void task::search_wchars_loc_wb_shift() {
 			wxLogMessage(_T("SearchWCharsLocWVecFix: using w_ndim_min as target freq value"));
 			w_dest.w = g_taskParams.w_ndim_min;
 
+			wxLogMessage(_T("SearchWCharsLocWVecFix: using b_ndim_min as target beta value"));
 			w_dest.b = g_taskParams.b_ndim_min;
 
 			g_pStabSolver->searchWaveWBShift(w_init, w_dest);

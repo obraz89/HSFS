@@ -69,6 +69,7 @@ public:
 	IMPEXP_PHYSCOMMON friend std::wostream& operator<<(std::wostream& str, t_WaveChars ww);
 	void print();
 	std::wstring to_wstr() const;
+	std::wstring to_wstr_min() const;
 
 	// exceptions
 	class t_BadTreat: public t_GenException{
