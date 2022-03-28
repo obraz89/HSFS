@@ -53,7 +53,7 @@ namespace task{
 
 	bool do_global_search_find_max(const int pid);
 
-	void calc_Cp_etc();
+	void calc_MF_chars();
 
 	void calc_scal_prod_self();
 

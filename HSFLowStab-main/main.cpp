@@ -139,8 +139,8 @@ int main(int argc, char* argv[]){
 		case task::GetAmplitudeFuncs:
 			task::get_amplitude_funcs();
 			break;
-		case task::GetMFChars:
-			task::calc_Cp_etc();
+		case task::CalcMFChars:
+			task::calc_MF_chars();
 			break;
 
 		case task::CalcScalProd_LST_test:

@@ -70,7 +70,7 @@ namespace task{
 		GetBLSpectrum, 
 
 		// calculate Cp and other useful functions in pave points
-		GetMFChars, 
+		CalcMFChars, 
 
 		// calculate scalar product of 2 modes, both are taken from LST analysis
 		CalcScalProd_LST_test, 

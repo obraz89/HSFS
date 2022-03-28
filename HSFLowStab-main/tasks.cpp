@@ -619,7 +619,7 @@ void task::get_profiles(){
 
 }
 
-void task::calc_Cp_etc(){
+void task::calc_MF_chars(){
 
 	int npts = g_pStabDB->get_npoints();
 
@@ -629,26 +629,84 @@ void task::calc_Cp_etc(){
 
 	double gM2 = prms.Gamma*prms.Mach*prms.Mach;
 
-	std::ofstream ofstr("output/cp.dat");
+	{
+		std::ofstream ofstr("output/cp.dat");
 
-	for (int j=0; j<npts; j++){
+		// calculate Cp (pressure coefficient) and write to a file
 
-		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
+		for (int j = 0; j<npts; j++) {
 
-		mf::t_Rec rec; 
-		
-		//v1, but Cp should be computed on surface
-		//rec = g_pMFDomain->get_rec(xyz);
+			mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
 
-		// v2, correct for Cp
-		g_pMFDomain->calc_nearest_surf_rec(xyz, rec);
+			mf::t_Rec rec;
 
-		double Cp = 2.0*(rec.p - 1./gM2);
+			//v1, but Cp should be computed on surface
+			//rec = g_pMFDomain->get_rec(xyz);
 
-		ofstr<<rec.x<<"\t"<<rec.y<<"\t"<<rec.z<<"\t"<<Cp<<"\n";
-		ofstr.flush();
+			// v2, correct for Cp
+			g_pMFDomain->calc_nearest_surf_rec(xyz, rec);
 
+			double Cp = 2.0*(rec.p - 1. / gM2);
+
+			ofstr << rec.x << "\t" << rec.y << "\t" << rec.z << "\t" << Cp << "\n";
+			ofstr.flush();
+
+		}
 	}
+
+
+	// calculate displacement thickness and write to a file
+	{
+		std::vector<double> y(1001);
+		std::vector<double> f(1001);
+
+		std::ofstream ofstr("output/disp_thick.dat");
+
+		ofstr << "x\ty\tz\tDisp_thick\n";
+
+		for (int j = 0; j < npts; j++) {
+
+			mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
+
+			mf::t_Rec rec_mf;
+
+			//v1, but Cp should be computed on surface
+			//rec = g_pMFDomain->get_rec(xyz);
+
+			// v2, correct for Cp
+			g_pMFDomain->calc_nearest_surf_rec(xyz, rec_mf);
+
+			t_ProfMFLoc profMFLoc(*g_pMFDomain);
+
+			mf::t_ProfDataCfg data_cfg;
+			data_cfg.ThickCoef = g_pMFDomain->get_prof_extr_cfg().ThickCoefDefault;
+			data_cfg.LoadFromAVFProfile = g_pMFDomain->get_prof_extr_cfg().LoadFromAVFProfile;
+			profMFLoc.initialize(xyz, data_cfg, blp::NSINIT_EXTRACT);
+
+			const int N = profMFLoc.get_nnodes();
+
+			if (N > f.size()) {
+				wxLogMessage(_T("Profile extracted has more nodes than vec, resizing"));
+				y.resize(N);
+				f.resize(N);
+			}
+
+			t_Profile::t_Rec rec;
+			for (int k = 0; k < profMFLoc.get_nnodes(); k++) {
+				rec = profMFLoc.get_rec(k);
+
+				y[k] = rec.y;
+				f[k] = rec.r*(1.0 - rec.u);
+
+			}
+
+			double disp_thick = smat::fun_integrate(y, f, N);
+
+			ofstr << rec_mf.x << "\t" << rec_mf.y << "\t" << rec_mf.z << "\t" << disp_thick << "\n";
+			ofstr.flush();
+		}
+	} // ~calculate displacement thickness and write to a file
+	
 
 }
 
