@@ -12,6 +12,7 @@ tools/**/*.ini
 # compiler generated & precomp
 *_mod.f90
 *.pchi
+*.ipch
 # intermed
 *.mod
 *.ncb
@@ -19,6 +20,8 @@ tools/**/*.ini
 *.pchi
 # msvs
 *.VC.db
+*.VC.db-shm
+*.VC.db-wal
 *.VC.opendb
 *.suo
 *.res
