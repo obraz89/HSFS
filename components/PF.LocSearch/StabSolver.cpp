@@ -198,6 +198,9 @@ void t_StabSolver::setContext(const mf::t_GeomPoint a_xyz, mf::t_ProfDataCfg* pP
 		prof_cfg.LoadFromAVFProfile = true;
 	}
 
+	if (_rFldNS.get_mf_params().BLUseGlobalRFAsLocal)
+		prof_cfg.UseGlobalRFAsLocal = true;
+
 	switch (_params.NSProfInit)
 	{
 	case (blp::NSINIT_EXTRACT):

@@ -109,6 +109,8 @@ void t_CGNS3DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("BLYSelfsimMultiplier", 1.0, _T("dels = BLYSelfsimMultiplier * L_ref * sqrt(nue*x/Ue)"));
 
+	g.add("BLUseGlobalRFAsLocal", 0, _T("Use Global RF as local when making local profile"));
+
 }
 
 void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginParamsGroup& g){
@@ -180,5 +182,7 @@ void t_CGNS3DParams::init_fld_base_params(t_CGNS3DParams& params, const TPluginP
 	params.BLGridLineNonOrthRecalcY = g.get_int_param("BLGridLineNonOrthRecalcY");
 
 	params.BLYSelfsimMultiplier = g.get_real_param("BLYSelfsimMultiplier");
+
+	params.BLUseGlobalRFAsLocal = g.get_int_param("BLUseGlobalRFAsLocal");
 
 }

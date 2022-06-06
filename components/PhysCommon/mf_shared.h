@@ -117,6 +117,7 @@ protected:
 // eg enthalpy criterion, see t_Blk::get_bound_ind_enth
 /************************************************************************/
 
+// TODO: move BLUseGlobalRFAsLocal to Profile params 
 class IMPEXP_PHYSCOMMON t_FldParams{
 public:
 	t_ViscType ViscType;
@@ -124,6 +125,8 @@ public:
 		L_ref, T_inf, T_wall, 
 		T_mju, Mju_pow, Gamma, Pr,
 		Mol_weight, R_Gas, BulkViscRatio;
+
+	bool BLUseGlobalRFAsLocal;
 };
 
 IMPEXP_PHYSCOMMON t_Rec operator-(const mf::t_Rec& rec1, const mf::t_Rec& rec2);

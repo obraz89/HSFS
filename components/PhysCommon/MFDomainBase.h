@@ -45,6 +45,7 @@ namespace mf{
 // ThickFixed - force fixed total thickness
 // NNodes - use later with interpolators
 // LoadFromAVFProfile - extract raw profile not from field, but from AVF self-sim data
+// UseGlobalRFAsLocal - do not rotate reference frame to local rf (inviscid streamline)
 /************************************************************************/
 	struct IMPEXP_PHYSCOMMON t_ProfDataCfg{
 
@@ -55,6 +56,8 @@ namespace mf{
 		int NNodes;
 
 		bool LoadFromAVFProfile = false;
+
+		bool UseGlobalRFAsLocal = false;
 
 	};
 

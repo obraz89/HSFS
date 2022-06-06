@@ -591,6 +591,7 @@ void task::get_profiles(){
 		mf::t_ProfDataCfg data_cfg;
 		data_cfg.ThickCoef = g_pMFDomain->get_prof_extr_cfg().ThickCoefDefault;
 		data_cfg.LoadFromAVFProfile = g_pMFDomain->get_prof_extr_cfg().LoadFromAVFProfile;
+		data_cfg.UseGlobalRFAsLocal = g_pMFDomain->get_mf_params().BLUseGlobalRFAsLocal;
 		profMFLoc.initialize(xyz, data_cfg, blp::NSINIT_EXTRACT);
 
 		swprintf(szFname, MAX_FNAME_LEN, _T("%s/ProfileMFLoc_%d.dat"),hsstab::OUTPUT_DIR.c_str(), j);

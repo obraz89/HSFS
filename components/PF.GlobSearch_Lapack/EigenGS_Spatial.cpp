@@ -115,6 +115,8 @@ void t_GlobSrchSpat::setContext(const mf::t_GeomPoint& a_xyz){
 		prof_cfg.LoadFromAVFProfile = true;
 	}
 
+	prof_cfg.UseGlobalRFAsLocal = _rBlk.get_mf_params().BLUseGlobalRFAsLocal;
+
 	switch (_params.NSProfInit)
 	{
 	case (blp::NSINIT_EXTRACT):

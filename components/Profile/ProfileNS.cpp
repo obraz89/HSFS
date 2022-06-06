@@ -41,14 +41,15 @@ void t_ProfMFLoc::_initialize_extract(const t_GeomPoint& xyz, const mf::t_ProfDa
 
 	t_SqMat3Dbl jac, jac_inv;
 
-	if (!init_cfg.LoadFromAVFProfile) {
-		jac = _rDomain.calc_jac_to_loc_rf(r_xyz_base);
-		jac_inv = jac.inverse();
-	}
-	else {
+	if (init_cfg.LoadFromAVFProfile || init_cfg.UseGlobalRFAsLocal) {
 		jac.setToUnity();
 		jac_inv.setToUnity();
 	}
+	else {
+		jac = _rDomain.calc_jac_to_loc_rf(r_xyz_base);
+		jac_inv = jac.inverse();
+	}
+
 	// second column of rotation matrix (jac) is surface normal
 	jac.col_to_vec(1, surf_norm);
 
