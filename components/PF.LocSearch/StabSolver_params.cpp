@@ -90,7 +90,8 @@ void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("CurvTermsEnabled", CURV_TERMS_FLAG_DEFAULT_STR, _T("Enable/disable curvature terms in stability computations"));
 
-	g.add("bCheckPhaseSpeedSSonic", 1, _T("Do fast check for phase speed to be between 1-1/Mx, 1+1/Mx"));
+	g.add("bCheckAlphaPositive", 0, _T("Consider only discrete modes with ar>0"));
+	g.add("bCheckPhaseSpeedSSonic", 0, _T("Do fast check for phase speed to be between 1-1/Mx, 1+1/Mx"));
 }
 
 void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
@@ -185,6 +186,7 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 
 	CurvTermsOn = it_b->second;
 
+	bCheckAlphaPositive = g.get_int_param("bCheckAlphaPositive");
 	bCheckPhaseSpeedSSonic = g.get_int_param("bCheckPhaseSpeedSSonic");
 
 }

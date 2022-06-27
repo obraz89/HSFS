@@ -973,15 +973,19 @@ std::vector<t_WCharsLoc> t_GlobSrchSpat::getInstabModes(const t_WCharsLoc& init_
 		getSpectrum(init_wave);
 		// TODO: empirics!!!
 		for (it=_spectrum.begin(); it<_spectrum.end(); it++){
-			// IMPORTANT TODO: fix parasitic solutions, ask AVF
-			// now neglect parasitic branch manually
-			if (it->imag()<_params.Arg_Threshold && it->real()>0.0){
-				t_WCharsLoc wave;
-				wave.a = *it;
-				wave.b = _beta;
-				wave.w = _w;
-				wave.set_treat(stab::t_TaskTreat::SPAT);
-				wave.set_scales(get_stab_scales());
+			t_WCharsLoc wave;
+			wave.a = *it;
+			wave.b = _beta;
+			wave.w = _w;
+			wave.set_treat(stab::t_TaskTreat::SPAT);
+			wave.set_scales(get_stab_scales());
+			// IMPORTANT TODO: discard parasitic modes
+			bool ai_ar_check = stab::check_wchars_increment(wave);
+			// discard modes with ar<0 if option bCheckAlphaPositive is specified
+			// this is NOT a universal option, modes with ar<0 can exist (e.g. swept wing)
+			bool ar_check = !_params.bCheckAlphaPositive || stab::check_wchars_alpha_positive(wave);
+			bool c_check = !_params.bCheckPhaseSpeedSSonic || stab::check_wchars_c_phase(wave);
+			if (it->imag()<_params.Arg_Threshold && ai_ar_check && ar_check && c_check){
 				inits.push_back(wave);
 			}
 		}

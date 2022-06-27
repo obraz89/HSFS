@@ -93,6 +93,9 @@ void t_EigenGSParams::default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("BCOutKind", BC_OUT_KIND_DEFAULT_STR, _T("BC kind at the top of comp domain"));
 
+	g.add("bCheckAlphaPositive", 0, _T("Consider only discrete modes with ar>0"));
+	g.add("bCheckPhaseSpeedSSonic", 0, _T("Do fast check for phase speed to be between 1-1/Mx, 1+1/Mx"));
+
 }
 
 void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
@@ -180,6 +183,9 @@ void t_EigenGSParams::init(const hsstab::TPluginParamsGroup& g){
 	if (it == BC_OUT_KIND_STR.end()) wxLogMessage(_T("PF.EigenGS: unknown option for BC out kind, supported options HOMOGEN, P_ASYM"));
 
 	BCOutKind = static_cast<t_BCOutKind>(it->second);
+
+	bCheckAlphaPositive = g.get_int_param("bCheckAlphaPositive");
+	bCheckPhaseSpeedSSonic = g.get_int_param("bCheckPhaseSpeedSSonic");
 
 }
 

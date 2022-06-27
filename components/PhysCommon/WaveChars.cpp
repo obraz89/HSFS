@@ -215,6 +215,10 @@ namespace stab{
 	}
 
 	}
+
+	bool check_wchars_alpha_positive(const t_WaveChars& w) {
+		return w.a.real() > 0.0;
+	}
 }
 
 // ----------------------------------------------------------------- t_WCharsLoc

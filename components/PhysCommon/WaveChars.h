@@ -85,6 +85,10 @@ namespace stab{
 
 	// "ai/ar" should always be small
 	IMPEXP_PHYSCOMMON bool check_wchars_increment(const t_WaveChars& w);
+
+	// check that alpha is positive
+	// TODO: alpha can be negative for discrete modes (!)
+	IMPEXP_PHYSCOMMON bool check_wchars_alpha_positive(const t_WaveChars& w);
 }
 
 /************************************************************************/

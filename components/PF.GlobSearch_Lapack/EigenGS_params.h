@@ -32,6 +32,9 @@ namespace pf{
 		enum t_BCOutKind {BC_OUT_HOMOGEN=0, BC_OUT_P_ASYM};
 		t_BCOutKind BCOutKind;
 
+		bool bCheckAlphaPositive;
+		bool bCheckPhaseSpeedSSonic;
+
 		t_EigenGSParams();
 
 		void init_supported_options();
