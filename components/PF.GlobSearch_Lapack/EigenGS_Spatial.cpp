@@ -785,6 +785,10 @@ int t_GlobSrchSpat::_solve(){
 
 	// fill A~ and B~ by rows
 	// first block - bc,bc,fo,bc,bc
+
+	// if there is a uniform or artificial condition like phi + alpha*eps*phi = 0
+	// we can set any eps, here eps = 1+i is used to make eigen val that is clearly filtered as unphysical
+	MKL_Complex16 EPS; EPS.real = 1.0; EPS.imag = 1.0;
 	int row_num=0;
 	{
 		for (int j=0; j<GS_NVARS_SPAT; j++){
@@ -804,7 +808,7 @@ int t_GlobSrchSpat::_solve(){
 
 				MKL_Complex16 one; one.real = 1.0; one.imag = 0.0;
 
-				_A_G[g_ind] = one;
+				_A_G[g_ind] = EPS;
 				_B_G[g_ind] = one;
 
 			}else{
@@ -863,7 +867,7 @@ int t_GlobSrchSpat::_solve(){
 
 				MKL_Complex16 one; one.real = 1.0; one.imag = 0.0;
 
-				_A_G[g_ind] = one;
+				_A_G[g_ind] = EPS;
 				_B_G[g_ind] = one;
 
 			}
