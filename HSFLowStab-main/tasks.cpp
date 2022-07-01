@@ -548,6 +548,8 @@ void task::get_amplitude_funcs(){
 
 			g_pStabSolver->searchWave(w_init, cond, stab_treat);
 
+			g_pStabSolver->calcGroupVelocity(w_init);
+
 			wxLogMessage(_T("converged to wave:%s"), &w_init.to_wstr()[0]);
 
 			g_pStabSolver->dumpEigenFuctions(strFname);
