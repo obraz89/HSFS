@@ -233,15 +233,21 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 		loc_solver.searchWave(wchars, stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED),
 			stab::t_TaskTreat::SPAT);
 
-		// calc <H1*dze_ddx, ksi>
-		loc_solver.calcScalarProd_H1_HW(dze_ddx, ksi, v1_a, v1_w);
+		if (_params.CalcNonParEffectsAmpFun) {
+			// calc <H1*dze_ddx, ksi>
+			loc_solver.calcScalarProd_H1_HW(dze_ddx, ksi, v1_a, v1_w);
+		}
+		else {
+			v1_a = 0.0;
+		}
 
-		//v1_a = 0.0;
-
-		// calc <H2*dze, ksi>
-		v2_a = loc_solver.calcScalarProd_H2(dze, ksi);
-
-		//v2_a = 0.0;
+		if (_params.CalcNonParEffectsMeanFlow) {
+			// calc <H2*dze, ksi>
+			v2_a = loc_solver.calcScalarProd_H2(dze, ksi);
+		}
+		else {
+			v2_a = 0.0;
+		}
 
 		// calc <H1*dze, ksi>
 		loc_solver.calcScalarProd_H1_HW(dze, ksi, v3_a, v3_w);
@@ -286,15 +292,23 @@ void t_WavePackLine::_calc_nonpar_sigma_additions(stab::t_LSBase& loc_solver) {
 
 		wxLogMessage(_T("Sigma addition (nondim local):%lf"), -1.0*_line[i].da_nonpar.imag());
 		wxLogMessage(_T("Debug : current x=%lf"), xyz.x());
-		getchar();
+		//getchar();
 
 		// modify wave chars glob and DO NOT modify wchars loc!
 		t_WCharsLoc wchars_new;
 		wchars_new = _line[i].wchars_loc;
 		wchars_new.a = _line[i].wchars_loc.a + _line[i].da_nonpar;
 
-		t_WCharsGlob wchars_glob(wchars_new, _rFldMF.calc_jac_to_loc_rf(xyz),
-			loc_solver.get_stab_scales());
+		t_SqMat3Dbl jac;
+
+		if (_rFldMF.get_mf_params().BLUseGlobalRFAsLocal) {
+			jac.setToUnity();
+		}
+		else {
+			jac = _rFldMF.calc_jac_to_loc_rf(xyz);
+		}
+
+		t_WCharsGlob wchars_glob(wchars_new, jac, loc_solver.get_stab_scales());
 
 		_line[i].wave_chars = wchars_glob;	
 

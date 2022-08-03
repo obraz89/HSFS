@@ -80,6 +80,10 @@ void pf::wpline_default_settings(hsstab::TPluginParamsGroup& g) {
 
 	g.add("CalcNonParallelEffects", 0, _T("Calculate addition to increment due to mf non-parallel effects"));
 
+	g.add("CalcNonParEffectsAmpFun", 1, _T("Calculate non par additions from amp fun deformation"));
+
+	g.add("CalcNonParEffectsMeanFlow", 1, _T("Calculate non par additions from amp fun deformation"));
+
 	g.add("CalcNonParEffectsAtQmax", 0, _T("Calculate non par additions at point where disturbance mass flux is max, otherwise at wall"));
 
 	g.add("IndexStepPointsFromFile", 1, _T("skip IndexStepPointsFromFile-1 points when moving along points from file"));
@@ -136,6 +140,10 @@ void t_WPLineParams::init_wpline_base_params(const hsstab::TPluginParamsGroup& g
 	WriteDisturbanceField = g.get_int_param("WriteDisturbanceField");
 
 	CalcNonParallelEffects = g.get_int_param("CalcNonParallelEffects");
+
+	CalcNonParEffectsAmpFun = g.get_int_param("CalcNonParEffectsAmpFun");
+
+	CalcNonParEffectsMeanFlow = g.get_int_param("CalcNonParEffectsMeanFlow");
 
 	CalcNonParEffectsAtQmax = g.get_int_param("CalcNonParEffectsAtQmax");
 

@@ -47,6 +47,12 @@ namespace pf{
 
 		bool CalcNonParallelEffects;
 
+		// if true, calculate addition to increment from amp fun deformation (v1_a)
+		bool CalcNonParEffectsAmpFun;
+
+		// if true, calculate addition to increment from mean flow variation (v2_a)
+		bool CalcNonParEffectsMeanFlow;
+
 		// if true, calculate sigma addition at point where mass flux of disturbance is max (mass flux disturbance)
 		// otherwise calculate addition at wall (pressure disturbance)
 		bool CalcNonParEffectsAtQmax;
