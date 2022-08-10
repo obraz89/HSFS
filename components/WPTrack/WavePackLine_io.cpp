@@ -34,7 +34,7 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 
 	std::wofstream fstr(&fname[0], write_mode);
 	fstr<<_T("s[m]\tx[m]\ty[m]\tz[m]\tsigma[1/m]\tn_factor[]\tlambda[m]\tNju[kHz]\t");
-	fstr << _T("kx[1/m]\tky[1/m]\tkz[1/m]\tstabRe[]\tDels[m]\tMe\n");
+	fstr << _T("kx[1/m]\tky[1/m]\tkz[1/m]\tstabRe[]\tDels[m]\tMe\t Thick_Total[]\n");
 
 	for (int i=0; i<_line.size(); i++){
 
@@ -58,20 +58,21 @@ void t_WavePackLine::print_to_file(const std::string& fname, std::ios_base::open
 
 		mf::t_GeomPoint xyz= rec.mean_flow.get_xyz();
 
-		fstr<<_T("\t")<<std_manip::std_format_fixed(L_ref*xyz.x())
-			<<_T("\t")<< std_manip::std_format_fixed(L_ref*xyz.y())
-			<<_T("\t")<< std_manip::std_format_fixed(L_ref*xyz.z())
-			<<_T("\t")<< std_manip::std_format_fixed(_sigma[i])
-			<<_T("\t")<< std_manip::std_format_fixed(rec.n_factor)
-			<<_T("\t")<< std_manip::std_format_fixed(lambda)
-			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.w.real()/(2000.0*3.141592653))
+		fstr<<_T("\t")<<std_manip::std_format_sci(L_ref*xyz.x())
+			<<_T("\t")<< std_manip::std_format_sci(L_ref*xyz.y())
+			<<_T("\t")<< std_manip::std_format_sci(L_ref*xyz.z())
+			<<_T("\t")<< std_manip::std_format_sci(_sigma[i])
+			<<_T("\t")<< std_manip::std_format_sci(rec.n_factor)
+			<<_T("\t")<< std_manip::std_format_sci(lambda)
+			<<_T("\t")<< std_manip::std_format_sci(dim_wave.w.real()/(2000.0*3.141592653))
 			// debug
-			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.a.real())
-			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.kn.real())
-			<<_T("\t")<< std_manip::std_format_fixed(dim_wave.b.real())
-			<<_T("\t")<< std_manip::std_format_fixed(stab_scales.ReStab)
-			<<_T("\t")<< std_manip::std_format_fixed(stab_scales.Dels)
-			<<_T("\t")<< std_manip::std_format_fixed(stab_scales.Me)
+			<<_T("\t")<< std_manip::std_format_sci(dim_wave.a.real())
+			<<_T("\t")<< std_manip::std_format_sci(dim_wave.kn.real())
+			<<_T("\t")<< std_manip::std_format_sci(dim_wave.b.real())
+			<<_T("\t")<< std_manip::std_format_sci(stab_scales.ReStab)
+			<<_T("\t")<< std_manip::std_format_sci(stab_scales.Dels)
+			<<_T("\t")<< std_manip::std_format_sci(stab_scales.Me)
+			<< _T("\t") << std_manip::std_format_sci(rec.bl_thick_total)
 			<<_T("\n");	
 	};
 

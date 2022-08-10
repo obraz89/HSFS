@@ -1041,6 +1041,9 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, cur_wave);
 
+		 // debug 
+		 pLine->back().bl_thick_total = loc_solver.getThickMF();
+
 		 if (_params.CalcWPDispersion)
 			 _calc_d2sig_dx2(cur_wave, loc_solver, pLine->back());
 

@@ -65,6 +65,10 @@ namespace stab{
 		void pack_to_arr(t_WPRec2H5Arr& arr) const;
 		void unpack_from_arr(const double* cont);
 		void unpack_from_arr(const t_WPRec2H5Arr& arr);
+
+		// debug
+		double bl_thick_total;
+
 	};
 
 /************************************************************************/
