@@ -505,6 +505,100 @@ void TDomain::calc_surf_norm_corr(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) 
 
 }
 
+void TDomain::calc_surf_tang_vectors_grd(const t_ZoneNode& surf_node, t_Vec3Dbl& t1, t_Vec3Dbl& t2) const {
+
+	const TZone& blk = Zones[surf_node.iZone - 1];
+
+	const int i_base = surf_node.iNode.i;
+	const int j_base = surf_node.iNode.j;
+	const int k_base = surf_node.iNode.k;
+
+	mf::cg::TZoneFacePos fp = surf_node.iFacePos;
+
+	// shifts from base ijk to get v1, v2 - surface vectors
+	int di1, dj1, dk1;
+	int di2, dj2, dk2;
+
+	di1 = dj1 = dk1 = 0;
+	di2 = dj2 = dk2 = 0;
+	// keep all nodes inside the block (no ghosts)
+	if ((fp == mf::cg::TZoneFacePos::faceXmin) || (fp == mf::cg::TZoneFacePos::faceXmax)) {
+
+		dj1 = j_base != blk.je ? 1 : -1;
+
+		dk2 = k_base != blk.ke ? 1 : -1;
+
+	}
+
+	if ((fp == mf::cg::TZoneFacePos::faceYmin) || (fp == mf::cg::TZoneFacePos::faceYmax)) {
+
+		di1 = i_base != blk.ie ? 1 : -1;
+
+		dk2 = k_base != blk.ke ? 1 : -1;
+
+	}
+
+	if ((fp == mf::cg::TZoneFacePos::faceZmin) || (fp == mf::cg::TZoneFacePos::faceZmax)) {
+
+		di1 = i_base != blk.ie ? 1 : -1;
+
+		dj2 = j_base != blk.je ? 1 : -1;
+
+	}
+
+	// check that all indices are ok
+
+	if (!_check_znode_is_real_cell(surf_node))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p0 is not real cell"));
+
+	if (!_check_znode_is_real_cell(t_ZoneNode(surf_node.iZone, i_base + di1, j_base + dj1, k_base + dk1)))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p1 is not real cell"));
+
+	if (!_check_znode_is_real_cell(t_ZoneNode(surf_node.iZone, i_base + di2, j_base + dj2, k_base + dk2)))
+		wxLogMessage(_T("Error: calc_surf_norm_corr: p2 is not real cell"));
+
+
+	mf::t_Rec rec0, rec1, rec2;
+	mf::t_GeomPoint p0, p1, p2;
+
+	get_rec(blk, i_base, j_base, k_base, rec0);
+	get_rec(blk, i_base + di1, j_base + dj1, k_base + dk1, rec1);
+	get_rec(blk, i_base + di2, j_base + dj2, k_base + dk2, rec2);
+
+	p0 = rec0.get_xyz();
+	p1 = rec1.get_xyz();
+	p2 = rec2.get_xyz();
+
+	t1 = p1 - p0;
+	t2 = p2 - p0;
+
+	t1.normalize();
+	t2.normalize();
+
+	t_Rec outer_rec;
+	calc_nearest_inviscid_rec(rec0.get_xyz(), outer_rec);
+
+	t_Vec3Dbl flow_dir = outer_rec.get_uvw().normalize();
+
+	// choose correct direction - v1 must be closest to the external streamline
+	t_Vec3Dbl vecs[] = { t1, t2, -1.0*t1, -1.0*t2 };
+
+	double sp_max = -1.0;
+	int i_max = -1;
+	for (int i = 0; i < 3; i++) {
+		double sp = vector::dot(vecs[i], flow_dir);
+		if (sp > sp_max) {
+			sp_max = sp;
+			i_max = i;
+		}
+	}
+
+	wxLogMessage(_T("Scal prod of t1 with inviscid uvw dir:\n%lf"), sp_max);
+	t1 = vecs[i_max];
+	// t2 is not changed (and usually not used as in jac v2 will be v3xv1)
+
+}
+
 double TDomain::calc_x_scale(const t_GeomPoint& xyz) const{
 	wxLogMessage(_T("MF Domain Warning: LRef scale used as x scale"));
 	return get_mf_params().L_ref;
@@ -1174,6 +1268,11 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 
 	t_SqMat3Dbl jac;
 
+	if (get_mf_params().LocalRFOrient == t_LocalRFOrient::GLOBAL) {
+		jac.setToUnity();
+		return jac;
+	}
+
 	t_Rec bound_rec, surface_rec;
 	get_rec(raw_profile.back(), bound_rec);
 	get_rec(raw_profile[0], surface_rec);
@@ -1190,14 +1289,21 @@ t_SqMat3Dbl TDomain::calc_jac_to_loc_rf(const t_GeomPoint& xyz) const{
 		e2 = bound_rec.get_xyz() - surface_rec.get_xyz();
 		e2.normalize();
 	}
-	//double norm = two_norm(e2);
-	// construct e1': along inviscid streamline
-	// be sure e1'*e2'=0:
-	// e1' = norm(Ue - (e2'*Ue));
+
+	// construct e1': along inviscid streamline or along surface 
 
 	u_e = bound_rec.get_uvw();
-	e1 = u_e - vector::dot(e2, u_e)*e2;
-	e1.normalize();
+	if (get_mf_params().LocalRFOrient == t_LocalRFOrient::INVISCID_STREAMLINE) {
+		e1 = u_e - vector::dot(e2, u_e) * e2;
+		e1.normalize();
+	}
+
+	if (get_mf_params().LocalRFOrient == t_LocalRFOrient::PPOINTS_WPLINE_2D) {
+		t_Vec3Dbl t1, t2;
+		calc_surf_tang_vectors_grd(surf_znode, t1, t2);
+		e1 = t1 - vector::dot(e2, t1) * e2;
+		e1.normalize();
+	}
 	// e3' = [e1' x e2']
 	e3 = vector::cross(e1, e2);
 	// ordinary orthogonal 

@@ -111,6 +111,14 @@ protected:
 	};
 };
 
+enum t_LocalRFOrient {
+
+	INVISCID_STREAMLINE,
+	PPOINTS_WPLINE_2D,
+	GLOBAL
+
+};
+
 /************************************************************************/
 /* Common Flow field parameters                                         */
 // some are important to calculate BL thickness etc
@@ -126,7 +134,7 @@ public:
 		T_mju, Mju_pow, Gamma, Pr,
 		Mol_weight, R_Gas, BulkViscRatio;
 
-	bool BLUseGlobalRFAsLocal;
+	t_LocalRFOrient LocalRFOrient;
 };
 
 IMPEXP_PHYSCOMMON t_Rec operator-(const mf::t_Rec& rec1, const mf::t_Rec& rec2);

@@ -751,6 +751,8 @@ namespace mf{
 
 			virtual void calc_surf_norm_corr(const t_ZoneNode& surf_node, t_Vec3Dbl& norm) const;
 
+			virtual void calc_surf_tang_vectors_grd(const t_ZoneNode& surf_node, t_Vec3Dbl& t1, t_Vec3Dbl& t2) const;
+
 			virtual t_SqMat3Dbl calc_jac_to_loc_rf(const t_GeomPoint& xyz) const;
 
 			void calc_jac_to_loc_rf(const t_GeomPoint& xyz, t_SqMat3Dbl& jac);
@@ -844,6 +846,7 @@ namespace mf {
 		t_DomainCGNSParams();
 
 		std::map<wxString, int> FACE_POS_StART_STR;
+		std::map<wxString, int> LOCRF_ORIENT_OPTS;
 
 		mf::cg::TZoneFacePos FacePosStarting;
 

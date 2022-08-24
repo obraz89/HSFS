@@ -142,6 +142,8 @@ void t_CGNS2DParams::plug_default_settings(TPluginParamsGroup& g){
 
 	g.add("BLUseGlobalRFAsLocal", 0, _T("Use global RF as local when making local profile"));
 
+	g.add("LocalRFOrient", _T("InviscidStreamline"), _T("what reference frame to use as local"));
+
 }
 
 void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginParamsGroup& g){
@@ -228,7 +230,7 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 	it = params.FACE_POS_StART_STR.find(FacePosStr);
 
 	if (it == params.FACE_POS_StART_STR.end())
-		ssuGENTHROW(_T("Unknown value provided for otion StartingFacePos"));
+		ssuGENTHROW(_T("Unknown value provided for option StartingFacePos"));
 
 	params.FacePosStarting = static_cast<mf::cg::TZoneFacePos>(it->second);
 
@@ -236,6 +238,12 @@ void t_CGNS2DParams::init_fld_base_params(t_CGNS2DParams& params, const TPluginP
 
 	params.BLYSelfsimMultiplier = g.get_real_param("BLYSelfsimMultiplier");
 
-	params.BLUseGlobalRFAsLocal = g.get_int_param("BLUseGlobalRFAsLocal");
+	wxString LocRFOrientStr = g.get_string_param("LocalRFOrient");
+	it = params.LOCRF_ORIENT_OPTS.find(LocRFOrientStr);
+
+	if (it ==params.LOCRF_ORIENT_OPTS.end())
+		ssuGENTHROW(_T("Unknown value provided for option LocalRFOrient"));
+
+	params.LocalRFOrient = static_cast<t_LocalRFOrient>(it->second);
 
 }

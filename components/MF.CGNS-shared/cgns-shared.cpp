@@ -26,6 +26,11 @@ using namespace mf::cg;
 #define OPT_FACE_POS_ZMIN _T("Zmin")
 #define OPT_FACE_POS_ZMAX _T("Zmax")
 
+#define OPT_LOCRF_INVISCID_STREAMLINE _T("InviscidStreamline")
+#define OPT_LOCRF_PPOINTS_WPLINE_2D _T("PPointsWPLine2D")
+#define OPT_LOCRF_GLOBAL _T("Global")
+
+
 static const char* g_cgCoordNames[] = { "CoordinateX", "CoordinateY", "CoordinateZ" };
 
 mf::t_DomainCGNSParams::t_DomainCGNSParams() :t_FldParams() {
@@ -38,6 +43,12 @@ mf::t_DomainCGNSParams::t_DomainCGNSParams() :t_FldParams() {
 	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_YMAX, mf::cg::TZoneFacePos::faceYmax));
 	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_ZMIN, mf::cg::TZoneFacePos::faceZmin));
 	FACE_POS_StART_STR.insert(std::make_pair(OPT_FACE_POS_ZMAX, mf::cg::TZoneFacePos::faceZmax));
+
+	LOCRF_ORIENT_OPTS.clear();
+
+	LOCRF_ORIENT_OPTS.insert(std::make_pair(OPT_LOCRF_INVISCID_STREAMLINE, t_LocalRFOrient::INVISCID_STREAMLINE));
+	LOCRF_ORIENT_OPTS.insert(std::make_pair(OPT_LOCRF_PPOINTS_WPLINE_2D, t_LocalRFOrient::PPOINTS_WPLINE_2D));
+	LOCRF_ORIENT_OPTS.insert(std::make_pair(OPT_LOCRF_GLOBAL, t_LocalRFOrient::GLOBAL));
 }
 
 // full or truncated (in case surf_znode is internal but carries face_pos of starting face) 

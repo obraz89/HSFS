@@ -1030,11 +1030,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 //loc_solver.calcGroupVelocity(cur_wave);
 
 		 t_SqMat3Dbl jac1;
+		 jac1 = _rFldMF.calc_jac_to_loc_rf(cur_xyz);
 
-		 if (_rFldMF.get_mf_params().BLUseGlobalRFAsLocal)
-			 jac1.setToUnity();
-		 else
-			 jac1 = _rFldMF.calc_jac_to_loc_rf(cur_xyz);
 
 		 t_WCharsGlob wchars_glob(cur_wave, jac1, 
 			 loc_solver.get_stab_scales());
