@@ -10,6 +10,8 @@
 
 #include "dll_impexp_shared.h"
 
+#include <chrono>
+
 namespace log_my{
 	inline void wxLogMessageStd(const std::wstring& str){
 		const wxChar* pStr = &(str[0]);
@@ -66,6 +68,26 @@ protected:
 	void DoLogString(const wxChar* szString, time_t WXUNUSED(t));
 };
 //-----------------------------------------------------------------------------
+
+// get elapsed time since the last call to get (in seconds)
+struct IMPEXP_SHARED t_TimeInterval {
+	static std::chrono::time_point<std::chrono::steady_clock> start;
+	static void init() {
+		start = std::chrono::high_resolution_clock::now();
+	}
+
+	static double get() {
+		auto now = std::chrono::high_resolution_clock::now();
+		double t = std::chrono::duration_cast<std::chrono::microseconds>(now - start).count()/1000000.0;
+		start = now;
+
+		return t;
+	}
+
+	static void log(const wxString& msg) {
+		wxLogMessage(_T("TimeInterval: %s ; Elapsed since last call:%lf"), msg, get());
+	}
+};
 
 
 #endif // __LOGGER

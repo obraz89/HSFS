@@ -8,7 +8,7 @@
 
 #include "ProfileStab.h"
 
-//#include "Log.h"
+#include "log.h"
 
 #include "io_helpers.h"
 
@@ -346,6 +346,8 @@ void task::retrace_wplines_cond_spat(stab::t_WPRetraceMode a_mode_retrace){
 			g_pGSSolverSpat->setContext(test_xyz);
 
 			g_pStabSolver->setContext(test_xyz);
+
+			t_TimeInterval::log(_T("Retrace, gs & ls context set"));
 
 			// TODO: for now GS is always spat, should be read from gs file later
 			t_WCharsLoc w_init;w_init.set_treat(stab::t_TaskTreat::SPAT);

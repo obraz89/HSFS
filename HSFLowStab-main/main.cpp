@@ -17,6 +17,8 @@ using namespace std;
 
 #include "mpi.h"
 
+#include "log.h"
+
 bool load_Settings_n_Plugins();
 
 //debug
@@ -30,6 +32,8 @@ int main(int argc, char* argv[]){
 		printf ("Error starting MPI program. Terminating.\n");
 		MPI_Abort(MPI_COMM_WORLD, rc);
 	}
+
+	t_TimeInterval::init();
 
 #ifdef wxUSE_UNICODE
 	wxChar **wxArgv = new wxChar*[argc + 1];

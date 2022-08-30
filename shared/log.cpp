@@ -34,3 +34,5 @@ void TLogFile::DoLogString(const wxChar* szString, time_t WXUNUSED(t))
 	m_file.Write(wxString(szString)+_T("\n"), *wxConvCurrent);
 }
 
+std::chrono::time_point<std::chrono::steady_clock> t_TimeInterval::start;
+
