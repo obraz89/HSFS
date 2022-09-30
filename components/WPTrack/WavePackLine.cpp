@@ -841,8 +841,12 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 	 do{
 
+		 t_TimeInterval::log(_("TimeInterval: loop start"));
+
 		 loc_solver.setContext(cur_xyz);
 		 gs_solver.setContext(cur_xyz);
+
+		 t_TimeInterval::log(_("TimeInterval: context is set"));
 
 		 // try to interpolate wchars from previous values
 
@@ -968,6 +972,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 
 			 bool ok_wave = search_instab_ls_gs(w_init, cur_wave, loc_solver, gs_solver, cur_xyz);
 
+			 t_TimeInterval::log(_("TimeInterval: search_instab_ls_gs done"));
+
 			 //getchar();
 
 			 if (!ok_wave) {
@@ -1032,11 +1038,15 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 t_SqMat3Dbl jac1;
 		 jac1 = _rFldMF.calc_jac_to_loc_rf(cur_xyz);
 
+		 t_TimeInterval::log(_("TimeInterval: jac computed"));
+
 
 		 t_WCharsGlob wchars_glob(cur_wave, jac1, 
 			 loc_solver.get_stab_scales());
 
 		 _add_node(*pLine, _rFldMF.get_rec(cur_xyz), wchars_glob, cur_wave);
+
+		 t_TimeInterval::log(_("TimeInterval: node added to wpline"));
 
 		 // debug 
 		 pLine->back().bl_thick_total = loc_solver.getThickMF();
@@ -1051,9 +1061,13 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 log_my::wxLogMessageStd(ostr.str());
 		 ostr.str(_T(""));ostr.clear();
 
+		 t_TimeInterval::log(_("TimeInterval: written rec to log"));
+
 		 t_WPLineRec& last_rec = pLine->back();
 
 		 _calc_dr(dt, last_rec, dr_dir, dr);
+
+		 t_TimeInterval::log(_("TimeInterval: dr was computed"));
 
 		 // TODO: IMPORTANT! BE ALWAYS ON SURFACE
 		 nxt_xyz = cur_xyz + dr; 
@@ -1061,6 +1075,8 @@ void t_WavePackLine::_retrace_dir_cond(t_GeomPoint start_xyz, t_WCharsLoc init_w
 		 proceed_cond = proceed_cond && _proceed_retrace(nxt_xyz, cur_wave, direction);
 
 		 cur_xyz = nxt_xyz;
+
+		 t_TimeInterval::log(_("TimeInterval: proceed condition checked"));
 
 	 }while (proceed_cond);
 
