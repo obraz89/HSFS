@@ -26,6 +26,8 @@ namespace pf{
 		t_MapWxStrInt PROFSTAB_NONDIM_TYPES_STR;
 		t_ProfStabCfg::t_Nondim NondimScaleType;
 
+		double MaxNonDimIncrement;
+
 		bool bCheckAlphaPositive;
 		bool bCheckPhaseSpeedSSonic;
 

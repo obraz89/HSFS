@@ -92,6 +92,8 @@ void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
 
 	g.add("bCheckAlphaPositive", 0, _T("Consider only discrete modes with ar>0"));
 	g.add("bCheckPhaseSpeedSSonic", 0, _T("Do fast check for phase speed to be between 1-1/Mx, 1+1/Mx"));
+
+	g.add("MaxNonDimIncrement", 0.0, _T("If specified positive value, waves with increments greater than this value are treated unphysical"));
 }
 
 void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
@@ -188,6 +190,8 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 
 	bCheckAlphaPositive = g.get_int_param("bCheckAlphaPositive");
 	bCheckPhaseSpeedSSonic = g.get_int_param("bCheckPhaseSpeedSSonic");
+
+	MaxNonDimIncrement = g.get_real_param("MaxNonDimIncrement");
 
 }
 

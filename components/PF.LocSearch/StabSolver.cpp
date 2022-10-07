@@ -914,7 +914,7 @@ std::vector<t_WCharsLoc> t_StabSolver::filter_gs_waves_spat(const std::vector<t_
 
 				// TODO: nice checking that wave is physical
 				bool check_increment = stab::check_wchars_increment(cur_wave);
-				if (!stab::check_wchars_increment(cur_wave)) {
+				if (!stab::check_wchars_increment(cur_wave, _params.MaxNonDimIncrement)) {
 					wxLogMessage(_T("Filter gs waves: Checks for increment failed!"));
 					continue;
 				}

@@ -84,7 +84,7 @@ namespace stab{
 	IMPEXP_PHYSCOMMON bool check_wchars_c_phase(const t_WaveChars& w);
 
 	// "ai/ar" should always be small
-	IMPEXP_PHYSCOMMON bool check_wchars_increment(const t_WaveChars& w);
+	IMPEXP_PHYSCOMMON bool check_wchars_increment(const t_WaveChars& w, double max_nondim_increment = 0.0);
 
 	// check that alpha is positive
 	// TODO: alpha can be negative for discrete modes (!)

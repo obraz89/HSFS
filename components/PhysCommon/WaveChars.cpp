@@ -172,7 +172,7 @@ namespace stab{
 
 	}
 
-	bool check_wchars_increment(const t_WaveChars& w){
+	bool check_wchars_increment(const t_WaveChars& w, double max_nondim_increment /*=0*/){
 
 		double inc, coef;
 		double k, ar, knr, br, ai, kni, bi, wi;
@@ -195,6 +195,8 @@ namespace stab{
 
 		case stab::t_TaskTreat::TIME:
 
+			inc = abs(w.w.imag());
+
 			coef = abs(w.w.imag()/w.w.real());
 
 			break;
@@ -205,6 +207,15 @@ namespace stab{
 			coef = 1.0;
 			break;
 		}
+
+	// check only if max_nondim_increment is specified
+	if (max_nondim_increment > 0.0) {
+		if (inc > max_nondim_increment){
+			wxLogMessage(_T("Checking Wchars: increment=%lf is greater than inc abs threshold (%lf)- treating unphysical"),
+				inc, max_nondim_increment);
+			return false;
+		}
+	}
 
 	// TODO: empiric constant !
 	if (coef<0.5){
