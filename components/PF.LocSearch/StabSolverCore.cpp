@@ -1031,22 +1031,31 @@ t_Complex t_StabSolver::_calcResidual(t_Complex* out_resid_coefs) const{
 
 t_Complex t_StabSolver::solve(t_WCharsLoc& stab_point){
 
+#ifdef __PERFORMANCE_MEASURE
 	t_TimeInterval::log(_T("t_StabSolver::solve:start"));
+#endif // __PERFORMANCE_MEASURE
 
 	this->_waveChars = stab_point;
 	this->_math_solver.clean();
 
 	setAsymptotics(_math_solver.solution[0]);
 
+#ifdef __PERFORMANCE_MEASURE
 	t_TimeInterval::log(_T("t_StabSolver::solve:asymptotic set"));
+#endif // __PERFORMANCE_MEASURE
 
 	_math_solver.solve();
 
-	t_TimeInterval::log(_T("t_StabSolver::solve:_solve done"));
+#ifdef __PERFORMANCE_MEASURE
+	//t_TimeInterval::log(_T("t_StabSolver::solve:_solve done"));
+#endif // __PERFORMANCE_MEASURE
 
 	t_Complex resid = _calcResidual();
 
-	t_TimeInterval::log(_T("t_StabSolver::solve:resid computed"));
+#ifdef __PERFORMANCE_MEASURE
+	//t_TimeInterval::log(_T("t_StabSolver::solve:resid computed"));
+#endif // __PERFORMANCE_MEASURE
+
 	_waveChars.resid = resid;
 	stab_point.resid = resid;
 	return resid;
