@@ -243,7 +243,7 @@ void task::search_wchars_loc_wb_shift() {
 		pid_e = pave_pnt_ind;
 	}
 
-	wxLogMessage(_T("SearchWCharsLocBetaFix: point_id=%d"), pid_s);
+	wxLogMessage(_T("SearchWCharsLocWBShift: point_id=%d"), pid_s);
 
 	// for now, working only with first pid = pid_s
 	for (int pid = pid_s; pid <= pid_s; pid++) {
@@ -264,13 +264,15 @@ void task::search_wchars_loc_wb_shift() {
 
 			t_WCharsLoc w_dest = w_init;
 
-			wxLogMessage(_T("SearchWCharsLocWVecFix: using w_ndim_min as target freq value"));
+			wxLogMessage(_T("SearchWCharsLocWBShift: using w_ndim_min as target freq value"));
 			w_dest.w = g_taskParams.w_ndim_min;
 
-			wxLogMessage(_T("SearchWCharsLocWVecFix: using b_ndim_min as target beta value"));
+			wxLogMessage(_T("SearchWCharsLocWBShift: using b_ndim_min as target beta value"));
 			w_dest.b = g_taskParams.b_ndim_min;
 
-			g_pStabSolver->searchWaveWBShift(w_init, w_dest);
+			wxLogMessage(_T("SearchWCharsLocWBShift: using Nw as number of iterations"));
+
+			g_pStabSolver->searchWaveWBShift(w_init, w_dest, g_taskParams.N_w);
 
 		}
 		catch (t_GenException e) {

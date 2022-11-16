@@ -133,7 +133,7 @@ public:
 
 	bool searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest);
 
-	bool searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest);
+	bool searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest, int NSteps);
 
 	std::vector<t_WCharsLoc> filter_gs_waves_spat(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond);
 	std::vector<t_WCharsLoc> filter_gs_waves_time(const std::vector<t_WCharsLoc> wcands, stab::t_LSCond cond);

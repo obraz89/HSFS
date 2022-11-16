@@ -741,10 +741,7 @@ bool t_StabSolver::searchWaveFixWVecDirSpat(const t_WCharsLoc& wchars_start, t_W
 // wchars_end is (a2, b2, w2), a2 is to be found
 // move in the plane (b, w) with small step
 /************************************************************************/
-bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest) {
-
-	// TODO: make parameter to control number of steps
-	int NSteps = 1001;
+bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLoc& wchars_dest, int NSteps) {
 
 	stab::t_LSCond cond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED);
 	stab::t_TaskTreat treat(stab::t_TaskTreat::SPAT);
@@ -755,7 +752,8 @@ bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLo
 	t_WCharsLoc wch = wchars_start;
 
 	searchWave(wch, cond, treat);
-	calcGroupVelocity(wch);
+	wxLogMessage(_T("before group velo calc ok"));
+	calcGroupVelocity_ScalProd(wch);
 
 	wxLogMessage(_T("Start wave:%s"), wch.to_wstr().c_str());
 	double da;
@@ -771,11 +769,11 @@ bool t_StabSolver::searchWaveWBShift(const t_WCharsLoc& wchars_start, t_WCharsLo
 		wch.a += da;
 
 		searchWave(wch, cond, treat);
-		calcGroupVelocity(wch);
+		calcGroupVelocity_ScalProd(wch);
 
 		wxLogMessage(_T("[i=%d] Cur wave:%s"), i, wch.to_wstr().c_str());
 
-		ofstr << wch.to_wstr_min().c_str();
+		ofstr << wch.to_wstr_min().c_str(); ofstr.flush();
 	}
 
 	wxLogMessage(_T("freq residual: %lf"), wchars_dest.w.real() - wch.w.real());
