@@ -105,6 +105,9 @@ int main(int argc, char* argv[]){
 			// using fixed debug value of pid
 			task::do_global_search_find_max(0);
 			break;
+		case task::TTaskType::SearchMaxInstabLocGrad:
+			task::search_max_instab_loc_grad();
+			break;
 		case task::TTaskType::SearchWCharsLocWVecFix:
 			task::search_wchars_loc_wvec_fix();
 			break;

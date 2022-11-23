@@ -8,7 +8,7 @@
 
 //-----------------------try steepest descent----------------------------------
 
-//-------------------------------------------------------------t_SteepDescAiSrch
+//-------------------------------------------------------------t_SteepDescWiSrch
 class t_SteepDescWiSrch: public smat::t_SteepDescSrch{
 
 	pf::t_StabSolver& _rStabSolver;
@@ -223,8 +223,8 @@ t_WCharsLoc pf::t_StabSolver::_getMaxInstabSpat_Grad(const t_WCharsLoc& init_gue
 
 	//raw search
 	t_WCharsLoc init_guess_spat = init_guess;
-	calcGroupVelocity(init_guess_spat);
-	init_guess_spat.to_spat();
+	calcGroupVelocity_ScalProd(init_guess_spat);
+	//init_guess_spat.to_spat();
 	t_SteepDescAiSrch ai_max_srchr(*this, init_guess_spat); 
 	ai_max_srchr.search_max_wave(init_guess_spat);
 	return init_guess_spat;

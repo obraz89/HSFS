@@ -53,6 +53,8 @@ namespace task{
 
 	bool do_global_search_find_max(const int pid);
 
+	void search_max_instab_loc_grad();
+
 	void calc_MF_chars();
 
 	void calc_scal_prod_self();

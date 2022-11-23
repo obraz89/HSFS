@@ -39,7 +39,7 @@ int t_SteepDescSrch::_search_min_desc(t_VecDbl& a_arg){
 		fun_cur = _calc_fun_desc(_arg_cur);
 		_grad_cur = _calc_grad_desc(_arg_cur);
 		// IMPORTANT TODO: step?
-		double dt = 0.005*_arg_cur.norm()/_grad_cur.norm();
+		double dt = 0.001*_arg_cur.norm()/_grad_cur.norm();
 
 		_arg_nxt = _arg_cur - dt*_grad_cur;
 		fun_nxt = _calc_fun_desc(_arg_nxt);
@@ -51,7 +51,7 @@ int t_SteepDescSrch::_search_min_desc(t_VecDbl& a_arg){
 		_arg_cur = _arg_nxt;
 
 		// debug
-		wxLogMessage(_T("Minimizing{SD} fun=%f"), fun_nxt);
+		wxLogMessage(_T("Minimizing{SD} fun=%f, arg=%s"), fun_nxt, _arg_nxt.to_wxstr());
 
 	} while (!converged);
 

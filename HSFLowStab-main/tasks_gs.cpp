@@ -713,6 +713,62 @@ bool task::do_global_search_find_max(const int pid){
 
 }
 
+void task::search_max_instab_loc_grad() {
+
+	int npave_pts = g_pStabDB->get_npoints();
+
+	int pave_pnt_ind = g_taskParams.pave_point_id;
+	if (pave_pnt_ind >= g_pStabDB->get_npoints())
+	{
+		wxLogError(_T("StabDb: point_id is out of range: point_id=%d"), pave_pnt_ind);
+		return;
+	}
+
+	int pid_s, pid_e;
+	if (pave_pnt_ind < 0) {
+		pid_s = 0;
+		pid_e = g_pStabDB->get_npoints() - 1;
+	}
+	else {
+		pid_s = pave_pnt_ind;
+		pid_e = pave_pnt_ind;
+	}
+
+	wxLogMessage(_T("SearchMaxInstabLocGrad: point_id=%d"), pid_s);
+
+	// for now, working only with first pid = pid_s
+	for (int pid = pid_s; pid <= pid_s; pid++) {
+
+		try {
+			const mf::t_GeomPoint& test_xyz = g_pStabDB->get_pave_pt(pid).xyz;
+
+			g_pStabSolver->setContext(test_xyz);
+
+			t_WCharsLoc w_init; w_init.set_treat(stab::t_TaskTreat::SPAT);
+
+			bool read_ok = read_max_wave_pid(pid, _T("wchars_max_loc.dat"), w_init);
+
+			if (!read_ok)
+				ssuGENTHROW(_T("Failed to read max wave chars, skipping wpline"));
+			else
+				wxLogMessage(_T("Max Wave pid=%d read from file: ok"), pid);
+
+			t_WCharsLoc w_dest = w_init;
+
+			g_pStabSolver->searchMaxWave(w_init, stab::t_LSCond::FREE, stab::t_TaskTreat::SPAT);
+
+		}
+		catch (t_GenException e) {
+			wxLogMessage(e.what());
+		}
+		catch (...) {
+			wxLogMessage(_T("Failed to find wave, pid=%d"), pid);
+		}
+
+	};
+
+}
+
 // tmp, debugging...
 
 void test::gs_lapack_vs_petsc(){

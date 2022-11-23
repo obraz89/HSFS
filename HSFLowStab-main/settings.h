@@ -24,8 +24,13 @@ namespace task{
 		// Global search of instabilities
 		SearchInstabLoc=0, 
 
-		// Test: do global search and find max with local search
+		// Test: do global search and find max with local search (try Newton method)
+		// ai = ai(b), w=fixed
 		SearchMaxInstabLoc,
+
+		// with initial wave from global search, try steepest descent to find max of ai
+		// ai = ai(w,b)
+		SearchMaxInstabLocGrad,
 
 		// Search wchars (a_end, b_end, w_end) from (a_start, b_start, w_start)
 		// keep br/ar fixed
