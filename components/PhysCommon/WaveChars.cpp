@@ -218,7 +218,7 @@ namespace stab{
 	}
 
 	// TODO: empiric constant !
-	if (coef<0.5){
+	if (coef<0.25){
 		return true;
 	}else{
 		wxLogMessage(_T("Checking Wchars: sigma/k=%lf is not small - treating unphysical"), coef);
