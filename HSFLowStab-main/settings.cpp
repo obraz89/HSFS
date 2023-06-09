@@ -185,6 +185,11 @@ bool load_Settings_n_Plugins()
 
 		conf->Read(_T("b_ndim_min"), &g_taskParams.b_ndim_min, 0.0e+00);
 		conf->Read(_T("b_ndim_max"), &g_taskParams.b_ndim_max, 1.0e+00);
+
+		conf->Read(_T("b_ndim_im_min"), &g_taskParams.b_ndim_im_min, 0.0e+00);
+		conf->Read(_T("b_ndim_im_max"), &g_taskParams.b_ndim_im_max, 0.0e+00);
+		g_taskParams.N_b_im = conf->Read(_T("N_b_im"), 1);
+
 		conf->Read(_T("b_dim_min"), &g_taskParams.b_dim_min, -1000.0e+00);
 		conf->Read(_T("b_dim_max"), &g_taskParams.b_dim_max, 1000.0e+00);
 		g_taskParams.N_b = conf->Read(_T("N_b"), 10);

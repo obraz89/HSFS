@@ -40,38 +40,43 @@ bool search_global_initial_wr_fixed_spat(double a_wr, t_WCharsLoc& ret_wave){
 
 	const t_StabScales& stab_scales = stab_solver->get_stab_scales();
 
-	const int n_bt=g_taskParams.N_b;
-
+	const int n_bt = g_taskParams.N_b;
 	double bt_min = g_taskParams.b_ndim_min;
 	double bt_max = g_taskParams.b_ndim_max;
 
+	const int n_bt_im = g_taskParams.N_b_im;
+	double bt_im_min = g_taskParams.b_ndim_im_min;
+	double bt_im_max = g_taskParams.b_ndim_im_max;
+
 	double dbt = (n_bt>1) ? (bt_max - bt_min)/double(n_bt-1) : 0.0;
+	double dbt_im = (n_bt_im > 1) ? (bt_im_max - bt_im_min) / double(n_bt_im - 1) : 0.0;
 
 	const double w = a_wr;
 
 	std::vector<t_WCharsLoc> waves_spat;
 
 	for (int j=0; j<n_bt; j++){
+		for (int k = 0; k < n_bt_im; k++) {
 
-		std::vector<t_WCharsLoc> init_waves_raw;
-		std::vector<t_WCharsLoc> init_waves_filtered;
+			std::vector<t_WCharsLoc> init_waves_raw;
+			std::vector<t_WCharsLoc> init_waves_filtered;
 
-		std::cout<<"J="<<j<<"\n";
+			std::cout << "J=" << j << "\n";
 
-		t_WCharsLoc init_wave;
+			t_WCharsLoc init_wave;
 
-		init_wave.b = bt_min + dbt*j;
-		init_wave.w = w;
+			init_wave.b = t_Complex(bt_min + dbt * j, bt_im_min + dbt_im * k);
+			init_wave.w = w;
 
-		init_waves_raw = gs_solver->getInstabModes(init_wave);
+			init_waves_raw = gs_solver->getInstabModes(init_wave);
 
-		init_waves_filtered = g_pStabSolver->filter_gs_waves_spat(init_waves_raw, 
-			stab::t_LSCond(stab::t_LSCond::B_FIXED|stab::t_LSCond::W_FIXED));
+			init_waves_filtered = g_pStabSolver->filter_gs_waves_spat(init_waves_raw,
+				stab::t_LSCond(stab::t_LSCond::B_FIXED | stab::t_LSCond::W_FIXED));
 
-		for (int k=0; k<init_waves_filtered.size(); k++)
-			waves_spat.push_back(init_waves_filtered[k]);	
-
-	}	// ~loop over betas
+			for (int k = 0; k < init_waves_filtered.size(); k++)
+				waves_spat.push_back(init_waves_filtered[k]);
+		}
+	}	// ~loop over betas (real)
 
 	if (waves_spat.size()>0){
 
