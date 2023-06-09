@@ -636,6 +636,7 @@ void task::calc_MF_chars(){
 	{
 		std::ofstream ofstr("output/cp.dat");
 
+		ofstr << "x\ty\tz\tCp\tP\n";
 		// calculate Cp (pressure coefficient) and write to a file
 
 		for (int j = 0; j<npts; j++) {
@@ -652,7 +653,7 @@ void task::calc_MF_chars(){
 
 			double Cp = 2.0*(rec.p - 1. / gM2);
 
-			ofstr << rec.x << "\t" << rec.y << "\t" << rec.z << "\t" << Cp << "\n";
+			ofstr << rec.x << "\t" << rec.y << "\t" << rec.z << "\t" << Cp << "\t" << rec.p << "\n";
 			ofstr.flush();
 
 		}
