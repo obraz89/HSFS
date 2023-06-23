@@ -977,18 +977,43 @@ t_Complex t_StabSolver::_calcResidual(t_Complex* out_resid_coefs) const{
 
 		// direct problem
 		// get resid by temperature residual
-		// construct matrix of 4 cols (u,u',v,w)
+		// construct matrix of 4 cols (f1,f2,f3,f4)
 		// of solutions at wall
 		// solve with rhs (0,1,0,0)
 		// and construct resid of temperature
 
 		rhs[1]=1.0;
-		for (int i=0; i<4; i++){
-			mat[i][0] = wall_func[i][0];
-			mat[i][1] = wall_func[i][1];
-			mat[i][2] = wall_func[i][2];
-			mat[i][3] = wall_func[i][6];
+
+		// fill in matrix of values f[i][j]
+		{
+			// homogen BC, f1 = u, f2 = u', f3 = v, f4 = w
+			if (_params.WallBC == pf::t_StabSolverParams::WALL_HOMOGEN) {
+				for (int i = 0; i < 4; i++) {
+					mat[i][0] = wall_func[i][0];
+					mat[i][1] = wall_func[i][1];
+					mat[i][2] = wall_func[i][2];
+					mat[i][3] = wall_func[i][6];
+				}
+			}
+
+			// slip BC, f1 = u - eta_u*u', f2 = u', f3 = v, f4 = w - eta_w*w'
+			if (_params.WallBC == pf::t_StabSolverParams::WALL_SLIP) {
+				// WallBC_EtaU, WallBC_EtaW are in global HSFlow nondim scale
+				// in stability reference frame (length scale is Dels)
+				// coefs are multiplied by Lref/Dels
+				
+				double l_coef = _rFldNS.get_mf_params().L_ref / get_stab_scales().Dels;
+				double eu = _params.WallBC_EtaU * l_coef;
+				double ew = _params.WallBC_EtaW * l_coef;
+				for (int i = 0; i < 4; i++) {
+					mat[i][0] = wall_func[i][0] - eu*wall_func[i][1];
+					mat[i][1] = wall_func[i][1];
+					mat[i][2] = wall_func[i][2];
+					mat[i][3] = wall_func[i][6] - ew*wall_func[i][7];
+				}
+			}
 		}
+		
 		matrix::base::mat_mul<t_CompVal, t_CompVal>(mat.inverse(),rhs,resid_coefs);
 
 		for (int i=0; i<4; i++){
@@ -1005,6 +1030,11 @@ t_Complex t_StabSolver::_calcResidual(t_Complex* out_resid_coefs) const{
 		// and construct resid of pressure
 
 		rhs[0]=1.0;
+
+		// IMPORTANT TODO: conditions for slip bc
+		if (_params.WallBC != pf::t_StabSolverParams::WALL_HOMOGEN) {
+			wxLogError(_T("t_StabSolver::_calcResidual not implemented for conjugate with this wall bc type"));
+		}
 		for (int i=0; i<4; i++){
 			mat[i][0] = wall_func[i][2];
 			mat[i][1] = wall_func[i][1];

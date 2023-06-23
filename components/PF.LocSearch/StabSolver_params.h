@@ -31,6 +31,15 @@ namespace pf{
 		bool bCheckAlphaPositive;
 		bool bCheckPhaseSpeedSSonic;
 
+		enum t_WallBC {
+			WALL_HOMOGEN = 0,
+			WALL_SLIP
+		};
+		t_WallBC WallBC;
+		t_MapWxStrInt WALL_BCS_OPTS_STR;
+
+		double WallBC_EtaU, WallBC_EtaW;
+
 		t_StabSolverParams();
 		void init_supported_options();
 

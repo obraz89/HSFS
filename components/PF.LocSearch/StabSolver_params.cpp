@@ -23,6 +23,8 @@ static const int ADJUST_MAX_ITER_DEFAULT= 50;
 
 #define CURV_TERMS_FLAG_DEFAULT_STR _("NO")
 
+#define WALL_BC_DEFAULT_STR _("HOMOGEN")
+
 // small increment to compute smth like
 // dw/da : (w(a+DELTA) - w(a))/DELTA
 static const double DELTA_SMALL = 1.0e-6;
@@ -68,6 +70,11 @@ void t_StabSolverParams::init_supported_options(){
 		std::make_pair(_T("YES"), true)
 	);
 
+	WALL_BCS_OPTS_STR.clear();
+
+	WALL_BCS_OPTS_STR.insert(std::make_pair(WALL_BC_DEFAULT_STR, 0));
+	WALL_BCS_OPTS_STR.insert(std::make_pair(_("SLIP"), 1));
+
 }
 
 void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
@@ -94,6 +101,10 @@ void t_StabSolverParams::default_settings(hsstab::TPluginParamsGroup& g){
 	g.add("bCheckPhaseSpeedSSonic", 0, _T("Do fast check for phase speed to be between 1-1/Mx, 1+1/Mx"));
 
 	g.add("MaxNonDimIncrement", 0.0, _T("If specified positive value, waves with increments greater than this value are treated unphysical"));
+
+	g.add("WallBC", WALL_BC_DEFAULT_STR, _T("OPtions for wall boundary conditions, default is homogen(u=v=w=0), other is slip"));
+	g.add("WallBC_EtaU", 0.0, _T("Slip coef for U component"));
+	g.add("WallBC_EtaW", 0.0, _T("Slip coef for W component"));
 }
 
 void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
@@ -192,6 +203,39 @@ void t_StabSolverParams::init(const hsstab::TPluginParamsGroup& g){
 	bCheckPhaseSpeedSSonic = g.get_int_param("bCheckPhaseSpeedSSonic");
 
 	MaxNonDimIncrement = g.get_real_param("MaxNonDimIncrement");
+
+	// parse WALL_BC option
+	{
+		wxString wall_bc_str = g.get_string_param("WallBC");
+
+		// trim from both left and right
+		wall_bc_str.Trim(true); wall_bc_str.Trim(false);
+
+		it = WALL_BCS_OPTS_STR.find(wall_bc_str);
+
+		if (it == WALL_BCS_OPTS_STR.end()) {
+
+			wxString msg(_T("PF.LocSearch: Unknown option for wall bc, supported options HOMOGEN, SLIP"));
+			wxLogError(msg); ssuGENTHROW(msg);
+		}
+
+		int wbc = it->second;
+
+		switch (wbc) {
+		case WALL_HOMOGEN:
+			WallBC = WALL_HOMOGEN;
+			break;
+		case WALL_SLIP:
+			WallBC = WALL_SLIP;
+			break;
+		default:
+			wxLogError(_T("PF.LocSearch: Failed to read wall bc"));
+			break;
+		}
+
+		WallBC_EtaU = g.get_real_param("WallBC_EtaU");
+		WallBC_EtaW = g.get_real_param("WallBC_EtaW");
+	}
 
 }
 
