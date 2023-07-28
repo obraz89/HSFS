@@ -633,53 +633,30 @@ void task::calc_MF_chars(){
 
 	double gM2 = prms.Gamma*prms.Mach*prms.Mach;
 
-	{
-		std::ofstream ofstr("output/cp.dat");
+	std::ofstream ofstr("output/mf_chars.dat");
+	ofstr.setf(std::ios::scientific, std::ios_base::floatfield);
+	// x y z Cp P DispTh St
+	ofstr << "x\ty\tz\tCp\tP\tDispTh\tSt\n";
 
-		ofstr << "x\ty\tz\tCp\tP\n";
-		// calculate Cp (pressure coefficient) and write to a file
+	for (int j = 0; j < npts; j++) {
 
-		for (int j = 0; j<npts; j++) {
+		mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
 
-			mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
+		mf::t_Rec rec;
 
-			mf::t_Rec rec;
+		g_pMFDomain->calc_nearest_surf_rec(xyz, rec);
 
-			//v1, but Cp should be computed on surface
-			//rec = g_pMFDomain->get_rec(xyz);
-
-			// v2, correct for Cp
-			g_pMFDomain->calc_nearest_surf_rec(xyz, rec);
-
-			double Cp = 2.0*(rec.p - 1. / gM2);
-
-			ofstr << rec.x << "\t" << rec.y << "\t" << rec.z << "\t" << Cp << "\t" << rec.p << "\n";
-			ofstr.flush();
-
+		// calculate Cp
+		double Cp;
+		{
+			Cp = 2.0 * (rec.p - 1. / gM2);
 		}
-	}
 
-
-	// calculate displacement thickness and write to a file
-	{
-		std::vector<double> y(1001);
-		std::vector<double> f(1001);
-
-		std::ofstream ofstr("output/disp_thick.dat");
-
-		ofstr << "x\ty\tz\tDisp_thick\n";
-
-		for (int j = 0; j < npts; j++) {
-
-			mf::t_GeomPoint xyz = g_pStabDB->get_pave_pt(j).xyz;
-
-			mf::t_Rec rec_mf;
-
-			//v1, but Cp should be computed on surface
-			//rec = g_pMFDomain->get_rec(xyz);
-
-			// v2, correct for Cp
-			g_pMFDomain->calc_nearest_surf_rec(xyz, rec_mf);
+		// calculate disp thick, St
+		double disp_thick, St;
+		{
+			std::vector<double> y(1001);
+			std::vector<double> f(1001);
 
 			t_ProfMFLoc profMFLoc(*g_pMFDomain);
 
@@ -701,18 +678,28 @@ void task::calc_MF_chars(){
 				rec = profMFLoc.get_rec(k);
 
 				y[k] = rec.y;
-				f[k] = rec.r*(1.0 - rec.u);
+				f[k] = rec.r * (1.0 - rec.u);
 
 			}
 
-			double disp_thick = smat::fun_integrate(y, f, N);
+			disp_thick = smat::fun_integrate(y, f, N);
 
-			ofstr << rec_mf.x << "\t" << rec_mf.y << "\t" << rec_mf.z << "\t" << disp_thick << "\n";
-			ofstr.flush();
+			// St
+			{
+				rec = profMFLoc.get_rec(0);
+				double mu_w = g_pMFDomain->calc_viscosity(rec.t);
+				double RePr = g_pMFDomain->get_mf_params().Re * g_pMFDomain->get_mf_params().Pr;
+				double T_dif = g_pMFDomain->calc_T0() - rec.t;
+				St = mu_w * rec.t1 / (RePr * T_dif);
+			}
 		}
-	} // ~calculate displacement thickness and write to a file
-	
+		// x y z Cp P DispTh St
+		ofstr << rec.x << "\t" << rec.y << "\t" << rec.z << "\t" << Cp << "\t" << rec.p << "\t" 
+			<< disp_thick << "\t" << St	<< "\n";
+		ofstr.flush();
 
+	}
+	ofstr.close();
 }
 
 void task::get_bl_spectrum(){

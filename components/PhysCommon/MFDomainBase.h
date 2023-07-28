@@ -138,6 +138,8 @@ namespace mf{
 
 			virtual double calc_p_freestream() const;
 
+			virtual double calc_T0() const;
+
 			virtual double calc_viscosity(const double t) const ;
 
 			virtual double calc_viscosity(const t_GeomPoint& xyz) const;

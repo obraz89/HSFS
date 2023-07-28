@@ -56,6 +56,13 @@ double mf::t_DomainBase::calc_p_freestream() const {
 
 }
 
+double mf::t_DomainBase::calc_T0() const{
+
+	const mf::t_FldParams& p = get_mf_params();
+
+	return 1.0 + 0.5 * (p.Gamma - 1) * p.Mach * p.Mach;
+}
+
 double mf::t_DomainBase::calc_viscosity(const double t) const{
 
 	const t_FldParams& mf_prms = get_mf_params();
