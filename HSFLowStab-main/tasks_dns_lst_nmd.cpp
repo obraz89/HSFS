@@ -8,6 +8,8 @@
 
 #include "fstream"
 
+#include "log.h"
+
 using namespace hsstab;
 
 struct t_SpctrInfo {
@@ -513,7 +515,8 @@ void _get_amp_funcs_from_full_spectrum(int i_w, int j_b, const t_SpctrInfo spd, 
 
 		// skip all data up to a required line
 		for (int ln = 0; ln < glob_ind; ln++)
-			ifstr.getline(line, max_lsize, '\n');
+			//ifstr.getline(line, max_lsize, '\n');
+			ifstr.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 		ifstr.getline(line, max_lsize, '\n');
 
@@ -574,6 +577,8 @@ void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>&
 
 	g_pStabSolver->getAmpFuncs(amp_fun_LST);
 
+	t_Complex coef_p;
+
 	if (true) {
 
 		// debug - write amplitude functions
@@ -582,7 +587,7 @@ void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>&
 
 		t_Complex pmax_LST = _search_max_pressure_disturb(amp_fun_LST);
 
-		t_Complex coef_p = pmax_DNS / pmax_LST;
+		coef_p = pmax_DNS / pmax_LST;
 
 		wxLogMessage(_T("pmax_DNS/pmax_LST=(%lf,%lf)"), coef_p.real(), coef_p.imag());
 		wxLogMessage(_T("abs(pmax_DNS/pmax_LST)=%lf"), smat::norm(coef_p));
@@ -607,7 +612,9 @@ void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>&
 
 			ofstr << y_lst[nnodes_stab - 1 - i] << "\t";
 			for (int j = 0; j<8; j++) {
-				t_Complex val = amp_fun_LST[nnodes_stab - 1 - i][j] * coef_p;
+				t_Complex& val = amp_fun_LST[nnodes_stab - 1 - i][j];
+				// scale LST amp funcs to DNS
+				val *= coef_p;
 				ofstr << val.real() << "\t";
 				ofstr << val.imag() << "\t";
 			}
@@ -627,11 +634,16 @@ void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>&
 
 		//wxLogMessage(_T("LST <A_lst_scaled2dns_p, A_lst_conj>=%lf"), smat::norm(coef_p*val_lst));
 
-		t_Complex coef_scal = val_dns / val_lst;
+		// normalize coef to be 1 when lst&dns shapes are same and 0 when differ
+		// coef = <Q/Qmax, A_conj>/<A/Amax, A_conj>
+		// Qmax, Amax are max abs disturbance of pressure
+		t_Complex coef_scal = val_dns / (val_lst * coef_p);
 
 		wxLogMessage(_T("<Q_dns, A_lst_conj>/<A_lst, A_lst_conj>=(%lf, %lf)"), coef_scal.real(), coef_scal.imag());
 		wxLogMessage(_T("abs(coef_scal)=%lf"), smat::norm(coef_scal));
 
+		// amp_fun_lst is already scaled to Qmax/Amax, so just mul by coef_scal
+		// <Q,A_conj>/<A, A_conj>*A = coef_scal * (Qmax/Amax*A)
 		// du
 		a_wall_data[0] = amp_fun_LST[nnodes_stab - 1][0] * coef_scal;
 		// dv
@@ -642,6 +654,11 @@ void _do_calc_dns2lst_wall_disturb(t_WCharsLoc wchars_A, std::vector<t_Complex>&
 		a_wall_data[3] = amp_fun_LST[nnodes_stab - 1][3] * coef_scal;
 		// dt
 		a_wall_data[4] = amp_fun_LST[nnodes_stab - 1][4] * coef_scal;
+
+		// debug
+
+		wxLogMessage(_T("LST spectral density of dp at wall:%lf"), smat::norm(a_wall_data[3]));
+		wxLogMessage(_T("DNS spectral density of dp at wall:%lf"), smat::norm(amp_fun_DNS[nnodes_stab - 1][3]));
 	
 	}
 
@@ -693,7 +710,7 @@ void _get_wchars(t_WCharsLoc& wc_dest, const t_WCharsLoc& wc_s) {
 
 	// move along w line to final destination
 
-	const double dw = wc_dest.w.real() >= wc_s.w.real() ? 0.0025 : -0.0025;
+	const double dw = wc_dest.w.real() >= wc_s.w.real() ? 0.001 : -0.001;
 
 	const int Nw = int(abs((wc_dest.w.real() - wc_s.w.real()) / dw));
 
@@ -800,17 +817,19 @@ void _get_lst_wpacket_from_dns() {
 
 	ofstr << spd.Nw << "\t" << spd.Nb << "\n";
 
-	double w_fft_min_crop = 4.77;
-	double w_fft_max_crop = 238.0;
+	double w_fft_min_crop = 14.77;
+	double w_fft_max_crop = 500.0;
 
 	double b_fft_min_crop = 0.0;
-	double b_fft_max_crop = 300.0;
+	double b_fft_max_crop = 1500.0;
 
 	for (int i = 0; i < spd.Nw; i++){
+//	for (int i = 30; i < 31; i++) {
 
 		bool need_full_search = true;
 
 		for (int j = 0; j < spd.Nb; j++) {
+		//for (int j = 112; j < 113; j++) {
 
 			w_fft = spd.Om_fft_min + i*dOm_fft;
 			b_fft = spd.B_fft_min + j*dB_fft;
