@@ -225,7 +225,7 @@ void t_ProfileStab::initialize_dist_DNS(t_ProfMFLoc& a_rProfNS, t_ProfStabCfgDNS
 
 	const double dY = a_rProfNS.get_thick() / (cfg.NNodes - 1);
 
-	const double y_scale = bl_thick_scale*sqrt(Params.Re);
+	const double y_scale = bl_thick_scale;
 
 	for (int i=0; i<_nnodes; i++){
 
