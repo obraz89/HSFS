@@ -102,6 +102,7 @@ namespace task{
 
 	extern wxString SpatTimeNames[SpatTimeNum];
 
+	// basic task params
 	struct TTaskParams{
 
 		int id;
@@ -124,10 +125,17 @@ namespace task{
 		int N_b_im;
 
 	};
+	
+	struct TTaskParamsCalcScalProd {
+		// al values here are in fft non-dim
+		double w_min_crop_fft, w_max_crop_fft;
+		double b_min_crop_fft, b_max_crop_fft;
+	};
 
 }
 
 extern task::TTaskParams g_taskParams;
+extern task::TTaskParamsCalcScalProd g_taskParamsCalcScalProd;
 
 //-----------------------------------------------------------------------------
 

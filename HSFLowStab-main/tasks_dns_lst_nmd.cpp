@@ -817,11 +817,16 @@ void _get_lst_wpacket_from_dns() {
 
 	ofstr << spd.Nw << "\t" << spd.Nb << "\n";
 
-	double w_fft_min_crop = 14.77;
-	double w_fft_max_crop = 500.0;
+	double w_fft_min_crop = g_taskParamsCalcScalProd.w_min_crop_fft;
+	double w_fft_max_crop = g_taskParamsCalcScalProd.w_max_crop_fft;
 
-	double b_fft_min_crop = 0.0;
-	double b_fft_max_crop = 1500.0;
+	double b_fft_min_crop = g_taskParamsCalcScalProd.b_min_crop_fft;
+	double b_fft_max_crop = g_taskParamsCalcScalProd.b_max_crop_fft;
+
+	wxLogMessage(_T("CalcScalProd: w_fft_min_crop = %d"), w_fft_min_crop);
+	wxLogMessage(_T("CalcScalProd: w_fft_max_crop = %d"), w_fft_max_crop);
+	wxLogMessage(_T("CalcScalProd: b_fft_min_crop = %d"), b_fft_min_crop);
+	wxLogMessage(_T("CalcScalProd: b_fft_max_crop = %d"), b_fft_max_crop);
 
 	for (int i = 0; i < spd.Nw; i++){
 //	for (int i = 30; i < 31; i++) {
