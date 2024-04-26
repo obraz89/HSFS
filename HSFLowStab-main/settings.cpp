@@ -224,7 +224,7 @@ bool load_Settings_n_Plugins()
 		conf->Read(_T("w_min_crop_fft"), &g_taskParamsCalcScalProd.w_min_crop_fft, 0.0);
 		conf->Read(_T("w_max_crop_fft"), &g_taskParamsCalcScalProd.w_max_crop_fft, 1.0e+06);
 		conf->Read(_T("b_min_crop_fft"), &g_taskParamsCalcScalProd.b_min_crop_fft, 0.0);
-		conf->Read(_T("w_max_crop_fft"), &g_taskParamsCalcScalProd.b_max_crop_fft, 1.0e+06);
+		conf->Read(_T("b_max_crop_fft"), &g_taskParamsCalcScalProd.b_max_crop_fft, 1.0e+06);
 		conf->Flush();
 	}
 	
