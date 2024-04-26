@@ -582,10 +582,10 @@ void task::get_profiles(){
 
 		const t_StabScales& stsc = g_pStabSolver->get_stab_scales();
 
-		wxLogMessage(_T("point #%d[%lf, %lf, %lf]: Dels=%lf, Restab=%lf"),
+		wxLogMessage(_T("point #%d[%.3e, %.3e, %.3e]: Dels=%.5e, Restab=%.5e"),
 			j,xyz.x(), xyz.y(), xyz.z(), stsc.Dels, stsc.ReStab);
 	
-		wxLogMessage(_T("\t\tMe=%lf, Ue=%lf, Ue_dim=%lf"), stsc.Me, stsc.Ue, stsc.UeDim);
+		wxLogMessage(_T("\t\tMe=%.5e, Ue=%.5e, Ue_dim=%.5e"), stsc.Me, stsc.Ue, stsc.UeDim);
 
 		wchar_t szFname[33];
 
